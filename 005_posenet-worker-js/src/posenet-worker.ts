@@ -206,4 +206,7 @@ export const drawSkeltonAndPoint = (srcCanvas: HTMLCanvasElement, prediction: po
         drawPoints(canvas, x)
         drawSkeleton(canvas, x)
     })
+    const imageData = canvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height)
+    canvas.remove()
+    return imageData
 }
