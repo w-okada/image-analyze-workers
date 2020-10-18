@@ -1,0 +1,1 @@
+cd ../004_opencv-worker-js; npm run build; cd -; cp ../004_opencv-worker-js/dist/* node_modules/\@dannadori/opencv-worker-js/dist/; cp node_modules/\@dannadori/opencv-worker-js/dist/0.opencv-worker.worker.js public/;
