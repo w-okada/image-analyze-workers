@@ -5,7 +5,7 @@ export { AsciiConfig } from './const'
 export { BrowserType, getBrowserType} from './BrowserUtil';
 export { IMAGE_PATH } from "./DemoUtil"
 
-export const generateAsciiDefaultConfig = ():AsciiConfig => {
+export const generateAsciiArtDefaultConfig = ():AsciiConfig => {
     const defaultConf:AsciiConfig = {
         browserType         : getBrowserType(),
         processOnLocal      : false
@@ -13,7 +13,7 @@ export const generateAsciiDefaultConfig = ():AsciiConfig => {
     return defaultConf
 }
 
-export const generateDefaultAsciiParams = () =>{
+export const generateDefaultAsciiArtParams = () =>{
     const defaultParams: AsciiOperatipnParams = {
         type: AsciiFunctionType.AsciiArt,
         processWidth        : 300,
@@ -102,7 +102,7 @@ export class AsciiArtWorkerManager{
     private outCanvas:HTMLCanvasElement = document.createElement("canvas")
 
     private localAA = new LocalAA()
-    private config:AsciiConfig = generateAsciiDefaultConfig()
+    private config:AsciiConfig = generateAsciiArtDefaultConfig()
 
     init = (config: AsciiConfig|null) => {
         if(config != null){
