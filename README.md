@@ -22,32 +22,8 @@ Note. some module is not provided as webworker for safari because of it's restri
 ![image](https://user-images.githubusercontent.com/48346627/95987700-be773780-0e62-11eb-9645-40b7c0adb826.png)
 
 
-- install
-```
-$ npm install \@dannadori/bodypix-worker-js
-$ cp node_modules/\@dannadori/bodypix-worker-js/dist/0.bodypix-worker.worker.js public/
-```
-
-- basic usage
-
-```
-// Generate Config
-config:BodyPixConfig = generateBodyPixDefaultConfig()
-
-// Initialize with config
-facemesh:FacemeshWorkerManager = new FacemeshWorkerManager()
-bodypix.init(config).then(() => {
-  console.log("initialized.")
-})
-
-// Predict
-bodypix.predict(canvas, BodypixFunctionType.SegmentPerson).then(prediction => {
-  console.log(prediction)
-}
-
-```
-
-for more detail, you can see the demo source.
+- installation and usage 
+[See here](/001_bodypix-worker-js)
 
 - demo
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t01_bodypix/index.html
