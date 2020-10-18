@@ -74,29 +74,10 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t05_posenet/index.ht
 ## HandPose
 ![image](https://user-images.githubusercontent.com/48346627/95988209-88868300-0e63-11eb-809a-35a52b7f77fe.png)
 
-- install
-```
-$ npm install \@dannadori/handpose-worker-js
-$ cp node_modules/\@dannadori/handpose-worker-js/dist/0.handpose-worker.worker.js public/;
-```
-- basic usage
 
-```
-// Generate Config
-config = generateHandPoseDefaultConfig()()
-params = generateDefaultHandPoseParams()
-// Initialize with config
-manager: HandPoseWorkerManager = new HandPoseWorkerManager()
-manager.init(this.config).then(()=>{
-  console.log("initialized.")
-})
+- installation and usage 
+[See here](/006_handpose-worker-js)
 
-// Predict
-manager.predict(this.canvas, params).then(converted=>{
-}
-```
-
-for more detail, you can see the demo source.
 
 - demo
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t06_handpose/index.html
@@ -108,6 +89,10 @@ This repository was inspired by this site.
 
 https://github.com/terryky/tfjs_webgl_app
 
+
+Demo images are from pakutaso
+
+http://www.pakutaso.com
 
 
 

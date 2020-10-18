@@ -11,36 +11,41 @@ $ cp node_modules/\@dannadori/handpose-worker-js/dist/0.handpose-worker.worker.j
 ## API
 
 ```
-generatePoseNetDefaultConfig: () => PoseNetConfig;
-generateDefaultPoseNetParams: () => PoseNetOperatipnParams;
-drawSkeltonAndPoint: (srcCanvas: HTMLCanvasElement, prediction: poseNet.Pose[]) => ImageData;
+generateHandPoseDefaultConfig: () => HandPoseConfig;
+generateDefaultHandPoseParams: () => HandPoseOperatipnParams;
+drawHandSkelton: (srcCanvas: HTMLCanvasElement, prediction: any, params: HandPoseOperatipnParams) => ImageData;
 
-PoseNetWorkerManager
-init(config?: PoseNetConfig | null): Promise<unknown>;
-predict(targetCanvas: HTMLCanvasElement, params?: PoseNetOperatipnParams): Promise<poseNet.Pose[]>;
+HandPoseWorkerManager {
+init: (config: HandPoseConfig | null) => Promise<unknown>;
+predict: (targetCanvas: HTMLCanvasElement, params: HandPoseOperatipnParams) => Promise<any>;
 
 ```
 
 ## Configuration and Parameter
 
 ```
-export interface PoseNetConfig{
+
+export interface HandPoseConfig{
     browserType         : BrowserType
     model               : ModelConfig
+    useTFWasmBackend    : boolean // cunrrently only for facemesh.
     processOnLocal      : boolean
-    // processWidth        : number
-    // processHeight       : number
+    modelReloadInterval   : number // if not reload, set zero    
 }
 
-export enum PoseNetFunctionType{
-    SinglePerson,
-    MultiPerson,// Not implemented
+export enum HandPoseFunctionType{
+    EstimateHands,
 }
 
-export interface PoseNetOperatipnParams{
-    type               : PoseNetFunctionType
-    singlePersonParams : SinglePersonInterfaceConfig
-    multiPersonParams  : MultiPersonInferenceConfig
+export interface HandPoseOperatipnParams{
+    type                : HandPoseFunctionType
+    estimateHands       : EstimateHandsParams
+    processWidth        : number
+    processHeight       : number
+}
+
+export interface EstimateHandsParams{
+    flipHorizontal: boolean
 }
 
 ```
@@ -62,7 +67,46 @@ In this time, the name is "srcImage.jpg"
 Sample code is here.
 
 ```
+import React from 'react';
+import './App.css';
+import { HandPoseWorkerManager, generateDefaultHandPoseParams, generateHandPoseDefaultConfig, drawHandSkelton } from '@dannadori/handpose-worker-js'
 
+class App extends React.Component{
+  
+  manager = new HandPoseWorkerManager()
+  config = generateHandPoseDefaultConfig()
+  params = generateDefaultHandPoseParams()
+
+  srcCanvas = document.createElement("canvas")
+  dstCanvas = document.createElement("canvas")
+
+  componentDidMount = () =>{
+    document.getRootNode().lastChild!.appendChild(this.srcCanvas)
+    document.getRootNode().lastChild!.appendChild(this.dstCanvas)
+    const srcImage = document.createElement("img")
+    srcImage.onload = () =>{
+      this.manager.init(this.config).then(()=>{
+        this.srcCanvas.getContext("2d")!.drawImage(
+          srcImage, 0, 0, this.srcCanvas.width, this.dstCanvas.height)
+        return this.manager.predict(this.srcCanvas, this.params)
+      }).then((res)=>{
+        const imageData = drawHandSkelton(this.srcCanvas, res, this.params)
+        console.log(res)
+        this.dstCanvas.getContext("2d")!.putImageData(imageData, 0, 0)
+      })
+    }
+    srcImage.src = "./srcImage.jpg"
+  }
+
+  render = ()=>{
+    return (
+      <div className="App">
+      </div>
+    );
+  }
+}
+
+export default App;
 
 
 ```
