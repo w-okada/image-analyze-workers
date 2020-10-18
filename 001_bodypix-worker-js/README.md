@@ -21,6 +21,33 @@ init(config?: BodyPixConfig | null): Promise<unknown>;
 predict(targetCanvas: HTMLCanvasElement, params: BodyPixOperatipnParams): Promise<any>;
 ```
 
+## Configuration and Parameter
+
+```
+export interface BodyPixConfig {
+    browserType: BrowserType;
+    model: ModelConfig;
+    processOnLocal: boolean;
+}
+
+export interface BodyPixOperatipnParams {
+    type: BodypixFunctionType;
+    segmentPersonParams: PersonInferenceConfig;
+    segmentPersonPartsParams: PersonInferenceConfig;
+    segmentMultiPersonParams: MultiPersonInstanceInferenceConfig;
+    segmentMultiPersonPartsParams: MultiPersonInstanceInferenceConfig;
+    processWidth: number;
+    processHeight: number;
+}
+
+export declare enum BodypixFunctionType {
+    SegmentPerson = 0,
+    SegmentMultiPerson = 1,
+    SegmentPersonParts = 2,
+    SegmentMultiPersonParts = 3
+}
+```
+
 ## Step by step
 ### Create environment and install package
 ```
