@@ -11,41 +11,36 @@ $ cp node_modules/\@dannadori/asciiart-worker-js/dist/0.asciiart-worker.worker.j
 ## API
 
 ```
-generateFacemeshDefaultConfig: () => FacemeshConfig;
-generateDefaultFacemeshParams: () => FacemeshOperatipnParams;
-drawFacemeshImage: (srcCanvas: HTMLCanvasElement, prediction: facemesh.AnnotatedPrediction[], params: FacemeshOperatipnParams) => ImageData;
+generateAsciiArtDefaultConfig: () => AsciiConfig;
+generateDefaultAsciiArtParams: () => AsciiOperatipnParams;
 
-FacemeshWorkerManager
-init: (config: FacemeshConfig | null) => Promise<unknown>;
-predict: (targetCanvas: HTMLCanvasElement, params: FacemeshOperatipnParams) => Promise<any>;
-
+AsciiArtWorkerManager
+init: (config: AsciiConfig | null) => Promise<unknown>;
+predict(targetCanvas: HTMLCanvasElement, params: AsciiOperatipnParams): Promise<HTMLCanvasElement>;
 ```
 
 ## Configuration and Parameter
 
 ```
-export interface BodyPixConfig {
-    browserType: BrowserType;
-    model: ModelConfig;
-    processOnLocal: boolean;
+
+export interface AsciiConfig{
+    browserType         : BrowserType
+    processOnLocal      : boolean
 }
 
-export interface BodyPixOperatipnParams {
-    type: BodypixFunctionType;
-    segmentPersonParams: PersonInferenceConfig;
-    segmentPersonPartsParams: PersonInferenceConfig;
-    segmentMultiPersonParams: MultiPersonInstanceInferenceConfig;
-    segmentMultiPersonPartsParams: MultiPersonInstanceInferenceConfig;
-    processWidth: number;
-    processHeight: number;
+
+export interface AsciiOperatipnParams{
+    type: AsciiFunctionType
+    processWidth        : number
+    processHeight       : number
+    asciiStr            : string
+    fontSize            : number
 }
 
-export declare enum BodypixFunctionType {
-    SegmentPerson = 0,
-    SegmentMultiPerson = 1,
-    SegmentPersonParts = 2,
-    SegmentMultiPersonParts = 3
+export enum AsciiFunctionType{
+    AsciiArt
 }
+
 ```
 
 ## Step by step
@@ -67,13 +62,13 @@ Sample code is here.
 ```
 import React from 'react';
 import './App.css';
-import { FacemeshWorkerManager, generateDefaultFacemeshParams, generateFacemeshDefaultConfig, drawFacemeshImage } from '@dannadori/facemesh-worker-js'
+import { AsciiArtWorkerManager, generateAsciiArtDefaultConfig, generateDefaultAsciiArtParams } from '@dannadori/asciiart-worker-js'
 
 class App extends React.Component{
   
-  manager = new FacemeshWorkerManager()
-  config = generateFacemeshDefaultConfig()
-  params = generateDefaultFacemeshParams()
+  manager = new AsciiArtWorkerManager()
+  config = generateAsciiArtDefaultConfig()
+  params = generateDefaultAsciiArtParams()
 
   srcCanvas = document.createElement("canvas")
   dstCanvas = document.createElement("canvas")
@@ -89,8 +84,7 @@ class App extends React.Component{
         return this.manager.predict(this.srcCanvas, this.params)
       }).then((res)=>{
         console.log(res)
-        const facemeshImage = drawFacemeshImage(this.srcCanvas, res, this.params)
-        this.dstCanvas.getContext("2d")!.putImageData(facemeshImage, 0, 0)
+        this.dstCanvas.getContext("2d")!.drawImage(res, 0, 0, this.dstCanvas.width, this.dstCanvas.height)
       })
     }
     srcImage.src = "./srcImage.jpg"

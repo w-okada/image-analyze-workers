@@ -41,30 +41,10 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t02_facemesh/index.h
 ## asciiart
 ![image](https://user-images.githubusercontent.com/48346627/95987874-fc745b80-0e62-11eb-95ac-43b3d998d50f.png)
 
-- install
-```
-$ npm install \@dannadori/asciiart-worker-js
-$ cp node_modules/\@dannadori/asciiart-worker-js/dist/0.asciiart-worker.worker.js public/
-```
 
-- basic usage
+- installation and usage 
+[See here](/003_ascii-worker-js)
 
-```
-// Generate Config
-config:AsciiConfig = generateAsciiDefaultConfig()
-
-// Initialize with config
-aa: AsciiArtWorkerManager = new AsciiArtWorkerManager()
-aa.init(this.config).then(() => {
-  console.log("initialized.")
-})
-
-// Predict
-this.aa.predict(this.canvas).then(converted => {
-}
-```
-
-for more detail, you can see the demo source.
 - demo
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t03_asciiart/index.html
 

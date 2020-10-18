@@ -26,28 +26,33 @@ predict: (targetCanvas: HTMLCanvasElement, params: FacemeshOperatipnParams) => P
 ## Configuration and Parameter
 
 ```
-export interface BodyPixConfig {
-    browserType: BrowserType;
-    model: ModelConfig;
-    processOnLocal: boolean;
+export interface ModelConfig{
+    maxContinuousChecks: number;
+    detectionConfidence: number;
+    maxFaces: number;
+    iouThreshold: number;
+    scoreThreshold: number;
 }
 
-export interface BodyPixOperatipnParams {
-    type: BodypixFunctionType;
-    segmentPersonParams: PersonInferenceConfig;
-    segmentPersonPartsParams: PersonInferenceConfig;
-    segmentMultiPersonParams: MultiPersonInstanceInferenceConfig;
-    segmentMultiPersonPartsParams: MultiPersonInstanceInferenceConfig;
-    processWidth: number;
-    processHeight: number;
+export interface FacemeshConfig{
+    browserType           : BrowserType
+    useTFWasmBackend      : boolean // cunrrently only for facemesh.
+    modelReloadInterval   : number // if not reload, set zero
+    model                 : ModelConfig
+    processOnLocal        : boolean
 }
 
-export declare enum BodypixFunctionType {
-    SegmentPerson = 0,
-    SegmentMultiPerson = 1,
-    SegmentPersonParts = 2,
-    SegmentMultiPersonParts = 3
+
+export interface FacemeshOperatipnParams{
+    type                : FacemeshFunctionType
+    processWidth        : number
+    processHeight       : number
 }
+
+export enum FacemeshFunctionType{
+    DetectMesh,
+}
+
 ```
 
 ## Step by step
@@ -67,6 +72,46 @@ In this time, the name is "srcImage.jpg"
 Sample code is here.
 
 ```
+import React from 'react';
+import './App.css';
+import { FacemeshWorkerManager, generateDefaultFacemeshParams, generateFacemeshDefaultConfig, drawFacemeshImage } from '@dannadori/facemesh-worker-js'
+
+class App extends React.Component{
+  
+  manager = new FacemeshWorkerManager()
+  config = generateFacemeshDefaultConfig()
+  params = generateDefaultFacemeshParams()
+
+  srcCanvas = document.createElement("canvas")
+  dstCanvas = document.createElement("canvas")
+
+  componentDidMount = () =>{
+    document.getRootNode().lastChild!.appendChild(this.srcCanvas)
+    document.getRootNode().lastChild!.appendChild(this.dstCanvas)
+    const srcImage = document.createElement("img")
+    srcImage.onload = () =>{
+      this.manager.init(this.config).then(()=>{
+        this.srcCanvas.getContext("2d")!.drawImage(
+          srcImage, 0, 0, this.srcCanvas.width, this.dstCanvas.height)
+        return this.manager.predict(this.srcCanvas, this.params)
+      }).then((res)=>{
+        console.log(res)
+        const facemeshImage = drawFacemeshImage(this.srcCanvas, res, this.params)
+        this.dstCanvas.getContext("2d")!.putImageData(facemeshImage, 0, 0)
+      })
+    }
+    srcImage.src = "./srcImage.jpg"
+  }
+
+  render = ()=>{
+    return (
+      <div className="App">
+      </div>
+    );
+  }
+}
+
+export default App;
 
 
 ```

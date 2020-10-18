@@ -1,14 +1,13 @@
-import React from 'react';
 import './App.css';
-import { AsciiArtWorkerManager, AsciiConfig, generateAsciiDefaultConfig, generateDefaultAsciiParams } from '@dannadori/asciiart-worker-js'
+import { AsciiArtWorkerManager, AsciiConfig, generateAsciiArtDefaultConfig, generateDefaultAsciiArtParams } from '@dannadori/asciiart-worker-js'
 import DemoBase, { ControllerUIProp } from './DemoBase';
 
 class App extends DemoBase {
   manager: AsciiArtWorkerManager = new AsciiArtWorkerManager()
   canvas = document.createElement("canvas")
 
-  config:AsciiConfig = generateAsciiDefaultConfig()
-  params = generateDefaultAsciiParams()
+  config:AsciiConfig = generateAsciiArtDefaultConfig()
+  params = generateDefaultAsciiArtParams()
 
   getCustomMenu = () => {
     const menu: ControllerUIProp[] = [
