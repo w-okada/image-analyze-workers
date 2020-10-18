@@ -1,4 +1,4 @@
-This is webworker module for Bodypix.
+This is webworker module for [Bodypix](https://github.com/tensorflow/tfjs-models/tree/master/body-pix).
 
 # bodypix
 ![image](https://user-images.githubusercontent.com/48346627/95987700-be773780-0e62-11eb-9645-40b7c0adb826.png)
@@ -106,6 +106,8 @@ class App extends React.Component{
     );
   }
 }
+
+export default App;
 
 ```
 

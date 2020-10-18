@@ -32,33 +32,8 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t01_bodypix/index.ht
 ## facemesh
 ![image](https://user-images.githubusercontent.com/48346627/95987793-dfd82380-0e62-11eb-9fe5-d0fab9eb2598.png)
 
-
-- install
-```
-$ npm install \@dannadori/facemesh-worker-js
-$ cp node_modules/\@dannadori/facemesh-worker-js/dist/0.facemesh-worker.worker.js public/
-```
-
-- basic usage
-
-```
-// Generate Config
-config:FacemeshConfig = generateFacemeshDefaultConfig()
-
-// Initialize with config
-facemesh:FacemeshWorkerManager = new FacemeshWorkerManager()
-facemesh.init(config).then(()=>{
-  console.log("initialized.")
-})
-
-// Predict
-facemesh.predict(canvas).then(prediction=>{
-  console.log(prediction)
-}
-
-```
-
-for more detail, you can see the demo source.
+- installation and usage 
+[See here](/002_facemesh-worker-js)
 
 - demo
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t02_facemesh/index.html
