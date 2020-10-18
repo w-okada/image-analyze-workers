@@ -2,7 +2,7 @@ import './App.css';
 import DemoBase, { ControllerUIProp } from './DemoBase';
 import { BodypixWorkerManager, generateBodyPixDefaultConfig, generateDefaultBodyPixParams, SemanticPersonSegmentation  } from '@dannadori/bodypix-worker-js'
 import { FacemeshWorkerManager, generateFacemeshDefaultConfig, generateDefaultFacemeshParams, AnnotatedPrediction, Coords3D } from '@dannadori/facemesh-worker-js'
-import { AsciiArtWorkerManager, generateAsciiDefaultConfig, generateDefaultAsciiParams } from '@dannadori/asciiart-worker-js'
+import { AsciiArtWorkerManager, generateAsciiArtDefaultConfig, generateDefaultAsciiArtParams } from '@dannadori/asciiart-worker-js'
 import { OpenCVWorkerManager, generateOpenCVDefaultConfig, generateDefaultOpenCVParams } from '@dannadori/opencv-worker-js'
 import { HandPoseWorkerManager, generateHandPoseDefaultConfig, generateDefaultHandPoseParams } from '@dannadori/handpose-worker-js'
 import { BodyPixOperatipnParams } from '@dannadori/bodypix-worker-js/dist/const';
@@ -60,7 +60,7 @@ class App extends DemoBase {
       return config
     })(),
     (()=>{
-      const config = generateAsciiDefaultConfig()
+      const config = generateAsciiArtDefaultConfig()
 //      config.processOnLocal = true
       return config
     })(),    
@@ -86,7 +86,7 @@ class App extends DemoBase {
       return params
     })(),
     (()=>{
-      const params = generateDefaultAsciiParams()
+      const params = generateDefaultAsciiArtParams()
       return params
     })(),
     (()=>{

@@ -14,6 +14,9 @@ Note. some module is not provided as webworker for safari because of it's restri
   - [opencv](#opencv)
   - [PoseNet](#posenet)
   - [HandPose](#handpose)
+- [Experiments](#experiments)
+  - [Multi-version based tfjs model](#multi-version-based-tfjs-model)
+  - [Performance improvement](#performance-improvement)
 - [Reference](#reference)
 
 
@@ -82,6 +85,23 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t05_posenet/index.ht
 - demo
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t06_handpose/index.html
 
+
+# Experiments
+## Multi-version based tfjs model
+With webworker, we can use models which based on the differenct tfjs models.
+
+- demo
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/exp01_multi-worker-performance/index.html
+
+- [src](/exp01_multi-worker-performance)
+
+## Performance improvement
+With webworker, we can improve performance when we use multiple models.
+
+- demo
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/exp01_multi-worker-performance/index.html
+
+- [src](/exp02_multi-tfjs-worker-performance)
 
 
 # Reference
