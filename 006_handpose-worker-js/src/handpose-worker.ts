@@ -3,10 +3,10 @@ import { getBrowserType, BrowserType } from "./BrowserUtil"
 import * as handpose from "@tensorflow-models/handpose";
 import * as tf from '@tensorflow/tfjs';
 
-export const generateHandPoseDefaultConfig = ():HandPoseConfig => {
-    const defaultConf:HandPoseConfig = {
-        browserType         : getBrowserType(),
-        model               : {
+export const generateHandPoseDefaultConfig = (): HandPoseConfig => {
+    const defaultConf: HandPoseConfig = {
+        browserType: getBrowserType(),
+        model: {
             maxContinuousChecks: Infinity,
             detectionConfidence: 0.8,
             iouThreshold: 0.3,
@@ -14,34 +14,34 @@ export const generateHandPoseDefaultConfig = ():HandPoseConfig => {
         },
         useTFWasmBackend: false,
         processOnLocal: false,
-        modelReloadInterval   : 1024 * 60,
-    //    modelReloadInterval   : 300,
-}
+        modelReloadInterval: 1024 * 60,
+        //    modelReloadInterval   : 300,
+    }
     // WASMバージョンがあまり早くないので、ローカルで実施を強制。
-    if(defaultConf.browserType == BrowserType.SAFARI){
+    if (defaultConf.browserType == BrowserType.SAFARI) {
         defaultConf.processOnLocal = true
     }
 
     return defaultConf
 }
 
-export const generateDefaultHandPoseParams = () =>{
+export const generateDefaultHandPoseParams = () => {
     const defaultParams: HandPoseOperatipnParams = {
         type: HandPoseFunctionType.EstimateHands,
-        estimateHands:{
-            flipHorizontal : false,
+        estimateHands: {
+            flipHorizontal: false,
         },
-        processWidth:300,
-        processHeight:300,
+        processWidth: 300,
+        processHeight: 300,
     }
     return defaultParams
 }
 
-export class LocalHP{
+export class LocalHP {
     model: handpose.HandPose | null = null
-    canvas: HTMLCanvasElement = (()=>{
+    canvas: HTMLCanvasElement = (() => {
         const newCanvas = document.createElement("canvas")
-        newCanvas.style.display="none"
+        newCanvas.style.display = "none"
         //document!.getRootNode()!.lastChild!.appendChild(newCanvas)
         return newCanvas
     })()
@@ -55,10 +55,10 @@ export class LocalHP{
     }
 
 
-    predict = async (targetCanvas: HTMLCanvasElement, config:HandPoseConfig, params:HandPoseOperatipnParams):Promise<any> => {
+    predict = async (targetCanvas: HTMLCanvasElement, config: HandPoseConfig, params: HandPoseOperatipnParams): Promise<any> => {
         // ImageData作成  
         const processWidth = (params.processWidth <= 0 || params.processHeight <= 0) ? targetCanvas.width : params.processWidth
-        const processHeight = (params.processWidth <= 0 || params.processHeight <= 0) ? targetCanvas.height : params.processHeight 
+        const processHeight = (params.processWidth <= 0 || params.processHeight <= 0) ? targetCanvas.height : params.processHeight
 
         this.canvas.width = processWidth
         this.canvas.height = processHeight
@@ -66,27 +66,27 @@ export class LocalHP{
         ctx.drawImage(targetCanvas, 0, 0, processWidth, processHeight)
         const newImg = ctx.getImageData(0, 0, processWidth, processHeight)
 
-        const  prediction = await this.model!.estimateHands(newImg)
+        const prediction = await this.model!.estimateHands(newImg)
         return prediction
-      }
+    }
 }
 
-export class HandPoseWorkerManager{
-    private workerHP:Worker|null = null
+export class HandPoseWorkerManager {
+    private workerHP: Worker | null = null
     private canvas = document.createElement("canvas")
 
     private config = generateHandPoseDefaultConfig()
     private localHP = new LocalHP()
 
-    private initializeModel_internal = () =>{
+    private initializeModel_internal = () => {
         this.workerHP = new Worker("./workerHP.ts", { type: 'module' })
-        this.workerHP!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
-        const p = new Promise((onResolve, onFail)=>{
+        this.workerHP!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
+        const p = new Promise((onResolve, onFail) => {
             this.workerHP!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
                     onResolve()
-                }else{
+                } else {
                     console.log("Handpose Initialization something wrong..")
                     onFail(event)
                 }
@@ -94,25 +94,25 @@ export class HandPoseWorkerManager{
         })
         return p
     }
-    init = (config: HandPoseConfig|null) => {
-        if(config != null){
+    init = (config: HandPoseConfig | null) => {
+        if (config != null) {
             this.config = config
         }
 
-        if(this.workerHP){
+        if (this.workerHP) {
             this.workerHP.terminate()
         }
 
-        if(this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal === true){
-            if(this.config.useTFWasmBackend){
+        if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal === true) {
+            if (this.config.useTFWasmBackend) {
                 require('@tensorflow/tfjs-backend-wasm')
-            }else{
+            } else {
                 require('@tensorflow/tfjs-backend-webgl')
             }
 
             // safariはwebworkerでWebGLが使えないのでworkerは使わない。
             return new Promise((onResolve, onFail) => {
-                tf.ready().then(()=>{
+                tf.ready().then(() => {
                     this.localHP.init(this.config!).then(() => {
                         onResolve()
                     })
@@ -126,95 +126,144 @@ export class HandPoseWorkerManager{
 
     model_reload_interval = 0
     model_refresh_counter = 0
-    private liveCheck = () =>{
-        if(this.model_refresh_counter > this.config.modelReloadInterval && this.config.modelReloadInterval > 0){
+    private liveCheck = () => {
+        if (this.model_refresh_counter > this.config.modelReloadInterval && this.config.modelReloadInterval > 0) {
             console.log("reload model! this is a work around for memory leak.")
             this.model_refresh_counter = 0
-            if(this.config.browserType === BrowserType.SAFARI && this.config.processOnLocal === true){
+            if (this.config.browserType === BrowserType.SAFARI && this.config.processOnLocal === true) {
                 return new Promise((onResolve, onFail) => {
-                    tf.ready().then(()=>{
+                    tf.ready().then(() => {
                         this.localHP.init(this.config!).then(() => {
                             onResolve()
                         })
                     })
                 })
-            }else{
+            } else {
                 this.workerHP?.terminate()
                 return this.initializeModel_internal()
             }
-        }else{
+        } else {
             this.model_refresh_counter += 1
         }
     }
 
 
-    predict = (targetCanvas:HTMLCanvasElement, params:HandPoseOperatipnParams) => {
-        if(this.config.processOnLocal===true){
+    predict = (targetCanvas: HTMLCanvasElement, params: HandPoseOperatipnParams) => {
+        if (this.config.processOnLocal === true) {
             const p = new Promise(async (onResolve: (v: any) => void, onFail) => {
                 await this.liveCheck()
                 const prediction = await this.localHP.predict(targetCanvas, this.config, params)
                 onResolve(prediction)
             })
             return p
-        }else if(this.config.browserType == BrowserType.SAFARI){
+        } else if (this.config.browserType == BrowserType.SAFARI) {
             // safariはwebworkerでcanvas(offscreencanvas)が使えないので、縮小・拡大が面倒。ここでやっておく。
-            let data:Uint8ClampedArray
-            if(params.processHeight>0 && params.processWidth>0){
-                this.canvas.width  = params.processWidth
+            let data: Uint8ClampedArray
+            if (params.processHeight > 0 && params.processWidth > 0) {
+                this.canvas.width = params.processWidth
                 this.canvas.height = params.processHeight
                 this.canvas.getContext("2d")!.drawImage(targetCanvas, 0, 0, params.processWidth, params.processHeight)
                 data = this.canvas.getContext("2d")!.getImageData(0, 0, params.processWidth, params.processHeight).data
-            }else{
+            } else {
                 const ctx = targetCanvas.getContext("2d")!
                 data = ctx.getImageData(0, 0, targetCanvas.width, targetCanvas.height)!.data
             }
             const uid = performance.now()
-            const p = new Promise(async (onResolve: (v:any) => void, onFail) => {
+            const p = new Promise(async (onResolve: (v: any) => void, onFail) => {
                 await this.liveCheck()
-            
-                this.workerHP!.postMessage({ 
-                    message: WorkerCommand.PREDICT, uid:uid, 
+
+                this.workerHP!.postMessage({
+                    message: WorkerCommand.PREDICT, uid: uid,
                     config: this.config,
                     params: params,
-                    data:data
+                    data: data
                 }, [data.buffer])
 
                 this.workerHP!.onmessage = (event) => {
-                    if(event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid){
+                    if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
                         onResolve(event.data.prediction)
-                    }else{
+                    } else {
                         console.log("Handpose Prediction something wrong..")
                         onFail(event)
                     }
                 }
             })
             return p
-        }else{
+        } else {
             const offscreen = new OffscreenCanvas(targetCanvas.width, targetCanvas.height)
-            const offctx    = offscreen.getContext("2d")!
+            const offctx = offscreen.getContext("2d")!
             offctx.drawImage(targetCanvas, 0, 0, targetCanvas.width, targetCanvas.height)
             const imageBitmap = offscreen.transferToImageBitmap()
 
             const uid = performance.now()
-            const p = new Promise(async (onResolve:(v:any)=>void, onFail)=>{
+            const p = new Promise(async (onResolve: (v: any) => void, onFail) => {
                 await this.liveCheck()
-                this.workerHP!.postMessage({ 
-                    message: WorkerCommand.PREDICT, uid:uid, 
+                this.workerHP!.postMessage({
+                    message: WorkerCommand.PREDICT, uid: uid,
                     config: this.config,
                     params: params,
                     image: imageBitmap
                 }, [imageBitmap])
 
                 this.workerHP!.onmessage = (event) => {
-                    if(event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid){
+                    if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
                         onResolve(event.data.prediction)
-                    }else{
+                    } else {
                         console.log("Handpose Prediction something wrong..")
                         onFail(event)
                     }
-                }        
+                }
             })
             return p
         }
     }
+}
+
+
+
+
+const fingerLookupIndices: { [key: string]: number[] } = {
+    "thumb": [0, 1, 2, 3, 4],
+    "indexFinger": [0, 5, 6, 7, 8],
+    "middleFinger": [0, 9, 10, 11, 12],
+    "ringFinger": [0, 13, 14, 15, 16],
+    "pinky": [0, 17, 18, 19, 20]
+}
+
+
+export const drawHandSkelton = (srcCanvas: HTMLCanvasElement, prediction: any, params: HandPoseOperatipnParams) => {
+    const canvas = document.createElement("canvas")
+    canvas.width = srcCanvas.width
+    canvas.height = srcCanvas.height
+    const ctx = canvas.getContext("2d")!
+
+    const scaleX = srcCanvas.width / params.processWidth
+    const scaleY = srcCanvas.height / params.processHeight
+    prediction.forEach((x: any) => {
+        const landmarks = x.landmarks as number[][]
+        landmarks.forEach(landmark => {
+            const x = landmark[0] * scaleX
+            const y = landmark[1] * scaleY
+            ctx.fillRect(x, y, 5, 5)
+        })
+
+        const fingers = Object.keys(fingerLookupIndices);
+        fingers.forEach(x => {
+            const points = fingerLookupIndices[x].map(idx => landmarks[idx])
+
+            ctx.beginPath();
+            ctx.moveTo(points[0][0] * scaleX, points[0][1] * scaleY);
+            for (let i = 1; i < points.length; i++) {
+                const point = points[i];
+                ctx.lineTo(point[0] * scaleX, point[1] * scaleY);
+            }
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.closePath();
+        })
+    })
+
+    const image = ctx.getImageData(0, 0, canvas.width, canvas.height)
+    canvas.remove()
+    return image
 }
