@@ -1,223 +1,92 @@
-This repository is the zoo of image processing webworkers for javascript. 
-You can use these workers as npm package.
+This is webworker module for Bodypix.
 
-Note. some module is not provided as webworker for safari because of it's restriction.
-
-<a href="https://www.buymeacoffee.com/wokad" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
-
-# Webworkers
-
-- [Webworkers](#webworkers)
-  - [bodypix](#bodypix)
-  - [facemesh](#facemesh)
-  - [asciiart](#asciiart)
-  - [opencv](#opencv)
-  - [PoseNet](#posenet)
-  - [HandPose](#handpose)
-- [Reference](#reference)
-
-
-
-## bodypix
+# bodypix
 ![image](https://user-images.githubusercontent.com/48346627/95987700-be773780-0e62-11eb-9645-40b7c0adb826.png)
 
 
-- install
+## Install
 ```
 $ npm install \@dannadori/bodypix-worker-js
 $ cp node_modules/\@dannadori/bodypix-worker-js/dist/0.bodypix-worker.worker.js public/
 ```
-
-- basic usage
+## API
 
 ```
-// Generate Config
-config:BodyPixConfig = generateBodyPixDefaultConfig()
+generateBodyPixDefaultConfig: () => BodyPixConfig;
+generateDefaultBodyPixParams: () => BodyPixOperatipnParams;
+createForegroundImage: (srcCanvas: HTMLCanvasElement, prediction: SemanticPersonSegmentation) => ImageData
 
-// Initialize with config
-facemesh:FacemeshWorkerManager = new FacemeshWorkerManager()
-bodypix.init(config).then(() => {
-  console.log("initialized.")
-})
+BodypixWorkerManager
+init(config?: BodyPixConfig | null): Promise<unknown>;
+predict(targetCanvas: HTMLCanvasElement, params: BodyPixOperatipnParams): Promise<any>;
+```
 
-// Predict
-bodypix.predict(canvas, BodypixFunctionType.SegmentPerson).then(prediction => {
-  console.log(prediction)
+## Step by step
+### Create environment and install package
+```
+$ create-react-app demo/  --typescript
+$ cd demo/
+$ npm install
+$ npm install @dannadori/bodypix-worker-js
+$ cp node_modules/\@dannadori/bodypix-worker-js/dist/0.bodypix-worker.worker.js public/
+```
+
+### Add source image to public. 
+In this time, the name is "srcImage.jpg"
+
+### Edit src/App.tsx
+Sample code is here.
+
+```
+import React from 'react';
+import './App.css';
+import {
+  BodypixWorkerManager, generateBodyPixDefaultConfig,
+  generateDefaultBodyPixParams, createForegroundImage,
+} from '@dannadori/bodypix-worker-js'
+
+class App extends React.Component{
+  
+  manager = new BodypixWorkerManager()
+  config = generateBodyPixDefaultConfig()
+  params = generateDefaultBodyPixParams()
+
+  srcCanvas = document.createElement("canvas")
+  dstCanvas = document.createElement("canvas")
+
+  componentDidMount = () =>{
+    document.getRootNode().lastChild!.appendChild(this.srcCanvas)
+    document.getRootNode().lastChild!.appendChild(this.dstCanvas)
+    const srcImage = document.createElement("img")
+    srcImage.onload = () =>{
+      this.manager.init(this.config).then(()=>{
+        this.srcCanvas.getContext("2d")!.drawImage(
+          srcImage, 0, 0, this.srcCanvas.width, this.dstCanvas.height)
+        return this.manager.predict(this.srcCanvas, this.params)
+      }).then((res)=>{
+        console.log(res)
+        const foreground = createForegroundImage(this.srcCanvas, res)
+        this.dstCanvas.getContext("2d")!.putImageData(foreground, 0, 0)
+      })
+    }
+    srcImage.src = "./srcImage.jpg"
+  }
+
+  render = ()=>{
+    return (
+      <div className="App">
+      </div>
+    );
+  }
 }
 
 ```
 
-for more detail, you can see the demo source.
-
-- demo
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t01_bodypix/index.html
-
-
-## facemesh
-![image](https://user-images.githubusercontent.com/48346627/95987793-dfd82380-0e62-11eb-9fe5-d0fab9eb2598.png)
-
-
-- install
-```
-$ npm install \@dannadori/facemesh-worker-js
-$ cp node_modules/\@dannadori/facemesh-worker-js/dist/0.facemesh-worker.worker.js public/
-```
-
-- basic usage
+### build and start
 
 ```
-// Generate Config
-config:FacemeshConfig = generateFacemeshDefaultConfig()
-
-// Initialize with config
-facemesh:FacemeshWorkerManager = new FacemeshWorkerManager()
-facemesh.init(config).then(()=>{
-  console.log("initialized.")
-})
-
-// Predict
-facemesh.predict(canvas).then(prediction=>{
-  console.log(prediction)
-}
-
+$ npm run start
 ```
-
-for more detail, you can see the demo source.
-
-- demo
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t02_facemesh/index.html
-
-## asciiart
-![image](https://user-images.githubusercontent.com/48346627/95987874-fc745b80-0e62-11eb-95ac-43b3d998d50f.png)
-
-- install
-```
-$ npm install \@dannadori/asciiart-worker-js
-$ cp node_modules/\@dannadori/asciiart-worker-js/dist/0.asciiart-worker.worker.js public/
-```
-
-- basic usage
-
-```
-// Generate Config
-config:AsciiConfig = generateAsciiDefaultConfig()
-
-// Initialize with config
-aa: AsciiArtWorkerManager = new AsciiArtWorkerManager()
-aa.init(this.config).then(() => {
-  console.log("initialized.")
-})
-
-// Predict
-this.aa.predict(this.canvas).then(converted => {
-}
-```
-
-for more detail, you can see the demo source.
-- demo
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t03_asciiart/index.html
-
-## opencv
-![image](https://user-images.githubusercontent.com/48346627/95988031-40676080-0e63-11eb-81a6-0262a24f685e.png)
-
-- install
-```
-$ npm install \@dannadori/opencv-worker-js
-$ cp node_modules/\@dannadori/opencv-worker-js/dist/0.opencv-worker.worker.js public/;
-```
-- basic usage
-
-```
-// Generate Config
-config:OpenCVConfig = generateOpenCVDefaultConfig()
-
-// Initialize with config
-opencv:OpenCVWorkerManager = new OpenCVWorkerManager()
-opencv.init(this.config).then(()=>{
-  console.log("initialized.")
-})
-
-// Predict
-this.opencv.predict(this.canvas, params).then(converted=>{
-}
-```
-
-for more detail, you can see the demo source.
-
-
-- demo
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t04_opencv/index.html
-
-
-## PoseNet
-![image](https://user-images.githubusercontent.com/48346627/95988122-6260e300-0e63-11eb-9b1e-8712b47410dd.png)
-
-- install
-```
-$ npm install \@dannadori/posenet-worker-js
-$ cp node_modules/\@dannadori/posenet-worker-js/dist/0.posenet-worker.worker.js public/;
-```
-- basic usage
-
-```
-// Generate Config
-config = generatePoseNetDefaultConfig()()
-params = generateDefaultPoseNetParams()
-// Initialize with config
-manager: PoseNetWorkerManager = new PoseNetWorkerManager()
-manager.init(this.config).then(()=>{
-  console.log("initialized.")
-})
-
-// Predict
-manager.predict(this.canvas, params).then(converted=>{
-}
-```
-
-for more detail, you can see the demo source.
-
-
-- demo
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t05_posenet/index.html
-
-
-## HandPose
-![image](https://user-images.githubusercontent.com/48346627/95988209-88868300-0e63-11eb-809a-35a52b7f77fe.png)
-
-- install
-```
-$ npm install \@dannadori/handpose-worker-js
-$ cp node_modules/\@dannadori/handpose-worker-js/dist/0.handpose-worker.worker.js public/;
-```
-- basic usage
-
-```
-// Generate Config
-config = generateHandPoseDefaultConfig()()
-params = generateDefaultHandPoseParams()
-// Initialize with config
-manager: HandPoseWorkerManager = new HandPoseWorkerManager()
-manager.init(this.config).then(()=>{
-  console.log("initialized.")
-})
-
-// Predict
-manager.predict(this.canvas, params).then(converted=>{
-}
-```
-
-for more detail, you can see the demo source.
-
-- demo
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t06_handpose/index.html
-
-
-
-# Reference
-This repository was inspired by this site.
-
-https://github.com/terryky/tfjs_webgl_app
-
 
 
 
