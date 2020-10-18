@@ -62,29 +62,9 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t04_opencv/index.htm
 ## PoseNet
 ![image](https://user-images.githubusercontent.com/48346627/95988122-6260e300-0e63-11eb-9b1e-8712b47410dd.png)
 
-- install
-```
-$ npm install \@dannadori/posenet-worker-js
-$ cp node_modules/\@dannadori/posenet-worker-js/dist/0.posenet-worker.worker.js public/;
-```
-- basic usage
 
-```
-// Generate Config
-config = generatePoseNetDefaultConfig()()
-params = generateDefaultPoseNetParams()
-// Initialize with config
-manager: PoseNetWorkerManager = new PoseNetWorkerManager()
-manager.init(this.config).then(()=>{
-  console.log("initialized.")
-})
-
-// Predict
-manager.predict(this.canvas, params).then(converted=>{
-}
-```
-
-for more detail, you can see the demo source.
+- installation and usage 
+[See here](/005_posenet-worker-js)
 
 
 - demo

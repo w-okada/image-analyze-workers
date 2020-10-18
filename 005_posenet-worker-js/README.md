@@ -14,7 +14,7 @@ $ cp node_modules/\@dannadori/posenet-worker-js/dist/0.posenet-worker.worker.js 
 ```
 generatePoseNetDefaultConfig: () => PoseNetConfig;
 generateDefaultPoseNetParams: () => PoseNetOperatipnParams;
-drawSkeltonAndPoint: (srcCanvas: HTMLCanvasElement, prediction: poseNet.Pose[]) => void;
+drawSkeltonAndPoint: (srcCanvas: HTMLCanvasElement, prediction: poseNet.Pose[]) => ImageData;
 
 PoseNetWorkerManager
 init(config?: PoseNetConfig | null): Promise<unknown>;
@@ -25,28 +25,24 @@ predict(targetCanvas: HTMLCanvasElement, params?: PoseNetOperatipnParams): Promi
 ## Configuration and Parameter
 
 ```
-
-export interface OpenCVConfig {
-    browserType: BrowserType;
-    processOnLocal: boolean;
-}
-export interface OpenCVOperatipnParams {
-    type: OpenCVFunctionType;
-    cannyParams: CannyParams | null;
-    processWidth: number;
-    processHeight: number;
-}
-export declare enum OpenCVFunctionType {
-    Canny = 0,
-    xxx = 1
-}
-export interface CannyParams {
-    threshold1: number;
-    threshold2: number;
-    apertureSize: number;
-    L2gradient: boolean;
+export interface PoseNetConfig{
+    browserType         : BrowserType
+    model               : ModelConfig
+    processOnLocal      : boolean
+    // processWidth        : number
+    // processHeight       : number
 }
 
+export enum PoseNetFunctionType{
+    SinglePerson,
+    MultiPerson,// Not implemented
+}
+
+export interface PoseNetOperatipnParams{
+    type               : PoseNetFunctionType
+    singlePersonParams : SinglePersonInterfaceConfig
+    multiPersonParams  : MultiPersonInferenceConfig
+}
 
 ```
 
