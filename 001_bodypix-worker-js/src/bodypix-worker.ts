@@ -1,6 +1,7 @@
 import { WorkerResponse, WorkerCommand, BodypixFunctionType, BodyPixConfig, ModelConfigMobileNetV1_05, BodyPixOperatipnParams } from "./const"
 import * as bodyPix from '@tensorflow-models/body-pix'
 import { BrowserType, getBrowserType } from "./BrowserUtil";
+import { SemanticPersonSegmentation } from "@tensorflow-models/body-pix";
 
 export { ModelConfigResNet, ModelConfigMobileNetV1, ModelConfigMobileNetV1_05, BodypixFunctionType } from './const'
 export { BrowserType, getBrowserType} from './BrowserUtil';
@@ -181,3 +182,47 @@ export class BodypixWorkerManager {
         }
     }
 }
+
+
+
+//// Utility for Demo
+const createForegroundImage = (srcCanvas:HTMLCanvasElement, prediction:SemanticPersonSegmentation) =>{
+    const tmpCanvas = document.createElement("canvas")
+    tmpCanvas.width = prediction.width
+    tmpCanvas.height = prediction.height
+    const imageData = tmpCanvas.getContext("2d")!.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height)
+    const data = imageData.data
+    for (let rowIndex = 0; rowIndex < prediction.height; rowIndex++) {
+      for (let colIndex = 0; colIndex < prediction.width; colIndex++) {
+        const seg_offset = ((rowIndex * prediction.width) + colIndex)
+        const pix_offset = ((rowIndex * prediction.width) + colIndex) * 4
+  
+        if (prediction.data[seg_offset] === 0) {
+          data[pix_offset] = 0
+          data[pix_offset + 1] = 0
+          data[pix_offset + 2] = 0
+          data[pix_offset + 3] = 0
+        } else {
+          data[pix_offset] = 255
+          data[pix_offset + 1] = 255
+          data[pix_offset + 2] = 255
+          data[pix_offset + 3] = 255
+        }
+      }
+    }
+    const imageDataTransparent = new ImageData(data, prediction.width, prediction.height);
+    tmpCanvas.getContext("2d")!.putImageData(imageDataTransparent, 0, 0)
+  
+    const outputCanvas = document.createElement("canvas")
+  
+    outputCanvas.width = srcCanvas.width
+    outputCanvas.height = srcCanvas.height
+    const ctx = outputCanvas.getContext("2d")!
+    ctx.drawImage(tmpCanvas, 0, 0, outputCanvas.width, outputCanvas.height)
+    ctx.globalCompositeOperation = 'source-in';
+    ctx.drawImage(srcCanvas, 0, 0, outputCanvas.width, outputCanvas.height)
+    const outputImage = outputCanvas.getContext("2d")!.getImageData(0, 0, outputCanvas.width, outputCanvas.height)
+    tmpCanvas.remove()
+    outputCanvas.remove()  
+    return outputImage
+  }
