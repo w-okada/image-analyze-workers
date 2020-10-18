@@ -62,46 +62,7 @@ In this time, the name is "srcImage.jpg"
 Sample code is here.
 
 ```
-import React from 'react';
-import './App.css';
-import { PoseNetWorkerManager, generateDefaultPoseNetParams, generatePoseNetDefaultConfig, drawSkeltonAndPoint } from '@dannadori/posenet-worker-js'
 
-class App extends React.Component{
-  
-  manager = new PoseNetWorkerManager()
-  config = generatePoseNetDefaultConfig()
-  params = generateDefaultPoseNetParams()
-
-  srcCanvas = document.createElement("canvas")
-  dstCanvas = document.createElement("canvas")
-
-  componentDidMount = () =>{
-    document.getRootNode().lastChild!.appendChild(this.srcCanvas)
-    document.getRootNode().lastChild!.appendChild(this.dstCanvas)
-    const srcImage = document.createElement("img")
-    srcImage.onload = () =>{
-      this.manager.init(this.config).then(()=>{
-        this.srcCanvas.getContext("2d")!.drawImage(
-          srcImage, 0, 0, this.srcCanvas.width, this.dstCanvas.height)
-        return this.manager.predict(this.srcCanvas, this.params)
-      }).then((res)=>{
-        const imageData = drawSkeltonAndPoint(this.srcCanvas, res)
-        console.log(res)
-        this.dstCanvas.getContext("2d")!.putImageData(imageData, 0, 0)
-      })
-    }
-    srcImage.src = "./srcImage.jpg"
-  }
-
-  render = ()=>{
-    return (
-      <div className="App">
-      </div>
-    );
-  }
-}
-
-export default App;
 
 
 ```
