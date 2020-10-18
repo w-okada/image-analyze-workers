@@ -186,7 +186,7 @@ export class BodypixWorkerManager {
 
 
 //// Utility for Demo
-const createForegroundImage = (srcCanvas:HTMLCanvasElement, prediction:SemanticPersonSegmentation) =>{
+export const createForegroundImage = (srcCanvas:HTMLCanvasElement, prediction:SemanticPersonSegmentation) =>{
     const tmpCanvas = document.createElement("canvas")
     tmpCanvas.width = prediction.width
     tmpCanvas.height = prediction.height

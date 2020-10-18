@@ -1,6 +1,6 @@
 {
    "name": "@dannadori/bodypix-worker-js",
-   "version": "1.0.18",
+   "version": "1.0.20",
    "description": "",
    "main": "dist/bodypix-worker.js",
    "scripts": {
