@@ -51,29 +51,8 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t03_asciiart/index.h
 ## opencv
 ![image](https://user-images.githubusercontent.com/48346627/95988031-40676080-0e63-11eb-81a6-0262a24f685e.png)
 
-- install
-```
-$ npm install \@dannadori/opencv-worker-js
-$ cp node_modules/\@dannadori/opencv-worker-js/dist/0.opencv-worker.worker.js public/;
-```
-- basic usage
-
-```
-// Generate Config
-config:OpenCVConfig = generateOpenCVDefaultConfig()
-
-// Initialize with config
-opencv:OpenCVWorkerManager = new OpenCVWorkerManager()
-opencv.init(this.config).then(()=>{
-  console.log("initialized.")
-})
-
-// Predict
-this.opencv.predict(this.canvas, params).then(converted=>{
-}
-```
-
-for more detail, you can see the demo source.
+- installation and usage 
+[See here](/004_opencv-worker-js)
 
 
 - demo
