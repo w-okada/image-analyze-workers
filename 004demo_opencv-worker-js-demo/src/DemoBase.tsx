@@ -96,7 +96,7 @@ class DemoBase extends React.Component {
         const params: ControllerUIProp[] = [
             {
                 title: "input",
-                currentIndexOrValue: 0,
+                currentIndexOrValue: inputVideoLabels.length-2,
                 values: inputVideoIds,
                 displayLabels: inputVideoLabels,
                 fileValue: ["image"],
@@ -376,6 +376,18 @@ class ControllerUI extends React.Component<IControllerUI, IControllerUI>{
     getCurrentValue = (title: string):string|number => {
         const x = this.state.controllerUIProps.find(x => x.title === title)
         if(x){
+            if(x.values){
+                return x.values![x.currentIndexOrValue]
+            }else{
+                return x!.currentIndexOrValue!
+            }
+        }
+        return ""
+    }
+
+    getCurrentDisplayLabel = (title: string):string|number => {
+        const x = this.state.controllerUIProps.find(x => x.title === title)
+        if(x){
             if(x.displayLabels){
                 return x.displayLabels[x.currentIndexOrValue]
             }else if(x.values){
@@ -385,7 +397,6 @@ class ControllerUI extends React.Component<IControllerUI, IControllerUI>{
             }
         }
         return ""
-
     }
 
     render() {

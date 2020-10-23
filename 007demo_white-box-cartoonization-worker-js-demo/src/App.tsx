@@ -22,6 +22,13 @@ class App extends DemoBase {
         callback: (val: string | number | MediaStream) => { },
       },
       {
+        title: "modelPath",
+        currentIndexOrValue: 1,
+        displayLabels:["Float32","UINT8"],
+        values: ["/white-box-cartoonization-conv/model.json", "/white-box-cartoonization/model.json"],
+        callback: (val: string | number | MediaStream) => { },
+      },
+      {
         title: "useTFWasmBackend",
         currentIndexOrValue: 1,
         values: ["on", "off"],
@@ -35,6 +42,7 @@ class App extends DemoBase {
           this.config.processOnLocal     = (processOnLocal === "on" ? true  : false) as boolean
           const useTFWasmBackend = this.controllerRef.current!.getCurrentValue("useTFWasmBackend")
           this.config.useTFWasmBackend   = (useTFWasmBackend === "on" ? true  : false) as boolean
+          this.config.modelPath = this.controllerRef.current!.getCurrentValue("modelPath") as string
           this.requireReload()
         },
       },

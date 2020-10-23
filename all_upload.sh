@@ -35,4 +35,10 @@ npm run build
 sh sync.sh 
 cd -
 
+cd 007demo_white-box-cartoonization-worker-js-demo
+npm update
+npm run build
+sh sync.sh 
+cd -
+
 
