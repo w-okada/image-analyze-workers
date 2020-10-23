@@ -162,12 +162,11 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/exp02_multi-worker-p
 ### Citation
 - Same as Exp.1
 
-
 # Reference
+
 This repository was inspired by this site.
 
 https://github.com/terryky/tfjs_webgl_app
-
 
 Demo images are from pakutaso
 
