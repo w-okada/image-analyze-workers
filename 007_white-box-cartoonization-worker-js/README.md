@@ -57,8 +57,15 @@ export interface EstimateHandsParams{
 $ create-react-app demo/  --typescript
 $ cd demo/
 $ npm install
-$ npm install @dannadori/handpose-worker-js
-$ cp node_modules/\@dannadori/handpose-worker-js/dist/0.handpose-worker.worker.js public/
+$ npm install @dannadori/white-box-cartoonization-worker-js
+$ cp node_modules/\@dannadori/white-box-cartoonization-worker-js/dist/0.white-box-cartoonization-worker.worker.js public/
+```
+
+### Download Model
+```
+$ mkdir public/white-box-cartoonization
+$ curl 'https://flect-lab-web.s3-us-west-2.amazonaws.com/white-box-cartoonization/model.json' > public/white-box-cartoonization/model.json
+$ curl 'https://flect-lab-web.s3-us-west-2.amazonaws.com/white-box-cartoonization/group1-shard1of1.bin' > public/white-box-cartoonization/group1-shard1of1.bin
 ```
 
 ### Add source image to public. 
@@ -70,13 +77,13 @@ Sample code is here.
 ```
 import React from 'react';
 import './App.css';
-import { HandPoseWorkerManager, generateDefaultHandPoseParams, generateHandPoseDefaultConfig, drawHandSkelton } from '@dannadori/handpose-worker-js'
+import { CartoonWorkerManager, generateCartoonDefaultConfig, generateDefaultCartoonParams } from '@dannadori/white-box-cartoonization-worker-js'
 
 class App extends React.Component{
   
-  manager = new HandPoseWorkerManager()
-  config = generateHandPoseDefaultConfig()
-  params = generateDefaultHandPoseParams()
+  manager = new CartoonWorkerManager()
+  config = generateCartoonDefaultConfig()
+  params = generateDefaultCartoonParams()
 
   srcCanvas = document.createElement("canvas")
   dstCanvas = document.createElement("canvas")
@@ -91,9 +98,7 @@ class App extends React.Component{
           srcImage, 0, 0, this.srcCanvas.width, this.dstCanvas.height)
         return this.manager.predict(this.srcCanvas, this.params)
       }).then((res)=>{
-        const imageData = drawHandSkelton(this.srcCanvas, res, this.params)
-        console.log(res)
-        this.dstCanvas.getContext("2d")!.putImageData(imageData, 0, 0)
+        this.dstCanvas.getContext("2d")!.drawImage(res, 0, 0, this.dstCanvas.width, this.dstCanvas.height)
       })
     }
     srcImage.src = "./srcImage.jpg"
@@ -108,7 +113,6 @@ class App extends React.Component{
 }
 
 export default App;
-
 
 ```
 
