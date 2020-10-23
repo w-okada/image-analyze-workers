@@ -1,4 +1,4 @@
-This is webworker module for [HandPose](https://github.com/tensorflow/tfjs-models/tree/master/handpose).
+This is webworker module for [White-Box-Cartoon](https://github.com/SystemErrorWang/White-box-Cartoonization).
 
 ## White-Box-Cartoon
 ![image](https://user-images.githubusercontent.com/48346627/96987969-aab48b00-155e-11eb-8b81-cd0e522ac974.png)
@@ -6,19 +6,26 @@ This is webworker module for [HandPose](https://github.com/tensorflow/tfjs-model
 
 ## Install
 ```
-$ npm install \@dannadori/handpose-worker-js
-$ cp node_modules/\@dannadori/handpose-worker-js/dist/0.handpose-worker.worker.js public/
+# install package
+$ npm install @dannadori/white-box-cartoonization-worker-js
+$ cp node_modules/\@dannadori/white-box-cartoonization-worker-js/dist/0.white-box-cartoonization-worker.worker.js public/
+
+# download model
+$ mkdir public/white-box-cartoonization
+$ curl 'https://flect-lab-web.s3-us-west-2.amazonaws.com/white-box-cartoonization/model.json' > public/white-box-cartoonization/model.json
+$ curl 'https://flect-lab-web.s3-us-west-2.amazonaws.com/white-box-cartoonization/group1-shard1of1.bin' > public/white-box-cartoonization/group1-shard1of1.bin
+
 ```
 ## API
 
 ```
-generateHandPoseDefaultConfig: () => HandPoseConfig;
-generateDefaultHandPoseParams: () => HandPoseOperatipnParams;
-drawHandSkelton: (srcCanvas: HTMLCanvasElement, prediction: any, params: HandPoseOperatipnParams) => ImageData;
+generateCartoonDefaultConfig: () => CartoonConfig;
+generateDefaultCartoonParams: () => CartoonOperatipnParams;
 
-HandPoseWorkerManager {
-init: (config: HandPoseConfig | null) => Promise<unknown>;
-predict: (targetCanvas: HTMLCanvasElement, params: HandPoseOperatipnParams) => Promise<any>;
+CartoonWorkerManager {
+init(config: CartoonConfig | null): Promise<unknown>;
+predict(targetCanvas: HTMLCanvasElement, params?: CartoonOperatipnParams): Promise<HTMLCanvasElement>;
+
 
 ```
 
@@ -26,28 +33,24 @@ predict: (targetCanvas: HTMLCanvasElement, params: HandPoseOperatipnParams) => P
 
 ```
 
-export interface HandPoseConfig{
+export interface CartoonConfig{
     browserType         : BrowserType
-    model               : ModelConfig
-    useTFWasmBackend    : boolean // cunrrently only for facemesh.
     processOnLocal      : boolean
-    modelReloadInterval   : number // if not reload, set zero    
+    useTFWasmBackend    : boolean
 }
 
-export enum HandPoseFunctionType{
-    EstimateHands,
-}
 
-export interface HandPoseOperatipnParams{
-    type                : HandPoseFunctionType
-    estimateHands       : EstimateHandsParams
+export interface CartoonOperatipnParams{
+    type        : CartoonFunctionType
     processWidth        : number
     processHeight       : number
 }
 
-export interface EstimateHandsParams{
-    flipHorizontal: boolean
+export enum CartoonFunctionType{
+    Cartoon,
+    xxx, // Not implemented
 }
+
 
 ```
 

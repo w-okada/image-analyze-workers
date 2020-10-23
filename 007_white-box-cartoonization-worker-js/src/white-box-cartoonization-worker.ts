@@ -10,6 +10,7 @@ export const generateCartoonDefaultConfig = ():CartoonConfig => {
         browserType         : getBrowserType(),
         processOnLocal      : false,
         useTFWasmBackend    : false,
+        modelPath           : "/white-box-cartoonization/model.json",
     }
     return defaultConf
 }
@@ -18,8 +19,8 @@ export const generateCartoonDefaultConfig = ():CartoonConfig => {
 export const generateDefaultCartoonParams = ():CartoonOperatipnParams => {
     const defaultParams:CartoonOperatipnParams = {
         type                : CartoonFunctionType.Cartoon,
-        processWidth        : 256,
-        processHeight       : 256,
+        processWidth        : 320,
+        processHeight       : 320,
     }
     return defaultParams
 }

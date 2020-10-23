@@ -70,10 +70,11 @@ const predictWithData = async (data: Uint8ClampedArray , config: CartoonConfig, 
 onmessage = async (event) => {
     //  console.log("event", event)
     if (event.data.message === WorkerCommand.INITIALIZE) {
-        await load_module(event.data.config as CartoonConfig)
+        const config = event.data.config as CartoonConfig
+        await load_module(config)
         tf.ready().then(async()=>{
             tf.env().set('WEBGL_CPU_FORWARD', false)
-            model = await tf.loadGraphModel("/white-box-cartoonization/model.json")
+            model = await tf.loadGraphModel(config.modelPath)
             console.log(model.inputs)
             console.log(model.inputNodes)
             console.log(model.outputs)
