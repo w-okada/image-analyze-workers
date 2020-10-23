@@ -26,8 +26,8 @@ const predict = async (image: ImageBitmap, config: FacemeshConfig, params:Faceme
   const ctx = offscreen.getContext("2d")!
   ctx.drawImage(image, 0, 0, processWidth, processHeight)
   const newImg = ctx.getImageData(0, 0, processWidth, processHeight)
-
-  const  prediction = await model!.estimateFaces(newImg)
+  
+  const  prediction = model!.estimateFaces(newImg)
   return prediction
 }
 
