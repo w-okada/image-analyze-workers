@@ -20,7 +20,8 @@ export interface ModelConfig{
 
 export interface FacemeshConfig{
     browserType           : BrowserType
-    useTFWasmBackend      : boolean // cunrrently only for facemesh.
+    useTFWasmBackend      : boolean 
+    wasmPath              : string
     modelReloadInterval   : number // if not reload, set zero
     model                 : ModelConfig
     processOnLocal        : boolean

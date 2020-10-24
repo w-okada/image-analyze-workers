@@ -89,7 +89,7 @@ onmessage = async (event) => {
         const params: CartoonOperatipnParams = event.data.params
         const uid: number = event.data.uid
 
-        console.log("Current Backend:",tf.getBackend())
+        console.log("current backend[worker thread]:",tf.getBackend())
         if(data){ // Case.2
             console.log("Browser SAFARI")
             const dataArray = await predictWithData(data, config, params)

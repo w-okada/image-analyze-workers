@@ -59,22 +59,31 @@ class App extends DemoBase {
         callback: (val: string | number | MediaStream) => { },
       },
       {
+        title: "useTFWasmBackend",
+        currentIndexOrValue: 1,
+        values: ["on", "off"],
+        callback: (val: string | number | MediaStream) => { },
+      },
+      {
         title: "reload model",
         currentIndexOrValue: 0,
         callback: (val: string | number | MediaStream) => {
           const maxContinuousChecks = this.controllerRef.current!.getCurrentValue("maxContinuousChecks")
           const detectionConfidence = this.controllerRef.current!.getCurrentValue("detectionConfidence")
-          const maxFaces = this.controllerRef.current!.getCurrentValue("maxFaces")
-          const iouThreshold = this.controllerRef.current!.getCurrentValue("iouThreshold")
-          const scoreThreshold = this.controllerRef.current!.getCurrentValue("scoreThreshold")
-          const processOnLocal = this.controllerRef.current!.getCurrentValue("processOnLocal")
+          const maxFaces            = this.controllerRef.current!.getCurrentValue("maxFaces")
+          const iouThreshold        = this.controllerRef.current!.getCurrentValue("iouThreshold")
+          const scoreThreshold      = this.controllerRef.current!.getCurrentValue("scoreThreshold")
+          const processOnLocal      = this.controllerRef.current!.getCurrentValue("processOnLocal")
+          const useTFWasmBackend    = this.controllerRef.current!.getCurrentValue("useTFWasmBackend")
 
           this.config.model.maxContinuousChecks = maxContinuousChecks as number
           this.config.model.detectionConfidence = detectionConfidence as number
           this.config.model.maxFaces            = maxFaces as number
           this.config.model.iouThreshold        = iouThreshold as number
-          this.config.model.scoreThreshold     = scoreThreshold as number
-          this.config.processOnLocal     = (processOnLocal === "on" ? true  : false) as boolean
+          this.config.model.scoreThreshold      = scoreThreshold as number
+          this.config.processOnLocal            = (processOnLocal === "on" ? true  : false) as boolean
+          this.config.useTFWasmBackend          = (useTFWasmBackend === "on" ? true  : false) as boolean
+
           this.requireReload()
           console.log(this.config.model)
 

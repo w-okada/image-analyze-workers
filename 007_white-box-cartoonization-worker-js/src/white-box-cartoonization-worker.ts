@@ -56,6 +56,7 @@ export class LocalCT{
     }
 
     predict = async (targetCanvas:HTMLCanvasElement, config: CartoonConfig, params: CartoonOperatipnParams) => {
+        console.log("current backend[main thread]:",tf.getBackend())
         // ImageData作成
         this.canvas.width  = params.processWidth
         this.canvas.height = params.processHeight

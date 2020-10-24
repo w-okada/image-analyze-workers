@@ -2,6 +2,7 @@ import { HandPoseConfig, HandPoseOperatipnParams, HandPoseFunctionType, WorkerCo
 import { getBrowserType, BrowserType } from "./BrowserUtil"
 import * as handpose from "@tensorflow-models/handpose";
 import * as tf from '@tensorflow/tfjs';
+import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
 
 export const generateHandPoseDefaultConfig = (): HandPoseConfig => {
     const defaultConf: HandPoseConfig = {
@@ -15,9 +16,9 @@ export const generateHandPoseDefaultConfig = (): HandPoseConfig => {
         useTFWasmBackend: false,
         processOnLocal: false,
         modelReloadInterval: 1024 * 60,
-        //    modelReloadInterval   : 300,
+        wasmPath: "/tfjs-backend-wasm.wasm"
     }
-    // WASMバージョンがあまり早くないので、ローカルで実施を強制。
+    // WASMバージョンがあまり早くないので、Safariはローカルで実施をデフォルトにする。
     if (defaultConf.browserType == BrowserType.SAFARI) {
         defaultConf.processOnLocal = true
     }
@@ -56,6 +57,7 @@ export class LocalHP {
 
 
     predict = async (targetCanvas: HTMLCanvasElement, config: HandPoseConfig, params: HandPoseOperatipnParams): Promise<any> => {
+        console.log("current backend[main thread]:",tf.getBackend())
         // ImageData作成  
         const processWidth = (params.processWidth <= 0 || params.processHeight <= 0) ? targetCanvas.width : params.processWidth
         const processHeight = (params.processWidth <= 0 || params.processHeight <= 0) ? targetCanvas.height : params.processHeight
@@ -103,23 +105,33 @@ export class HandPoseWorkerManager {
             this.workerHP.terminate()
         }
 
-        if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal === true) {
-            if (this.config.useTFWasmBackend) {
-                require('@tensorflow/tfjs-backend-wasm')
-            } else {
-                require('@tensorflow/tfjs-backend-webgl')
-            }
-
-            // safariはwebworkerでWebGLが使えないのでworkerは使わない。
+        // run on main thread
+        //// wasm on safari is not enough fast, but run on main thread is not mandatory
+        if (this.config.processOnLocal === true) {
             return new Promise((onResolve, onFail) => {
-                tf.ready().then(() => {
-                    this.localHP.init(this.config!).then(() => {
-                        onResolve()
+                let p
+                if (this.config.useTFWasmBackend) {
+                    console.log("use wasm backend", this.config.wasmPath)
+                    require('@tensorflow/tfjs-backend-wasm')
+                    setWasmPath(this.config.wasmPath)
+                    p = tf.setBackend("wasm")
+                } else {
+                    console.log("use webgl backend")
+                    require('@tensorflow/tfjs-backend-webgl')
+                    p = tf.setBackend("webgl")
+                }
+                
+                p.then(()=>{
+                    tf.ready().then(() => {
+                        this.localHP!.init(this.config!).then(() => {
+                            onResolve()
+                        })
                     })
                 })
             })
         }
 
+        // run on worker thread
         return this.initializeModel_internal()
     }
 

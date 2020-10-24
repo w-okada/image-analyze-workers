@@ -3,6 +3,7 @@ import * as facemesh from '@tensorflow-models/facemesh'
 import { getBrowserType, BrowserType } from "./BrowserUtil";
 import * as tf from '@tensorflow/tfjs';
 import { Coords3D } from "@tensorflow-models/facemesh/dist/util";
+import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
 
 export { FacemeshConfig, FacemeshFunctionType, FacemeshOperatipnParams } from './const'
 export { BrowserType, getBrowserType } from './BrowserUtil';
@@ -21,7 +22,8 @@ export const generateFacemeshDefaultConfig = (): FacemeshConfig => {
             iouThreshold: 0.3,
             scoreThreshold: 0.75
         },
-        processOnLocal: false
+        processOnLocal: false,
+        wasmPath: "/tfjs-backend-wasm.wasm"
     }
     return defaultConf
 }
@@ -55,6 +57,8 @@ export class LocalFM {
 
 
     predict = async (targetCanvas: HTMLCanvasElement, config: FacemeshConfig, params: FacemeshOperatipnParams): Promise<any> => {
+        console.log("current backend[main thread]:",tf.getBackend())
+
         // ImageData作成  
         const processWidth = (params.processWidth <= 0 || params.processHeight <= 0) ? targetCanvas.width : params.processWidth
         const processHeight = (params.processWidth <= 0 || params.processHeight <= 0) ? targetCanvas.height : params.processHeight
@@ -108,25 +112,33 @@ export class FacemeshWorkerManager {
         }
 
 
+        // run on main thread
+        //// wasm on safari is enough fast, so run on main thread is not mandatory
         if (this.config.processOnLocal === true) {
-            if (this.config.useTFWasmBackend) {
-                require('@tensorflow/tfjs-backend-wasm')
-            } else {
-                require('@tensorflow/tfjs-backend-webgl')
-            }
-
-            // safariはwebworkerでWebGLが使えないのでworkerは使わない。
             return new Promise((onResolve, onFail) => {
-                tf.ready().then(() => {
-                    this.localFM!.init(this.config!).then(() => {
-                        onResolve()
+                let p
+                if (this.config.useTFWasmBackend) {
+                    console.log("use wasm backend", this.config.wasmPath)
+                    require('@tensorflow/tfjs-backend-wasm')
+                    setWasmPath(this.config.wasmPath)
+                    p = tf.setBackend("wasm")
+                } else {
+                    console.log("use webgl backend")
+                    require('@tensorflow/tfjs-backend-webgl')
+                    p = tf.setBackend("webgl")
+                }
+                
+                p.then(()=>{
+                    tf.ready().then(() => {
+                        this.localFM!.init(this.config!).then(() => {
+                            onResolve()
+                        })
                     })
                 })
             })
         }
 
-
-
+        // run on worker thread
         return this.initializeModel_internal()
     }
 
@@ -155,6 +167,7 @@ export class FacemeshWorkerManager {
 
     predict = (targetCanvas: HTMLCanvasElement, params: FacemeshOperatipnParams) => {
         if (this.config.processOnLocal === true) {
+            //Case.1 Main thread
             const p = new Promise(async (onResolve: (v: any) => void, onFail) => {
                 await this.liveCheck()
                 const prediction = await this.localFM.predict(targetCanvas, this.config, params)
@@ -162,6 +175,7 @@ export class FacemeshWorkerManager {
             })
             return p
         } else if (this.config.browserType == BrowserType.SAFARI) {
+            // Case.2 Safari on worker thread
             // safariはwebworkerでcanvas(offscreencanvas)が使えないので、縮小・拡大が面倒。ここでやっておく。
             let data: Uint8ClampedArray
             if (params.processHeight > 0 && params.processWidth > 0) {
@@ -196,6 +210,7 @@ export class FacemeshWorkerManager {
             })
             return p
         } else {
+            // Case.3 Normal browser on worker thread                
             const offscreen = new OffscreenCanvas(targetCanvas.width, targetCanvas.height)
             const offctx = offscreen.getContext("2d")!
             offctx.drawImage(targetCanvas, 0, 0, targetCanvas.width, targetCanvas.height)

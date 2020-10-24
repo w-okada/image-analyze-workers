@@ -68,6 +68,12 @@ class App extends DemoBase {
         values: ["on", "off"],
         callback: (val: string | number | MediaStream) => { },
       },
+      // {
+      //   title: "useTFWasmBackend",
+      //   currentIndexOrValue: 1,
+      //   values: ["on", "off"],
+      //   callback: (val: string | number | MediaStream) => { },
+      // },
       {
         title:"reload model",
         currentIndexOrValue:0,
@@ -79,6 +85,7 @@ class App extends DemoBase {
           const w = this.controllerRef.current!.getCurrentValue("inputResolution(w)")
           const h = this.controllerRef.current!.getCurrentValue("inputResolution(h)")       
           const processOnLocal = this.controllerRef.current!.getCurrentValue("processOnLocal")
+          // const useTFWasmBackend = this.controllerRef.current!.getCurrentValue("useTFWasmBackend")
 
           console.log(modelArch)
           this.config.model.architecture = modelArch as ('ResNet50' | 'MobileNetV1')
@@ -87,6 +94,7 @@ class App extends DemoBase {
           this.config.model.quantBytes = quantBytes as (4 | 2 | 1)
           this.config.model.inputResolution = { width:w as number, height: h as number }
           this.config.processOnLocal     = (processOnLocal === "on" ? true  : false) as boolean
+          // this.config.useTFWasmBackend   = (useTFWasmBackend === "on" ? true  : false) as boolean
 
           this.requireReload()
         },

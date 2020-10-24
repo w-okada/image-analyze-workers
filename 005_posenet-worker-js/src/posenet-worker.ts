@@ -1,9 +1,10 @@
 import {
-    PoseNetConfig, ModelConfigMobileNetV1, ModelConfigResNet50, WorkerCommand,
+    PoseNetConfig, ModelConfigResNet50, WorkerCommand,
     WorkerResponse, PoseNetFunctionType, PoseNetOperatipnParams
 } from './const'
 import { getBrowserType, BrowserType } from './BrowserUtil'
 import * as poseNet from '@tensorflow-models/posenet'
+import * as tf from '@tensorflow/tfjs';
 
 export { Pose, getAdjacentKeyPoints } from '@tensorflow-models/posenet'
 export { ModelConfigResNet50, ModelConfigMobileNetV1, PoseNetOperatipnParams, PoseNetFunctionType } from './const'
@@ -12,8 +13,14 @@ export const generatePoseNetDefaultConfig = (): PoseNetConfig => {
     const defaultConf: PoseNetConfig = {
         browserType: getBrowserType(),
         model: ModelConfigResNet50,
-        processOnLocal: false
+        processOnLocal: false,
+        useTFWasmBackend: false, // we can not use posenet with wasm.
+        wasmPath: "/tfjs-backend-wasm.wasm"
     }
+    // WASMバージョンがあまり早くないので、Safariはローカルで実施をデフォルトにする。
+    if (defaultConf.browserType == BrowserType.SAFARI) {
+        defaultConf.processOnLocal = true
+    }    
     return defaultConf
 }
 
@@ -48,6 +55,7 @@ class LocalPN {
 
 
     predict = async (canvas: HTMLCanvasElement, config: PoseNetConfig, params: PoseNetOperatipnParams): Promise<poseNet.Pose[]> => {
+        console.log("current backend[main thread]:",tf.getBackend())
         // ImageData作成
         //// input resolutionにリサイズするのでここでのリサイズは不要
         // const processWidth = (config.processWidth <= 0 || config.processHeight <= 0) ? image.width : config.processWidth
@@ -83,6 +91,7 @@ export class PoseNetWorkerManager {
 
     private config: PoseNetConfig = generatePoseNetDefaultConfig()
     private localPN = new LocalPN()
+    private canvas = document.createElement("canvas")
     init(config: PoseNetConfig | null = null) {
         if (config != null) {
             this.config = config
@@ -91,8 +100,8 @@ export class PoseNetWorkerManager {
             this.workerPN.terminate()
         }
 
-        if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal === true) {
-            // safariはwebworkerでWebGLが使えないのでworkerは使わない。
+//        if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal === true) {
+        if (this.config.processOnLocal === true) {
             return new Promise((onResolve, onFail) => {
                 this.localPN.init(this.config!).then(() => {
                     onResolve()
@@ -100,7 +109,6 @@ export class PoseNetWorkerManager {
             })
         }
 
-        // safari以外はworkerで処理
         this.workerPN = new Worker('./workerPN.ts', { type: 'module' })
         this.workerPN!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
         const p = new Promise((onResolve, onFail) => {
@@ -118,30 +126,50 @@ export class PoseNetWorkerManager {
     }
 
     predict(targetCanvas: HTMLCanvasElement, params: PoseNetOperatipnParams = generateDefaultPoseNetParams()) {
-        if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal === true) {
-            const p = new Promise(async (onResolve: (v: poseNet.Pose[]) => void, onFail) => {
+        // if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal === true) {
+        if (this.config.processOnLocal === true) {
+            //Case.1 Main thread
+                const p = new Promise(async (onResolve: (v: poseNet.Pose[]) => void, onFail) => {
                 const prediction = await this.localPN.predict(targetCanvas, this.config, params)
                 onResolve(prediction)
             })
             return p
-        } else {
+        } else if(this.config.browserType === BrowserType.SAFARI){
+            // Case.2 Safari on worker thread
+            //// input resolutionにリサイズするのでここでのリサイズはしない
+            const data = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height).data
+            const uid = performance.now()
+            const p = new Promise(async (onResolve: (v: poseNet.Pose[]) => void, onFail) => {
+
+                this.workerPN!.postMessage({
+                    message: WorkerCommand.PREDICT, uid: uid,
+                    config: this.config,
+                    params: params,
+                    data: data, width:targetCanvas.width, height:targetCanvas.height
+                }, [data.buffer])
+
+                this.workerPN!.onmessage = (event) => {
+                    if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
+                        onResolve(event.data.prediction)
+                    } else {
+                        console.log("Facemesh Prediction something wrong..")
+                        onFail(event)
+                    }
+                }
+            })
+            return p
+        }else{
+            // Case.3 Normal browser on worker thread
             const offscreen = new OffscreenCanvas(targetCanvas.width, targetCanvas.height)
             const offctx = offscreen.getContext("2d")!
             offctx.drawImage(targetCanvas, 0, 0, targetCanvas.width, targetCanvas.height)
             const imageBitmap = offscreen.transferToImageBitmap()
             const uid = performance.now()
-
-            // This code work with mobilenet but too slow(about 1sec) (ofcourse faster than cpu-backend(about10sec))
-            // And with resenet, doesn't work(maxpooling not support?).
-            // So currently I don't intent this code.  ( also (*1)line)
-            const imageData = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height)
             this.workerPN!.postMessage({
                 message: WorkerCommand.PREDICT, uid: uid,
                 image: imageBitmap,
-                //data:imageData!.data, width:imageData!.width, height:imageData!.height, // (*1)
                 config: this.config, params: params
             }, [imageBitmap])
-            //}, [imageData.data.buffer]) // (*1)
             const p = new Promise((onResolve: (v: poseNet.Pose[]) => void, onFail) => {
                 this.workerPN!.onmessage = (event) => {
                     if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
@@ -156,8 +184,6 @@ export class PoseNetWorkerManager {
         }
     }
 }
-
-
 
 //// Utility for Demo
 const drawPoints = (canvas: HTMLCanvasElement, prediction: poseNet.Pose) => {

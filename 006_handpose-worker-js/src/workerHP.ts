@@ -2,18 +2,22 @@ import * as handpose from '@tensorflow-models/handpose'
 import { BrowserType } from './BrowserUtil';
 import { HandPoseConfig, HandPoseOperatipnParams, HandPoseFunctionType, WorkerCommand, WorkerResponse } from "./const"
 import * as tf from '@tensorflow/tfjs';
+import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
 
 const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
 
 let model: handpose.HandPose | null
 
-const load_module = (config: HandPoseConfig) => {
+const load_module = async (config: HandPoseConfig) => {
   if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
-    console.log("use wasm backend1")
+    console.log("use wasm backend" ,config.wasmPath)
     require('@tensorflow/tfjs-backend-wasm')
+    setWasmPath(config.wasmPath)
+    await tf.setBackend("wasm")
   }else{
     console.log("use webgl backend")
     require('@tensorflow/tfjs-backend-webgl')
+    await tf.setBackend("webgl")
   }
 }
 
@@ -43,7 +47,7 @@ const predictForSafari = async (data: Uint8ClampedArray, config: HandPoseConfig,
 onmessage = async (event) => {
 //  console.log("event", event)
   if (event.data.message === WorkerCommand.INITIALIZE) {
-    load_module(event.data.config as HandPoseConfig)
+    await load_module(event.data.config as HandPoseConfig)
     
     tf.ready().then(()=>{
       tf.env().set('WEBGL_CPU_FORWARD', false)
@@ -63,6 +67,7 @@ onmessage = async (event) => {
     const data = event.data.data
     const config = event.data.config as HandPoseConfig
     const params = event.data.params as HandPoseOperatipnParams
+    console.log("current backend[worker thread]:",tf.getBackend())
 
     if(config.browserType == BrowserType.SAFARI){
       const prediction = await predictForSafari(data, config, params)

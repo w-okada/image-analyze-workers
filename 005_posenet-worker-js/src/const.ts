@@ -12,11 +12,11 @@ export const WorkerResponse = {
 }
 
 export interface PoseNetConfig{
-    browserType         : BrowserType
-    model               : ModelConfig
-    processOnLocal      : boolean
-    // processWidth        : number
-    // processHeight       : number
+    browserType           : BrowserType
+    model                 : ModelConfig
+    processOnLocal        : boolean
+    useTFWasmBackend      : boolean  // we can not use posenet with wasm. shouldn't be true.
+    wasmPath              : string
 }
 
 export const ModelConfigMobileNetV1: ModelConfig = {

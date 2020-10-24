@@ -130,7 +130,8 @@ Commercial application is prohibited, please remain this license if you clone th
 ```
 
 ### Citation
-
+- [Cartoonize your video on your browser](https://dannadori.medium.com/cartoonize-your-video-on-your-browser-1db8d1c18e4)
+- [ブラウザ上で画像をアニメ化する。](https://note.com/wokwok/n/nef799e9a7d46)
 
 # Experiments
 ## Exp.1 Multi-version based tfjs model

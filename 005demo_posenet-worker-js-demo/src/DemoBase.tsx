@@ -282,26 +282,30 @@ class PerformanceCanvas extends React.Component {
         this.pfm.processingTimes.push(predictTime)
         this.pfm.processingTurnTimes.push(turnTime)
 
-        const averageProcessingTime = this.pfm.processingTimes.reduce((p, c) => { return p + c }) / this.pfm.processingTimes.length
+        //const averageProcessingTime = this.pfm.processingTimes.reduce((p, c) => { return p + c }) / this.pfm.processingTimes.length
         const averageProcessingTurnTime = this.pfm.processingTurnTimes.reduce((p, c) => { return p + c }) / this.pfm.processingTimes.length
-        const averageProcessingTimeText = "AVR(ms):" + ("" + averageProcessingTime).substr(0, 4) + "[" + this.pfm.processingTimes.length + "]"
-        const averageProcessingTurnTimeText = "AVR(ms):" + ("" + averageProcessingTurnTime).substr(0, 4) + "[" + this.pfm.processingTimes.length + "]"
+        //const averageProcessingTimeText = "AVR(ms):" + ("" + averageProcessingTime).substr(0, 4) + "[" + this.pfm.processingTimes.length + "]"
+        const averageProcessingTurnTimeText = "AVR(ms):" + ("" + averageProcessingTurnTime).substr(0, 4) + "[n=" + this.pfm.processingTimes.length + "]"
+        const fps = this.pfm.processingTimes.length / (this.pfm.processingTurnTimes.reduce((p, c) => { return p + c }) / 1000)
+        const fpsText = "FPS:" + ("" + fps).substr(0, 4) + "[n=" + this.pfm.processingTimes.length + "]"
 
         const ctx = this.performanceCanvasRef.current!.getContext("2d")!
         ctx.clearRect(0, 0, this.performanceCanvasRef.current!.width, this.performanceCanvasRef.current!.height)
-        ctx.fillStyle = "rgba(50,50,100,0.5)";
-        ctx.fillText(averageProcessingTimeText, 10, 10)
-        ctx.fillText(averageProcessingTurnTimeText, 10, 20)
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
+        ctx.font="15px Arial";
+        ctx.fillText(fpsText, 10, 20)
+        ctx.fillText(averageProcessingTurnTimeText, 10, 35)
     }
 
     render() {
         return (
             <div style={{ position: "absolute", top: "20px", left: "3px" }}>
-                <canvas ref={this.performanceCanvasRef} height="20px" width="100px" />
+                <canvas ref={this.performanceCanvasRef} height="120px" width="500px" />
             </div>
         )
     }
 }
+
 ///////////////////////////////////////////////////
 /// Simple Controller UI
 ///////////////////////////////////////////////////

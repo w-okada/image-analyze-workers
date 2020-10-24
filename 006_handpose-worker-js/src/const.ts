@@ -17,10 +17,11 @@ export const WorkerResponse = {
 // }
 
 export interface HandPoseConfig{
-    browserType         : BrowserType
-    model               : ModelConfig
-    useTFWasmBackend    : boolean // cunrrently only for facemesh.
-    processOnLocal      : boolean
+    browserType           : BrowserType
+    model                 : ModelConfig
+    useTFWasmBackend      : boolean
+    wasmPath              : string
+    processOnLocal        : boolean
     modelReloadInterval   : number // if not reload, set zero    
 }
 
