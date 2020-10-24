@@ -11,6 +11,7 @@ export const generateCartoonDefaultConfig = ():CartoonConfig => {
         processOnLocal      : false,
         useTFWasmBackend    : false,
         modelPath           : "/white-box-cartoonization/model.json",
+        wasmPath            : "/tfjs-backend-wasm.wasm"
     }
     return defaultConf
 }

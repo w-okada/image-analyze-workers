@@ -9,6 +9,7 @@ This is webworker module for [White-Box-Cartoon](https://github.com/SystemErrorW
 # install package
 $ npm install @dannadori/white-box-cartoonization-worker-js
 $ cp node_modules/\@dannadori/white-box-cartoonization-worker-js/dist/0.white-box-cartoonization-worker.worker.js public/
+$ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 
 # download model
 $ mkdir public/white-box-cartoonization
@@ -32,11 +33,12 @@ predict(targetCanvas: HTMLCanvasElement, params?: CartoonOperatipnParams): Promi
 ## Configuration and Parameter
 
 ```
-
 export interface CartoonConfig{
     browserType         : BrowserType
     processOnLocal      : boolean
     useTFWasmBackend    : boolean
+    wasmPath            : string
+    modelPath           : string
 }
 
 
@@ -62,6 +64,7 @@ $ cd demo/
 $ npm install
 $ npm install @dannadori/white-box-cartoonization-worker-js
 $ cp node_modules/\@dannadori/white-box-cartoonization-worker-js/dist/0.white-box-cartoonization-worker.worker.js public/
+$ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 ```
 
 ### Download Model

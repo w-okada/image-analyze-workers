@@ -7,6 +7,8 @@ This is webworker module for [HandPose](https://github.com/tensorflow/tfjs-model
 ```
 $ npm install \@dannadori/handpose-worker-js
 $ cp node_modules/\@dannadori/handpose-worker-js/dist/0.handpose-worker.worker.js public/
+$ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
+
 ```
 ## API
 
@@ -24,13 +26,13 @@ predict: (targetCanvas: HTMLCanvasElement, params: HandPoseOperatipnParams) => P
 ## Configuration and Parameter
 
 ```
-
-export interface HandPoseConfig{
-    browserType         : BrowserType
-    model               : ModelConfig
-    useTFWasmBackend    : boolean // cunrrently only for facemesh.
-    processOnLocal      : boolean
-    modelReloadInterval   : number // if not reload, set zero    
+export interface HandPoseConfig {
+    browserType: BrowserType;
+    model: ModelConfig;
+    useTFWasmBackend: boolean;
+    wasmPath: string;
+    processOnLocal: boolean;
+    modelReloadInterval: number;
 }
 
 export enum HandPoseFunctionType{
@@ -58,6 +60,8 @@ $ cd demo/
 $ npm install
 $ npm install @dannadori/handpose-worker-js
 $ cp node_modules/\@dannadori/handpose-worker-js/dist/0.handpose-worker.worker.js public/
+$ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
+
 ```
 
 ### Add source image to public. 

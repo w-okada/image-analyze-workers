@@ -4,7 +4,7 @@
   "private": true,
   "homepage": "./",
   "dependencies": {
-    "@dannadori/white-box-cartoonization-worker-js": "^1.0.5",
+    "@dannadori/white-box-cartoonization-worker-js": "^1.0.6",
     "@tensorflow/tfjs-backend-wasm": "^2.6.0",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",

@@ -34,14 +34,14 @@ export interface ModelConfig{
     scoreThreshold: number;
 }
 
-export interface FacemeshConfig{
-    browserType           : BrowserType
-    useTFWasmBackend      : boolean // cunrrently only for facemesh.
-    modelReloadInterval   : number // if not reload, set zero
-    model                 : ModelConfig
-    processOnLocal        : boolean
+export interface FacemeshConfig {
+    browserType: BrowserType;
+    useTFWasmBackend: boolean;
+    wasmPath: string;
+    modelReloadInterval: number;
+    model: ModelConfig;
+    processOnLocal: boolean;
 }
-
 
 export interface FacemeshOperatipnParams{
     type                : FacemeshFunctionType
@@ -63,6 +63,8 @@ $ cd demo/
 $ npm install
 $ npm install @dannadori/facemesh-worker-js
 $ cp node_modules/\@dannadori/facemesh-worker-js/dist/0.facemesh-worker.worker.js public/
+$ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
+
 ```
 
 ### Add source image to public. 

@@ -14,6 +14,7 @@ export interface CartoonConfig{
     browserType         : BrowserType
     processOnLocal      : boolean
     useTFWasmBackend    : boolean
+    wasmPath            : string
     modelPath           : string
 }
 

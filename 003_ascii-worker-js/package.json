@@ -1,6 +1,6 @@
 {
   "name": "@dannadori/asciiart-worker-js",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "",
   "main": "dist/asciiart-worker.js",
   "scripts": {

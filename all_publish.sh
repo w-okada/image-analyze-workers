@@ -30,3 +30,7 @@ npm version patch
 npm publish
 cd -
 
+cd 007_white-box-cartoonization-worker-js
+npm version patch
+npm publish
+cd -
