@@ -86,7 +86,7 @@ export class LocalCT{
 
 
 
-export class CartoonWorkerManager{
+export class BisenetV2CelebAMaskWorkerManager{
     private workerCT:Worker|null = null
     private canvasOut = document.createElement("canvas")
     private canvas = document.createElement("canvas")
