@@ -182,3 +182,47 @@ export class BisenetV2CelebAMaskWorkerManager{
         }
     }
 }
+
+
+
+//// Utility for Demo
+export const rainbow = [
+    [110, 64, 170], [143, 61, 178], [178, 60, 178], [210, 62, 167],
+    [238, 67, 149], [255, 78, 125], [255, 94, 99],  [255, 115, 75],
+    [255, 140, 56], [239, 167, 47], [217, 194, 49], [194, 219, 64],
+    [175, 240, 91], [135, 245, 87], [96, 247, 96],  [64, 243, 115],
+    [40, 234, 141], [28, 219, 169], [26, 199, 194], [33, 176, 213],
+    [47, 150, 224], [65, 125, 224], [84, 101, 214], [99, 81, 195]
+  ];
+  
+
+export const createForegroundImage = (srcCanvas:HTMLCanvasElement, prediction:number[][]) =>{
+    const tmpCanvas = document.createElement("canvas")
+    tmpCanvas.width = prediction[0].length
+    tmpCanvas.height = prediction.length    
+    const imageData = tmpCanvas.getContext("2d")!.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height)
+    const data = imageData.data
+    for (let rowIndex = 0; rowIndex < tmpCanvas.height; rowIndex++) {
+      for (let colIndex = 0; colIndex < tmpCanvas.width; colIndex++) {
+        const seg_offset = ((rowIndex * tmpCanvas.width) + colIndex)
+        const pix_offset = ((rowIndex * tmpCanvas.width) + colIndex) * 4
+
+        data[pix_offset + 0] = 128
+        data[pix_offset + 1] = rainbow[prediction[rowIndex][colIndex]][0]
+        data[pix_offset + 2] = rainbow[prediction[rowIndex][colIndex]][1]
+        data[pix_offset + 3] = rainbow[prediction[rowIndex][colIndex]][2]
+      }
+    }
+    const imageDataTransparent = new ImageData(data, tmpCanvas.width, tmpCanvas.height);
+    tmpCanvas.getContext("2d")!.putImageData(imageDataTransparent, 0, 0)
+
+    const outputCanvas = document.createElement("canvas")
+
+    outputCanvas.width = srcCanvas.width
+    outputCanvas.height = srcCanvas.height
+    const ctx = outputCanvas.getContext("2d")!
+    ctx.drawImage(tmpCanvas, 0, 0, outputCanvas.width, outputCanvas.height)
+    const outImageData = ctx.getImageData(0, 0, outputCanvas.width, outputCanvas.height)
+    return  outImageData
+
+  }
