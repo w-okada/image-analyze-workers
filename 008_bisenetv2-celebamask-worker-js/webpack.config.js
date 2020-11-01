@@ -2,7 +2,7 @@ const path = require('path');
 const WorkerPlugin = require('worker-plugin');
 module.exports = {
     mode: 'development',
-    entry: './src/bisenetv2-celebamask.ts', // <-- (1)
+    entry: './src/bisenetv2-celebamask-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
     },
@@ -12,7 +12,7 @@ module.exports = {
         ],
     },
     output: {
-        filename: 'bisenetv2-celebamask.js', // <-- (2)
+        filename: 'bisenetv2-celebamask-worker.js', // <-- (2)
         path: path.resolve(__dirname, 'dist'),
         libraryTarget: 'umd',
         globalObject: 'typeof self !== \'undefined\' ? self : this'
