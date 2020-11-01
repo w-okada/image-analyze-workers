@@ -48,7 +48,7 @@ export class LocalCT{
             load_module(config).then(()=>{
                 tf.ready().then(async()=>{
                     tf.env().set('WEBGL_CPU_FORWARD', false)
-                    this.model = await tf.loadGraphModel("/white-box-cartoonization/model.json")
+                    this.model = await tf.loadGraphModel(config.modelPath)
                     onResolve()                    
                 })
             })
@@ -64,23 +64,24 @@ export class LocalCT{
         const ctx = this.canvas.getContext("2d")!
         ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height)
         
-
-        let tensor = tf.browser.fromPixels(this.canvas)
-        tensor = tf.sub(tensor.expandDims(0).div(127.5), 1)
-        let prediction = this.model!.predict(tensor) as tf.Tensor
-    
-        const alpha = tf.ones([1, params.processWidth, params.processHeight, 1])
-        prediction = tf.concat([prediction, alpha], 3)
-        prediction = tf.add(prediction, 1)
-        prediction = tf.mul(prediction, 127.5)
-        prediction = prediction.flatten()
-        prediction = tf.cast(prediction, "int32")
-        prediction = tf.squeeze(prediction as tf.Tensor)    
-        let imgArray = await prediction.array() as number[]
-        let imgArray2 = new Uint8ClampedArray(imgArray.length)
-        imgArray2.set(imgArray)
-        const outputImage = new ImageData(imgArray2, this.canvas.width, this.canvas.height)
-        ctx.putImageData(outputImage, 0, 0)
+        tf.tidy(()=>{
+            let tensor = tf.browser.fromPixels(this.canvas)
+            tensor = tf.sub(tensor.expandDims(0).div(127.5), 1)
+            let prediction = this.model!.predict(tensor) as tf.Tensor
+        
+            const alpha = tf.ones([1, params.processWidth, params.processHeight, 1])
+            prediction = tf.concat([prediction, alpha], 3)
+            prediction = tf.add(prediction, 1)
+            prediction = tf.mul(prediction, 127.5)
+            prediction = prediction.flatten()
+            prediction = tf.cast(prediction, "int32")
+            prediction = tf.squeeze(prediction as tf.Tensor)    
+            let imgArray = prediction.arraySync() as number[]
+            let imgArray2 = new Uint8ClampedArray(imgArray.length)
+            imgArray2.set(imgArray)
+            const outputImage = new ImageData(imgArray2, this.canvas.width, this.canvas.height)
+            ctx.putImageData(outputImage, 0, 0)
+        })
 
         return this.canvas
     

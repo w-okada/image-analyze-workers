@@ -50,21 +50,24 @@ const predict = async (image:ImageBitmap, config: CartoonConfig, params: Cartoon
 const predictWithData = async (data: Uint8ClampedArray , config: CartoonConfig, params: CartoonOperatipnParams) => {
     const imageData = new ImageData(data, params.processWidth, params.processHeight)
 
-    let tensor = tf.browser.fromPixels(imageData)
-    tensor = tf.sub(tensor.expandDims(0).div(127.5), 1)
-    let prediction = await model!.predict(tensor) as tf.Tensor
-
-    const alpha = tf.ones([1, params.processWidth, params.processHeight,1])
-    prediction = tf.concat([prediction, alpha], 3)
-    prediction = tf.add(prediction, 1)
-    prediction = tf.mul(prediction, 127.5)
-    prediction = prediction.flatten()
-    prediction = tf.cast(prediction, "int32")
-    prediction = tf.squeeze(prediction as tf.Tensor)    
-    let imgArray = await prediction.array() as number[]
-    let imgArray2 = new Uint8ClampedArray(imgArray.length)
-    imgArray2.set(imgArray)
-    return imgArray2
+    let imgArray2:Uint8ClampedArray
+    tf.tidy(()=>{
+        let tensor = tf.browser.fromPixels(imageData)
+        tensor = tf.sub(tensor.expandDims(0).div(127.5), 1)
+        let prediction = model!.predict(tensor) as tf.Tensor
+    
+        const alpha = tf.ones([1, params.processWidth, params.processHeight,1])
+        prediction = tf.concat([prediction, alpha], 3)
+        prediction = tf.add(prediction, 1)
+        prediction = tf.mul(prediction, 127.5)
+        prediction = prediction.flatten()
+        prediction = tf.cast(prediction, "int32")
+        prediction = tf.squeeze(prediction as tf.Tensor)    
+        let imgArray = prediction.arraySync() as number[]
+        let imgArray2 = new Uint8ClampedArray(imgArray.length)
+        imgArray2.set(imgArray)
+    })
+    return imgArray2!
 }
 
 onmessage = async (event) => {
