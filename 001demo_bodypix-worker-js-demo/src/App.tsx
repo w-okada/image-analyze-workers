@@ -219,7 +219,7 @@ class App extends DemoBase {
       {
         title: "ProcessWidth",
         currentIndexOrValue: 300,
-        range: [300, 1024, 10],
+        range: [100, 1024, 10],
         callback: (val: string | number | MediaStream) => {
           this.params.processWidth = val as number
         },
@@ -227,7 +227,7 @@ class App extends DemoBase {
       {
         title: "ProcessHeight",
         currentIndexOrValue: 300,
-        range: [300, 1024, 10],
+        range: [100, 1024, 10],
         callback: (val: string | number | MediaStream) => {
           this.params.processHeight = val as number
         },
