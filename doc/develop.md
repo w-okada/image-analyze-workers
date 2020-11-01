@@ -143,6 +143,7 @@ $ cd 005demo_posenet-worker-js-demo/
 $ cat package.json
   "homepage": "./",
 $ npm install
+$ npm install semantic-ui-react;npm install semantic-ui-css
 $ npm install @dannadori/posenet-worker-js
 # from other package, copy and edit (1),(5)
 #  (1)mod_build.sh, (2)app.py, (3)server.crt, (4))server.key, (5)sync.sh (6) DemoBase.tsx

@@ -1,6 +1,7 @@
 import { getBrowserType, BrowserType } from "./BrowserUtil";
 import * as tf from '@tensorflow/tfjs';
 import { BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperatipnParams, BisenetV2CelebAMaskFunctionType, WorkerCommand, WorkerResponse } from "./const";
+import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
 
 export const generateBisenetV2CelebAMaskDefaultConfig = ():BisenetV2CelebAMaskConfig => {
     const defaultConf:BisenetV2CelebAMaskConfig = {
@@ -8,7 +9,9 @@ export const generateBisenetV2CelebAMaskDefaultConfig = ():BisenetV2CelebAMaskCo
         processOnLocal      : false,
         useTFWasmBackend    : false,
         modelPath           : "/bisenetv2-celebamask/model.json",
+//        modelPath           : "/bisenetv2-celebamaskF16/model.json",
         wasmPath            : "/tfjs-backend-wasm.wasm"
+//        wasmPath            : "/tfjs-backend-wasm-simd.wasm"
     }
     return defaultConf
 }
@@ -28,13 +31,14 @@ const load_module = async (config: BisenetV2CelebAMaskConfig) => {
     if(config.useTFWasmBackend){
         console.log("use wasm backend")
       require('@tensorflow/tfjs-backend-wasm')
+      setWasmPath(config.wasmPath)
       await tf.setBackend("wasm")
     }else{
       console.log("use webgl backend")
       require('@tensorflow/tfjs-backend-webgl')
       await tf.setBackend("webgl")
     }
-  }
+}
 
 export class LocalCT{
     model:tf.GraphModel|null = null
@@ -53,34 +57,22 @@ export class LocalCT{
         return p
     }
 
-    predict = async (targetCanvas:HTMLCanvasElement, config: BisenetV2CelebAMaskConfig, params: BisenetV2CelebAMaskOperatipnParams) => {
+    predict = async (targetCanvas:HTMLCanvasElement, config: BisenetV2CelebAMaskConfig, params: BisenetV2CelebAMaskOperatipnParams):Promise<number[][]> => {
         console.log("current backend[main thread]:",tf.getBackend())
         // ImageData作成
         this.canvas.width  = params.processWidth
         this.canvas.height = params.processHeight
         const ctx = this.canvas.getContext("2d")!
         ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height)
-        
-
-        let tensor = tf.browser.fromPixels(this.canvas)
-        tensor = tf.sub(tensor.expandDims(0).div(127.5), 1)
-        let prediction = this.model!.predict(tensor) as tf.Tensor
-    
-        const alpha = tf.ones([1, params.processWidth, params.processHeight, 1])
-        prediction = tf.concat([prediction, alpha], 3)
-        prediction = tf.add(prediction, 1)
-        prediction = tf.mul(prediction, 127.5)
-        prediction = prediction.flatten()
-        prediction = tf.cast(prediction, "int32")
-        prediction = tf.squeeze(prediction as tf.Tensor)    
-        let imgArray = await prediction.array() as number[]
-        let imgArray2 = new Uint8ClampedArray(imgArray.length)
-        imgArray2.set(imgArray)
-        const outputImage = new ImageData(imgArray2, this.canvas.width, this.canvas.height)
-        ctx.putImageData(outputImage, 0, 0)
-
-        return this.canvas
-    
+        let bm:number[][]
+        tf.tidy(()=>{
+            let tensor = tf.browser.fromPixels(this.canvas)
+            tensor = tf.sub(tensor.expandDims(0).div(127.5), 1)
+            let prediction = this.model!.predict(tensor) as tf.Tensor
+            console.log(prediction)
+            bm = prediction.arraySync() as number[][]
+        })
+        return bm!
     }
 }
 
@@ -125,16 +117,12 @@ export class BisenetV2CelebAMaskWorkerManager{
         return p
     }
 
-    predict(targetCanvas:HTMLCanvasElement, params = generateDefaultBisenetV2CelebAMaskParams()):Promise<HTMLCanvasElement>{
+    predict(targetCanvas:HTMLCanvasElement, params = generateDefaultBisenetV2CelebAMaskParams()):Promise<number[][]>{
         if(this.config.processOnLocal == true){
             // Case.1 Process on local thread.
-            const p = new Promise(async(onResolve:(v:HTMLCanvasElement)=>void, onFail)=>{
-                const convertedCanvas = await this.localCT.predict(targetCanvas, this.config, params)
-                this.canvasOut.width = targetCanvas.width
-                this.canvasOut.height = targetCanvas.height
-                const ctx = this.canvasOut.getContext("2d")!
-                ctx.drawImage(convertedCanvas, 0, 0, this.canvasOut.width, this.canvasOut.height)
-                onResolve(this.canvasOut)
+            const p = new Promise(async(onResolve:(v:number[][])=>void, onFail)=>{
+                const prediction = await this.localCT.predict(targetCanvas, this.config, params)
+                onResolve(prediction)
             })
             return p            
 //            return null
@@ -155,19 +143,11 @@ export class BisenetV2CelebAMaskWorkerManager{
                 config: this.config, params: params,
                 data: dataArray
             }, [dataArray.buffer])
-            const p = new Promise((onResolve:(v:HTMLCanvasElement)=>void, onFail)=>{
+            const p = new Promise((onResolve:(v:number[][])=>void, onFail)=>{
                 this.workerCT!.onmessage = (event) => {
                     if(event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid){
-                        const outDataArray = event.data.converted
-                        const outImageData = new ImageData(outDataArray, imageData.width, imageData.height)
-                        this.canvas.width = imageData.width
-                        this.canvas.height = imageData.height
-                        this.canvas.getContext("2d")!.putImageData(outImageData, 0, 0)
-                        this.canvasOut.width = targetCanvas.width
-                        this.canvasOut.height = targetCanvas.height
-                        const ctx = this.canvasOut.getContext("2d")!
-                        ctx.drawImage(this.canvas, 0, 0, this.canvasOut.width, this.canvasOut.height)
-                        onResolve(this.canvasOut)
+                        const prediction = event.data.prediction
+                        onResolve(prediction)
                     }else{
                         console.log("celeb a mask Prediction something wrong..")
                         onFail(event)
@@ -187,16 +167,11 @@ export class BisenetV2CelebAMaskWorkerManager{
                 // data: data, width: inImageData.width, height:inImageData.height
                 image: imageBitmap
             }, [imageBitmap])
-            const p = new Promise((onResolve:(v:HTMLCanvasElement)=>void, onFail)=>{
+            const p = new Promise((onResolve:(v:number[][])=>void, onFail)=>{
                 this.workerCT!.onmessage = (event) => {
                     if(event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid){
-                        const imagedata = event.data.converted
-                        this.canvasOut.width = targetCanvas.width
-                        this.canvasOut.height = targetCanvas.height
-                        const ctx = this.canvasOut.getContext("2d")!
-                        ctx.drawImage(imagedata, 0, 0, targetCanvas.width, targetCanvas.height)
-                        onResolve(this.canvasOut)
-//                        console.log("worker!!!!", imageBitmap.width, imageBitmap.height)
+                        const prediction = event.data.prediction
+                        onResolve(prediction)
                     }else{
                         console.log("celeb a mask Prediction something wrong..")
                         onFail(event)

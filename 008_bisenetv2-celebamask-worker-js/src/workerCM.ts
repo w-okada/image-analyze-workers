@@ -1,7 +1,7 @@
 import { WorkerCommand, WorkerResponse, BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperatipnParams } from './const'
 import * as tf from '@tensorflow/tfjs';
 import { BrowserType } from './BrowserUtil';
-
+import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
 const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
 
 let model:tf.GraphModel|null
@@ -10,6 +10,7 @@ const load_module = async (config: BisenetV2CelebAMaskConfig) => {
     if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
       console.log("use wasm backend")
       require('@tensorflow/tfjs-backend-wasm')
+      setWasmPath(config.wasmPath)
       await tf.setBackend("wasm")
     }else{
       console.log("use webgl backend")
@@ -25,46 +26,29 @@ const predict = async (image:ImageBitmap, config: BisenetV2CelebAMaskConfig, par
     ctx.drawImage(image, 0, 0, off.width, off.height)
     const imageData = ctx.getImageData(0, 0, off.width, off.height)
 
+    let bm:number[][]|null = null
     tf.tidy(()=>{
         let tensor = tf.browser.fromPixels(imageData)
         tensor = tf.sub(tensor.expandDims(0).div(127.5), 1)
+//        tensor = tensor.expandDims(0).div(255)
         let prediction = model!.predict(tensor) as tf.Tensor
-    
-        const alpha = tf.ones([1,params.processWidth,params.processHeight,1])
-        prediction = tf.concat([prediction, alpha], 3)
-        prediction = tf.add(prediction, 1)
-        prediction = tf.mul(prediction, 127.5)
-        prediction = prediction.flatten()
-        prediction = tf.cast(prediction, "int32")
-        prediction = tf.squeeze(prediction as tf.Tensor)    
-        let imgArray = prediction.arraySync() as number[]
-        let imgArray2 = new Uint8ClampedArray(imgArray.length)
-        imgArray2.set(imgArray)
-        const  outputImage = new ImageData(imgArray2, params.processWidth, params.processHeight)
-        ctx.putImageData(outputImage, 0, 0)
+        bm = prediction.arraySync() as number[][]
     })
-    return off.transferToImageBitmap()
+    return bm
 }
 
 // Case.2 Use ImageBitmap (for Safari or special intent)
 const predictWithData = async (data: Uint8ClampedArray , config: BisenetV2CelebAMaskConfig, params: BisenetV2CelebAMaskOperatipnParams) => {
     const imageData = new ImageData(data, params.processWidth, params.processHeight)
 
-    let tensor = tf.browser.fromPixels(imageData)
-    tensor = tf.sub(tensor.expandDims(0).div(127.5), 1)
-    let prediction = await model!.predict(tensor) as tf.Tensor
-
-    const alpha = tf.ones([1, params.processWidth, params.processHeight,1])
-    prediction = tf.concat([prediction, alpha], 3)
-    prediction = tf.add(prediction, 1)
-    prediction = tf.mul(prediction, 127.5)
-    prediction = prediction.flatten()
-    prediction = tf.cast(prediction, "int32")
-    prediction = tf.squeeze(prediction as tf.Tensor)    
-    let imgArray = await prediction.array() as number[]
-    let imgArray2 = new Uint8ClampedArray(imgArray.length)
-    imgArray2.set(imgArray)
-    return imgArray2
+    let bm:number[][]|null = null
+    tf.tidy(()=>{
+        let tensor = tf.browser.fromPixels(imageData)
+        tensor = tf.sub(tensor.expandDims(0).div(127.5), 1)
+        let prediction = model!.predict(tensor) as tf.Tensor
+        bm = prediction.arraySync() as number[][]
+    })
+    return bm
 }
 
 onmessage = async (event) => {
@@ -92,11 +76,11 @@ onmessage = async (event) => {
         console.log("current backend[worker thread]:",tf.getBackend())
         if(data){ // Case.2
             console.log("Browser SAFARI")
-            const dataArray = await predictWithData(data, config, params)
-            ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, converted: dataArray }, [dataArray.buffer])
+            const prediction  = await predictWithData(data, config, params)
+            ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
         }else{ // Case.1
-            const imageData = await predict(image, config, params)
-            ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, converted: imageData }, [imageData])
+            const prediction = await predict(image, config, params)
+            ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
         }
     }
 }
