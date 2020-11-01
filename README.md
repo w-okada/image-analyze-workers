@@ -31,13 +31,16 @@ Note. some module is not provided as webworker for safari because of it's restri
     - [demo](#demo-6)
     - [License](#license)
     - [Citation](#citation)
+  - [BiseNetv2 Celeb A Mask](#bisenetv2-celeb-a-mask)
+    - [installation and usage](#installation-and-usage-7)
+    - [demo](#demo-7)
 - [Experiments](#experiments)
   - [Exp.1 Multi-version based tfjs model](#exp1-multi-version-based-tfjs-model)
-    - [demo](#demo-7)
+    - [demo](#demo-8)
     - [src](#src)
     - [Citation](#citation-1)
   - [Exp.2 Performance improvement](#exp2-performance-improvement)
-    - [demo](#demo-8)
+    - [demo](#demo-9)
     - [src](#src-1)
     - [Citation](#citation-2)
 - [Reference](#reference)
@@ -132,6 +135,18 @@ Commercial application is prohibited, please remain this license if you clone th
 ### Citation
 - [Cartoonize your video on your browser](https://dannadori.medium.com/cartoonize-your-video-on-your-browser-1db8d1c18e4)
 - [ブラウザ上で画像をアニメ化する。](https://note.com/wokwok/n/nef799e9a7d46)
+
+
+## BiseNetv2 Celeb A Mask
+
+![image](https://user-images.githubusercontent.com/48346627/97803282-822e3e80-1c8c-11eb-8635-74d937e5a8f6.png)
+
+### installation and usage 
+[See here](/008_bisenetv2-celebamask-worker-js)
+
+### demo
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t08_bisenetv2-celebamask/index.html
+
 
 # Experiments
 ## Exp.1 Multi-version based tfjs model
