@@ -18,9 +18,15 @@ class App extends DemoBase {
   config = (()=>{
     const c = generateBisenetV2CelebAMaskDefaultConfig()
     c.useTFWasmBackend = false
+    c.modelPath="/bisenetv2-celebamask/model.json"
     return c
   })()
-  params = generateDefaultBisenetV2CelebAMaskParams()
+  params = (()=>{
+    const p = generateDefaultBisenetV2CelebAMaskParams()
+    p.processHeight=256
+    p.processWidth=256
+    return p
+  })()
 
   getCustomMenu = () => {
     const menu: ControllerUIProp[] = [
@@ -55,23 +61,21 @@ class App extends DemoBase {
         },
       },
       {
-        title: "ProcessResolution",
-        currentIndexOrValue: 3,
-        values: [64, 128, 256, 320, 440, 512],
+        title: "ProcessWidth",
+        currentIndexOrValue: 256,
+        range: [128, 1024, 10],
         callback: (val: string | number | MediaStream) => {
           this.params.processWidth = val as number
-          this.params.processHeight = val as number
         },
       },
-      // {
-      //   title: "ProcessHeight",
-      //   currentIndexOrValue: 256,
-      //   range: [256, 720, 10],
-      //   callback: (val: string | number | MediaStream) => {
-      //     this.params.processHeight = val as number
-      //   },
-      // }
-
+      {
+        title: "ProcessHeight",
+        currentIndexOrValue: 256,
+        range: [128, 1024, 10],
+        callback: (val: string | number | MediaStream) => {
+          this.params.processHeight = val as number
+        },
+      }
     ]
     return menu
   }
