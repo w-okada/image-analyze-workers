@@ -34,6 +34,7 @@ Note. some module is not provided as webworker for safari because of it's restri
   - [BiseNetv2 Celeb A Mask](#bisenetv2-celeb-a-mask)
     - [installation and usage](#installation-and-usage-7)
     - [demo](#demo-7)
+    - [reference](#reference)
 - [Experiments](#experiments)
   - [Exp.1 Multi-version based tfjs model](#exp1-multi-version-based-tfjs-model)
     - [demo](#demo-8)
@@ -43,7 +44,7 @@ Note. some module is not provided as webworker for safari because of it's restri
     - [demo](#demo-9)
     - [src](#src-1)
     - [Citation](#citation-2)
-- [Reference](#reference)
+- [Reference](#reference-1)
 
 ## bodypix
 ![image](https://user-images.githubusercontent.com/48346627/95987700-be773780-0e62-11eb-9645-40b7c0adb826.png)
@@ -147,6 +148,8 @@ Commercial application is prohibited, please remain this license if you clone th
 ### demo
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t08_bisenetv2-celebamask/index.html
 
+### reference
+[Enable arbitry resolution](https://github.com/w-okada/bisenetv2-tensorflow)
 
 # Experiments
 ## Exp.1 Multi-version based tfjs model
