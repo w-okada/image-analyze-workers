@@ -1,7 +1,6 @@
-This is webworker module for [Facemesh](https://github.com/tensorflow/tfjs-models/tree/master/facemesh).
-
+This is webworker module for [Face landmarks detection](https://github.com/tensorflow/tfjs-models/tree/master/face-landmarks-detection).
 ## facemesh
-![image](https://user-images.githubusercontent.com/48346627/95987793-dfd82380-0e62-11eb-9fe5-d0fab9eb2598.png)
+![image](https://user-images.githubusercontent.com/48346627/98291726-efc0ce80-1fee-11eb-9707-ab98bc36e732.png)
 
 
 
@@ -43,10 +42,11 @@ export interface FacemeshConfig {
     processOnLocal: boolean;
 }
 
-export interface FacemeshOperatipnParams{
-    type                : FacemeshFunctionType
-    processWidth        : number
-    processHeight       : number
+export interface FacemeshOperatipnParams {
+    type: FacemeshFunctionType;
+    processWidth: number;
+    processHeight: number;
+    predictIrises: boolean;
 }
 
 export enum FacemeshFunctionType{

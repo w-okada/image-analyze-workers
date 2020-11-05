@@ -64,6 +64,12 @@ class App extends DemoBase {
         values: ["on", "off"],
         callback: (val: string | number | MediaStream) => { },
       },
+      // {
+      //   title: "useTFCPUBackend",
+      //   currentIndexOrValue: 1,
+      //   values: ["on", "off"],
+      //   callback: (val: string | number | MediaStream) => { },
+      // },
       {
         title: "reload model",
         currentIndexOrValue: 0,
@@ -75,6 +81,7 @@ class App extends DemoBase {
           const scoreThreshold      = this.controllerRef.current!.getCurrentValue("scoreThreshold")
           const processOnLocal      = this.controllerRef.current!.getCurrentValue("processOnLocal")
           const useTFWasmBackend    = this.controllerRef.current!.getCurrentValue("useTFWasmBackend")
+          // const useTFCPUBackend    = this.controllerRef.current!.getCurrentValue("useTFCPUBackend")
 
           this.config.model.maxContinuousChecks = maxContinuousChecks as number
           this.config.model.detectionConfidence = detectionConfidence as number
@@ -83,6 +90,7 @@ class App extends DemoBase {
           this.config.model.scoreThreshold      = scoreThreshold as number
           this.config.processOnLocal            = (processOnLocal === "on" ? true  : false) as boolean
           this.config.useTFWasmBackend          = (useTFWasmBackend === "on" ? true  : false) as boolean
+          // this.config.useTFCPUBackend           = (useTFCPUBackend === "on" ? true  : false) as boolean
 
           this.requireReload()
           console.log(this.config.model)
@@ -100,7 +108,7 @@ class App extends DemoBase {
       {
         title: "ProcessWidth",
         currentIndexOrValue: 300,
-        range: [300, 1024, 10],
+        range: [200, 1024, 10],
         callback: (val: string | number | MediaStream) => {
           this.params.processWidth = val as number
         },
@@ -108,21 +116,37 @@ class App extends DemoBase {
       {
         title: "ProcessHeight",
         currentIndexOrValue: 300,
-        range: [300, 1024, 10],
+        range: [200, 1024, 10],
         callback: (val: string | number | MediaStream) => {
           this.params.processHeight = val as number
+        },
+      },
+      {
+        title: "iris prdiction",
+        currentIndexOrValue: 1,
+        values: ["on", "off"],
+        callback: (val: string | number | MediaStream) => {
+          this.params.predictIrises = val === "on" ? true : false
         },
       }
     ]
     return menu
   }
   
+  distance = (a:number[], b:number[]) => {
+    return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2));
+  }
+  
 
+  NUM_KEYPOINTS = 468;
+  NUM_IRIS_KEYPOINTS = 5;
   drawResult = (prediction:AnnotatedPrediction[], params:FacemeshOperatipnParams) =>{
     const canvasWidth = this.resultCanvasRef.current!.width
     const canvasHeight = this.resultCanvasRef.current!.height
     const ctx = this.resultCanvasRef.current!.getContext("2d")!
     ctx.clearRect(0, 0, canvasWidth, canvasHeight)
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 1;
 
     //console.log("Facemesh prediction:", prediction)
 
@@ -142,13 +166,49 @@ class App extends DemoBase {
            ]);
         const region = new Path2D();
         region.moveTo(points[0][0], points[0][1]);
-        for (let i = 1; i < points.length; i++) {
-          const point = points[i];
+        for (let j = 1; j < points.length; j++) {
+          const point = points[j];
           region.lineTo( point[0], point[1]);
         }
         region.closePath();
         ctx.stroke(region);
       }
+
+
+    if(keypoints.length > this.NUM_KEYPOINTS) {
+        const offset = this.NUM_KEYPOINTS
+        ctx.strokeStyle = "#FF2C35";
+        ctx.lineWidth = 1;
+
+        const irisIndex = [
+          offset, offset+1, offset+2, offset+3, offset+4,
+          offset+5, offset+6, offset+7, offset+8, offset+9,
+        ].map(index=>
+          [
+            (keypoints[index][0]/params.processWidth) *canvasWidth,
+            (keypoints[index][1]/params.processHeight) *canvasHeight,
+          ]
+        )
+        const irisTriangle = [
+          0,1,2, 0,2,3, 0,3,4, 0,4,1,
+          5,6,7, 5,7,8, 5,8,9, 5,9,6,
+        ]
+
+        for(let i = 0; i< irisTriangle.length/3;i++){
+          const region = new Path2D();
+          const irisOffset = i * 3
+          const p0 = irisIndex[ irisTriangle[irisOffset + 0]]
+          const p1 = irisIndex[ irisTriangle[irisOffset + 1]]
+          const p2 = irisIndex[ irisTriangle[irisOffset + 2]]
+          region.moveTo(p0[0], p0[1]);
+          region.lineTo(p1[0], p1[1]);
+          region.lineTo(p2[0], p2[1]);
+          region.closePath();
+          ctx.stroke(region);
+        }
+
+      }
+
     })
   }
 

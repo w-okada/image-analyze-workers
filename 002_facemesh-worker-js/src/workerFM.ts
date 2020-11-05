@@ -1,11 +1,15 @@
-import * as facemesh from '@tensorflow-models/facemesh'
+//import * as facemesh from '@tensorflow-models/facemesh'
+import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection'
+
 import { WorkerCommand, WorkerResponse, FacemeshConfig, FacemeshOperatipnParams } from './const'
 import * as tf from '@tensorflow/tfjs';
 import { BrowserType } from './BrowserUtil';
 import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
+import { AnnotatedPrediction } from '@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh';
 const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
 
-let model: facemesh.FaceMesh | null
+//let model: facemesh.FaceMesh | null
+let model: faceLandmarksDetection.FaceLandmarksDetector | null
 
 const load_module = async (config: FacemeshConfig) => {
   if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
@@ -13,6 +17,8 @@ const load_module = async (config: FacemeshConfig) => {
     require('@tensorflow/tfjs-backend-wasm')
     setWasmPath(config.wasmPath)
     await tf.setBackend("wasm")
+  }else if(config.useTFCPUBackend){
+    await tf.setBackend("cpu")
   }else{
     console.log("use webgl backend")
     require('@tensorflow/tfjs-backend-webgl')
@@ -20,7 +26,7 @@ const load_module = async (config: FacemeshConfig) => {
   }
 }
 
-const predict = async (image: ImageBitmap, config: FacemeshConfig, params:FacemeshOperatipnParams): Promise<facemesh.AnnotatedPrediction[]> => {
+const predict = async (image: ImageBitmap, config: FacemeshConfig, params:FacemeshOperatipnParams): Promise<AnnotatedPrediction[]> => {
   // ImageData作成  
   const processWidth = (params.processWidth <= 0 || params.processHeight <= 0) ? image.width : params.processWidth
   const processHeight = (params.processWidth <= 0 || params.processHeight <= 0) ? image.height : params.processHeight 
@@ -31,15 +37,24 @@ const predict = async (image: ImageBitmap, config: FacemeshConfig, params:Faceme
   ctx.drawImage(image, 0, 0, processWidth, processHeight)
   const newImg = ctx.getImageData(0, 0, processWidth, processHeight)
   
-  const  prediction = model!.estimateFaces(newImg)
-  return prediction
+  const tensor = tf.browser.fromPixels(newImg)
+  const prediction = await model!.estimateFaces({
+    input: tensor,
+    predictIrises: params.predictIrises
+  })
+  tensor.dispose()
+  return prediction!
 }
 
-const predictForSafari = async (data: Uint8ClampedArray, config: FacemeshConfig, params:FacemeshOperatipnParams): Promise<facemesh.AnnotatedPrediction[]> => {
+const predictForSafari = async (data: Uint8ClampedArray, config: FacemeshConfig, params:FacemeshOperatipnParams): Promise<AnnotatedPrediction[]> => {
   // ImageData作成
   const imageData = new ImageData(data, params.processWidth, params.processHeight);
-  const prediction = await model!.estimateFaces(imageData)
-
+  let tensor = tf.browser.fromPixels(imageData)
+  const prediction = await model!.estimateFaces({
+    input: tensor,
+    predictIrises: params.predictIrises
+  })
+  tensor.dispose()
   return prediction
 }
 
@@ -50,7 +65,8 @@ onmessage = async (event) => {
     await load_module(event.data.config as FacemeshConfig)
     tf.ready().then(()=>{
       tf.env().set('WEBGL_CPU_FORWARD', false)
-      facemesh.load().then(res => {
+      // facemesh.load().then(res => {
+      faceLandmarksDetection.load().then(res =>{
         console.log("new model:",res)
         model = res
         ctx.postMessage({ message: WorkerResponse.INITIALIZED })
