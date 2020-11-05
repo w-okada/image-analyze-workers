@@ -35,6 +35,7 @@
       "worker-plugin": "^5.0.0"
    },
    "dependencies": {
+      "@tensorflow-models/face-landmarks-detection": "0.0.2",
       "@tensorflow-models/facemesh": "0.0.4",
       "@tensorflow/tfjs": "^2.5.0",
       "@tensorflow/tfjs-backend-wasm": "^2.5.0",

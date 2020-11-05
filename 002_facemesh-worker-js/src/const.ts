@@ -21,6 +21,7 @@ export interface ModelConfig{
 export interface FacemeshConfig{
     browserType           : BrowserType
     useTFWasmBackend      : boolean 
+    useTFCPUBackend       : boolean 
     wasmPath              : string
     modelReloadInterval   : number // if not reload, set zero
     model                 : ModelConfig
@@ -32,6 +33,7 @@ export interface FacemeshOperatipnParams{
     type                : FacemeshFunctionType
     processWidth        : number
     processHeight       : number
+    predictIrises       : boolean
 }
 
 export enum FacemeshFunctionType{

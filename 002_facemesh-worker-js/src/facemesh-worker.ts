@@ -1,9 +1,11 @@
 import { WorkerResponse, WorkerCommand, FacemeshConfig, FacemeshFunctionType, FacemeshOperatipnParams, } from "./const"
-import * as facemesh from '@tensorflow-models/facemesh'
+//import * as facemesh from '@tensorflow-models/facemesh'
+import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection'
 import { getBrowserType, BrowserType } from "./BrowserUtil";
 import * as tf from '@tensorflow/tfjs';
 import { Coords3D } from "@tensorflow-models/facemesh/dist/util";
 import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
+import { AnnotatedPrediction } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh";
 
 export { FacemeshConfig, FacemeshFunctionType, FacemeshOperatipnParams } from './const'
 export { BrowserType, getBrowserType } from './BrowserUtil';
@@ -14,6 +16,7 @@ export const generateFacemeshDefaultConfig = (): FacemeshConfig => {
     const defaultConf: FacemeshConfig = {
         browserType: getBrowserType(),
         useTFWasmBackend: false,
+        useTFCPUBackend: false,
         modelReloadInterval: 1024 * 60,
         model: {
             maxContinuousChecks: 5,
@@ -33,12 +36,14 @@ export const generateDefaultFacemeshParams = () => {
         type: FacemeshFunctionType.DetectMesh,
         processWidth: 300,
         processHeight: 300,
+        predictIrises: false
     }
     return defaultParams
 }
 
 export class LocalFM {
-    model: facemesh.FaceMesh | null = null
+    //model: facemesh.FaceMesh | null = null
+    model: faceLandmarksDetection.FaceLandmarksDetector | null = null
     canvas: HTMLCanvasElement = (() => {
         const newCanvas = document.createElement("canvas")
         newCanvas.style.display = "none"
@@ -47,7 +52,8 @@ export class LocalFM {
     })()
 
     init = (config: FacemeshConfig) => {
-        return facemesh.load(config.model).then(res => {
+//        return facemesh.load(config.model).then(res => {
+        return faceLandmarksDetection.load().then(res =>{
             console.log("facemesh loaded locally", config)
             this.model = res
 
@@ -68,8 +74,13 @@ export class LocalFM {
         const ctx = this.canvas.getContext("2d")!
         ctx.drawImage(targetCanvas, 0, 0, processWidth, processHeight)
         const newImg = ctx.getImageData(0, 0, processWidth, processHeight)
-
-        const prediction = await this.model!.estimateFaces(newImg)
+        let tensor = tf.browser.fromPixels(newImg)
+        const prediction = await this.model!.estimateFaces({
+            input: tensor,
+            predictIrises: params.predictIrises
+        })
+        tensor.dispose()
+        
         return prediction
     }
 }
@@ -189,7 +200,7 @@ export class FacemeshWorkerManager {
             }
             const uid = performance.now()
 
-            const p = new Promise(async (onResolve: (v: facemesh.AnnotatedPrediction[]) => void, onFail) => {
+            const p = new Promise(async (onResolve: (v: AnnotatedPrediction[]) => void, onFail) => {
                 await this.liveCheck()
 
                 this.workerFM!.postMessage({
@@ -217,7 +228,7 @@ export class FacemeshWorkerManager {
             const imageBitmap = offscreen.transferToImageBitmap()
 
             const uid = performance.now()
-            const p = new Promise(async (onResolve: (v: facemesh.AnnotatedPrediction[]) => void, onFail) => {
+            const p = new Promise(async (onResolve: (v: AnnotatedPrediction[]) => void, onFail) => {
                 await this.liveCheck()
 
                 this.workerFM!.postMessage({
@@ -243,7 +254,7 @@ export class FacemeshWorkerManager {
 
 
 //// Utility for Demo
-export const drawFacemeshImage = (srcCanvas: HTMLCanvasElement, prediction: facemesh.AnnotatedPrediction[], params: FacemeshOperatipnParams) => {
+export const drawFacemeshImage = (srcCanvas: HTMLCanvasElement, prediction: AnnotatedPrediction[], params: FacemeshOperatipnParams) => {
     const tmpCanvas = document.createElement("canvas")
     tmpCanvas.width = srcCanvas.width
     tmpCanvas.height = srcCanvas.height
