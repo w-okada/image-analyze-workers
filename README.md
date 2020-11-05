@@ -58,7 +58,7 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t01_bodypix/index.ht
 
 
 ## facemesh
-![image](https://user-images.githubusercontent.com/48346627/98291726-efc0ce80-1fee-11eb-9707-ab98bc36e732.png)
+![image](https://user-images.githubusercontent.com/48346627/98291984-534afc00-1fef-11eb-9e89-33b5f267b28c.png)
 
 ### installation and usage 
 [See here](/002_facemesh-worker-js)

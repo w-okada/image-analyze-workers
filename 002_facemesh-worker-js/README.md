@@ -1,7 +1,6 @@
 This is webworker module for [Face landmarks detection](https://github.com/tensorflow/tfjs-models/tree/master/face-landmarks-detection).
 ## facemesh
-![image](https://user-images.githubusercontent.com/48346627/98291726-efc0ce80-1fee-11eb-9707-ab98bc36e732.png)
-
+![image](https://user-images.githubusercontent.com/48346627/98291984-534afc00-1fef-11eb-9e89-33b5f267b28c.png)
 
 
 ## Install
