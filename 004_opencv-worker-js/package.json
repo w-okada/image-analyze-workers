@@ -1,6 +1,6 @@
 {
   "name": "@dannadori/opencv-worker-js",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "",
   "main": "dist/opencv-worker.js",
   "scripts": {
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FLECT-DEV-TEAM/image-analyze-workers"
+    "url": "git+https://github.com/w-okada/image-analyze-workers"
   },
   "keywords": [
     "webworker",
@@ -21,9 +21,9 @@
   "author": "wataru.okada@flect.co.jp",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/FLECT-DEV-TEAM/image-analyze-workers/issues"
+    "url": "https://github.com/w-okada/image-analyze-workers"
   },
-  "homepage": "https://github.com/FLECT-DEV-TEAM/image-analyze-workers#readme",
+  "homepage": "https://github.com/w-okada/image-analyze-workers",
   "devDependencies": {
     "npm-run-all": "^4.1.5",
     "rimraf": "^3.0.2",
