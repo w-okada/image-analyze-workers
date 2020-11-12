@@ -134,7 +134,7 @@ export class BodypixWorkerManager {
         }
         
 
-        this.workerBP = new Worker(config!.workerPath, { type: 'module' })
+        this.workerBP = new Worker(this.config.workerPath, { type: 'module' })
 
         this.workerBP!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
         return new Promise((onResolve, onFail) => {
