@@ -7,7 +7,7 @@ This is webworker module for OpenCV.
 ## Install
 ```
 $ npm install \@dannadori/opencv-worker-js
-$ cp node_modules/\@dannadori/opencv-worker-js/dist/0.opencv-worker.worker.js public/
+$ cp node_modules/\@dannadori/opencv-worker-js/dist/opencv-worker-worker.js public/
 ```
 ## API
 
@@ -26,8 +26,9 @@ predict(targetCanvas: HTMLCanvasElement, params?: OpenCVOperatipnParams): Promis
 ```
 
 export interface OpenCVConfig {
-    browserType: BrowserType;
-    processOnLocal: boolean;
+    browserType    : BrowserType;
+    processOnLocal : boolean;
+    workerPath     : string
 }
 export interface OpenCVOperatipnParams {
     type: OpenCVFunctionType;
@@ -56,7 +57,7 @@ $ create-react-app demo/  --typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/opencv-worker-js
-$ cp node_modules/\@dannadori/opencv-worker-js/dist/0.opencv-worker.worker.js public/
+$ cp node_modules/\@dannadori/opencv-worker-js/dist/opencv-worker-worker.js public/
 ```
 
 ### Add source image to public. 

@@ -1,5 +1,7 @@
 import { WorkerCommand, WorkerResponse, OpenCVFunctionType, OpenCVConfig, OpenCVOperatipnParams } from './const'
 
+export let Module = {}
+
 const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
 const cv_asm = require('../resources/opencv.js');
 let init_cv = false
@@ -66,3 +68,7 @@ onmessage = async (event) => {
         }
     }
 }
+
+module.exports = [
+    ctx
+]

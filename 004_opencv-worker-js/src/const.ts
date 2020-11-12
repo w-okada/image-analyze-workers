@@ -13,6 +13,7 @@ export const WorkerResponse = {
 export interface OpenCVConfig{
     browserType         : BrowserType
     processOnLocal      : boolean
+    workerPath          : string
 }
 
 

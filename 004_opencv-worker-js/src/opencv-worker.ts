@@ -8,6 +8,7 @@ export const generateOpenCVDefaultConfig = ():OpenCVConfig => {
     const defaultConf:OpenCVConfig = {
         browserType         : getBrowserType(),
         processOnLocal      : false,
+        workerPath          : "/opencv-worker-worker.js"
     }
     return defaultConf
 }
@@ -105,7 +106,9 @@ export class OpenCVWorkerManager{
         }
 
         // Bodypix 用ワーカー
-        this.workerCV = new Worker('./workerCV.ts', { type: 'module' })
+       this.workerCV = new Worker(this.config.workerPath, { type: 'module' })
+        // this.workerCV = new Worker("./opencv-worker-worker.ts", { type: 'module' })
+        
         this.workerCV!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
         const p = new Promise((onResolve, onFail)=>{
             this.workerCV!.onmessage = (event) => {
