@@ -5,7 +5,11 @@ import DemoBase, { ControllerUIProp } from './DemoBase';
 class App extends DemoBase {
   manager:OpenCVWorkerManager = new OpenCVWorkerManager()
 
-  config:OpenCVConfig = generateOpenCVDefaultConfig()
+  config:OpenCVConfig = (()=>{
+    const c = generateOpenCVDefaultConfig()
+//    c.processOnLocal = true
+    return c
+  })()
   params = generateDefaultOpenCVParams()
 
   IMAGE_PATH = "./yuka_kawamura.jpg"
