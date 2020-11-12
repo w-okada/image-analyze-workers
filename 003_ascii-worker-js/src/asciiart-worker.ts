@@ -1,7 +1,7 @@
 import { WorkerResponse, WorkerCommand, AsciiConfig, AsciiFunctionType, AsciiOperatipnParams } from "./const"
 import { getBrowserType, BrowserType } from "./BrowserUtil";
 
-export { AsciiConfig } from './const'
+export { AsciiConfig, AsciiOperatipnParams, AsciiFunctionType } from './const'
 export { BrowserType, getBrowserType} from './BrowserUtil';
 export { IMAGE_PATH } from "./DemoUtil"
 
