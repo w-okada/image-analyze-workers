@@ -11,7 +11,8 @@ export const generateCartoonDefaultConfig = ():CartoonConfig => {
         processOnLocal      : false,
         useTFWasmBackend    : false,
         modelPath           : "/white-box-cartoonization/model.json",
-        wasmPath            : "/tfjs-backend-wasm.wasm"
+        wasmPath            : "/tfjs-backend-wasm.wasm",
+        workerPath          : "/white-box-cartoonization-worker-worker.js"
     }
     return defaultConf
 }
@@ -113,7 +114,7 @@ export class CartoonWorkerManager{
         }
 
         // Bodypix 用ワーカー
-        this.workerCT = new Worker('./workerCT.ts', { type: 'module' })
+        this.workerCT = new Worker(this.config.workerPath, { type: 'module' })
         this.workerCT!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
         const p = new Promise((onResolve, onFail)=>{
             this.workerCT!.onmessage = (event) => {
