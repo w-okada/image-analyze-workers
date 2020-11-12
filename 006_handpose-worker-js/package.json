@@ -1,6 +1,6 @@
 {
     "name": "@dannadori/handpose-worker-js",
-    "version": "1.0.10",
+    "version": "1.0.11",
     "description": "",
     "main": "dist/handpose-worker.js",
     "scripts": {
