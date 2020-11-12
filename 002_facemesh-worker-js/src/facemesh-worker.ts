@@ -3,15 +3,18 @@ import { WorkerResponse, WorkerCommand, FacemeshConfig, FacemeshFunctionType, Fa
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection'
 import { getBrowserType, BrowserType } from "./BrowserUtil";
 import * as tf from '@tensorflow/tfjs';
-import { Coords3D } from "@tensorflow-models/facemesh/dist/util";
+// import { Coords3D } from "@tensorflow-models/facemesh/dist/util";
 import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
 import { AnnotatedPrediction } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh";
+import { Coords3D } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh/util";
 
 export { FacemeshConfig, FacemeshFunctionType, FacemeshOperatipnParams } from './const'
 export { BrowserType, getBrowserType } from './BrowserUtil';
 export { IMAGE_PATH } from "./DemoUtil"
-export { AnnotatedPrediction } from "@tensorflow-models/facemesh"
-export { Coords3D } from '@tensorflow-models/facemesh/dist/util';
+// export { AnnotatedPrediction } from "@tensorflow-models/facemesh"
+export { AnnotatedPrediction } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh";
+export { Coords3D } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh/util";
+// export { Coords3D } from '@tensorflow-models/facemesh/dist/util';
 export const generateFacemeshDefaultConfig = (): FacemeshConfig => {
     const defaultConf: FacemeshConfig = {
         browserType: getBrowserType(),
