@@ -29,7 +29,9 @@ export const generateFacemeshDefaultConfig = (): FacemeshConfig => {
             scoreThreshold: 0.75
         },
         processOnLocal: false,
-        wasmPath: "/tfjs-backend-wasm.wasm"
+        wasmPath: "/tfjs-backend-wasm.wasm",
+        workerPath: "/facemesh-worker-worker.js"
+
     }
     return defaultConf
 }
@@ -99,7 +101,7 @@ export class FacemeshWorkerManager {
     private localFM = new LocalFM()
 
     private initializeModel_internal = () => {
-        this.workerFM = new Worker('./workerFM.ts', { type: 'module' })
+        this.workerFM = new Worker(this.config.workerPath, { type: 'module' })
         this.workerFM!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
         const p = new Promise((onResolve, onFail) => {
             this.workerFM!.onmessage = (event) => {
