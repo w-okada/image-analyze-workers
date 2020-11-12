@@ -22,7 +22,8 @@ export interface HandPoseConfig{
     useTFWasmBackend      : boolean
     wasmPath              : string
     processOnLocal        : boolean
-    modelReloadInterval   : number // if not reload, set zero    
+    modelReloadInterval   : number // if not reload, set zero   
+    workerPath            : string 
 }
 
 export interface ModelConfig{

@@ -16,7 +16,9 @@ export const generateHandPoseDefaultConfig = (): HandPoseConfig => {
         useTFWasmBackend: false,
         processOnLocal: false,
         modelReloadInterval: 1024 * 60,
-        wasmPath: "/tfjs-backend-wasm.wasm"
+        wasmPath: "/tfjs-backend-wasm.wasm",
+        workerPath: "/handpose-worker-worker.js"
+
     }
     // WASMバージョンがあまり早くないので、Safariはローカルで実施をデフォルトにする。
     if (defaultConf.browserType == BrowserType.SAFARI) {
@@ -81,7 +83,7 @@ export class HandPoseWorkerManager {
     private localHP = new LocalHP()
 
     private initializeModel_internal = () => {
-        this.workerHP = new Worker("./workerHP.ts", { type: 'module' })
+        this.workerHP = new Worker(this.config.workerPath, { type: 'module' })
         this.workerHP!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
         const p = new Promise((onResolve, onFail) => {
             this.workerHP!.onmessage = (event) => {
