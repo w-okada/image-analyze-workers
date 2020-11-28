@@ -88,7 +88,7 @@ class App extends DemoBase {
       },
       {
         title: "nega",
-        currentIndexOrValue: 1,
+        currentIndexOrValue: 0,
         values: ["on","off"],
         callback: (val: string | number | MediaStream) => {
           if(val === "on"){
