@@ -21,7 +21,8 @@ export const generateDefaultOpenCVParams = ():OpenCVOperatipnParams => {
             threshold1    : 50,
             threshold2    : 100,
             apertureSize  : 3,
-            L2gradient    : false,        
+            L2gradient    : false,
+            bitwiseNot    : true
         },
         blurParams         : {
             kernelSize    : [10, 10],
@@ -73,7 +74,12 @@ export class LocalCV{
 
         this.cv_asm.cvtColor(src, src, this.cv_asm.COLOR_RGB2GRAY, 0);
         this.cv_asm.Canny(src, dst, cannyParams!.threshold1, cannyParams!.threshold2, cannyParams!.apertureSize, cannyParams!.L2gradient);
+        if(cannyParams!.bitwiseNot){
+            this.cv_asm.bitwise_not(dst, dst);
+        }
         this.cv_asm.cvtColor(dst, dst, this.cv_asm.COLOR_GRAY2RGBA, 0);
+
+
         if (width !== processWidth || height !== processHeight) {
             let dsize = new this.cv_asm.Size(width, height);
             this.cv_asm.resize(dst, dst, dsize, 0, 0, this.cv_asm.INTER_AREA);

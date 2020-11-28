@@ -27,6 +27,9 @@ const canny = async (data: Uint8ClampedArray, width: number, height: number, con
 
     cv_asm.cvtColor(src, src, cv_asm.COLOR_RGB2GRAY, 0);
     cv_asm.Canny(src, dst, cannyParams!.threshold1, cannyParams!.threshold2, cannyParams!.apertureSize, cannyParams!.L2gradient);
+    if(cannyParams!.bitwiseNot){
+        cv_asm.bitwise_not(dst, dst);
+    }
     cv_asm.cvtColor(dst, dst, cv_asm.COLOR_GRAY2RGBA, 0);
     if (width !== processWidth || height !== processHeight) {
         let dsize = new cv_asm.Size(width, height);

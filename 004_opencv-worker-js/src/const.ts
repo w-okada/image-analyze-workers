@@ -35,6 +35,7 @@ export interface CannyParams{
     threshold2    : number
     apertureSize  : number 
     L2gradient    : boolean
+    bitwiseNot    : boolean
 }
 
 export interface BlurParams{

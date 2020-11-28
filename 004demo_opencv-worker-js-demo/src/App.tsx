@@ -87,6 +87,18 @@ class App extends DemoBase {
         },
       },
       {
+        title: "nega",
+        currentIndexOrValue: 1,
+        values: ["on","off"],
+        callback: (val: string | number | MediaStream) => {
+          if(val === "on"){
+            this.params.cannyParams!.bitwiseNot = true
+          }else{
+            this.params.cannyParams!.bitwiseNot = false
+          }
+        },
+      },      
+      {
         title: "BlurKernelSize",
         currentIndexOrValue: 10,
         range: [2, 50, 1],
