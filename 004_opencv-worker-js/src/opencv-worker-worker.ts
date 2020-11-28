@@ -38,6 +38,35 @@ const canny = async (data: Uint8ClampedArray, width: number, height: number, con
     return outImageData
 }
 
+const blur = async (data: Uint8ClampedArray, width: number, height: number, config: OpenCVConfig, params: OpenCVOperatipnParams) => {
+    // ImageData作成  
+    const processWidth = (params.processWidth <= 0 || params.processHeight <= 0) ? width : params.processWidth
+    const processHeight = (params.processWidth <= 0 || params.processHeight <= 0) ? height : params.processHeight
+    const blurParams = params.blurParams
+
+    const inImageData = new ImageData(new Uint8ClampedArray(data), width, height)
+    let src = cv_asm.matFromImageData(inImageData);
+    let dst = new cv_asm.Mat();
+    if (width !== processWidth || height !== processHeight) {
+        let dsize = new cv_asm.Size(processWidth, processHeight);
+        cv_asm.resize(src, src, dsize, 0, 0, cv_asm.INTER_AREA);
+    }
+
+    const ksize = new cv_asm.Size(blurParams!.kernelSize[0], blurParams!.kernelSize[1]);
+    const anchor = new cv_asm.Point(blurParams!.anchorPoint[0], blurParams!.anchorPoint[1]);    
+    cv_asm.blur(src, dst, ksize, anchor, cv_asm.BORDER_DEFAULT);
+    
+    if (width !== processWidth || height !== processHeight) {
+        let dsize = new cv_asm.Size(width, height);
+        cv_asm.resize(dst, dst, dsize, 0, 0, cv_asm.INTER_AREA);
+    }
+    const outImageData = new ImageData(new Uint8ClampedArray(dst.data), dst.cols, dst.rows)
+    src.delete(); dst.delete();
+
+    return outImageData
+}
+
+
 onmessage = async (event) => {
     //  console.log("event", event)
     if (event.data.message === WorkerCommand.INITIALIZE) {
@@ -59,13 +88,17 @@ onmessage = async (event) => {
         const uid: number = event.data.uid
         const config: OpenCVConfig = event.data.config
         const params: OpenCVOperatipnParams = event.data.params
+        let imageData:ImageData
         if (params.type === OpenCVFunctionType.Canny) {
-            const imageData = await canny(data, width, height, config, params)
-            const outData = imageData.data
-            ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, converted: outData }, [outData.buffer])
+            imageData = await canny(data, width, height, config, params)
+        } else if(params.type === OpenCVFunctionType.Blur){
+            imageData = await blur(data, width, height, config, params)
         } else {
             console.log("not implemented", params.type)
         }
+        const outData = imageData!.data
+        ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, converted: outData }, [outData.buffer])
+
     }
 }
 

@@ -18,15 +18,16 @@ export interface OpenCVConfig{
 
 
 export interface OpenCVOperatipnParams{
-    type        : OpenCVFunctionType
-    cannyParams : CannyParams|null
+    type         : OpenCVFunctionType
+    cannyParams? : CannyParams|null
+    blurParams?  : BlurParams|null
     processWidth        : number
     processHeight       : number
 }
 
 export enum OpenCVFunctionType{
     Canny,
-    xxx, // Not implemented
+    Blur,
 }
 
 export interface CannyParams{
@@ -34,5 +35,10 @@ export interface CannyParams{
     threshold2    : number
     apertureSize  : number 
     L2gradient    : boolean
+}
+
+export interface BlurParams{
+    kernelSize    : number[]
+    anchorPoint   : number[] // [-1, -1]
 }
 

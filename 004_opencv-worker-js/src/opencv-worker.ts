@@ -23,6 +23,10 @@ export const generateDefaultOpenCVParams = ():OpenCVOperatipnParams => {
             apertureSize  : 3,
             L2gradient    : false,        
         },
+        blurParams         : {
+            kernelSize    : [10, 10],
+            anchorPoint   : [ -1, -1 ],
+        },
         processWidth        : 300,
         processHeight       : 300,
     }
@@ -79,6 +83,37 @@ export class LocalCV{
 
         return outImageData
     }
+
+    blur = async (data: Uint8ClampedArray, width: number, height: number, config: OpenCVConfig, params: OpenCVOperatipnParams) => {
+        // ImageData作成  
+        const processWidth = (params.processWidth <= 0 || params.processHeight <= 0) ? width : params.processWidth
+        const processHeight = (params.processWidth <= 0 || params.processHeight <= 0) ? height : params.processHeight
+        const blurParams = params.blurParams
+
+        const inImageData = new ImageData(new Uint8ClampedArray(data), width, height)
+        let src = this.cv_asm.matFromImageData(inImageData);
+        let dst = new this.cv_asm.Mat();
+        if (width !== processWidth || height !== processHeight) {
+            let dsize = new this.cv_asm.Size(processWidth, processHeight);
+            this.cv_asm.resize(src, src, dsize, 0, 0, this.cv_asm.INTER_AREA);
+        }
+
+        const ksize = new this.cv_asm.Size(blurParams!.kernelSize[0], blurParams!.kernelSize[1]);
+        const anchor = new this.cv_asm.Point(blurParams!.anchorPoint[0], blurParams!.anchorPoint[1]);
+
+        this.cv_asm.blur(src, dst, ksize, anchor, this.cv_asm.BORDER_DEFAULT);
+
+        if (width !== processWidth || height !== processHeight) {
+            let dsize = new this.cv_asm.Size(width, height);
+            this.cv_asm.resize(dst, dst, dsize, 0, 0, this.cv_asm.INTER_AREA);
+        }
+        const outImageData = new ImageData(new Uint8ClampedArray(dst.data), dst.cols, dst.rows)
+        src.delete(); dst.delete();
+
+        return outImageData
+    }
+
+
 }
 
 
@@ -131,7 +166,15 @@ export class OpenCVWorkerManager{
 
         if(this.config.processOnLocal == true){
             const p = new Promise(async (onResolve: (v: any) => void, onFail) => {
-                const prediction = await this.localCV!.canny(inImageData.data, inImageData.width, inImageData.height, this.config, params)
+                let prediction
+                switch(params.type){
+                    case OpenCVFunctionType.Canny:
+                        prediction = await this.localCV!.canny(inImageData.data, inImageData.width, inImageData.height, this.config, params)
+                        break
+                    case OpenCVFunctionType.Blur:
+                        prediction = await this.localCV!.blur(inImageData.data, inImageData.width, inImageData.height, this.config, params)
+                        break
+                }
                 this.canvasOut.width  = prediction.width
                 this.canvasOut.height = prediction.height
                 const ctx = this.canvasOut.getContext("2d")!
