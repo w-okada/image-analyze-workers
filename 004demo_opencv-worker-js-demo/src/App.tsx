@@ -7,6 +7,7 @@ class App extends DemoBase {
 
   config:OpenCVConfig = (()=>{
     const c = generateOpenCVDefaultConfig()
+    c.workerPath = "./opencv-worker-worker.js"
 //    c.processOnLocal = true
     return c
   })()
