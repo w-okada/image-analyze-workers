@@ -32,6 +32,7 @@ const predict = async (image:ImageBitmap, config: U2NetPortraitConfig, params: U
         tensor = tf.sub(tensor.expandDims(0).div(127.5), 1)
 //        tensor = tensor.expandDims(0).div(255)
         let prediction = model!.predict(tensor) as tf.Tensor
+        console.log(prediction)
         bm = prediction.arraySync() as number[][]
     })
     return bm
