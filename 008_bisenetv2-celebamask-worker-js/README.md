@@ -2,11 +2,6 @@
 
 ![image](https://user-images.githubusercontent.com/48346627/97803282-822e3e80-1c8c-11eb-8635-74d937e5a8f6.png)
 
-### installation and usage 
-[See here](/008_bisenetv2-celebamask-worker-js)
-
-https://github.com/MaybeShewill-CV/bisenetv2-tensorflow
-
 ## Install
 ```
 ## install
