@@ -11,9 +11,6 @@ class App extends DemoBase {
     c.useTFWasmBackend = true
     c.wasmPath = ""
     c.modelPath="/u2net-portrait_192/model.json"
-    // c.workerPath="/P01_wokers/t09_u2net-portrait/u2net-portrait-worker-worker.js"
-    c.workerPath="./u2net-portrait-worker-worker.js"
-
     return c
   })()
   params = (()=>{

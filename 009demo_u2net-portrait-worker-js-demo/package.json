@@ -4,7 +4,7 @@
   "private": true,
   "homepage": "./",
   "dependencies": {
-    "@dannadori/u2net-portrait-worker-js": "^1.0.8",
+    "@dannadori/u2net-portrait-worker-js": "^1.0.9",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.5.0",
