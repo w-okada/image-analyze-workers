@@ -7,49 +7,51 @@
 ```
 ## install
 $ npm install @dannadori/u2net-portrait-worker-js
-$ cp node_modules/\@dannadori/bisenetv2-celebamask-worker-js/dist/bisenetv2-celebamask-worker-worker.js public/
+$ cp node_modules/\@dannadori/u2net-portrait-worker-js/dist/u2net-portrait-worker-worker.js public/
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 
 ## download model
-$ mkdir public/bisenetv2-celebamask
-$ curl 'https://flect-lab-web.s3-us-west-2.amazonaws.com/bisenetv2-celebamask/model.json' > public/bisenetv2-celebamask/model.json
-$ curl 'https://flect-lab-web.s3-us-west-2.amazonaws.com/bisenetv2-celebamask/group1-shard1of3.bin' > public/bisenetv2-celebamask/group1-shard1of3.bin
-$ curl 'https://flect-lab-web.s3-us-west-2.amazonaws.com/bisenetv2-celebamask/group1-shard2of3.bin' > public/bisenetv2-celebamask/group1-shard2of3.bin
-$ curl 'https://flect-lab-web.s3-us-west-2.amazonaws.com/bisenetv2-celebamask/group1-shard3of3.bin' > public/bisenetv2-celebamask/group1-shard3of3.bin
+$ for res in 192 256 320 512 1024; do 
+    mkdir public/u2net-portrait_${res} 
+    curl https://flect-lab-web.s3-us-west-2.amazonaws.com/u2net-portrait_${res}/model.json > public/u2net-portrait_${res}/model.json     
+    for count in `seq 42`; do 
+	    curl https://flect-lab-web.s3-us-west-2.amazonaws.com/u2net-portrait_${res}/group1-shard${count}of42.bin  > public/u2net-portrait_${res}/group1-shard${count}of42.bin 
+      done 
+  done
 ```
 ## API
 
 ```
-generateBisenetV2CelebAMaskDefaultConfig: () => BisenetV2CelebAMaskConfig;
-generateDefaultBisenetV2CelebAMaskParams: () => BisenetV2CelebAMaskOperatipnParams;
-export declare const createForegroundImage: (srcCanvas: HTMLCanvasElement, prediction: number[][]) => ImageData;
+generateU2NetPortraitDefaultConfig: () => U2NetPortraitConfig;
+generateDefaultU2NetPortraitParams: () => U2NetPortraitOperationParams;
+createForegroundImage: (srcCanvas: HTMLCanvasElement, prediction: number[][]) => ImageData;
 
-BisenetV2CelebAMaskWorkerManager
-init(config: BisenetV2CelebAMaskConfig | null): Promise<unknown>;
-predict(targetCanvas: HTMLCanvasElement, params?: BisenetV2CelebAMaskOperatipnParams): Promise<number[][]>;
+export declare class U2NetPortraitWorkerManager {
+    init(config: U2NetPortraitConfig | null): Promise<void>;
+    predict(targetCanvas: HTMLCanvasElement, params?: U2NetPortraitOperationParams): Promise<number[][]>;
+}
+
 ```
 
 ## Configuration and Parameter
 
 ```
-export interface BisenetV2CelebAMaskConfig{
-    browserType         : BrowserType
-    processOnLocal      : boolean
-    useTFWasmBackend    : boolean
-    wasmPath            : string
-    modelPath           : string
-    workerPath          : string
+export interface U2NetPortraitConfig {
+    browserType: BrowserType;
+    processOnLocal: boolean;
+    useTFWasmBackend: boolean;
+    wasmPath: string;
+    modelPath: string;
+    workerPath: string;
 }
-
-export interface BisenetV2CelebAMaskOperatipnParams{
-    type        : BisenetV2CelebAMaskFunctionType
-    processWidth        : number
-    processHeight       : number
+export interface U2NetPortraitOperationParams {
+    type: U2NetPortraitFunctionType;
+    processWidth: number;
+    processHeight: number;
 }
-
-export enum BisenetV2CelebAMaskFunctionType{
-    Mask,
-    xxx, // Not implemented
+export declare enum U2NetPortraitFunctionType {
+    Portrait = 0,
+    xxx = 1
 }
 
 
