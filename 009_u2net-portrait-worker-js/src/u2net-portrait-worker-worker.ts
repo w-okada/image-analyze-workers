@@ -26,7 +26,7 @@ const predict = async (image:ImageBitmap, config: U2NetPortraitConfig, params: U
     ctx.drawImage(image, 0, 0, off.width, off.height)
     const imageData = ctx.getImageData(0, 0, off.width, off.height)
 
-    let bm:number[][]|null = null
+    let bm:number[][][]|null = null
     tf.tidy(()=>{
         let tensor = tf.browser.fromPixels(imageData)
 
@@ -36,22 +36,18 @@ const predict = async (image:ImageBitmap, config: U2NetPortraitConfig, params: U
         tensor = tensor.sub(0.485).div(0.229)
 
         let prediction = model!.predict(tensor) as tf.Tensor
-        //console.log("max valur2: ", tf.max(prediction).toString(), tf.min(prediction).toString())
-        
         prediction = prediction.onesLike().sub(prediction)
         prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()))
-        // console.log("max valur3: ", tf.max(prediction).toString(), tf.min(prediction).toString())
-        // console.log(prediction)
-        bm = prediction.arraySync() as number[][]
+        bm = prediction.arraySync() as number[][][]
     })
-    return bm
+    return bm![0]
 }
 
 // Case.2 Use ImageBitmap (for Safari or special intent)
 const predictWithData = async (data: Uint8ClampedArray , config: U2NetPortraitConfig, params: U2NetPortraitOperationParams) => {
     const imageData = new ImageData(data, params.processWidth, params.processHeight)
 
-    let bm:number[][]|null = null
+    let bm:number[][][]|null = null
     tf.tidy(()=>{
         let tensor = tf.browser.fromPixels(imageData)
         tensor = tensor.expandDims(0)
@@ -62,9 +58,9 @@ const predictWithData = async (data: Uint8ClampedArray , config: U2NetPortraitCo
         prediction = prediction.onesLike().sub(prediction)
         prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()))
         
-        bm = prediction.arraySync() as number[][]
+        bm = prediction.arraySync() as number[][][]
     })
-    return bm
+    return bm![0]
 }
 
 onmessage = async (event) => {

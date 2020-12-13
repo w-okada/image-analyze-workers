@@ -71,7 +71,7 @@ $ for res in 192 256 320 512 1024; do
     mkdir public/u2net-portrait_${res} 
     curl https://flect-lab-web.s3-us-west-2.amazonaws.com/u2net-portrait_${res}/model.json > public/u2net-portrait_${res}/model.json     
     for count in `seq 42`; do 
-	    curl https://flect-lab-web.s3-us-west-2.amazonaws.com/u2net-portrait_${res}/model.json > public/u2net-portrait_${res}/group1-shard${count}of42.bin 
+	    curl https://flect-lab-web.s3-us-west-2.amazonaws.com/u2net-portrait_${res}/group1-shard${count}of42.bin  > public/u2net-portrait_${res}/group1-shard${count}of42.bin 
       done 
   done
 

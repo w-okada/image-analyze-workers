@@ -43,7 +43,7 @@ export class LocalWorker{
     canvas = document.createElement("canvas")
 
     init = (config: U2NetPortraitConfig) => {
-        const p = new Promise((onResolve, onFail) => {
+        const p = new Promise<void>((onResolve, onFail) => {
             load_module(config).then(()=>{
                 tf.ready().then(async()=>{
                     tf.env().set('WEBGL_CPU_FORWARD', false)
@@ -62,7 +62,7 @@ export class LocalWorker{
         this.canvas.height = params.processHeight
         const ctx = this.canvas.getContext("2d")!
         ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height)
-        let bm:number[][]
+        let bm:number[][][]
         tf.tidy(()=>{
             let tensor = tf.browser.fromPixels(this.canvas)
             tensor = tensor.expandDims(0)
@@ -72,9 +72,9 @@ export class LocalWorker{
             let prediction = this.model!.predict(tensor) as tf.Tensor
             prediction = prediction.onesLike().sub(prediction)
             prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()))
-            bm = prediction.arraySync() as number[][]
+            bm = prediction.arraySync() as number[][][]
         })
-        return bm!
+        return bm![0]
     }
 }
 
@@ -95,7 +95,7 @@ export class U2NetPortraitWorkerManager{
         }
 
         if(this.config.processOnLocal == true){
-            return new Promise((onResolve, onFail) => {
+            return new Promise<void>((onResolve, onFail) => {
                 this.localWorker.init(this.config!).then(() => {
                     onResolve()
                 })
@@ -105,7 +105,7 @@ export class U2NetPortraitWorkerManager{
         // Bodypix 用ワーカー
         this.workerU2 = new Worker(this.config.workerPath, { type: 'module' })
         this.workerU2!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
-        const p = new Promise((onResolve, onFail)=>{
+        const p = new Promise<void>((onResolve, onFail)=>{
             this.workerU2!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
@@ -194,15 +194,6 @@ export const createForegroundImage = (srcCanvas:HTMLCanvasElement, prediction:nu
     tmpCanvas.height = prediction.length    
     const imageData = tmpCanvas.getContext("2d")!.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height)
     const data = imageData.data
-
-
-
-    for (let rowIndex = 0; rowIndex < this.canvas.height; rowIndex++) {
-        for (let colIndex = 0; colIndex < this.canvas.width; colIndex++) {
-        }
-      }
-
-
 
     for (let rowIndex = 0; rowIndex < tmpCanvas.height; rowIndex++) {
       for (let colIndex = 0; colIndex < tmpCanvas.width; colIndex++) {
