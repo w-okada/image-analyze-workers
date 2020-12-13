@@ -35,13 +35,16 @@ Note. some module is not provided as webworker for safari because of it's restri
     - [installation and usage](#installation-and-usage-7)
     - [demo](#demo-7)
     - [reference](#reference)
+  - [U^2-Net Portrait Drawing](#u2-net-portrait-drawing)
+    - [installation and usage](#installation-and-usage-8)
+    - [demo](#demo-8)
 - [Experiments](#experiments)
   - [Exp.1 Multi-version based tfjs model](#exp1-multi-version-based-tfjs-model)
-    - [demo](#demo-8)
+    - [demo](#demo-9)
     - [src](#src)
     - [Citation](#citation-1)
   - [Exp.2 Performance improvement](#exp2-performance-improvement)
-    - [demo](#demo-9)
+    - [demo](#demo-10)
     - [src](#src-1)
     - [Citation](#citation-2)
 - [Reference](#reference-1)
@@ -150,6 +153,19 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t08_bisenetv2-celeba
 
 ### reference
 [Enable arbitry resolution](https://github.com/w-okada/bisenetv2-tensorflow)
+
+
+## U^2-Net Portrait Drawing
+
+![image](https://user-images.githubusercontent.com/48346627/101999201-fba25d80-3d1d-11eb-8e63-445cb6abf204.png)
+
+### installation and usage 
+[See here](/009_u2net-portrait-worker-js)
+
+### demo
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t09_u2net-portrait/index.html
+
+
 
 # Experiments
 ## Exp.1 Multi-version based tfjs model
