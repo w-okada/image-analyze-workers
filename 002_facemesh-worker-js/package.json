@@ -1,6 +1,6 @@
 {
    "name": "@dannadori/facemesh-worker-js",
-   "version": "1.0.35",
+   "version": "1.0.36",
    "description": "",
    "main": "dist/facemesh-worker.js",
    "scripts": {

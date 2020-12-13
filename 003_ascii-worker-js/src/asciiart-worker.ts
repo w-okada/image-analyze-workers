@@ -10,7 +10,7 @@ export const generateAsciiArtDefaultConfig = ():AsciiConfig => {
     const defaultConf:AsciiConfig = {
         browserType         : getBrowserType(),
         processOnLocal      : false,
-        workerPath          : '/asciiart-worker-worker.js'
+        workerPath          : './asciiart-worker-worker.js'
     }
     return defaultConf
 }
@@ -119,7 +119,7 @@ export class AsciiArtWorkerManager{
 
         // safariはwebworkerでCanvasが使えないのでworkerは使わない。
         if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal === true) {
-            return new Promise((onResolve, onFail) => {
+            return new Promise<void>((onResolve, onFail) => {
                 onResolve()
                 return
             })
@@ -130,7 +130,7 @@ export class AsciiArtWorkerManager{
         this.workerAA = new Worker(config!.workerPath, { type: 'module' })
         
         this.workerAA!.postMessage({message: WorkerCommand.INITIALIZE})
-        const p = new Promise((onResolve, onFail)=>{
+        const p = new Promise<void>((onResolve, onFail)=>{
             this.workerAA!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")

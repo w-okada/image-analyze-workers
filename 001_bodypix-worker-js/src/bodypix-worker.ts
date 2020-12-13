@@ -14,7 +14,7 @@ export const generateBodyPixDefaultConfig = ():BodyPixConfig => {
         browserType         : getBrowserType(),
         model               : ModelConfigMobileNetV1_05,
         processOnLocal      : false,
-        workerPath          : "/bodypix-worker-worker.js"
+        workerPath          : "./bodypix-worker-worker.js"
     }
     return defaultConf
 }
@@ -126,7 +126,7 @@ export class BodypixWorkerManager {
 
         if(this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal == true){
             // safariはwebworkerでWebGLが使えないのでworkerは使わない。
-            return new Promise((onResolve, onFail) => {
+            return new Promise<void>((onResolve, onFail) => {
                 this.localBP.init(this.config!).then(() => {
                     onResolve()
                 })
@@ -137,7 +137,7 @@ export class BodypixWorkerManager {
         this.workerBP = new Worker(this.config.workerPath, { type: 'module' })
 
         this.workerBP!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
-        return new Promise((onResolve, onFail) => {
+        return new Promise<void>((onResolve, onFail) => {
             this.workerBP!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")

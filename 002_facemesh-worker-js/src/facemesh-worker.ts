@@ -30,7 +30,7 @@ export const generateFacemeshDefaultConfig = (): FacemeshConfig => {
         },
         processOnLocal: false,
         wasmPath: "/tfjs-backend-wasm.wasm",
-        workerPath: "/facemesh-worker-worker.js"
+        workerPath: "./facemesh-worker-worker.js"
 
     }
     return defaultConf
@@ -103,7 +103,7 @@ export class FacemeshWorkerManager {
     private initializeModel_internal = () => {
         this.workerFM = new Worker(this.config.workerPath, { type: 'module' })
         this.workerFM!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
-        const p = new Promise((onResolve, onFail) => {
+        const p = new Promise<void>((onResolve, onFail) => {
             this.workerFM!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
@@ -131,7 +131,7 @@ export class FacemeshWorkerManager {
         // run on main thread
         //// wasm on safari is enough fast, so run on main thread is not mandatory
         if (this.config.processOnLocal === true) {
-            return new Promise((onResolve, onFail) => {
+            return new Promise<void>((onResolve, onFail) => {
                 let p
                 if (this.config.useTFWasmBackend) {
                     console.log("use wasm backend", this.config.wasmPath)
@@ -165,7 +165,7 @@ export class FacemeshWorkerManager {
             console.log("reload model! this is a work around for memory leak.")
             this.model_refresh_counter = 0
             if (this.config.browserType === BrowserType.SAFARI && this.config.processOnLocal === true) {
-                return new Promise((onResolve, onFail) => {
+                return new Promise<void>((onResolve, onFail) => {
                     tf.ready().then(() => {
                         this.localFM.init(this.config!).then(() => {
                             onResolve()
