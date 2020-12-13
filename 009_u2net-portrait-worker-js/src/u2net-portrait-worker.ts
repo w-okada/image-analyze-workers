@@ -184,3 +184,55 @@ export class U2NetPortraitWorkerManager{
 }
 
 
+
+
+//// Utility for Demo
+
+export const createForegroundImage = (srcCanvas:HTMLCanvasElement, prediction:number[][]) =>{
+    const tmpCanvas = document.createElement("canvas")
+    tmpCanvas.width = prediction[0].length
+    tmpCanvas.height = prediction.length    
+    const imageData = tmpCanvas.getContext("2d")!.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height)
+    const data = imageData.data
+
+
+
+    for (let rowIndex = 0; rowIndex < this.canvas.height; rowIndex++) {
+        for (let colIndex = 0; colIndex < this.canvas.width; colIndex++) {
+        }
+      }
+
+
+
+    for (let rowIndex = 0; rowIndex < tmpCanvas.height; rowIndex++) {
+      for (let colIndex = 0; colIndex < tmpCanvas.width; colIndex++) {
+        const seg_offset = ((rowIndex * tmpCanvas.width) + colIndex)
+        const pix_offset = ((rowIndex * tmpCanvas.width) + colIndex) * 4
+        if(prediction[rowIndex][colIndex] > 0.005){
+
+          data[pix_offset + 0] = prediction[rowIndex][colIndex] *255
+          data[pix_offset + 1] = prediction[rowIndex][colIndex] *255
+          data[pix_offset + 2] = prediction[rowIndex][colIndex] *255
+          data[pix_offset + 3] = 255
+
+        }else{
+          data[pix_offset + 0] = 0
+          data[pix_offset + 1] = 0
+          data[pix_offset + 2] = 0
+          data[pix_offset + 3] = 0
+        }
+      }
+    }
+    const imageDataTransparent = new ImageData(data, tmpCanvas.width, tmpCanvas.height);
+    tmpCanvas.getContext("2d")!.putImageData(imageDataTransparent, 0, 0)
+
+    const outputCanvas = document.createElement("canvas")
+
+    outputCanvas.width = srcCanvas.width
+    outputCanvas.height = srcCanvas.height
+    const ctx = outputCanvas.getContext("2d")!
+    ctx.drawImage(tmpCanvas, 0, 0, outputCanvas.width, outputCanvas.height)
+    const outImageData = ctx.getImageData(0, 0, outputCanvas.width, outputCanvas.height)
+    return  outImageData
+
+  }

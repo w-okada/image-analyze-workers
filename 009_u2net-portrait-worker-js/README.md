@@ -6,7 +6,7 @@
 ## Install
 ```
 ## install
-$ npm install @dannadori/bisenetv2-celebamask-worker-js
+$ npm install @dannadori/u2net-portrait-worker-js
 $ cp node_modules/\@dannadori/bisenetv2-celebamask-worker-js/dist/bisenetv2-celebamask-worker-worker.js public/
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 
@@ -61,18 +61,20 @@ export enum BisenetV2CelebAMaskFunctionType{
 $ create-react-app demo/  --typescript
 $ cd demo/
 $ npm install
-$ npm install @dannadori/bisenetv2-celebamask-worker-js
-$ cp node_modules/\@dannadori/bisenetv2-celebamask-worker-js/dist/bisenetv2-celebamask-worker-worker.js public/
-$ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
+$ npm install @dannadori/u2net-portrait-worker-js
+$ cp node_modules/\@dannadori/u2net-portrait-worker-js/dist/u2net-portrait-worker-worker.js public/
 ```
 
 ### Download Model
 ```
-$ mkdir public/bisenetv2-celebamask
-$ curl 'https://flect-lab-web.s3-us-west-2.amazonaws.com/bisenetv2-celebamask/model.json' > public/bisenetv2-celebamask/model.json
-$ curl 'https://flect-lab-web.s3-us-west-2.amazonaws.com/bisenetv2-celebamask/group1-shard1of3.bin' > public/bisenetv2-celebamask/group1-shard1of3.bin
-$ curl 'https://flect-lab-web.s3-us-west-2.amazonaws.com/bisenetv2-celebamask/group1-shard2of3.bin' > public/bisenetv2-celebamask/group1-shard2of3.bin
-$ curl 'https://flect-lab-web.s3-us-west-2.amazonaws.com/bisenetv2-celebamask/group1-shard3of3.bin' > public/bisenetv2-celebamask/group1-shard3of3.bin
+$ for res in 192 256 320 512 1024; do 
+    mkdir public/u2net-portrait_${res} 
+    curl https://flect-lab-web.s3-us-west-2.amazonaws.com/u2net-portrait_${res}/model.json > public/u2net-portrait_${res}/model.json     
+    for count in `seq 42`; do 
+	    curl https://flect-lab-web.s3-us-west-2.amazonaws.com/u2net-portrait_${res}/model.json > public/u2net-portrait_${res}/group1-shard${count}of42.bin 
+      done 
+  done
+
 ```
 
 ### Add source image to public. 
