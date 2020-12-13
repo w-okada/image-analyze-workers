@@ -10,8 +10,7 @@ export const generateU2NetPortraitDefaultConfig = ():U2NetPortraitConfig => {
         useTFWasmBackend    : false,
         modelPath           : "/u2net-portrait/model.json",
         wasmPath            : "/tfjs-backend-wasm.wasm",
-        workerPath          : "/u2net-portrait-worker-worker.js"
-
+        workerPath          : "./u2net-portrait-worker-worker.js"
     }
     return defaultConf
 }
@@ -31,7 +30,7 @@ const load_module = async (config: U2NetPortraitConfig) => {
         console.log("use wasm backend")
       require('@tensorflow/tfjs-backend-wasm')
       setWasmPath(config.wasmPath)
-      await tf.setBackend("wasm")
+      await tf.setBackend("cpu")
     }else{
       console.log("use webgl backend")
       require('@tensorflow/tfjs-backend-webgl')
@@ -44,7 +43,7 @@ export class LocalWorker{
     canvas = document.createElement("canvas")
 
     init = (config: U2NetPortraitConfig) => {
-        const p = new Promise((onResolve, onFail) => {
+        const p = new Promise<void>((onResolve, onFail) => {
             load_module(config).then(()=>{
                 tf.ready().then(async()=>{
                     tf.env().set('WEBGL_CPU_FORWARD', false)
@@ -63,22 +62,26 @@ export class LocalWorker{
         this.canvas.height = params.processHeight
         const ctx = this.canvas.getContext("2d")!
         ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height)
-        let bm:number[][]
+        let bm:number[][][]
         tf.tidy(()=>{
             let tensor = tf.browser.fromPixels(this.canvas)
-            tensor = tf.sub(tensor.expandDims(0).div(127.5), 1)
+            tensor = tensor.expandDims(0)
+            tensor = tf.cast(tensor, 'float32')
+            tensor = tensor.div(tf.max(tensor))
+            tensor = tensor.sub(0.485).div(0.229)
             let prediction = this.model!.predict(tensor) as tf.Tensor
-            console.log(prediction)
-            bm = prediction.arraySync() as number[][]
+            prediction = prediction.onesLike().sub(prediction)
+            prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()))
+            bm = prediction.arraySync() as number[][][]
         })
-        return bm!
+        return bm![0]
     }
 }
 
 
 
 export class U2NetPortraitWorkerManager{
-    private workerCT:Worker|null = null
+    private workerU2:Worker|null = null
     private canvasOut = document.createElement("canvas")
     private canvas = document.createElement("canvas")
     private config = generateU2NetPortraitDefaultConfig()
@@ -87,12 +90,12 @@ export class U2NetPortraitWorkerManager{
         if(config != null){
             this.config = config
         }
-        if(this.workerCT){
-            this.workerCT.terminate()
+        if(this.workerU2){
+            this.workerU2.terminate()
         }
 
         if(this.config.processOnLocal == true){
-            return new Promise((onResolve, onFail) => {
+            return new Promise<void>((onResolve, onFail) => {
                 this.localWorker.init(this.config!).then(() => {
                     onResolve()
                 })
@@ -100,10 +103,10 @@ export class U2NetPortraitWorkerManager{
         }
 
         // Bodypix 用ワーカー
-        this.workerCT = new Worker(this.config.workerPath, { type: 'module' })
-        this.workerCT!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
-        const p = new Promise((onResolve, onFail)=>{
-            this.workerCT!.onmessage = (event) => {
+        this.workerU2 = new Worker(this.config.workerPath, { type: 'module' })
+        this.workerU2!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
+        const p = new Promise<void>((onResolve, onFail)=>{
+            this.workerU2!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
                     onResolve()
@@ -135,13 +138,13 @@ export class U2NetPortraitWorkerManager{
             const dataArray = imageData.data
             const uid = performance.now()
 
-            this.workerCT!.postMessage({ 
+            this.workerU2!.postMessage({ 
                 message: WorkerCommand.PREDICT, uid:uid,
                 config: this.config, params: params,
                 data: dataArray
             }, [dataArray.buffer])
             const p = new Promise((onResolve:(v:number[][])=>void, onFail)=>{
-                this.workerCT!.onmessage = (event) => {
+                this.workerU2!.onmessage = (event) => {
                     if(event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid){
                         const prediction = event.data.prediction
                         onResolve(prediction)
@@ -158,14 +161,14 @@ export class U2NetPortraitWorkerManager{
             off.getContext("2d")!.drawImage(targetCanvas, 0, 0, targetCanvas.width, targetCanvas.height)
             const imageBitmap = off.transferToImageBitmap()
             const uid = performance.now()
-            this.workerCT!.postMessage({ 
+            this.workerU2!.postMessage({ 
                 message: WorkerCommand.PREDICT, uid:uid,
                 config: this.config, params: params,
                 // data: data, width: inImageData.width, height:inImageData.height
                 image: imageBitmap
             }, [imageBitmap])
             const p = new Promise((onResolve:(v:number[][])=>void, onFail)=>{
-                this.workerCT!.onmessage = (event) => {
+                this.workerU2!.onmessage = (event) => {
                     if(event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid){
                         const prediction = event.data.prediction
                         onResolve(prediction)
@@ -181,3 +184,46 @@ export class U2NetPortraitWorkerManager{
 }
 
 
+
+
+//// Utility for Demo
+
+export const createForegroundImage = (srcCanvas:HTMLCanvasElement, prediction:number[][]) =>{
+    const tmpCanvas = document.createElement("canvas")
+    tmpCanvas.width = prediction[0].length
+    tmpCanvas.height = prediction.length    
+    const imageData = tmpCanvas.getContext("2d")!.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height)
+    const data = imageData.data
+
+    for (let rowIndex = 0; rowIndex < tmpCanvas.height; rowIndex++) {
+      for (let colIndex = 0; colIndex < tmpCanvas.width; colIndex++) {
+        const seg_offset = ((rowIndex * tmpCanvas.width) + colIndex)
+        const pix_offset = ((rowIndex * tmpCanvas.width) + colIndex) * 4
+        if(prediction[rowIndex][colIndex] > 0.005){
+
+          data[pix_offset + 0] = prediction[rowIndex][colIndex] *255
+          data[pix_offset + 1] = prediction[rowIndex][colIndex] *255
+          data[pix_offset + 2] = prediction[rowIndex][colIndex] *255
+          data[pix_offset + 3] = 255
+
+        }else{
+          data[pix_offset + 0] = 0
+          data[pix_offset + 1] = 0
+          data[pix_offset + 2] = 0
+          data[pix_offset + 3] = 0
+        }
+      }
+    }
+    const imageDataTransparent = new ImageData(data, tmpCanvas.width, tmpCanvas.height);
+    tmpCanvas.getContext("2d")!.putImageData(imageDataTransparent, 0, 0)
+
+    const outputCanvas = document.createElement("canvas")
+
+    outputCanvas.width = srcCanvas.width
+    outputCanvas.height = srcCanvas.height
+    const ctx = outputCanvas.getContext("2d")!
+    ctx.drawImage(tmpCanvas, 0, 0, outputCanvas.width, outputCanvas.height)
+    const outImageData = ctx.getImageData(0, 0, outputCanvas.width, outputCanvas.height)
+    return  outImageData
+
+  }

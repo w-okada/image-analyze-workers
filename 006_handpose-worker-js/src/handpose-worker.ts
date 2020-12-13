@@ -17,7 +17,7 @@ export const generateHandPoseDefaultConfig = (): HandPoseConfig => {
         processOnLocal: false,
         modelReloadInterval: 1024 * 60,
         wasmPath: "/tfjs-backend-wasm.wasm",
-        workerPath: "/handpose-worker-worker.js"
+        workerPath: "./handpose-worker-worker.js"
 
     }
     // WASMバージョンがあまり早くないので、Safariはローカルで実施をデフォルトにする。
@@ -85,7 +85,7 @@ export class HandPoseWorkerManager {
     private initializeModel_internal = () => {
         this.workerHP = new Worker(this.config.workerPath, { type: 'module' })
         this.workerHP!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
-        const p = new Promise((onResolve, onFail) => {
+        const p = new Promise<void>((onResolve, onFail) => {
             this.workerHP!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
@@ -110,7 +110,7 @@ export class HandPoseWorkerManager {
         // run on main thread
         //// wasm on safari is not enough fast, but run on main thread is not mandatory
         if (this.config.processOnLocal === true) {
-            return new Promise((onResolve, onFail) => {
+            return new Promise<void>((onResolve, onFail) => {
                 let p
                 if (this.config.useTFWasmBackend) {
                     console.log("use wasm backend", this.config.wasmPath)
@@ -145,7 +145,7 @@ export class HandPoseWorkerManager {
             console.log("reload model! this is a work around for memory leak.")
             this.model_refresh_counter = 0
             if (this.config.browserType === BrowserType.SAFARI && this.config.processOnLocal === true) {
-                return new Promise((onResolve, onFail) => {
+                return new Promise<void>((onResolve, onFail) => {
                     tf.ready().then(() => {
                         this.localHP.init(this.config!).then(() => {
                             onResolve()

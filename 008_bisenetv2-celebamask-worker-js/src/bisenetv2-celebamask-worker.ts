@@ -12,8 +12,7 @@ export const generateBisenetV2CelebAMaskDefaultConfig = ():BisenetV2CelebAMaskCo
 //        modelPath           : "/bisenetv2-celebamaskF16/model.json",
         wasmPath            : "/tfjs-backend-wasm.wasm",
 //        wasmPath            : "/tfjs-backend-wasm-simd.wasm"
-        workerPath          : "/bisenetv2-celebamask-worker-worker.js"
-
+        workerPath          : "./bisenetv2-celebamask-worker-worker.js"
     }
     return defaultConf
 }
@@ -47,7 +46,7 @@ export class LocalCT{
     canvas = document.createElement("canvas")
 
     init = (config: BisenetV2CelebAMaskConfig) => {
-        const p = new Promise((onResolve, onFail) => {
+        const p = new Promise<void>((onResolve, onFail) => {
             load_module(config).then(()=>{
                 tf.ready().then(async()=>{
                     tf.env().set('WEBGL_CPU_FORWARD', false)
@@ -95,7 +94,7 @@ export class BisenetV2CelebAMaskWorkerManager{
         }
 
         if(this.config.processOnLocal == true){
-            return new Promise((onResolve, onFail) => {
+            return new Promise<void>((onResolve, onFail) => {
                 this.localCT.init(this.config!).then(() => {
                     onResolve()
                 })
@@ -105,7 +104,7 @@ export class BisenetV2CelebAMaskWorkerManager{
         // Bodypix 用ワーカー
         this.workerCT = new Worker(this.config.workerPath, { type: 'module' })
         this.workerCT!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
-        const p = new Promise((onResolve, onFail)=>{
+        const p = new Promise<void>((onResolve, onFail)=>{
             this.workerCT!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
