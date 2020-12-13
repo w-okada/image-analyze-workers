@@ -10,7 +10,7 @@ export const generateU2NetPortraitDefaultConfig = ():U2NetPortraitConfig => {
         useTFWasmBackend    : false,
         modelPath           : "/u2net-portrait/model.json",
         wasmPath            : "/tfjs-backend-wasm.wasm",
-        workerPath          : "/u2net-portrait-worker-worker.js"
+        workerPath          : "./u2net-portrait-worker-worker.js"
     }
     return defaultConf
 }
