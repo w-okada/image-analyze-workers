@@ -17,6 +17,7 @@ export interface PoseNetConfig{
     processOnLocal        : boolean
     useTFWasmBackend      : boolean  // we can not use posenet with wasm. shouldn't be true.
     wasmPath              : string
+    workerPath            : string
 }
 
 export const ModelConfigMobileNetV1: ModelConfig = {

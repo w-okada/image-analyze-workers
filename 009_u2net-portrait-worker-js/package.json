@@ -1,0 +1,41 @@
+{
+  "name": "@dannadori/u2net-portrait-worker-js",
+  "version": "1.0.1",
+  "description": "",
+  "main": "dist/u2net-portrait-worker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "webpack": "npx webpack --config webpack.config.js",
+    "clean": "rimraf dist/*",
+    "build": "cp ../common/*.ts ./src; npm-run-all clean webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/w-okada/image-analyze-workers.git"
+  },
+  "keywords": [
+    "webworker",
+    "image processing",
+    "tensorflowjs"
+  ],
+  "author": "wataru.okada@flect.co.jp",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/w-okada/image-analyze-workers/issues"
+  },
+  "homepage": "https://github.com/w-okada/image-analyze-workers#readme",
+  "devDependencies": {
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^3.0.2",
+    "ts-loader": "^8.0.11",
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^4.0.5",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^4.2.0",
+    "worker-plugin": "^5.0.0"
+  },
+  "dependencies": {
+    "@tensorflow/tfjs": "^2.7.0",
+    "@tensorflow/tfjs-backend-wasm": "^2.7.0"
+  }
+}

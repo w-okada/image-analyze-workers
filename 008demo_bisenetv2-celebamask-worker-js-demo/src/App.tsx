@@ -19,6 +19,7 @@ class App extends DemoBase {
     const c = generateBisenetV2CelebAMaskDefaultConfig()
     c.useTFWasmBackend = false
     c.modelPath="/bisenetv2-celebamask/model.json"
+    c.workerPath="/P01_wokers/t08_bisenetv2-celebamask/bisenetv2-celebamask-worker-worker.js"
     return c
   })()
   params = (()=>{

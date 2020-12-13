@@ -16,6 +16,8 @@ export interface BodyPixConfig{
     browserType         : BrowserType
     model               : ModelConfig
     processOnLocal      : boolean
+    workerPath          : string
+
 }
 
 export const ModelConfigResNet: ModelConfig = {

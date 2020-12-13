@@ -15,7 +15,8 @@ export const generatePoseNetDefaultConfig = (): PoseNetConfig => {
         model: ModelConfigResNet50,
         processOnLocal: false,
         useTFWasmBackend: false, // we can not use posenet with wasm.
-        wasmPath: "/tfjs-backend-wasm.wasm"
+        wasmPath: "/tfjs-backend-wasm.wasm",
+        workerPath: "/posenet-worker-worker.js"
     }
     // WASMバージョンがあまり早くないので、Safariはローカルで実施をデフォルトにする。
     if (defaultConf.browserType == BrowserType.SAFARI) {
@@ -109,7 +110,7 @@ export class PoseNetWorkerManager {
             })
         }
 
-        this.workerPN = new Worker('./workerPN.ts', { type: 'module' })
+        this.workerPN = new Worker(this.config.workerPath, { type: 'module' })
         this.workerPN!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
         const p = new Promise((onResolve, onFail) => {
             this.workerPN!.onmessage = (event) => {

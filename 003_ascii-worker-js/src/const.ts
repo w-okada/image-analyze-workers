@@ -13,6 +13,7 @@ export const WorkerResponse = {
 export interface AsciiConfig{
     browserType         : BrowserType
     processOnLocal      : boolean
+    workerPath          : string
 }
 
 
@@ -27,3 +28,4 @@ export interface AsciiOperatipnParams{
 export enum AsciiFunctionType{
     AsciiArt
 }
+

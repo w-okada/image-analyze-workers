@@ -11,7 +11,7 @@ https://github.com/MaybeShewill-CV/bisenetv2-tensorflow
 ```
 ## install
 $ npm install @dannadori/bisenetv2-celebamask-worker-js
-$ cp node_modules/\@dannadori/bisenetv2-celebamask-worker-js/dist/0.bisenetv2-celebamask-worker.worker.js public/
+$ cp node_modules/\@dannadori/bisenetv2-celebamask-worker-js/dist/bisenetv2-celebamask-worker-worker.js public/
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 
 ## download model
@@ -42,6 +42,7 @@ export interface BisenetV2CelebAMaskConfig{
     useTFWasmBackend    : boolean
     wasmPath            : string
     modelPath           : string
+    workerPath          : string
 }
 
 export interface BisenetV2CelebAMaskOperatipnParams{
@@ -65,7 +66,7 @@ $ create-react-app demo/  --typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/bisenetv2-celebamask-worker-js
-$ cp node_modules/\@dannadori/bisenetv2-celebamask-worker-js/dist/0.bisenetv2-celebamask-worker.worker.js public/
+$ cp node_modules/\@dannadori/bisenetv2-celebamask-worker-js/dist/bisenetv2-celebamask-worker-worker.js public/
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 ```
 

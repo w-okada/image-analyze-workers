@@ -16,6 +16,7 @@ export interface CartoonConfig{
     useTFWasmBackend    : boolean
     wasmPath            : string
     modelPath           : string
+    workerPath          : string
 }
 
 

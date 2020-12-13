@@ -14,6 +14,7 @@ export const generateBodyPixDefaultConfig = ():BodyPixConfig => {
         browserType         : getBrowserType(),
         model               : ModelConfigMobileNetV1_05,
         processOnLocal      : false,
+        workerPath          : "/bodypix-worker-worker.js"
     }
     return defaultConf
 }
@@ -133,7 +134,7 @@ export class BodypixWorkerManager {
         }
         
 
-        this.workerBP = new Worker('./workerBP.ts', { type: 'module' })
+        this.workerBP = new Worker(this.config.workerPath, { type: 'module' })
 
         this.workerBP!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
         return new Promise((onResolve, onFail) => {

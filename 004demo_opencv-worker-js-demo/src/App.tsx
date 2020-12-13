@@ -5,7 +5,12 @@ import DemoBase, { ControllerUIProp } from './DemoBase';
 class App extends DemoBase {
   manager:OpenCVWorkerManager = new OpenCVWorkerManager()
 
-  config:OpenCVConfig = generateOpenCVDefaultConfig()
+  config:OpenCVConfig = (()=>{
+    const c = generateOpenCVDefaultConfig()
+    c.workerPath = "./opencv-worker-worker.js"
+//    c.processOnLocal = true
+    return c
+  })()
   params = generateDefaultOpenCVParams()
 
   IMAGE_PATH = "./yuka_kawamura.jpg"
@@ -32,9 +37,17 @@ class App extends DemoBase {
       {
         title: "function",
         currentIndexOrValue: 0,
-        values: ["Canny"],
+        values: ["Canny", "Blur"],
         callback: (val: string | number | MediaStream) => {
-          this.params.type = OpenCVFunctionType.Canny
+          switch(val as string){
+            case "Canny":
+              this.params.type = OpenCVFunctionType.Canny
+              break
+            case "Blur":
+              this.params.type = OpenCVFunctionType.Blur
+              break
+
+          }
         },
       },
       {
@@ -71,6 +84,26 @@ class App extends DemoBase {
           }else{
             this.params.cannyParams!.L2gradient = false
           }
+        },
+      },
+      {
+        title: "nega",
+        currentIndexOrValue: 0,
+        values: ["on","off"],
+        callback: (val: string | number | MediaStream) => {
+          if(val === "on"){
+            this.params.cannyParams!.bitwiseNot = true
+          }else{
+            this.params.cannyParams!.bitwiseNot = false
+          }
+        },
+      },      
+      {
+        title: "BlurKernelSize",
+        currentIndexOrValue: 10,
+        range: [2, 50, 1],
+        callback: (val: string | number | MediaStream) => {
+          this.params.blurParams!.kernelSize = [val as number, val as number]
         },
       },
       {

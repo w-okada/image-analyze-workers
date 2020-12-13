@@ -26,6 +26,7 @@ export interface FacemeshConfig{
     modelReloadInterval   : number // if not reload, set zero
     model                 : ModelConfig
     processOnLocal        : boolean
+    workerPath            : string
 }
 
 

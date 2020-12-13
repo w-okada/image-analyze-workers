@@ -7,7 +7,7 @@ This is webworker module for [Bodypix](https://github.com/tensorflow/tfjs-models
 ## Install
 ```
 $ npm install \@dannadori/bodypix-worker-js
-$ cp node_modules/\@dannadori/bodypix-worker-js/dist/0.bodypix-worker.worker.js public/
+$ cp node_modules/\@dannadori/bodypix-worker-js/dist/bodypix-worker-worker.js public/
 ```
 ## API
 
@@ -28,6 +28,7 @@ export interface BodyPixConfig {
     browserType: BrowserType;
     model: ModelConfig;
     processOnLocal: boolean;
+    workerPath: string;
 }
 
 export interface BodyPixOperatipnParams {
@@ -55,7 +56,7 @@ $ create-react-app demo/  --typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/bodypix-worker-js
-$ cp node_modules/\@dannadori/bodypix-worker-js/dist/0.bodypix-worker.worker.js public/
+$ cp node_modules/\@dannadori/bodypix-worker-js/dist/bodypix-worker-worker.js public/
 ```
 
 ### Add source image to public. 

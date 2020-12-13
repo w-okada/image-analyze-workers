@@ -1,6 +1,7 @@
 import { WorkerResponse, WorkerCommand, AsciiConfig, AsciiFunctionType, AsciiOperatipnParams } from "./const"
 import { getBrowserType, BrowserType } from "./BrowserUtil";
 
+
 export { AsciiConfig, AsciiOperatipnParams, AsciiFunctionType } from './const'
 export { BrowserType, getBrowserType} from './BrowserUtil';
 export { IMAGE_PATH } from "./DemoUtil"
@@ -8,7 +9,8 @@ export { IMAGE_PATH } from "./DemoUtil"
 export const generateAsciiArtDefaultConfig = ():AsciiConfig => {
     const defaultConf:AsciiConfig = {
         browserType         : getBrowserType(),
-        processOnLocal      : false
+        processOnLocal      : false,
+        workerPath          : '/asciiart-worker-worker.js'
     }
     return defaultConf
 }
@@ -23,6 +25,8 @@ export const generateDefaultAsciiArtParams = () =>{
     }
     return defaultParams
 }
+
+
 
 class LocalAA{
     // _asciiStr = " .,:;i1tfLCG08@"
@@ -122,7 +126,9 @@ export class AsciiArtWorkerManager{
         }
 
         // AsciiArt 用ワーカー
-        this.workerAA = new Worker('./workerAA.ts', { type: 'module' })
+//        this.workerAA = new Worker('./workerAA.ts', { type: 'module' })
+        this.workerAA = new Worker(config!.workerPath, { type: 'module' })
+        
         this.workerAA!.postMessage({message: WorkerCommand.INITIALIZE})
         const p = new Promise((onResolve, onFail)=>{
             this.workerAA!.onmessage = (event) => {
@@ -164,7 +170,8 @@ export class AsciiArtWorkerManager{
                         image.close()
                         onResolve(this.outCanvas)
                     }else{
-                        console.log("AsciiArt something wrong..")
+                        
+                        console.log("AsciiArt something wrong..", event.data.uid, uid)
                         onFail(event)
                     }
                 }

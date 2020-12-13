@@ -8,7 +8,7 @@ This is webworker module for [White-Box-Cartoon](https://github.com/SystemErrorW
 ```
 # install package
 $ npm install @dannadori/white-box-cartoonization-worker-js
-$ cp node_modules/\@dannadori/white-box-cartoonization-worker-js/dist/0.white-box-cartoonization-worker.worker.js public/
+$ cp node_modules/\@dannadori/white-box-cartoonization-worker-js/dist/white-box-cartoonization-worker-worker.js public/
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 
 # download model
@@ -39,6 +39,7 @@ export interface CartoonConfig{
     useTFWasmBackend    : boolean
     wasmPath            : string
     modelPath           : string
+    workerPath          : string
 }
 
 
@@ -63,7 +64,7 @@ $ create-react-app demo/  --typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/white-box-cartoonization-worker-js
-$ cp node_modules/\@dannadori/white-box-cartoonization-worker-js/dist/0.white-box-cartoonization-worker.worker.js public/
+$ cp node_modules/\@dannadori/white-box-cartoonization-worker-js/dist/white-box-cartoonization-worker-worker.js public/
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 ```
 
