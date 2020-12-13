@@ -8,7 +8,7 @@ export const generateOpenCVDefaultConfig = ():OpenCVConfig => {
     const defaultConf:OpenCVConfig = {
         browserType         : getBrowserType(),
         processOnLocal      : false,
-        workerPath          : "/opencv-worker-worker.js"
+        workerPath          : "./opencv-worker-worker.js"
     }
     return defaultConf
 }
@@ -40,14 +40,14 @@ export class LocalCV{
     init = (config: OpenCVConfig) => {
         if(this.opencvLoaded === true){
             console.log("local initialized cv_asm1 (reuse)")
-            const p = new Promise((onResolve, onFail) => {
+            const p = new Promise<void>((onResolve, onFail) => {
                 onResolve()
             })
             return p
         }else{
             console.log("local initialized cv_asm1 (new)")
             this.cv_asm = require('../resources/opencv.js');
-            const p = new Promise((onResolve, onFail) => {
+            const p = new Promise<void>((onResolve, onFail) => {
                 this.cv_asm.onRuntimeInitialized = function () {
                     console.log("local initialized cv_asm...")
                     onResolve()                    
@@ -139,7 +139,7 @@ export class OpenCVWorkerManager{
         }
 
         if(this.config.processOnLocal == true){
-            return new Promise((onResolve, onFail) => {
+            return new Promise<void>((onResolve, onFail) => {
                 this.localCV.init(this.config!).then(() => {
                     onResolve()
                 })
@@ -151,7 +151,7 @@ export class OpenCVWorkerManager{
         // this.workerCV = new Worker("./opencv-worker-worker.ts", { type: 'module' })
         
         this.workerCV!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
-        const p = new Promise((onResolve, onFail)=>{
+        const p = new Promise<void>((onResolve, onFail)=>{
             this.workerCV!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")

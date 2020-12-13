@@ -73,7 +73,7 @@ const blur = async (data: Uint8ClampedArray, width: number, height: number, conf
 onmessage = async (event) => {
     //  console.log("event", event)
     if (event.data.message === WorkerCommand.INITIALIZE) {
-        const p = new Promise((onResolve, onFail) => {
+        const p = new Promise<void>((onResolve, onFail) => {
             cv_asm.onRuntimeInitialized = function () {
                 console.log("initialized cv_asm 1/2")
                 onResolve()
