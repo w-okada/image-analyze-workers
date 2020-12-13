@@ -8,10 +8,10 @@ let model:tf.GraphModel|null
 
 const load_module = async (config: U2NetPortraitConfig) => {
     if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
-      console.log("use wasm backend")
+      console.log("use cpu backend, wasm doesnot support enough function")
       require('@tensorflow/tfjs-backend-wasm')
       setWasmPath(config.wasmPath)
-      await tf.setBackend("wasm")
+      await tf.setBackend("cpu")
     }else{
       console.log("use webgl backend")
       require('@tensorflow/tfjs-backend-webgl')
@@ -29,10 +29,19 @@ const predict = async (image:ImageBitmap, config: U2NetPortraitConfig, params: U
     let bm:number[][]|null = null
     tf.tidy(()=>{
         let tensor = tf.browser.fromPixels(imageData)
-        tensor = tf.sub(tensor.expandDims(0).div(127.5), 1)
-//        tensor = tensor.expandDims(0).div(255)
+
+        tensor = tensor.expandDims(0)
+        tensor = tf.cast(tensor, 'float32')
+        tensor = tensor.div(tf.max(tensor))
+        tensor = tensor.sub(0.485).div(0.229)
+
         let prediction = model!.predict(tensor) as tf.Tensor
-        console.log(prediction)
+        //console.log("max valur2: ", tf.max(prediction).toString(), tf.min(prediction).toString())
+        
+        prediction = prediction.onesLike().sub(prediction)
+        prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()))
+        // console.log("max valur3: ", tf.max(prediction).toString(), tf.min(prediction).toString())
+        // console.log(prediction)
         bm = prediction.arraySync() as number[][]
     })
     return bm
@@ -45,8 +54,14 @@ const predictWithData = async (data: Uint8ClampedArray , config: U2NetPortraitCo
     let bm:number[][]|null = null
     tf.tidy(()=>{
         let tensor = tf.browser.fromPixels(imageData)
-        tensor = tf.sub(tensor.expandDims(0).div(127.5), 1)
+        tensor = tensor.expandDims(0)
+        tensor = tf.cast(tensor, 'float32')
+        tensor = tensor.div(tf.max(tensor))
+        tensor = tensor.sub(0.485).div(0.229)
         let prediction = model!.predict(tensor) as tf.Tensor
+        prediction = prediction.onesLike().sub(prediction)
+        prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()))
+        
         bm = prediction.arraySync() as number[][]
     })
     return bm
