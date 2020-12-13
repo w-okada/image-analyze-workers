@@ -86,13 +86,26 @@ Sample code is here.
 ```
 import React from 'react';
 import './App.css';
-import { BisenetV2CelebAMaskWorkerManager, generateBisenetV2CelebAMaskDefaultConfig, generateDefaultBisenetV2CelebAMaskParams, createForegroundImage } from '@dannadori/bisenetv2-celebamask-worker-js'
+import { generateDefaultU2NetPortraitParams, generateU2NetPortraitDefaultConfig, U2NetPortraitWorkerManager, createForegroundImage } from '@dannadori/u2net-portrait-worker-js'
 
 class App extends React.Component{
   
-  manager = new BisenetV2CelebAMaskWorkerManager()
-  config = generateBisenetV2CelebAMaskDefaultConfig()
-  params = generateDefaultBisenetV2CelebAMaskParams()
+  manager = new U2NetPortraitWorkerManager()
+                
+  config = (()=>{
+    const c = generateU2NetPortraitDefaultConfig()
+    c.useTFWasmBackend = false
+    c.wasmPath = ""
+    c.modelPath="/u2net-portrait_192/model.json"
+    return c
+  })()
+  params = (()=>{
+    const p = generateDefaultU2NetPortraitParams()
+    p.processHeight=192
+    p.processWidth=192
+    return p
+  })()
+
 
   srcCanvas = document.createElement("canvas")
   dstCanvas = document.createElement("canvas")
@@ -107,9 +120,9 @@ class App extends React.Component{
           srcImage, 0, 0, this.srcCanvas.width, this.dstCanvas.height)
         return this.manager.predict(this.srcCanvas, this.params)
       }).then((res)=>{
-        console.log(res)
         const foreground = createForegroundImage(this.srcCanvas, res)
         this.dstCanvas.getContext("2d")!.putImageData(foreground, 0, 0)
+        this.dstCanvas.getContext("2d")!.fillText("asdfsfasfds", 10, 10)
       })
     }
     srcImage.src = "./srcImage.jpg"
@@ -124,7 +137,6 @@ class App extends React.Component{
 }
 
 export default App;
-
 ```
 
 ### build and start
