@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "bundle": "rollup --config rollup.config.js"
+    "bundle": "rollup --config rollup.config.js; cp node_modules/@dannadori/bodypix-worker-js/dist/bodypix-worker-worker.js build/ "
   },
   "keywords": [],
   "author": "",
