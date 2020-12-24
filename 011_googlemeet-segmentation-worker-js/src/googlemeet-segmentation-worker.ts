@@ -8,9 +8,9 @@ export const generateGoogleMeetSegmentationDefaultConfig = ():GoogleMeetSegmenta
         browserType         : getBrowserType(),
         processOnLocal      : false,
         useTFWasmBackend    : false,
-        modelPath           : "/modnet/model.json",
+        modelPath           : "/googlemeet-segmentation_128/model.json",
         wasmPath            : "/tfjs-backend-wasm.wasm",
-        workerPath          : "./modnet-worker-worker.js"
+        workerPath          : "./googlemeet-segmentation-worker-worker.js"
     }
     return defaultConf
 }
