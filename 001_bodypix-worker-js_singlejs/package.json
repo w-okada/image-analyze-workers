@@ -1,0 +1,21 @@
+{
+  "name": "001_bodypix-worker-js_singlejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "bundle": "rollup --config rollup.config.js; cp node_modules/@dannadori/bodypix-worker-js/dist/bodypix-worker-worker.js build/ "
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@dannadori/bodypix-worker-js": "^1.0.28"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^17.0.0",
+    "@rollup/plugin-node-resolve": "^11.0.1",
+    "rollup": "^2.35.1",
+    "rollup-plugin-terser": "^7.0.2"
+  }
+}
