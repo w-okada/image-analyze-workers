@@ -165,6 +165,17 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t08_bisenetv2-celeba
 ### demo
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t09_u2net-portrait/index.html
 
+## Google meet person segmentation
+
+![image](https://user-images.githubusercontent.com/48346627/103648756-afef7680-4fa0-11eb-8959-5583f9d51c8e.png)
+
+### installation and usage 
+[See here](/011_googlemeet-segmentation-worker-js)
+
+### demo
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/index.html
+
+
 
 
 # Experiments

@@ -21,3 +21,10 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+
+.eslintcache
+public/googlemeet-segmentation-worker-worker.js
+public/tfjs-backend-wasm-simd.wasm
+public/tfjs-backend-wasm-threaded-simd.wasm
+public/tfjs-backend-wasm.wasm
