@@ -4,7 +4,7 @@
   "private": true,
   "homepage": "./",
   "dependencies": {
-    "@dannadori/googlemeet-segmentation-worker-js": "^1.0.3",
+    "@dannadori/googlemeet-segmentation-worker-js": "^1.0.7",
     "@testing-library/jest-dom": "^5.11.8",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",

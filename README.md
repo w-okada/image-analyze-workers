@@ -6,6 +6,9 @@ Note. some module is not provided as webworker for safari because of it's restri
 <a href="https://www.buymeacoffee.com/wokad" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
 # Webworkers
+<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
+
+<!-- code_chunk_output -->
 
 - [Webworkers](#webworkers)
   - [bodypix](#bodypix)
@@ -38,16 +41,22 @@ Note. some module is not provided as webworker for safari because of it's restri
   - [U^2-Net Portrait Drawing](#u2-net-portrait-drawing)
     - [installation and usage](#installation-and-usage-8)
     - [demo](#demo-8)
+  - [Google meet person segmentation](#google-meet-person-segmentation)
+    - [installation and usage](#installation-and-usage-9)
+    - [demo](#demo-9)
 - [Experiments](#experiments)
   - [Exp.1 Multi-version based tfjs model](#exp1-multi-version-based-tfjs-model)
-    - [demo](#demo-9)
+    - [demo](#demo-10)
     - [src](#src)
     - [Citation](#citation-1)
   - [Exp.2 Performance improvement](#exp2-performance-improvement)
-    - [demo](#demo-10)
+    - [demo](#demo-11)
     - [src](#src-1)
     - [Citation](#citation-2)
 - [Reference](#reference-1)
+
+<!-- /code_chunk_output -->
+
 
 ## bodypix
 ![image](https://user-images.githubusercontent.com/48346627/95987700-be773780-0e62-11eb-9645-40b7c0adb826.png)
