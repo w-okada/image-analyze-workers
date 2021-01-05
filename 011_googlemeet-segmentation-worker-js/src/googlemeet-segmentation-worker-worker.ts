@@ -8,11 +8,11 @@ let model:tf.GraphModel|null
 
 const load_module = async (config: GoogleMeetSegmentationConfig) => {
     if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
-    //   console.log("use cpu backend, wasm doesnot support enough function")
+      console.log("use cpu backend, wasm doesnot support enough function")
       require('@tensorflow/tfjs-backend-wasm')
       setWasmPath(config.wasmPath)
-      await tf.setBackend("wasm")
-        //await tf.setBackend("wasm")
+    //   await tf.setBackend("wasm")
+        await tf.setBackend("cpu")
     }else{
       console.log("use webgl backend")
       require('@tensorflow/tfjs-backend-webgl')
@@ -22,25 +22,37 @@ const load_module = async (config: GoogleMeetSegmentationConfig) => {
 
 // Case.1 Use ImageBitmap (for Chrome default)
 const predict = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams) => {
-    const off = new OffscreenCanvas(params.processWidth, params.processHeight)
+    // const off = new OffscreenCanvas(params.processWidth, params.processHeight)
+    // const ctx = off.getContext("2d")!
+    // ctx.drawImage(image, 0, 0, off.width, off.height)
+    // const imageData = ctx.getImageData(0, 0, off.width, off.height)
+    console.log(image.width, image.height)
+    const off = new OffscreenCanvas(image.width, image.height)
     const ctx = off.getContext("2d")!
     ctx.drawImage(image, 0, 0, off.width, off.height)
     const imageData = ctx.getImageData(0, 0, off.width, off.height)
 
-    let bm:number[][][]|null = null
+    let bm:number[]|null = null
     tf.tidy(()=>{
         let tensor = tf.browser.fromPixels(imageData)
-
+        tensor = tf.image.resizeBilinear(tensor,[128, 128])
         tensor = tensor.expandDims(0)
         tensor = tf.cast(tensor, 'float32')
-        tensor = tensor.div(tf.max(tensor).div(2))
-        tensor = tensor.sub(1.0)
         // tensor = tensor.div(tf.max(tensor))
         // tensor = tensor.sub(0.485).div(0.229)
 
+        // tensor = tensor.div(tf.max(tensor).div(2))
+        // tensor = tensor.sub(1.0)
+
+        tensor = tensor.div(255.0)
+
         let prediction = model!.predict(tensor) as tf.Tensor
-        bm = prediction.arraySync() as number[][][]
-    })
+        // console.log("Max!",tf.max(prediction).arraySync(), "Min!",tf.min(prediction).arraySync(), )
+        // console.log(prediction)
+        prediction = prediction.softmax()
+        bm = prediction.arraySync() as number[]
+    }) 
+    // console.log(bm)
     return bm![0]
 }
 
@@ -56,11 +68,12 @@ const predictWithData = async (data: Uint8ClampedArray , config: GoogleMeetSegme
         // tensor = tensor.div(tf.max(tensor))
         // tensor = tensor.sub(0.485).div(0.229)
 
-        tensor = tensor.div(tf.max(tensor).div(2))
-        tensor = tensor.sub(1.0)
+        // tensor = tensor.div(tf.max(tensor).div(2))
+        // tensor = tensor.sub(1.0)
+
+        tensor = tensor.div(255.0)
 
         let prediction = model!.predict(tensor) as tf.Tensor
-        console.log(prediction)
         bm = prediction.arraySync() as number[][][]
     })
     return bm![0]

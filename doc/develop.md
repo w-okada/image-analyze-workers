@@ -54,12 +54,14 @@ $cat tsconfig.json
 "outDir": "./dist",
 
 ### webpack設定
+$ npm install -D worker-plugin
 cat > webpack.config.js
 const path = require('path');
+const WorkerPlugin = require('worker-plugin');
 
-module.exports = {
+const manager = {
     mode: 'development',
-    entry: './src/posenet-worker.ts', // <-- (1)
+    entry: './src/modnet-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
     },
@@ -69,54 +71,62 @@ module.exports = {
         ],
     },
     output: {
-        filename: 'posenet-worker.js', // <-- (2)
+        filename: 'modnet-worker.js', // <-- (2)
         path: path.resolve(__dirname, 'dist'),
         libraryTarget: 'umd',
         globalObject: 'typeof self !== \'undefined\' ? self : this'
     },
-};
-
-
-### worker-pluginの追加
-$ npm install -D worker-plugin
-$ cat webpack.config.js
-const path = require('path');
-const WorkerPlugin = require('worker-plugin');	 // <--- (1)
-module.exports = {
-    mode: 'development',
-    entry: './src/posenet-worker.ts', // <-- (1)
-    resolve: {
-        extensions: [".ts", ".js"],
-    },
-    module: {
-        rules: [
-            { test: /\.ts$/, loader: 'ts-loader' },
-        ],
-    },
-    output: {
-        filename: 'posenet-worker.js', // <-- (2)
-        path: path.resolve(__dirname, 'dist'),
-        libraryTarget: 'umd',
-        globalObject: 'typeof self !== \'undefined\' ? self : this'
-    },
-    plugins: [　　　　　　　　　　　　　　　　 // <--- (2)
+    plugins: [　　　　　　　　　　　　　　　　 // <--- (3)
         new WorkerPlugin()
     ]
 };
 
+
+
+const worker = {
+    mode: 'development',
+    entry: './src/modnet-worker-worker.ts', // <-- (1)
+    resolve: {
+        extensions: [".ts", ".js"],
+    },
+    module: {
+        rules: [
+            { test: /\.ts$/, loader: 'ts-loader' },
+        ],
+    },
+    output: {
+        filename: 'modnet-worker-worker.js', // <-- (2)
+        path: path.resolve(__dirname, 'dist'),
+        libraryTarget: 'umd',
+        globalObject: 'typeof self !== \'undefined\' ? self : this'
+    },
+    plugins: [　　　　　　　　　　　　　　　　 // <--- (3)
+        new WorkerPlugin()
+    ]
+};
+
+module.exports = [
+    manager, worker
+]
 ```
+
+
+
+
 
 ## ソースコード開発
 
 ```
 $ npm install @tensorflow-models/posenet
 $ npm install await-semaphore
-$ cat .gitignore 
+$ npm install @tensorflow/tfjs
+$ npm install @tensorflow/tfjs-backend-wasm
+$ cat > .gitignore 
 *~
 *#
 node_modules
 dist
-$ cat .npmignore 
+$ cat > .npmignore 
 *~
 *#
 node_modules

@@ -30,7 +30,7 @@ const load_module = async (config: GoogleMeetSegmentationConfig) => {
         console.log("use wasm backend")
       require('@tensorflow/tfjs-backend-wasm')
       setWasmPath(config.wasmPath)
-      await tf.setBackend("wasm")
+      await tf.setBackend("cpu")
     }else{
       console.log("use webgl backend")
       require('@tensorflow/tfjs-backend-webgl')
@@ -67,9 +67,12 @@ export class LocalWorker{
             let tensor = tf.browser.fromPixels(this.canvas)
             tensor = tensor.expandDims(0)
             tensor = tf.cast(tensor, 'float32')
-            tensor = tensor.div(tf.max(tensor).div(2))
-            tensor = tensor.sub(1.0)
+            // tensor = tensor.div(tf.max(tensor).div(2))
+            // tensor = tensor.sub(1.0)
+            tensor = tensor.div(255)
+
             let prediction = this.model!.predict(tensor) as tf.Tensor
+            prediction = prediction.softmax()            
             bm = prediction.arraySync() as number[][][]
 
         })
@@ -156,6 +159,7 @@ export class GoogleMeetSegmentationWorkerManager{
             return p
         }else{
             // Case.3 Process on worker thread, Chrome (Send ImageBitmap)
+            console.log("WORKER:",targetCanvas.width, targetCanvas.height)
             const off = new OffscreenCanvas(targetCanvas.width, targetCanvas.height)
             off.getContext("2d")!.drawImage(targetCanvas, 0, 0, targetCanvas.width, targetCanvas.height)
             const imageBitmap = off.transferToImageBitmap()

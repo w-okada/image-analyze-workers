@@ -10,7 +10,7 @@ class App extends DemoBase {
     const c = generateGoogleMeetSegmentationDefaultConfig()
     c.useTFWasmBackend = false
     // c.wasmPath = ""
-    //c.modelPath="/tfjs_model_float32/model.json"
+    c.modelPath="/googlemeet-segmentation_128_my/model.json"
     return c
   })()
   params = (()=>{
@@ -31,8 +31,8 @@ class App extends DemoBase {
       {
         title: "modelPath",
         currentIndexOrValue: 0,
-        displayLabels:["seg128"],
-        values: ["/googlemeet-segmentation_128/model.json"],
+        displayLabels:["my", "new", "seg128", "old"],
+        values: ["/googlemeet-segmentation_128_my/model.json", "/googlemeet-segmentation_128_new/model.json", "/googlemeet-segmentation_128/model.json", "/googlemeet-segmentation_128_old/model.json", ],
         callback: (val: string | number | MediaStream) => {
         },
       },
@@ -53,23 +53,23 @@ class App extends DemoBase {
           this.config.modelPath = this.controllerRef.current!.getCurrentValue("modelPath") as string  
 
 
-          const path = this.config.modelPath
-          if(path.indexOf("128") > 0){
-            this.params.processWidth = 128
-            this.params.processHeight = 128
-          }else if(path.indexOf("256") > 0){
-            this.params.processWidth = 256
-            this.params.processHeight = 256
-          }else if(path.indexOf("320") > 0){
-            this.params.processWidth = 320
-            this.params.processHeight = 320
-          }else if(path.indexOf("512") > 0){
-            this.params.processWidth = 512
-            this.params.processHeight = 512
-          }else if(path.indexOf("1024") > 0){
-            this.params.processWidth = 1024
-            this.params.processHeight = 1024
-          }          
+          // const path = this.config.modelPath
+          // if(path.indexOf("128") > 0){
+          //   this.params.processWidth = 128
+          //   this.params.processHeight = 128
+          // }else if(path.indexOf("256") > 0){
+          //   this.params.processWidth = 256
+          //   this.params.processHeight = 256
+          // }else if(path.indexOf("320") > 0){
+          //   this.params.processWidth = 320
+          //   this.params.processHeight = 320
+          // }else if(path.indexOf("512") > 0){
+          //   this.params.processWidth = 512
+          //   this.params.processHeight = 512
+          // }else if(path.indexOf("1024") > 0){
+          //   this.params.processWidth = 1024
+          //   this.params.processHeight = 1024
+          // }          
 
 
           this.requireReload()
@@ -86,17 +86,36 @@ class App extends DemoBase {
     this.canvas.height = prediction.length
     const imageData = this.canvas.getContext("2d")!.getImageData(0, 0, this.canvas.width, this.canvas.height)
     const data = imageData.data
-    const useIndex=1
+    const useIndex = 1
+    const inverse = 1
+    const base=255
     for (let rowIndex = 0; rowIndex < this.canvas.height; rowIndex++) {
       for (let colIndex = 0; colIndex < this.canvas.width; colIndex++) {
         const seg_offset = ((rowIndex * this.canvas.width) + colIndex)
         const pix_offset = ((rowIndex * this.canvas.width) + colIndex) * 4
         if(true){
+          // if(prediction[rowIndex][colIndex][useIndex] > 0){
+          if(prediction[rowIndex][colIndex][0]>0.5){
+            // data[pix_offset + 0] = prediction[rowIndex][colIndex][useIndex] *base * inverse
+            // data[pix_offset + 1] = prediction[rowIndex][colIndex][useIndex] *base * inverse 
+            // data[pix_offset + 2] = prediction[rowIndex][colIndex][useIndex] *base * inverse
+            data[pix_offset + 0] = 255
+            data[pix_offset + 1] = 0
+            data[pix_offset + 2] = 0
+            data[pix_offset + 3] = 128
+            // if(rowIndex==64 && colIndex==64){
+            //   console.log("64x64:::",data[pix_offset + 0], prediction[rowIndex][colIndex][useIndex] *base * inverse)
 
-          data[pix_offset + 0] = prediction[rowIndex][colIndex][useIndex] *255 
-          data[pix_offset + 1] = prediction[rowIndex][colIndex][useIndex] *255 
-          data[pix_offset + 2] = prediction[rowIndex][colIndex][useIndex] *255 
-          data[pix_offset + 3] = 255 - prediction[rowIndex][colIndex][useIndex] *255
+            // }
+          }else{
+            data[pix_offset + 0] = 0
+            data[pix_offset + 1] = 0
+            data[pix_offset + 2] = 0
+            data[pix_offset + 3] = 128
+          }
+
+//          data[pix_offset + 3] = 255 - prediction[rowIndex][colIndex][useIndex] * 255 * inverse
+//          console.log("value::",data[pix_offset + 0])
           // data[pix_offset + 3] = 255
 
           // data[pix_offset + 0] = 0
@@ -121,20 +140,16 @@ class App extends DemoBase {
     this.resultCanvasRef.current!.width = this.originalCanvas.current!.width
     this.resultCanvasRef.current!.height = this.originalCanvas.current!.height
     const ctx = this.resultCanvasRef.current!.getContext("2d")!
-    ctx.drawImage(this.originalCanvas.current!, 0, 0, this.originalCanvas.current!.width, this.originalCanvas.current!.height)
+    ctx.drawImage(this.originalCanvas.current!, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
     ctx.drawImage(this.canvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
   }
 
   count = 0
   handleResult = (prediction: any) => {
-    //console.log(prediction)
+    // console.log(prediction)
     this.drawSegmentation(prediction)
   }
 
-  componentDidMount(){
-
-    super.componentDidMount()
-  }
 }
 
 
