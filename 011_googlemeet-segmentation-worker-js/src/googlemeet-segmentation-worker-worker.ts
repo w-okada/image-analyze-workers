@@ -8,7 +8,7 @@ let model:tf.GraphModel|null
 
 const load_module = async (config: GoogleMeetSegmentationConfig) => {
     if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
-      //console.log("use cpu backend, wasm doesnot support enough function")
+      console.log("use cpu backend, wasm doesnot support enough function")
       require('@tensorflow/tfjs-backend-wasm')
       setWasmPath(config.wasmPath)
       //await tf.setBackend("wasm")

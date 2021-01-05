@@ -27,7 +27,7 @@ export const generateDefaultGoogleMeetSegmentationParams = ():GoogleMeetSegmenta
 
 const load_module = async (config: GoogleMeetSegmentationConfig) => {
     if(config.useTFWasmBackend){
-      console.log("use wasm backend")
+      console.log("use cpu backend, wasm doesnot support enough function")
       require('@tensorflow/tfjs-backend-wasm')
       setWasmPath(config.wasmPath)
       await tf.setBackend("cpu")
@@ -192,30 +192,37 @@ export class GoogleMeetSegmentationWorkerManager{
 
 //// Utility for Demo
 
-export const createForegroundImage = (srcCanvas:HTMLCanvasElement, prediction:number[][]) =>{
+export const createForegroundImage = (srcCanvas:HTMLCanvasElement, prediction:number[][][]) =>{
     const tmpCanvas = document.createElement("canvas")
     tmpCanvas.width = prediction[0].length
     tmpCanvas.height = prediction.length    
     const imageData = tmpCanvas.getContext("2d")!.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height)
     const data = imageData.data
 
+    const useIndex = 0
+
     for (let rowIndex = 0; rowIndex < tmpCanvas.height; rowIndex++) {
       for (let colIndex = 0; colIndex < tmpCanvas.width; colIndex++) {
         const seg_offset = ((rowIndex * tmpCanvas.width) + colIndex)
         const pix_offset = ((rowIndex * tmpCanvas.width) + colIndex) * 4
-        if(prediction[rowIndex][colIndex] > 0.005){
+        if(prediction[rowIndex][colIndex][useIndex]>0.5){
+            // data[pix_offset + 0] = prediction[rowIndex][colIndex][useIndex] *base * inverse
+            // data[pix_offset + 1] = prediction[rowIndex][colIndex][useIndex] *base * inverse 
+            // data[pix_offset + 2] = prediction[rowIndex][colIndex][useIndex] *base * inverse
+            data[pix_offset + 0] = 70
+            data[pix_offset + 1] = 30
+            data[pix_offset + 2] = 30
+            data[pix_offset + 3] = 200
+            // if(rowIndex==64 && colIndex==64){
+            //   console.log("64x64:::",data[pix_offset + 0], prediction[rowIndex][colIndex][useIndex] *base * inverse)
 
-          data[pix_offset + 0] = prediction[rowIndex][colIndex] *255
-          data[pix_offset + 1] = prediction[rowIndex][colIndex] *255
-          data[pix_offset + 2] = prediction[rowIndex][colIndex] *255
-          data[pix_offset + 3] = 255
-
-        }else{
-          data[pix_offset + 0] = 0
-          data[pix_offset + 1] = 0
-          data[pix_offset + 2] = 0
-          data[pix_offset + 3] = 0
-        }
+            // }
+          }else{
+            data[pix_offset + 0] = 0
+            data[pix_offset + 1] = 0
+            data[pix_offset + 2] = 0
+            data[pix_offset + 3] = 0
+          }
       }
     }
     const imageDataTransparent = new ImageData(data, tmpCanvas.width, tmpCanvas.height);
@@ -231,3 +238,7 @@ export const createForegroundImage = (srcCanvas:HTMLCanvasElement, prediction:nu
     return  outImageData
 
   }
+
+
+
+  
