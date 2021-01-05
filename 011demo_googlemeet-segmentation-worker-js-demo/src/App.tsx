@@ -10,13 +10,13 @@ class App extends DemoBase {
     const c = generateGoogleMeetSegmentationDefaultConfig()
     c.useTFWasmBackend = false
     // c.wasmPath = ""
-    c.modelPath="/googlemeet-segmentation_128_my/model.json"
+    c.modelPath="/googlemeet-segmentation_128_32/model.json"
     return c
   })()
   params = (()=>{
     const p = generateDefaultGoogleMeetSegmentationParams()
-    p.processHeight=128
-    p.processWidth=128
+    p.processHeight = 128
+    p.processWidth  = 128
     return p
   })()
 
@@ -31,8 +31,8 @@ class App extends DemoBase {
       {
         title: "modelPath",
         currentIndexOrValue: 0,
-        displayLabels:["my", "new", "seg128", "old"],
-        values: ["/googlemeet-segmentation_128_my/model.json", "/googlemeet-segmentation_128_new/model.json", "/googlemeet-segmentation_128/model.json", "/googlemeet-segmentation_128_old/model.json", ],
+        displayLabels:["seg128_32", "seg128_16", "seg144_32", "seg144_16"],
+        values: ["/googlemeet-segmentation_128_32/model.json", "/googlemeet-segmentation_128_16/model.json", "/googlemeet-segmentation_144_32/model.json", "googlemeet-segmentation_144_16/model.json" ],
         callback: (val: string | number | MediaStream) => {
         },
       },
@@ -53,13 +53,8 @@ class App extends DemoBase {
           this.config.modelPath = this.controllerRef.current!.getCurrentValue("modelPath") as string  
 
 
-          // const path = this.config.modelPath
-          // if(path.indexOf("128") > 0){
-          //   this.params.processWidth = 128
-          //   this.params.processHeight = 128
-          // }else if(path.indexOf("256") > 0){
-          //   this.params.processWidth = 256
-          //   this.params.processHeight = 256
+          const path = this.config.modelPath
+
           // }else if(path.indexOf("320") > 0){
           //   this.params.processWidth = 320
           //   this.params.processHeight = 320
@@ -72,7 +67,17 @@ class App extends DemoBase {
           // }          
 
 
-          this.requireReload()
+          this.requireReload(
+            ()=>{
+              if(path.indexOf("128") > 0){
+                this.params.processWidth = 128
+                this.params.processHeight = 128
+              }else if(path.indexOf("144") > 0){
+                this.params.processWidth = 144
+                this.params.processHeight = 256
+              }
+            }
+          )
         },
       },
     ]
@@ -99,9 +104,9 @@ class App extends DemoBase {
             // data[pix_offset + 0] = prediction[rowIndex][colIndex][useIndex] *base * inverse
             // data[pix_offset + 1] = prediction[rowIndex][colIndex][useIndex] *base * inverse 
             // data[pix_offset + 2] = prediction[rowIndex][colIndex][useIndex] *base * inverse
-            data[pix_offset + 0] = 255
-            data[pix_offset + 1] = 0
-            data[pix_offset + 2] = 0
+            data[pix_offset + 0] = 200
+            data[pix_offset + 1] = 200
+            data[pix_offset + 2] = 200
             data[pix_offset + 3] = 128
             // if(rowIndex==64 && colIndex==64){
             //   console.log("64x64:::",data[pix_offset + 0], prediction[rowIndex][colIndex][useIndex] *base * inverse)

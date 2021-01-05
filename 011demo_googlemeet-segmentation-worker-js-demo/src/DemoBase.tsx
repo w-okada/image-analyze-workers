@@ -31,6 +31,8 @@ class DemoBase extends React.Component {
 
     reloadRequired = false
 
+    preprocessBeforeReload:()=>void = ()=>{}
+
     getCustomMenu = () => {
         const menu: ControllerUIProp[] = []
         return menu
@@ -38,8 +40,11 @@ class DemoBase extends React.Component {
 
     handleResult = (prediction: any) => { }
 
-    requireReload = () =>{
+    requireReload = (preprocessBeforeReload?:()=>void) =>{
         this.reloadRequired = true
+        if(preprocessBeforeReload){
+            this.preprocessBeforeReload = preprocessBeforeReload
+        }
     }
 
     private adjustCanvaSize(input:HTMLImageElement|HTMLVideoElement){
@@ -172,6 +177,7 @@ class DemoBase extends React.Component {
             this.pfmRef.current!.end()
 
             if(this.reloadRequired === true){
+                this.preprocessBeforeReload()
                 this.manager!.init(Object.assign({}, this.config)).then(()=>{
                     this.reloadRequired=false
                     setTimeout(() => {
