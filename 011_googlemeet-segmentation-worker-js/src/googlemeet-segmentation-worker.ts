@@ -27,7 +27,7 @@ export const generateDefaultGoogleMeetSegmentationParams = ():GoogleMeetSegmenta
 
 const load_module = async (config: GoogleMeetSegmentationConfig) => {
     if(config.useTFWasmBackend){
-      console.log("use wasm backend")
+      console.log("use cpu backend, wasm doesnot support enough function")
       require('@tensorflow/tfjs-backend-wasm')
       setWasmPath(config.wasmPath)
       await tf.setBackend("cpu")
@@ -55,7 +55,7 @@ export class LocalWorker{
         return p
     }
 
-    predict = async (targetCanvas:HTMLCanvasElement, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][]> => {
+    predict = async (targetCanvas:HTMLCanvasElement, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]> => {
         console.log("current backend[main thread]:",tf.getBackend())
         // // ImageData作成
         // this.canvas.width  = params.processWidth
@@ -73,11 +73,12 @@ export class LocalWorker{
             tensor = tensor.div(255)
 
             let prediction = this.model!.predict(tensor) as tf.Tensor
-            prediction = prediction.softmax()            
+            prediction = prediction.softmax()
+            prediction = prediction.squeeze()
             bm = prediction.arraySync() as number[][][]
 
         })
-        return bm![0]
+        return bm!
     }
 }
 
@@ -122,10 +123,10 @@ export class GoogleMeetSegmentationWorkerManager{
         return p
     }
 
-    predict(targetCanvas:HTMLCanvasElement, params = generateDefaultGoogleMeetSegmentationParams()):Promise<number[][]>{
+    predict(targetCanvas:HTMLCanvasElement, params = generateDefaultGoogleMeetSegmentationParams()):Promise<number[][][]>{
         if(this.config.processOnLocal == true){
             // Case.1 Process on local thread.
-            const p = new Promise(async(onResolve:(v:number[][])=>void, onFail)=>{
+            const p = new Promise(async(onResolve:(v:number[][][])=>void, onFail)=>{
                 const prediction = await this.localWorker.predict(targetCanvas, this.config, params)
                 onResolve(prediction)
             })
@@ -146,7 +147,7 @@ export class GoogleMeetSegmentationWorkerManager{
                 config: this.config, params: params,
                 data: dataArray
             }, [dataArray.buffer])
-            const p = new Promise((onResolve:(v:number[][])=>void, onFail)=>{
+            const p = new Promise((onResolve:(v:number[][][])=>void, onFail)=>{
                 this.workerGM!.onmessage = (event) => {
                     if(event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid){
                         const prediction = event.data.prediction
@@ -171,7 +172,7 @@ export class GoogleMeetSegmentationWorkerManager{
                 // data: data, width: inImageData.width, height:inImageData.height
                 image: imageBitmap
             }, [imageBitmap])
-            const p = new Promise((onResolve:(v:number[][])=>void, onFail)=>{
+            const p = new Promise((onResolve:(v:number[][][])=>void, onFail)=>{
                 this.workerGM!.onmessage = (event) => {
                     if(event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid){
                         const prediction = event.data.prediction
@@ -192,30 +193,30 @@ export class GoogleMeetSegmentationWorkerManager{
 
 //// Utility for Demo
 
-export const createForegroundImage = (srcCanvas:HTMLCanvasElement, prediction:number[][]) =>{
+export const createForegroundImage = (srcCanvas:HTMLCanvasElement, prediction:number[][][]) =>{
     const tmpCanvas = document.createElement("canvas")
     tmpCanvas.width = prediction[0].length
     tmpCanvas.height = prediction.length    
     const imageData = tmpCanvas.getContext("2d")!.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height)
     const data = imageData.data
 
+    const useIndex = 0
+
     for (let rowIndex = 0; rowIndex < tmpCanvas.height; rowIndex++) {
       for (let colIndex = 0; colIndex < tmpCanvas.width; colIndex++) {
         const seg_offset = ((rowIndex * tmpCanvas.width) + colIndex)
         const pix_offset = ((rowIndex * tmpCanvas.width) + colIndex) * 4
-        if(prediction[rowIndex][colIndex] > 0.005){
-
-          data[pix_offset + 0] = prediction[rowIndex][colIndex] *255
-          data[pix_offset + 1] = prediction[rowIndex][colIndex] *255
-          data[pix_offset + 2] = prediction[rowIndex][colIndex] *255
-          data[pix_offset + 3] = 255
-
-        }else{
-          data[pix_offset + 0] = 0
-          data[pix_offset + 1] = 0
-          data[pix_offset + 2] = 0
-          data[pix_offset + 3] = 0
-        }
+        if(prediction[rowIndex][colIndex][useIndex]>0.5){
+            data[pix_offset + 0] = 70
+            data[pix_offset + 1] = 30
+            data[pix_offset + 2] = 30
+            data[pix_offset + 3] = 200
+          }else{
+            data[pix_offset + 0] = 0
+            data[pix_offset + 1] = 0
+            data[pix_offset + 2] = 0
+            data[pix_offset + 3] = 0
+          }
       }
     }
     const imageDataTransparent = new ImageData(data, tmpCanvas.width, tmpCanvas.height);
@@ -230,4 +231,8 @@ export const createForegroundImage = (srcCanvas:HTMLCanvasElement, prediction:nu
     const outImageData = ctx.getImageData(0, 0, outputCanvas.width, outputCanvas.height)
     return  outImageData
 
-  }
+}
+
+
+
+  

@@ -124,7 +124,6 @@ class App extends React.Component{
       }).then((res)=>{
         const foreground = createForegroundImage(this.srcCanvas, res)
         this.dstCanvas.getContext("2d")!.putImageData(foreground, 0, 0)
-        this.dstCanvas.getContext("2d")!.fillText("asdfsfasfds", 10, 10)
       })
     }
     srcImage.src = "./srcImage.jpg"

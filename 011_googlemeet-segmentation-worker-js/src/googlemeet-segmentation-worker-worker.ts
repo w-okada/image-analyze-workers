@@ -8,7 +8,7 @@ let model:tf.GraphModel|null
 
 const load_module = async (config: GoogleMeetSegmentationConfig) => {
     if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
-      //console.log("use cpu backend, wasm doesnot support enough function")
+      console.log("use cpu backend, wasm doesnot support enough function")
       require('@tensorflow/tfjs-backend-wasm')
       setWasmPath(config.wasmPath)
       //await tf.setBackend("wasm")
@@ -21,7 +21,7 @@ const load_module = async (config: GoogleMeetSegmentationConfig) => {
   }
 
 // Case.1 Use ImageBitmap (for Chrome default)
-const predict = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams) => {
+const predict = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]>=> {
     // const off = new OffscreenCanvas(params.processWidth, params.processHeight)
     // const ctx = off.getContext("2d")!
     // ctx.drawImage(image, 0, 0, off.width, off.height)
@@ -32,7 +32,7 @@ const predict = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, 
     ctx.drawImage(image, 0, 0, off.width, off.height)
     const imageData = ctx.getImageData(0, 0, off.width, off.height)
 
-    let bm:number[]|null = null
+    let bm:number[][][]|null = null
     tf.tidy(()=>{
         let tensor = tf.browser.fromPixels(imageData)
         tensor = tf.image.resizeBilinear(tensor,[params.processWidth, params.processHeight])
@@ -50,14 +50,15 @@ const predict = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, 
         // console.log("Max!",tf.max(prediction).arraySync(), "Min!",tf.min(prediction).arraySync(), )
         // console.log(prediction)
         prediction = prediction.softmax()
-        bm = prediction.arraySync() as number[]
+        prediction = prediction.squeeze()
+        bm = prediction.arraySync() as number[][][]
     }) 
     // console.log(bm)
-    return bm![0]
+    return bm!
 }
 
 // Case.2 Use ImageBitmap (for Safari or special intent)
-const predictWithData = async (data: Uint8ClampedArray , config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams) => {
+const predictWithData = async (data: Uint8ClampedArray , config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]> => {
     const imageData = new ImageData(data, params.processWidth, params.processHeight)
 
     let bm:number[][][]|null = null
@@ -75,9 +76,10 @@ const predictWithData = async (data: Uint8ClampedArray , config: GoogleMeetSegme
 
         let prediction = model!.predict(tensor) as tf.Tensor
         prediction = prediction.softmax()
+        prediction = prediction.squeeze()
         bm = prediction.arraySync() as number[][][]
     })
-    return bm![0]
+    return bm!
 }
 
 onmessage = async (event) => {
