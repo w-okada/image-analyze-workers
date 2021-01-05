@@ -8,11 +8,11 @@ let model:tf.GraphModel|null
 
 const load_module = async (config: GoogleMeetSegmentationConfig) => {
     if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
-      console.log("use cpu backend, wasm doesnot support enough function")
+      //console.log("use cpu backend, wasm doesnot support enough function")
       require('@tensorflow/tfjs-backend-wasm')
       setWasmPath(config.wasmPath)
-    //   await tf.setBackend("wasm")
-        await tf.setBackend("cpu")
+      //await tf.setBackend("wasm")
+      await tf.setBackend("cpu")
     }else{
       console.log("use webgl backend")
       require('@tensorflow/tfjs-backend-webgl')
@@ -26,7 +26,7 @@ const predict = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, 
     // const ctx = off.getContext("2d")!
     // ctx.drawImage(image, 0, 0, off.width, off.height)
     // const imageData = ctx.getImageData(0, 0, off.width, off.height)
-    console.log(image.width, image.height)
+    //console.log(image.width, image.height)
     const off = new OffscreenCanvas(image.width, image.height)
     const ctx = off.getContext("2d")!
     ctx.drawImage(image, 0, 0, off.width, off.height)
@@ -35,7 +35,7 @@ const predict = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, 
     let bm:number[]|null = null
     tf.tidy(()=>{
         let tensor = tf.browser.fromPixels(imageData)
-        tensor = tf.image.resizeBilinear(tensor,[128, 128])
+        tensor = tf.image.resizeBilinear(tensor,[params.processWidth, params.processHeight])
         tensor = tensor.expandDims(0)
         tensor = tf.cast(tensor, 'float32')
         // tensor = tensor.div(tf.max(tensor))
@@ -74,6 +74,7 @@ const predictWithData = async (data: Uint8ClampedArray , config: GoogleMeetSegme
         tensor = tensor.div(255.0)
 
         let prediction = model!.predict(tensor) as tf.Tensor
+        prediction = prediction.softmax()
         bm = prediction.arraySync() as number[][][]
     })
     return bm![0]

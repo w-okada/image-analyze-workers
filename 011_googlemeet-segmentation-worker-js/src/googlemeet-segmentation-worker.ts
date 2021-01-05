@@ -19,15 +19,15 @@ export const generateGoogleMeetSegmentationDefaultConfig = ():GoogleMeetSegmenta
 export const generateDefaultGoogleMeetSegmentationParams = ():GoogleMeetSegmentationOperationParams => {
     const defaultParams:GoogleMeetSegmentationOperationParams = {
         type                : GoogleMeetSegmentationFunctionType.Segmentation,
-        processWidth        : 256,
-        processHeight       : 256,
+        processWidth        : 128,
+        processHeight       : 128,
     }
     return defaultParams
 }
 
 const load_module = async (config: GoogleMeetSegmentationConfig) => {
     if(config.useTFWasmBackend){
-        console.log("use wasm backend")
+      console.log("use wasm backend")
       require('@tensorflow/tfjs-backend-wasm')
       setWasmPath(config.wasmPath)
       await tf.setBackend("cpu")
@@ -57,14 +57,15 @@ export class LocalWorker{
 
     predict = async (targetCanvas:HTMLCanvasElement, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][]> => {
         console.log("current backend[main thread]:",tf.getBackend())
-        // ImageData作成
-        this.canvas.width  = params.processWidth
-        this.canvas.height = params.processHeight
-        const ctx = this.canvas.getContext("2d")!
-        ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height)
+        // // ImageData作成
+        // this.canvas.width  = params.processWidth
+        // this.canvas.height = params.processHeight
+        // const ctx = this.canvas.getContext("2d")!
+        // ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height)
         let bm:number[][][]|null = null
         tf.tidy(()=>{
-            let tensor = tf.browser.fromPixels(this.canvas)
+            let tensor = tf.browser.fromPixels(targetCanvas)
+            tensor = tf.image.resizeBilinear(tensor,[params.processWidth, params.processHeight])
             tensor = tensor.expandDims(0)
             tensor = tf.cast(tensor, 'float32')
             // tensor = tensor.div(tf.max(tensor).div(2))
@@ -159,7 +160,7 @@ export class GoogleMeetSegmentationWorkerManager{
             return p
         }else{
             // Case.3 Process on worker thread, Chrome (Send ImageBitmap)
-            console.log("WORKER:",targetCanvas.width, targetCanvas.height)
+            //console.log("WORKER:",targetCanvas.width, targetCanvas.height)
             const off = new OffscreenCanvas(targetCanvas.width, targetCanvas.height)
             off.getContext("2d")!.drawImage(targetCanvas, 0, 0, targetCanvas.width, targetCanvas.height)
             const imageBitmap = off.transferToImageBitmap()
