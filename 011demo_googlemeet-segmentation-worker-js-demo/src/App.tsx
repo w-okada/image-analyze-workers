@@ -5,7 +5,7 @@ import { generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmenta
 class App extends DemoBase {
   manager:GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
   canvas = document.createElement("canvas")
-
+  smoothing:boolean = false
   config = (()=>{
     const c = generateGoogleMeetSegmentationDefaultConfig()
     c.useTFWasmBackend = false
@@ -74,6 +74,15 @@ class App extends DemoBase {
           )
         },
       },
+      {
+        title: "smoothing",
+        currentIndexOrValue: 1,
+        values: ["on", "off"],
+        callback: (val: string | number | MediaStream) => {
+          const smoothing = this.controllerRef.current!.getCurrentValue("smoothing")
+          this.smoothing   = (smoothing === "on" ? true  : false) as boolean
+        },
+      },
     ]
     return menu
   }
@@ -109,7 +118,14 @@ class App extends DemoBase {
     this.resultCanvasRef.current!.width = this.originalCanvas.current!.width
     this.resultCanvasRef.current!.height = this.originalCanvas.current!.height
     const ctx = this.resultCanvasRef.current!.getContext("2d")!
+
     ctx.drawImage(this.originalCanvas.current!, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
+
+    if(this.smoothing){
+      console.log("smoothing!")
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = "high"
+    }
     ctx.drawImage(this.canvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
   }
 
