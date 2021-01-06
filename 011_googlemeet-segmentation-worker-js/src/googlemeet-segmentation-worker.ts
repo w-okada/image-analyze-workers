@@ -57,14 +57,17 @@ export class LocalWorker{
 
     predict = async (targetCanvas:HTMLCanvasElement, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]> => {
         console.log("current backend[main thread]:",tf.getBackend())
-        // // ImageData作成
-        // this.canvas.width  = params.processWidth
-        // this.canvas.height = params.processHeight
-        // const ctx = this.canvas.getContext("2d")!
-        // ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height)
+        // ImageData作成
+        this.canvas.width  = params.processWidth
+        this.canvas.height = params.processHeight
+        const ctx = this.canvas.getContext("2d")!
+        ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height)
+
         let bm:number[][][]|null = null
         tf.tidy(()=>{
-            let tensor = tf.browser.fromPixels(targetCanvas)
+            let tensor = tf.browser.fromPixels(this.canvas)
+            
+            // let tensor = tf.browser.fromPixels(targetCanvas)
             tensor = tf.image.resizeBilinear(tensor,[params.processWidth, params.processHeight])
             tensor = tensor.expandDims(0)
             tensor = tf.cast(tensor, 'float32')
@@ -75,14 +78,13 @@ export class LocalWorker{
             let prediction = this.model!.predict(tensor) as tf.Tensor
             prediction = prediction.softmax()
             prediction = prediction.squeeze()
-            bm = prediction.arraySync() as number[][][]
-
+            let [predTensor0, predTensor1] = tf.split(prediction, 2, 2)
+            bm = predTensor0.arraySync() as number[][][]
+    
         })
         return bm!
     }
 }
-
-
 
 export class GoogleMeetSegmentationWorkerManager{
     private workerGM:Worker|null = null
