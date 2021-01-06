@@ -22,20 +22,16 @@ const load_module = async (config: GoogleMeetSegmentationConfig) => {
 
 // Case.1 Use ImageBitmap (for Chrome default)
 const predict = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]>=> {
-    // const off = new OffscreenCanvas(params.processWidth, params.processHeight)
-    // const ctx = off.getContext("2d")!
-    // ctx.drawImage(image, 0, 0, off.width, off.height)
-    // const imageData = ctx.getImageData(0, 0, off.width, off.height)
-    //console.log(image.width, image.height)
-    const off = new OffscreenCanvas(image.width, image.height)
+    const off = new OffscreenCanvas(params.processWidth, params.processWidth)
     const ctx = off.getContext("2d")!
     ctx.drawImage(image, 0, 0, off.width, off.height)
     const imageData = ctx.getImageData(0, 0, off.width, off.height)
 
+
     let bm:number[][][]|null = null
     tf.tidy(()=>{
         let tensor = tf.browser.fromPixels(imageData)
-        tensor = tf.image.resizeBilinear(tensor,[params.processWidth, params.processHeight])
+        // tensor = tf.image.resizeBilinear(tensor,[params.processWidth, params.processHeight])
         tensor = tensor.expandDims(0)
         tensor = tf.cast(tensor, 'float32')
         // tensor = tensor.div(tf.max(tensor))
@@ -48,14 +44,73 @@ const predict = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, 
 
         let prediction = model!.predict(tensor) as tf.Tensor
         // console.log("Max!",tf.max(prediction).arraySync(), "Min!",tf.min(prediction).arraySync(), )
-        // console.log(prediction)
-        prediction = prediction.softmax()
+        console.log(prediction)
         prediction = prediction.squeeze()
-        bm = prediction.arraySync() as number[][][]
+        prediction = prediction.softmax()
+        let [predTensor0, predTensor1] = tf.split(prediction, 2, 2)
+        bm = predTensor0.arraySync() as number[][][]
     }) 
     // console.log(bm)
     return bm!
 }
+
+
+// // 
+// // 特に高速化しない！！(fin.arraySyncで処理時間が爆発する)
+// const tiles:{[key:string]:tf.Tensor} = {}
+// const tile_zeros:{[key:string]:tf.Tensor} = {}
+// const tile_ones:{[key:string]:tf.Tensor} = {}
+
+// const predict_nouse = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]>=> {
+//     const off = new OffscreenCanvas(image.width, image.height)
+//     const ctx = off.getContext("2d")!
+//     ctx.drawImage(image, 0, 0, off.width, off.height)
+//     const imageData = ctx.getImageData(0, 0, off.width, off.height)
+
+//     const th_key = `{params.processWidth}x{params.processHeight}`
+//     if(!tiles[th_key]){
+//         console.log("create threshold1")
+//         tiles[th_key] = tf.ones([params.processHeight, params.processWidth, 1]).mul(0.5)
+//     }
+//     if(!tile_ones[th_key]){
+//         console.log("create threshold2")
+//         tile_ones[th_key] = tf.ones([params.processHeight, params.processWidth, 1]).mul(255)
+//     }
+//     if(!tile_zeros[th_key]){
+//         console.log("create threshold3")
+//         tile_zeros[th_key] = tf.zeros([params.processHeight, params.processWidth, 1])
+//     }
+//     const th = tiles[th_key]
+//     const tile_one = tile_ones[th_key]
+//     const tile_zero = tile_zeros[th_key]
+
+//     let bm:number[][][]|null = null
+//     tf.tidy(()=>{
+//         let orgTensor = tf.browser.fromPixels(imageData)
+//         let tensor = tf.image.resizeBilinear(orgTensor, [params.processWidth, params.processHeight])
+//         tensor = tensor.expandDims(0)
+//         tensor = tf.cast(tensor, 'float32')
+//         tensor = tensor.div(255.0)
+
+//         let prediction = model!.predict(tensor) as tf.Tensor
+//         console.log(prediction)
+//         prediction = prediction.softmax()
+//         prediction = prediction.squeeze()
+
+//         let [predTensor0, predTensor1] = tf.split(prediction, 2, 2)
+
+//         const cond = tf.less(predTensor0, th)
+//         predTensor0 = tf.where(cond, tile_zero, tile_one)
+
+//         let predTensor = tf.image.resizeBilinear(predTensor0 as tf.Tensor<tf.Rank.R3>,[image.height, image.width])
+//         const fin = tf.concat([orgTensor, predTensor], 2)
+
+//         bm = fin.arraySync() as number[][][]
+//     }) 
+//     return bm!
+// }
+
+
 
 // Case.2 Use ImageBitmap (for Safari or special intent)
 const predictWithData = async (data: Uint8ClampedArray , config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]> => {
@@ -77,8 +132,9 @@ const predictWithData = async (data: Uint8ClampedArray , config: GoogleMeetSegme
         let prediction = model!.predict(tensor) as tf.Tensor
         prediction = prediction.softmax()
         prediction = prediction.squeeze()
-        bm = prediction.arraySync() as number[][][]
-    })
+        let [predTensor0, predTensor1] = tf.split(prediction, 2, 2)
+        bm = predTensor0.arraySync() as number[][][]
+   })
     return bm!
 }
 
