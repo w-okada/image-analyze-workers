@@ -21,9 +21,11 @@ export interface GoogleMeetSegmentationConfig{
 
 
 export interface GoogleMeetSegmentationOperationParams{
-    type        : GoogleMeetSegmentationFunctionType
+    type                : GoogleMeetSegmentationFunctionType
     processWidth        : number
     processHeight       : number
+    smoothingS          : number
+    smoothingR          : number
 }
 
 export enum GoogleMeetSegmentationFunctionType{
