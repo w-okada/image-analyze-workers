@@ -26,6 +26,8 @@ export interface GoogleMeetSegmentationOperationParams{
     processHeight       : number
     smoothingS          : number
     smoothingR          : number
+    jbfWidth            : number
+    jbfHeight           : number
 }
 
 export enum GoogleMeetSegmentationFunctionType{

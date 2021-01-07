@@ -45,7 +45,7 @@ const predict = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, 
 
         let prediction = model!.predict(tensor) as tf.Tensor
         // console.log("Max!",tf.max(prediction).arraySync(), "Min!",tf.min(prediction).arraySync(), )
-        console.log(prediction)
+        //console.log(prediction)
         prediction = prediction.squeeze()
         prediction = prediction.softmax()
         let [predTensor0, predTensor1] = tf.split(prediction, 2, 2)
@@ -135,7 +135,13 @@ const predict_jbf = async (image:ImageBitmap, config: GoogleMeetSegmentationConf
 
 
 const predict_jbf_js = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]>=> {
-    const off = new OffscreenCanvas(params.processWidth, params.processHeight)
+    // const off = new OffscreenCanvas(params.processWidth, params.processHeight)
+    // const ctx = off.getContext("2d")!
+    // ctx.drawImage(image, 0, 0, off.width, off.height)
+    // const imageData = ctx.getImageData(0, 0, off.width, off.height)
+
+
+    const off = new OffscreenCanvas(image.width, image.height)
     const ctx = off.getContext("2d")!
     ctx.drawImage(image, 0, 0, off.width, off.height)
     const imageData = ctx.getImageData(0, 0, off.width, off.height)
@@ -145,18 +151,18 @@ const predict_jbf_js = async (image:ImageBitmap, config: GoogleMeetSegmentationC
     let seg:number[][]|null = null
     let img:number[][]|null = null
     tf.tidy(()=>{
-        let orgTensor = tf.browser.fromPixels(imageData)        
-        let tensor = orgTensor.expandDims(0)
+        let orgTensor = tf.browser.fromPixels(imageData)
+        let tensor = tf.image.resizeBilinear(orgTensor,[params.processHeight, params.processWidth])
+        tensor = tensor.expandDims(0)        
         tensor = tf.cast(tensor, 'float32')
         tensor = tensor.div(255.0)
         let prediction = model!.predict(tensor) as tf.Tensor
         prediction = prediction.squeeze()
         prediction = prediction.softmax()
         let [predTensor0, predTensor1] = tf.split(prediction, 2, 2)
-        // ↑ここまで同じ
 
-        orgTensor = tf.image.resizeBilinear(orgTensor, [256, 256])
-        predTensor0 = tf.image.resizeBilinear(predTensor0, [256, 256])
+        orgTensor = tf.image.resizeBilinear(orgTensor, [params.jbfWidth, params.jbfHeight])
+        predTensor0 = tf.image.resizeBilinear(predTensor0, [params.jbfWidth, params.jbfHeight])
         let newTensor = orgTensor.mean(2).toFloat()
         predTensor0 = predTensor0.squeeze()
         newTensor   = newTensor.mirrorPad([[spatialKern,spatialKern],[spatialKern,spatialKern]], 'symmetric')
@@ -167,8 +173,8 @@ const predict_jbf_js = async (image:ImageBitmap, config: GoogleMeetSegmentationC
         img = newTensor.arraySync()  as number[][]
     })
 
-    const width  = 256
-    const height = 256
+    const width  = params.jbfWidth
+    const height = params.jbfHeight
 
     if(!matrix_js_map[`${params.smoothingR}`]){
         matrix_js_map[`${params.smoothingR}`] = Array.from(new Array(256)).map((v,i) => Math.exp(i*i*-1*params.smoothingR))

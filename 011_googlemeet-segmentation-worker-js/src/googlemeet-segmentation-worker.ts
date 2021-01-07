@@ -10,7 +10,8 @@ export const generateGoogleMeetSegmentationDefaultConfig = ():GoogleMeetSegmenta
         useTFWasmBackend    : false,
         modelPath           : "/googlemeet-segmentation_128/model.json",
         wasmPath            : "/tfjs-backend-wasm.wasm",
-        workerPath          : "./googlemeet-segmentation-worker-worker.js"
+        workerPath          : "./googlemeet-segmentation-worker-worker.js",
+
     }
     return defaultConf
 }
@@ -23,6 +24,8 @@ export const generateDefaultGoogleMeetSegmentationParams = ():GoogleMeetSegmenta
         processHeight       : 128,
         smoothingS          : 0,
         smoothingR          : 0,
+        jbfWidth            : 128,
+        jbfHeight           : 128        
 
     }
     return defaultParams

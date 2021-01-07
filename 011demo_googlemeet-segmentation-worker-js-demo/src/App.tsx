@@ -77,7 +77,7 @@ class App extends DemoBase {
       {
         title: "smoothing_S",
         currentIndexOrValue: 0,
-        values: [0, 3, 5, 10],
+        values: [0, 1, 3, 5, 10],
         callback: (val: string | number | MediaStream) => {
           const smoothing_S = this.controllerRef.current!.getCurrentValue("smoothing_S")
           this.params.smoothingS = smoothing_S as number
@@ -86,10 +86,20 @@ class App extends DemoBase {
       {
         title: "smoothing_R",
         currentIndexOrValue: 0,
-        values: [0, 3, 5, 10],
+        values: [0, 1, 3, 5, 10],
         callback: (val: string | number | MediaStream) => {
           const smoothing_R = this.controllerRef.current!.getCurrentValue("smoothing_R")
           this.params.smoothingR = smoothing_R as number
+        },
+      },
+      {
+        title: "smoothing_w_h",
+        currentIndexOrValue: 0,
+        values: [128, 256, 512, 1024],
+        callback: (val: string | number | MediaStream) => {
+          const smoothing_w_h = this.controllerRef.current!.getCurrentValue("smoothing_w_h")
+          this.params.jbfWidth   = smoothing_w_h as number
+          this.params.jbfHeight  = smoothing_w_h as number
         },
       },
 
