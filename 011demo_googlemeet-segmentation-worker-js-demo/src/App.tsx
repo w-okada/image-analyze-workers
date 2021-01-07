@@ -64,32 +64,42 @@ class App extends DemoBase {
                 this.params.processWidth = 128
                 this.params.processHeight = 128
               }else if(path.indexOf("144") > 0){
-                this.params.processWidth = 144
-                this.params.processHeight = 256
+                this.params.processHeight = 144
+                this.params.processWidth = 256
               }else if(path.indexOf("96") > 0){
-                this.params.processWidth = 96
-                this.params.processHeight = 160
+                this.params.processHeight = 96
+                this.params.processWidth = 160
               }
             }
           )
         },
       },
       {
-        title: "smoothing",
-        currentIndexOrValue: 1,
-        values: ["on", "off"],
+        title: "smoothing_S",
+        currentIndexOrValue: 0,
+        values: [0, 3, 5, 10],
         callback: (val: string | number | MediaStream) => {
-          const smoothing = this.controllerRef.current!.getCurrentValue("smoothing")
-          this.smoothing   = (smoothing === "on" ? true  : false) as boolean
+          const smoothing_S = this.controllerRef.current!.getCurrentValue("smoothing_S")
+          this.params.smoothingS = smoothing_S as number
         },
       },
+      {
+        title: "smoothing_R",
+        currentIndexOrValue: 0,
+        values: [0, 3, 5, 10],
+        callback: (val: string | number | MediaStream) => {
+          const smoothing_R = this.controllerRef.current!.getCurrentValue("smoothing_R")
+          this.params.smoothingR = smoothing_R as number
+        },
+      },
+
     ]
     return menu
   }
 
 
 
-  drawSegmentation = (prediction: number[][][]) => {
+  drawSegmentation = (prediction: number[][]) => {
     this.canvas.width = prediction[0].length
     this.canvas.height = prediction.length
     const imageData = this.canvas.getContext("2d")!.getImageData(0, 0, this.canvas.width, this.canvas.height)
@@ -99,7 +109,7 @@ class App extends DemoBase {
       for (let colIndex = 0; colIndex < this.canvas.width; colIndex++) {
         const seg_offset = ((rowIndex * this.canvas.width) + colIndex)
         const pix_offset = ((rowIndex * this.canvas.width) + colIndex) * 4
-        if(prediction[rowIndex][colIndex][0]>0.5){
+        if(prediction[rowIndex][colIndex]>0.5){
           data[pix_offset + 0] = 70
           data[pix_offset + 1] = 30
           data[pix_offset + 2] = 30
@@ -121,17 +131,16 @@ class App extends DemoBase {
 
     ctx.drawImage(this.originalCanvas.current!, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
 
-    if(this.smoothing){
-      console.log("smoothing!")
-      ctx.imageSmoothingEnabled = true
-      ctx.imageSmoothingQuality = "high"
-    }
+    // if(this.smoothing){
+    //   console.log("smoothing!")
+    //   ctx.imageSmoothingEnabled = true
+    //   ctx.imageSmoothingQuality = "high"
+    // }
     ctx.drawImage(this.canvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
   }
 
   count = 0
   handleResult = (prediction: any) => {
-    // console.log(prediction)
     this.drawSegmentation(prediction)
   }
 

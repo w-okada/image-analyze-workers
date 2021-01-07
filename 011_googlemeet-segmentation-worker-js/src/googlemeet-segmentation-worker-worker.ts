@@ -2,6 +2,7 @@ import { GoogleMeetSegmentationConfig,  GoogleMeetSegmentationOperationParams,  
 import * as tf from '@tensorflow/tfjs';
 import { BrowserType } from './BrowserUtil';
 import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
+import { math, range } from '@tensorflow/tfjs';
 const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
 
 let model:tf.GraphModel|null
@@ -18,11 +19,11 @@ const load_module = async (config: GoogleMeetSegmentationConfig) => {
       require('@tensorflow/tfjs-backend-webgl')
       await tf.setBackend("webgl")
     }
-  }
+}
 
 // Case.1 Use ImageBitmap (for Chrome default)
 const predict = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]>=> {
-    const off = new OffscreenCanvas(params.processWidth, params.processWidth)
+    const off = new OffscreenCanvas(params.processWidth, params.processHeight)
     const ctx = off.getContext("2d")!
     ctx.drawImage(image, 0, 0, off.width, off.height)
     const imageData = ctx.getImageData(0, 0, off.width, off.height)
@@ -48,11 +49,207 @@ const predict = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, 
         prediction = prediction.squeeze()
         prediction = prediction.softmax()
         let [predTensor0, predTensor1] = tf.split(prediction, 2, 2)
+
         bm = predTensor0.arraySync() as number[][][]
     }) 
     // console.log(bm)
     return bm!
 }
+
+
+// Case.1 Use ImageBitmap (for Chrome default)
+let spatialKern = 3
+const rangeKern = 3
+const gaussianRange   = 1 / Math.sqrt(2*Math.PI * (rangeKern*rangeKern))
+const matrix = (()=>{
+    const t = tf.tensor1d(Array.from(new Array(256)).map((v,i) => i))
+    const matrix = t.mul(-1).mul(t).mul(gaussianRange).exp()
+    return matrix
+})()
+
+const matrix_js_map:{[key:string]:any} = {}
+
+const predict_jbf = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]>=> {
+    const off = new OffscreenCanvas(params.processWidth, params.processHeight)
+    const ctx = off.getContext("2d")!
+    ctx.drawImage(image, 0, 0, off.width, off.height)
+    const imageData = ctx.getImageData(0, 0, off.width, off.height)
+
+    let bm:number[][][]|null = null
+    tf.tidy(()=>{
+        let orgTensor = tf.browser.fromPixels(imageData)
+        const width  = imageData.width
+        const height = imageData.height
+        
+        let tensor = orgTensor.expandDims(0)
+        tensor = tf.cast(tensor, 'float32')
+        tensor = tensor.div(255.0)
+        let prediction = model!.predict(tensor) as tf.Tensor
+        prediction = prediction.squeeze()
+        prediction = prediction.softmax()
+        let [predTensor0, predTensor1] = tf.split(prediction, 2, 2)
+        // ↑ここまで同じ
+        let newTensor = orgTensor.mean(2).toFloat()
+        predTensor0 = predTensor0.squeeze()
+
+        console.log("before", predTensor0.shape, newTensor.shape)
+        newTensor   = newTensor.mirrorPad([[spatialKern,spatialKern],[spatialKern,spatialKern]], 'symmetric')
+        predTensor0 = predTensor0.mirrorPad([[spatialKern,spatialKern],[spatialKern,spatialKern]], 'symmetric')
+        console.log("after", predTensor0.shape, newTensor.shape)
+        let outTensor = tf.ones([width, height])
+        let outvals = [] 
+        for(let i=spatialKern; i<spatialKern+height; i++){
+            console.log("row:",i)
+            for(let j=spatialKern; j<spatialKern+width; j++){
+                // console.log(i,j)
+                const neighbourhood = (newTensor as tf.Tensor2D).slice([i-spatialKern, j-spatialKern],[2 * spatialKern + 1, 2 * spatialKern + 1])
+                const centerVal = (newTensor as tf.Tensor2D).slice([i,j],[1,1])
+                const indexes = neighbourhood.sub(centerVal).abs().toInt()
+                const res = matrix.gather(indexes)
+                const norm = res.sum()
+                const val = newTensor.slice([i-spatialKern, j-spatialKern],[2 * spatialKern + 1, 2 * spatialKern + 1]).mul(res).sum().div(norm) as tf.Tensor1D
+                //console.log(val)
+                outvals.push(val)
+                neighbourhood.dispose()
+                centerVal.dispose()
+                indexes.dispose()
+                res.dispose
+                norm.dispose()
+            }
+        }
+        console.log(outvals)
+        console.log(outvals.length)
+        console.log(outvals[0])
+        const result = tf.concat1d(outvals).reshape([width, height])
+        result.expandDims(2)
+        console.log("RESULT:!!A",result)
+        console.log("RESULT:!!B",result.shape)
+        console.log("RESULT:!!C",result.toString())
+
+        bm = result.arraySync() as number[][][]
+
+    }) 
+    return bm!
+}
+
+
+
+const predict_jbf_js = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]>=> {
+    const off = new OffscreenCanvas(params.processWidth, params.processHeight)
+    const ctx = off.getContext("2d")!
+    ctx.drawImage(image, 0, 0, off.width, off.height)
+    const imageData = ctx.getImageData(0, 0, off.width, off.height)
+
+    spatialKern = params.smoothingS
+
+    let seg:number[][]|null = null
+    let img:number[][]|null = null
+    tf.tidy(()=>{
+        let orgTensor = tf.browser.fromPixels(imageData)        
+        let tensor = orgTensor.expandDims(0)
+        tensor = tf.cast(tensor, 'float32')
+        tensor = tensor.div(255.0)
+        let prediction = model!.predict(tensor) as tf.Tensor
+        prediction = prediction.squeeze()
+        prediction = prediction.softmax()
+        let [predTensor0, predTensor1] = tf.split(prediction, 2, 2)
+        // ↑ここまで同じ
+
+        orgTensor = tf.image.resizeBilinear(orgTensor, [256, 256])
+        predTensor0 = tf.image.resizeBilinear(predTensor0, [256, 256])
+        let newTensor = orgTensor.mean(2).toFloat()
+        predTensor0 = predTensor0.squeeze()
+        newTensor   = newTensor.mirrorPad([[spatialKern,spatialKern],[spatialKern,spatialKern]], 'symmetric')
+        predTensor0 = predTensor0.mirrorPad([[spatialKern,spatialKern],[spatialKern,spatialKern]], 'symmetric')        
+
+        predTensor0 = predTensor0.squeeze()
+        seg = predTensor0.arraySync() as number[][]
+        img = newTensor.arraySync()  as number[][]
+    })
+
+    const width  = 256
+    const height = 256
+
+    if(!matrix_js_map[`${params.smoothingR}`]){
+        matrix_js_map[`${params.smoothingR}`] = Array.from(new Array(256)).map((v,i) => Math.exp(i*i*-1*params.smoothingR))
+    }
+
+    const matrix_js = matrix_js_map[`${params.smoothingR}`]
+    // const result:number[][][] = []
+    const result = Array.from(new Array(height), () => new Array(width).fill(0));
+    const kresult = Array.from(new Array(2*spatialKern+1), () => new Array(2*spatialKern+1).fill(0));
+    for(let i=spatialKern; i<spatialKern+height; i++){
+        // console.log("row:",i)
+        for(let j=spatialKern; j<spatialKern+width; j++){
+            // console.log("col:",j)
+            const centerVal = img![i][j]
+            let norm = 0
+            let sum  = 0
+            for(let ki = 0 ; ki < spatialKern*2+1; ki++){
+                // console.log("krow:",ki)
+                for(let kj = 0 ; kj < spatialKern*2+1; kj++){
+                    // console.log("kcol:",kj)
+                    const index = Math.floor(Math.abs(img![i - spatialKern + ki][j-spatialKern + kj] - centerVal))
+                    const val = matrix_js[index]
+                    // console.log("kcol:a", val, index)
+                    // console.log("kcol:b1",kj, kresult, kresult[ki] ,kresult[ki][kj])
+                    kresult[ki][kj] = val
+                    // console.log("kcol:c",kj)
+                    norm += val
+                    // console.log("kcol:d",kj)
+                    sum += seg![i - spatialKern + ki][j-spatialKern + kj] * val
+                    // console.log("kcol:e",kj)
+                }
+            }
+            result[i - spatialKern][j - spatialKern] = sum/norm
+        }
+    }
+
+    // console.log(result)
+
+    return result
+}
+
+
+
+
+
+// Case.1 Use ImageBitmap (for Chrome default)
+const predict_tmp = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]>=> {
+    const off = new OffscreenCanvas(params.processWidth, params.processHeight)
+    const ctx = off.getContext("2d")!
+    ctx.drawImage(image, 0, 0, off.width, off.height)
+    const imageData = ctx.getImageData(0, 0, off.width, off.height)
+
+
+    let bm:number[][][]|null = null
+//    const p = new Promise((onResolve:(v:number[][][])=>void, onFail)=>{
+    const p = new Promise((resolve:(v:number[][][])=>void, reject)=>{
+        tf.tidy(()=>{
+            let tensor = tf.browser.fromPixels(imageData)
+            tensor = tensor.expandDims(0)
+            tensor = tf.cast(tensor, 'float32')
+            tensor = tensor.div(255.0)
+    
+            let prediction = model!.predict(tensor) as tf.Tensor
+            prediction = prediction.squeeze()
+            prediction = prediction.softmax()
+            let [predTensor0, predTensor1] = tf.split(prediction, 2, 2)
+    
+            // const tens = tf.ones([1024,1024,3]) as tf.Tensor3D    
+            bm = predTensor0.arraySync() as number[][][]
+            resolve(bm!)
+            // tf.browser.toPixels(tens).then(res=>{
+            //     // resolve(bm!)
+            // })
+            //bm = tens.arraySync() as number[][][]
+        }) 
+    })
+    const res = await p
+    return res
+}
+
+
 
 
 // // 
@@ -166,8 +363,14 @@ onmessage = async (event) => {
             const prediction  = await predictWithData(data, config, params)
             ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
         }else{ // Case.1
-            const prediction = await predict(image, config, params)
-            ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
+            if(params.smoothingS == 0 && params.smoothingR == 0){
+                console.log("normal prediction")
+                const prediction = await predict(image, config, params)
+                ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
+            }else{
+                const prediction = await predict_jbf_js(image, config, params)
+                ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
+            }
         }
     }
 }

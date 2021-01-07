@@ -21,6 +21,9 @@ export const generateDefaultGoogleMeetSegmentationParams = ():GoogleMeetSegmenta
         type                : GoogleMeetSegmentationFunctionType.Segmentation,
         processWidth        : 128,
         processHeight       : 128,
+        smoothingS          : 0,
+        smoothingR          : 0,
+
     }
     return defaultParams
 }

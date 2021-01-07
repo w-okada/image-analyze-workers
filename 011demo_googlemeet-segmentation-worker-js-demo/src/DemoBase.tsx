@@ -12,7 +12,7 @@ interface ImageAnalyzerModelManager {
 
 class DemoBase extends React.Component {
     imageElementRef = React.createRef<HTMLImageElement>()
-    videoElementRef = React.createRef<HTMLVideoElement>()
+    videoElementRef = React.createRef<HTMLVideoElement>()    
     originalCanvas = React.createRef<HTMLCanvasElement>()
     resultCanvasRef = React.createRef<HTMLCanvasElement>()
     targetElement?: HTMLImageElement | HTMLVideoElement
@@ -116,6 +116,9 @@ class DemoBase extends React.Component {
                         this.videoElementRef.current!.src = path
                         this.videoElementRef.current!.currentTime=0
                         this.videoElementRef.current!.autoplay = true
+                        this.videoElementRef.current!.loop = true
+                        this.videoElementRef.current!.controls = true
+                        
                         this.videoElementRef.current!.play()
                         this.adjustCanvaSize(this.videoElementRef.current!)
                     }else{
@@ -201,9 +204,10 @@ class DemoBase extends React.Component {
             <div>
                 <div>
                     <img ref={this.imageElementRef} style={{ display: "none" }} alt="" crossOrigin="anonymous" />
-                    <video ref={this.videoElementRef} style={{ display: "none" }} />
+                    {/* <video ref={this.videoElementRef} style={{ display: "none" }} /> */}
                     <canvas ref={this.originalCanvas} />
                     <canvas ref={this.resultCanvasRef} />
+                    <video ref={this.videoElementRef} />
                 </div>
                 <div>
                     フリー素材ぱくたそ（www.pakutaso.com）model by 河村友歌
