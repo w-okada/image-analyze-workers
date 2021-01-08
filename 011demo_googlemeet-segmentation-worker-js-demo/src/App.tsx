@@ -9,6 +9,7 @@ class App extends DemoBase {
   config = (()=>{
     const c = generateGoogleMeetSegmentationDefaultConfig()
     c.useTFWasmBackend = false
+    c.processOnLocal = true
     // c.wasmPath = ""
     c.modelPath="./googlemeet-segmentation_128_32/model.json"
     c.wasmPath="./tfjs-backend-wasm.wasm"
@@ -25,7 +26,7 @@ class App extends DemoBase {
     const menu: ControllerUIProp[] = [
       {
         title: "processOnLocal",
-        currentIndexOrValue: 1,
+        currentIndexOrValue: 0,
         values: ["on", "off"],
         callback: (val: string | number | MediaStream) => { },
       },
@@ -100,6 +101,15 @@ class App extends DemoBase {
           const smoothing_w_h = this.controllerRef.current!.getCurrentValue("smoothing_w_h")
           this.params.jbfWidth   = smoothing_w_h as number
           this.params.jbfHeight  = smoothing_w_h as number
+        },
+      },
+      {
+        title: "resizeWithCanvas",
+        currentIndexOrValue: 1,
+        values: ["on", "off"],
+        callback: (val: string | number | MediaStream) => {
+          const resizeWithCanvas = this.controllerRef.current!.getCurrentValue("resizeWithCanvas")
+          this.params.resizeWithCanvas = (resizeWithCanvas === "on" ? true  : false) as boolean
         },
       },
 
