@@ -2,12 +2,15 @@ import { GoogleMeetSegmentationConfig,  GoogleMeetSegmentationOperationParams,  
 import * as tf from '@tensorflow/tfjs';
 import { BrowserType } from './BrowserUtil';
 import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
-import { math, range } from '@tensorflow/tfjs';
+import { drawArrayToCanvas, imageToGrayScaleArray, padSymmetricImage } from './utils';
+
+
 const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
 
 let model:tf.GraphModel|null
 
 const load_module = async (config: GoogleMeetSegmentationConfig) => {
+    console.log(config.browserType)
     if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
       console.log("use cpu backend, wasm doesnot support enough function")
       require('@tensorflow/tfjs-backend-wasm')
@@ -17,7 +20,11 @@ const load_module = async (config: GoogleMeetSegmentationConfig) => {
     }else{
       console.log("use webgl backend")
       require('@tensorflow/tfjs-backend-webgl')
-      await tf.setBackend("webgl")
+      try{
+        await tf.setBackend("webgl")
+      }catch{
+        await tf.setBackend("cpu")
+      }
     }
 }
 
@@ -132,8 +139,6 @@ const predict_jbf = async (image:ImageBitmap, config: GoogleMeetSegmentationConf
     return bm!
 }
 
-
-
 const predict_jbf_js = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]>=> {
     // const off = new OffscreenCanvas(params.processWidth, params.processHeight)
     // const ctx = off.getContext("2d")!
@@ -183,7 +188,6 @@ const predict_jbf_js = async (image:ImageBitmap, config: GoogleMeetSegmentationC
     const matrix_js = matrix_js_map[`${params.smoothingR}`]
     // const result:number[][][] = []
     const result = Array.from(new Array(height), () => new Array(width).fill(0));
-    const kresult = Array.from(new Array(2*spatialKern+1), () => new Array(2*spatialKern+1).fill(0));
     for(let i=spatialKern; i<spatialKern+height; i++){
         // console.log("row:",i)
         for(let j=spatialKern; j<spatialKern+width; j++){
@@ -199,7 +203,6 @@ const predict_jbf_js = async (image:ImageBitmap, config: GoogleMeetSegmentationC
                     const val = matrix_js[index]
                     // console.log("kcol:a", val, index)
                     // console.log("kcol:b1",kj, kresult, kresult[ki] ,kresult[ki][kj])
-                    kresult[ki][kj] = val
                     // console.log("kcol:c",kj)
                     norm += val
                     // console.log("kcol:d",kj)
@@ -210,13 +213,111 @@ const predict_jbf_js = async (image:ImageBitmap, config: GoogleMeetSegmentationC
             result[i - spatialKern][j - spatialKern] = sum/norm
         }
     }
-
     // console.log(result)
-
     return result
 }
 
 
+
+///// 速度は向上するが精度が劣化する。(GPU -> RAMの転送が遅い部分を解消しているが、精度が落ちる。)
+const segCanvas = new OffscreenCanvas(100,100)
+const segResizedCanvas = new OffscreenCanvas(100,100)
+const imgResizedCanvas = new OffscreenCanvas(100,100)
+const predict_jbf_js2 = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]>=> {
+    const off = new OffscreenCanvas(params.processWidth, params.processHeight)
+    const ctx = off.getContext("2d")!
+    ctx.drawImage(image, 0, 0, off.width, off.height)
+    const imageData = ctx.getImageData(0, 0, off.width, off.height)
+
+    spatialKern = params.smoothingS
+
+    let seg:number[][]|null = null
+    let img:number[][]|null = null
+    tf.tidy(()=>{
+        let orgTensor = tf.browser.fromPixels(imageData)
+        // let tensor = tf.image.resizeBilinear(orgTensor,[params.processHeight, params.processWidth])
+        let tensor = orgTensor.expandDims(0)        
+        tensor = tf.cast(tensor, 'float32')
+        tensor = tensor.div(255.0)
+        let prediction = model!.predict(tensor) as tf.Tensor
+        prediction = prediction.squeeze()
+        prediction = prediction.softmax()
+        let [predTensor0, predTensor1] = tf.split(prediction, 2, 2)
+
+        // orgTensor = tf.image.resizeBilinear(orgTensor, [params.jbfWidth, params.jbfHeight])
+        // predTensor0 = tf.image.resizeBilinear(predTensor0, [params.jbfWidth, params.jbfHeight])
+        // let newTensor = orgTensor.mean(2).toFloat()
+        predTensor0 = predTensor0.squeeze()
+        // newTensor   = newTensor.mirrorPad([[spatialKern,spatialKern],[spatialKern,spatialKern]], 'symmetric')
+        // predTensor0 = predTensor0.mirrorPad([[spatialKern,spatialKern],[spatialKern,spatialKern]], 'symmetric')        
+
+        predTensor0 = predTensor0.squeeze()
+        seg = predTensor0.arraySync() as number[][]
+        // img = newTensor.arraySync()  as number[][]
+    })
+
+    const width  = params.jbfWidth
+    const height = params.jbfHeight
+    drawArrayToCanvas(seg!, segCanvas)
+    segResizedCanvas.width  = width
+    segResizedCanvas.height = height
+    const segCtx = segResizedCanvas.getContext("2d")!
+    segCtx.imageSmoothingEnabled = true;
+    segCtx.imageSmoothingQuality = "low"
+    //@ts-ignore
+    segCtx.mozImageSmoothingEnabled = true;
+    //@ts-ignore
+    segCtx.webkitImageSmoothingEnabled = true;
+    //@ts-ignore
+    segCtx.msImageSmoothingEnabled = true;
+
+    segCtx.drawImage(segCanvas, 0, 0, width, height)
+    const segImg = segCtx.getImageData(0, 0, width, height)
+    seg = imageToGrayScaleArray(segImg)
+    seg = padSymmetricImage(seg, spatialKern, spatialKern, spatialKern, spatialKern)
+    imgResizedCanvas.width  = width
+    imgResizedCanvas.height = height
+    const imgCtx = segResizedCanvas.getContext("2d")!
+    // imgCtx.imageSmoothingEnabled = true
+    // imgCtx.imageSmoothingQuality = "high"
+    imgCtx.drawImage(image, 0, 0, width, height)
+    const imgImg = imgCtx.getImageData(0, 0, width, height)
+    img = imageToGrayScaleArray(imgImg)
+    img = padSymmetricImage(img, spatialKern, spatialKern, spatialKern, spatialKern)
+
+    if(!matrix_js_map[`${params.smoothingR}`]){
+        matrix_js_map[`${params.smoothingR}`] = Array.from(new Array(256)).map((v,i) => Math.exp(i*i*-1*params.smoothingR))
+    }
+    const matrix_js = matrix_js_map[`${params.smoothingR}`]
+
+    const result = Array.from(new Array(height), () => new Array(width).fill(0));
+    for(let i=spatialKern; i<spatialKern+height; i++){
+        // console.log("row:",i)
+        for(let j=spatialKern; j<spatialKern+width; j++){
+            // console.log("col:",j)
+            const centerVal = img![i][j]
+            let norm = 0
+            let sum  = 0
+            for(let ki = 0 ; ki < spatialKern*2+1; ki++){
+                // console.log("krow:",ki)
+                for(let kj = 0 ; kj < spatialKern*2+1; kj++){
+                    // console.log("kcol:",kj)
+                    const index = Math.floor(Math.abs(img![i - spatialKern + ki][j-spatialKern + kj] - centerVal))
+                    const val = matrix_js[index]
+                    // console.log("kcol:a", val, index)
+                    // console.log("kcol:c",kj)
+                    norm += val
+                    // console.log("kcol:d",kj)
+                    sum += seg![i - spatialKern + ki][j-spatialKern + kj] * val
+                    // console.log("kcol:e",kj)
+                }
+            }
+            result[i - spatialKern][j - spatialKern] = sum/norm
+        }
+    }
+    // console.log(result)
+    return result
+}
 
 
 
@@ -370,12 +471,16 @@ onmessage = async (event) => {
             ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
         }else{ // Case.1
             if(params.smoothingS == 0 && params.smoothingR == 0){
-                console.log("normal prediction")
                 const prediction = await predict(image, config, params)
                 ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
             }else{
-                const prediction = await predict_jbf_js(image, config, params)
-                ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
+                if(params.resizeWithCanvas){
+                    const prediction = await predict_jbf_js2(image, config, params)
+                    ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
+                }else{
+                    const prediction = await predict_jbf_js(image, config, params)
+                    ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
+                }
             }
         }
     }

@@ -28,6 +28,7 @@ export interface GoogleMeetSegmentationOperationParams{
     smoothingR          : number
     jbfWidth            : number
     jbfHeight           : number
+    resizeWithCanvas    : boolean
 }
 
 export enum GoogleMeetSegmentationFunctionType{

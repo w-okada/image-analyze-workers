@@ -25,7 +25,8 @@ export const generateDefaultGoogleMeetSegmentationParams = ():GoogleMeetSegmenta
         smoothingS          : 0,
         smoothingR          : 0,
         jbfWidth            : 128,
-        jbfHeight           : 128        
+        jbfHeight           : 128,
+        resizeWithCanvas    : false
 
     }
     return defaultParams
@@ -50,6 +51,7 @@ export class LocalWorker{
 
     init = (config: GoogleMeetSegmentationConfig) => {
         const p = new Promise<void>((onResolve, onFail) => {
+            console.log("load module")
             load_module(config).then(()=>{
                 tf.ready().then(async()=>{
                     tf.env().set('WEBGL_CPU_FORWARD', false)
