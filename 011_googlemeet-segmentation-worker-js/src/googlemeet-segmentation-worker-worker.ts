@@ -17,6 +17,9 @@ import("../crate/pkg").then(async(module) => {
     console.log("MMMMMMMMMMMMMMMMMM3",mod.add(1,2))
     console.log("MMMMMMMMMMMMMMMMMM3",mod.sum1(Uint32Array.from([1,2,3,4,5])))
     console.log("MMMMMMMMMMMMMMMMMM3",mod.sum2(1))
+
+    const jbf = new mod.JointBilateralFilter(1,2,3,4)
+    console.log("Config:::",jbf.get_config())
 });
 
 
