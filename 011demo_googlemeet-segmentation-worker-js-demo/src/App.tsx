@@ -34,9 +34,9 @@ class App extends DemoBase {
         title: "modelPath",
         currentIndexOrValue: 0,
         displayLabels:["seg128x128_32", "seg128x128_16", "seg144x256_32", "seg144x256_16", "seg96x160_32", "seg96x160_16"],
-        values: ["/googlemeet-segmentation_128_32/model.json", "/googlemeet-segmentation_128_16/model.json", 
-          "/googlemeet-segmentation_144_32/model.json", "googlemeet-segmentation_144_16/model.json", 
-          "/googlemeet-segmentation_96_32/model.json", "googlemeet-segmentation_96_16/model.json" ],
+        values: ["./googlemeet-segmentation_128_32/model.json", "./googlemeet-segmentation_128_16/model.json", 
+          "./googlemeet-segmentation_144_32/model.json", "./googlemeet-segmentation_144_16/model.json", 
+          "./googlemeet-segmentation_96_32/model.json", "./googlemeet-segmentation_96_16/model.json" ],
         callback: (val: string | number | MediaStream) => {
         },
       },

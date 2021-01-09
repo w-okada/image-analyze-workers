@@ -14,6 +14,7 @@ import("../crate/pkg").then(async(module) => {
     const mod = await module['default']
     console.log("MMMMMMMMMMMMMMMMMM2",mod)
     console.log("MMMMMMMMMMMMMMMMMM3",mod.greeting())
+    console.log("MMMMMMMMMMMMMMMMMM3",mod.add(1,2))
 });
 
 
