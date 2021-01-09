@@ -8,6 +8,31 @@ pub fn initialize() {
 
 
 #[wasm_bindgen]
+pub struct JointBilateralFilter {
+    w: u32,
+    h: u32,
+    sp: u32,
+    range: u32,
+}
+
+
+#[wasm_bindgen]
+impl JointBilateralFilter{
+    #[wasm_bindgen(constructor)]
+    pub fn new(w:u32, h:u32, sp:u32, range:u32) -> JointBilateralFilter{
+        JointBilateralFilter {w, h, sp, range}
+    }
+
+    #[wasm_bindgen]
+    pub fn get_config(self) -> Vec<u32> {
+        vec![self.w, self.h]
+        // vec![1,2]
+    }
+    
+}
+
+
+#[wasm_bindgen]
 pub fn add(a:u32, b:u32) -> u32 {
     a+b
 }
@@ -18,6 +43,7 @@ pub fn sum1(a:Vec<u32>) -> u32 {
 //    a.iter().fold(0, |sum, b| sum + b)
     10
 }
+
 
 #[wasm_bindgen]
 pub fn sum2(a:u32) -> Vec<u32> {
@@ -46,3 +72,9 @@ pub fn set_panic_hook() {
     #[cfg(feature = "console_error_panic_hook")]
     console_error_panic_hook::set_once();
 }
+
+
+
+
+
+
