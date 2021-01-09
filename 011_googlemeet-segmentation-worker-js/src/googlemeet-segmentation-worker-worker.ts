@@ -9,6 +9,14 @@ const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
 
 let model:tf.GraphModel|null
 
+import("../crate/pkg").then(async(module) => {
+    console.log("MMMMMMMMMMMMMMMMMM1",module)
+    const mod = await module['default']
+    console.log("MMMMMMMMMMMMMMMMMM2",mod)
+    console.log("MMMMMMMMMMMMMMMMMM3",mod.greeting())
+});
+
+
 const load_module = async (config: GoogleMeetSegmentationConfig) => {
     console.log(config.browserType)
     if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
