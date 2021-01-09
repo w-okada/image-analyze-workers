@@ -1,5 +1,6 @@
 const path = require('path');
 const WorkerPlugin = require('worker-plugin');
+const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 
 const manager = {
     mode: 'development',
@@ -29,11 +30,15 @@ const worker = {
     mode: 'development',
     entry: './src/googlemeet-segmentation-worker-worker.ts', // <-- (1)
     resolve: {
-        extensions: [".ts", ".js"],
+        extensions: [".ts", ".js", ".wasm"],
     },
     module: {
         rules: [
             { test: /\.ts$/, loader: 'ts-loader' },
+            {
+                test: /\.wasm$/,
+                type: "webassembly/async"
+            }
         ],
     },
     output: {
@@ -43,8 +48,15 @@ const worker = {
         globalObject: 'typeof self !== \'undefined\' ? self : this'
     },
     plugins: [　　　　　　　　　　　　　　　　 // <--- (3)
-        new WorkerPlugin()
-    ]
+        new WorkerPlugin(),
+        new WasmPackPlugin({
+            crateDirectory: path.join(__dirname, "crate")
+        })
+    ],
+    experiments: {
+        asyncWebAssembly: true,
+    }
+
 };
 
 module.exports = [
