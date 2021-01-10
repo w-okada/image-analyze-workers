@@ -29,6 +29,9 @@ export interface GoogleMeetSegmentationOperationParams{
     jbfWidth            : number
     jbfHeight           : number
     resizeWithCanvas    : boolean
+
+    staticMemory        : boolean
+    lightWrapping       : boolean
 }
 
 export enum GoogleMeetSegmentationFunctionType{
