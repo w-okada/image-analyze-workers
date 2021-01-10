@@ -26,7 +26,11 @@ export const generateDefaultGoogleMeetSegmentationParams = ():GoogleMeetSegmenta
         smoothingR          : 0,
         jbfWidth            : 128,
         jbfHeight           : 128,
-        resizeWithCanvas    : false
+        resizeWithCanvas    : false,
+
+        staticMemory        : false,
+        lightWrapping       : false,
+
 
     }
     return defaultParams

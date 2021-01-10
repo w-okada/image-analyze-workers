@@ -3,24 +3,46 @@ import * as tf from '@tensorflow/tfjs';
 import { BrowserType } from './BrowserUtil';
 import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
 import { drawArrayToCanvas, imageToGrayScaleArray, padSymmetricImage } from './utils';
-
+import { JointBilateralFilter } from '../crate/pkg'
 
 const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
 
 let model:tf.GraphModel|null
+// import("../crate/pkg").then(async(module) => {
+//     console.log("MMMMMMMMMMMMMMMMMM1",module)
+//     mod = await module['default']
+//     console.log("MMMMMMMMMMMMMMMMMM2",mod)
+//     console.log("MMMMMMMMMMMMMMMMMM3",mod.greeting())
+//     console.log("MMMMMMMMMMMMMMMMMM3",mod.add(1,2))
+//     console.log("MMMMMMMMMMMMMMMMMM3",mod.sum1(Uint32Array.from([1,2,3,4,5])))
+//     console.log("MMMMMMMMMMMMMMMMMM3",mod.sum2(1))
 
-import("../crate/pkg").then(async(module) => {
-    console.log("MMMMMMMMMMMMMMMMMM1",module)
-    const mod = await module['default']
-    console.log("MMMMMMMMMMMMMMMMMM2",mod)
-    console.log("MMMMMMMMMMMMMMMMMM3",mod.greeting())
-    console.log("MMMMMMMMMMMMMMMMMM3",mod.add(1,2))
-    console.log("MMMMMMMMMMMMMMMMMM3",mod.sum1(Uint32Array.from([1,2,3,4,5])))
-    console.log("MMMMMMMMMMMMMMMMMM3",mod.sum2(1))
+//     jbf = new mod.JointBilateralFilter(1,2,3,4)
+//     console.log("Config:::",jbf.get_config())
+// });
 
-    const jbf = new mod.JointBilateralFilter(1,2,3,4)
-    console.log("Config:::",jbf.get_config())
-});
+class JBF {
+    private static _instance:JBF
+    private constructor(){}
+    private mod?:any
+    private jbf?:JointBilateralFilter
+    
+
+    public static async  getInstance():Promise<JBF>{
+        if(!this._instance){
+            console.log("create instance")
+            this._instance = new JBF()
+            const promise = await import("../crate/pkg")
+            this._instance.mod = await promise['default']
+            // this._instance.jbf = new this._instance.mod.JointBilateralFilter(1,2,3,4)
+        }
+        return this._instance
+    }
+
+    getConfig = () => {
+        console.log("GET CONFIG:::", this.mod?.get_config())
+    }
+}
 
 
 const load_module = async (config: GoogleMeetSegmentationConfig) => {
@@ -89,7 +111,7 @@ const matrix = (()=>{
 })()
 
 const matrix_js_map:{[key:string]:any} = {}
-
+const output_memory_map:{[key:string]:any} = {}
 const predict_jbf = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]>=> {
     const off = new OffscreenCanvas(params.processWidth, params.processHeight)
     const ctx = off.getContext("2d")!
@@ -195,6 +217,92 @@ const predict_jbf_js = async (image:ImageBitmap, config: GoogleMeetSegmentationC
     const width  = params.jbfWidth
     const height = params.jbfHeight
 
+    const matrix_js_map_key = `${params.smoothingR}`
+    if(!matrix_js_map[matrix_js_map_key]){
+        matrix_js_map[matrix_js_map_key] = Array.from(new Array(256)).map((v,i) => Math.exp(i*i*-1*params.smoothingR))
+    }
+    const output_memory_map_key = `${width}x${height}`
+    if(!output_memory_map[output_memory_map_key] || params.staticMemory === false){
+        output_memory_map[output_memory_map_key] = Array.from(new Array(height), () => new Array(width).fill(0))
+    }
+
+    const matrix_js = matrix_js_map[matrix_js_map_key]
+    const result    = output_memory_map[output_memory_map_key]
+
+    for(let i=spatialKern; i<spatialKern+height; i++){
+        // console.log("row:",i)
+        for(let j=spatialKern; j<spatialKern+width; j++){
+            // console.log("col:",j)
+            const centerVal = img![i][j]
+            let norm = 0
+            let sum  = 0
+            for(let ki = 0 ; ki < spatialKern*2+1; ki++){
+                // console.log("krow:",ki)
+                for(let kj = 0 ; kj < spatialKern*2+1; kj++){
+                    // console.log("kcol:",kj)
+                    const index = Math.floor(Math.abs(img![i - spatialKern + ki][j-spatialKern + kj] - centerVal))
+                    const val = matrix_js[index]
+                    // console.log("kcol:a", val, index)
+                    // console.log("kcol:b1",kj, kresult, kresult[ki] ,kresult[ki][kj])
+                    // console.log("kcol:c",kj)
+                    norm += val
+                    // console.log("kcol:d",kj)
+                    sum += seg![i - spatialKern + ki][j-spatialKern + kj] * val
+                    // console.log("kcol:e",kj)
+                }
+            }
+            result[i - spatialKern][j - spatialKern] = sum/norm
+        }
+    }
+
+
+    // console.log(result)
+    return result
+}
+
+
+const predict_jbf_wasm = async (image:ImageBitmap, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]>=> {
+    // const off = new OffscreenCanvas(params.processWidth, params.processHeight)
+    // const ctx = off.getContext("2d")!
+    // ctx.drawImage(image, 0, 0, off.width, off.height)
+    // const imageData = ctx.getImageData(0, 0, off.width, off.height)
+
+
+    const off = new OffscreenCanvas(image.width, image.height)
+    const ctx = off.getContext("2d")!
+    ctx.drawImage(image, 0, 0, off.width, off.height)
+    const imageData = ctx.getImageData(0, 0, off.width, off.height)
+
+    spatialKern = params.smoothingS
+
+    let seg:number[][]|null = null
+    let img:number[][]|null = null
+    tf.tidy(()=>{
+        let orgTensor = tf.browser.fromPixels(imageData)
+        let tensor = tf.image.resizeBilinear(orgTensor,[params.processHeight, params.processWidth])
+        tensor = tensor.expandDims(0)        
+        tensor = tf.cast(tensor, 'float32')
+        tensor = tensor.div(255.0)
+        let prediction = model!.predict(tensor) as tf.Tensor
+        prediction = prediction.squeeze()
+        prediction = prediction.softmax()
+        let [predTensor0, predTensor1] = tf.split(prediction, 2, 2)
+
+        orgTensor = tf.image.resizeBilinear(orgTensor, [params.jbfWidth, params.jbfHeight])
+        predTensor0 = tf.image.resizeBilinear(predTensor0, [params.jbfWidth, params.jbfHeight])
+        let newTensor = orgTensor.mean(2).toFloat()
+        predTensor0 = predTensor0.squeeze()
+        newTensor   = newTensor.mirrorPad([[spatialKern,spatialKern],[spatialKern,spatialKern]], 'symmetric')
+        predTensor0 = predTensor0.mirrorPad([[spatialKern,spatialKern],[spatialKern,spatialKern]], 'symmetric')        
+
+        predTensor0 = predTensor0.squeeze()
+        seg = predTensor0.arraySync() as number[][]
+        img = newTensor.arraySync()  as number[][]
+    })
+
+    const width  = params.jbfWidth
+    const height = params.jbfHeight
+
     if(!matrix_js_map[`${params.smoothingR}`]){
         matrix_js_map[`${params.smoothingR}`] = Array.from(new Array(256)).map((v,i) => Math.exp(i*i*-1*params.smoothingR))
     }
@@ -230,7 +338,6 @@ const predict_jbf_js = async (image:ImageBitmap, config: GoogleMeetSegmentationC
     // console.log(result)
     return result
 }
-
 
 
 ///// 速度は向上するが精度が劣化する。(GPU -> RAMの転送が遅い部分を解消しているが、精度が落ちる。)
@@ -458,8 +565,14 @@ const predictWithData = async (data: Uint8ClampedArray , config: GoogleMeetSegme
 
 onmessage = async (event) => {
     //  console.log("event", event)
+    // const jbf = await JBF.getInstance()
+    // console.log("JBF!", jbf)
+    // console.log("JBF!", jbf.getConfig())
+
     if (event.data.message === WorkerCommand.INITIALIZE) {
         const config = event.data.config as GoogleMeetSegmentationConfig
+
+
         await load_module(config)
         tf.ready().then(async()=>{
             tf.env().set('WEBGL_CPU_FORWARD', false)
@@ -485,6 +598,7 @@ onmessage = async (event) => {
             ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
         }else{ // Case.1
             if(params.smoothingS == 0 && params.smoothingR == 0){
+                //const prediction = await predict_jbf_wasm(image, config, params)
                 const prediction = await predict(image, config, params)
                 ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
             }else{

@@ -1,5 +1,55 @@
 extern crate wasm_bindgen;
+use std::sync::{Once,};
 use wasm_bindgen::prelude::*;
+use rand::Rng;
+use chrono::{DateTime, Local};
+use std::convert::TryFrom;
+
+#[derive(Clone)]
+pub struct JointBilateralFilter2 {
+    w: u32,
+    h: u32,
+    sp: u32,
+    range: u32,
+    //https://github.com/rustwasm/wasm-bindgen/issues/1848#issuecomment-549855068
+    src_image: Vec<f64>,
+    seg_image: Vec<f64>,
+    pad_src_image: Vec<f64>,
+    pad_seg_image: Vec<f64>,
+    out_image: Vec<f64>,
+}
+
+
+pub fn get_JointBilateralFilter() -> Box<JointBilateralFilter2>{
+    static mut INSTANCE: Option<Box<JointBilateralFilter2>> = None;
+    static once: Once = Once::new();
+    unsafe{
+        once.call_once(||{
+            let instance = JointBilateralFilter2 {
+                w:1,h:2,sp:3,range:1,
+                src_image:     vec![0.0; 1024 * 1024 * 4 * 4],
+                seg_image:     vec![0.0; 1024 * 1024 * 1 * 4],
+                pad_src_image: vec![0.0; 1024 * 1024 * 1 * 4],
+                pad_seg_image: vec![0.0; 1024 * 1024 * 1 * 4],
+                out_image:     vec![0.0; 1024 * 1024 * 1 * 4],
+
+            };
+            INSTANCE = Some(Box::new(instance));
+        });
+
+
+        INSTANCE.clone().unwrap()
+    }
+
+}
+
+
+#[wasm_bindgen]
+pub fn get_config() -> Vec<u32> {
+    let jbf = get_JointBilateralFilter();
+    vec![jbf.w, jbf.h, jbf.range]
+}
+
 
 #[wasm_bindgen(start)]
 pub fn initialize() {
@@ -13,6 +63,7 @@ pub struct JointBilateralFilter {
     h: u32,
     sp: u32,
     range: u32,
+
 }
 
 

@@ -4,7 +4,11 @@ import { generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmenta
 
 class App extends DemoBase {
   manager:GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
-  canvas = document.createElement("canvas")
+  canvas          = document.createElement("canvas")
+  backgroundImage = document.createElement("img")
+  backgroundCanvas = document.createElement("canvas")
+  virtualBackgroundCanvas = document.createElement("canvas")
+  
   smoothing:boolean = false
   config = (()=>{
     const c = generateGoogleMeetSegmentationDefaultConfig()
@@ -21,6 +25,19 @@ class App extends DemoBase {
     p.processWidth  = 128
     return p
   })()
+
+
+
+  private selectBackgroundImage(path:string){
+    this.backgroundImage.onload = () =>{
+      this.backgroundCanvas.width = this.backgroundImage.width
+      this.backgroundCanvas.height = this.backgroundImage.height
+      const ctx = this.backgroundCanvas.getContext("2d")!
+      ctx.drawImage(this.backgroundImage, 0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height)
+    }
+    this.backgroundImage.src = path
+  }
+
 
   getCustomMenu = () => {
     const menu: ControllerUIProp[] = [
@@ -112,6 +129,38 @@ class App extends DemoBase {
           this.params.resizeWithCanvas = (resizeWithCanvas === "on" ? true  : false) as boolean
         },
       },
+      {
+        title: "staticMemory",
+        currentIndexOrValue: 1,
+        values: ["on", "off"],
+        callback: (val: string | number | MediaStream) => {
+          const staticMemory = this.controllerRef.current!.getCurrentValue("staticMemory")
+          this.params.staticMemory = (staticMemory === "on" ? true  : false) as boolean
+        },
+      },
+      {
+        title: "lightWrapping",
+        currentIndexOrValue: 1,
+        values: ["on", "off"],
+        callback: (val: string | number | MediaStream) => {
+          const lightWrapping = this.controllerRef.current!.getCurrentValue("lightWrapping")
+          this.params.lightWrapping = (lightWrapping === "on" ? true  : false) as boolean
+        },
+      },
+      {
+        title: "background",
+        currentIndexOrValue: 0,
+        values: ["image"],
+        fileValue: ["image"],
+        fileCallback:(fileType:string, path:string)=>{
+            if(fileType.startsWith("image")){
+              this.selectBackgroundImage(path)
+            }
+        },
+        callback: ((val: string | number | MediaStream) => {
+          console.log("unknwon input.", val)
+        })
+      },
 
     ]
     return menu
@@ -124,24 +173,49 @@ class App extends DemoBase {
     this.canvas.height = prediction.length
     const imageData = this.canvas.getContext("2d")!.getImageData(0, 0, this.canvas.width, this.canvas.height)
     const data = imageData.data
-    const useIndex = 1
-    for (let rowIndex = 0; rowIndex < this.canvas.height; rowIndex++) {
-      for (let colIndex = 0; colIndex < this.canvas.width; colIndex++) {
-        const seg_offset = ((rowIndex * this.canvas.width) + colIndex)
-        const pix_offset = ((rowIndex * this.canvas.width) + colIndex) * 4
-        if(prediction[rowIndex][colIndex]>0.5){
-          data[pix_offset + 0] = 70
-          data[pix_offset + 1] = 30
-          data[pix_offset + 2] = 30
-          data[pix_offset + 3] = 200
-        }else{
-          data[pix_offset + 0] = 0
-          data[pix_offset + 1] = 0
-          data[pix_offset + 2] = 0
-          data[pix_offset + 3] = 0
+
+    if(this.params.lightWrapping){
+      for (let rowIndex = 0; rowIndex < this.canvas.height; rowIndex++) {
+        for (let colIndex = 0; colIndex < this.canvas.width; colIndex++) {
+          const pix_offset = ((rowIndex * this.canvas.width) + colIndex) * 4
+          if(prediction[rowIndex][colIndex]>0.5){
+            data[pix_offset + 0] = 70
+            data[pix_offset + 1] = 30
+            data[pix_offset + 2] = 30
+            data[pix_offset + 3] = 255
+          }else if(prediction[rowIndex][colIndex]>0.4){
+              data[pix_offset + 0] = 255
+              data[pix_offset + 1] = 255
+              data[pix_offset + 2] = 255
+              data[pix_offset + 3] = 128
+          }else{
+            data[pix_offset + 0] = 0
+            data[pix_offset + 1] = 0
+            data[pix_offset + 2] = 0
+            data[pix_offset + 3] = 0
+          }
+        }
+      }
+    }else{
+      for (let rowIndex = 0; rowIndex < this.canvas.height; rowIndex++) {
+        for (let colIndex = 0; colIndex < this.canvas.width; colIndex++) {
+          const seg_offset = ((rowIndex * this.canvas.width) + colIndex)
+          const pix_offset = ((rowIndex * this.canvas.width) + colIndex) * 4
+          if(prediction[rowIndex][colIndex]>0.5){
+            data[pix_offset + 0] = 70
+            data[pix_offset + 1] = 30
+            data[pix_offset + 2] = 30
+            data[pix_offset + 3] = 255
+          }else{
+            data[pix_offset + 0] = 0
+            data[pix_offset + 1] = 0
+            data[pix_offset + 2] = 0
+            data[pix_offset + 3] = 0
+          }
         }
       }
     }
+    
     const imageDataTransparent = new ImageData(data, this.canvas.width, this.canvas.height);
     this.canvas.getContext("2d")!.putImageData(imageDataTransparent, 0, 0)
 
@@ -149,14 +223,22 @@ class App extends DemoBase {
     this.resultCanvasRef.current!.height = this.originalCanvas.current!.height
     const ctx = this.resultCanvasRef.current!.getContext("2d")!
 
-    ctx.drawImage(this.originalCanvas.current!, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
+    if(this.backgroundImage.src){
+      this.virtualBackgroundCanvas.width  = this.resultCanvasRef.current!.width
+      this.virtualBackgroundCanvas.height = this.resultCanvasRef.current!.height
+      const ctxv = this.virtualBackgroundCanvas.getContext("2d")!
+      ctxv.drawImage(this.canvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
+      ctxv.globalCompositeOperation = 'source-atop';
+      ctxv.drawImage(this.backgroundCanvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
 
-    // if(this.smoothing){
-    //   console.log("smoothing!")
-    //   ctx.imageSmoothingEnabled = true
-    //   ctx.imageSmoothingQuality = "high"
-    // }
-    ctx.drawImage(this.canvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
+      ctx.drawImage(this.originalCanvas.current!, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
+      ctx.drawImage( this.virtualBackgroundCanvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
+      
+
+    }else{
+      ctx.drawImage(this.originalCanvas.current!, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
+      ctx.drawImage(this.canvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
+    }
   }
 
   count = 0
