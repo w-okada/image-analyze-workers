@@ -58,7 +58,8 @@ const worker = {
     plugins: [　　　　　　　　　　　　　　　　 // <--- (3)
         new WorkerPlugin(),
         new WasmPackPlugin({
-            crateDirectory: path.join(__dirname, "crate")
+            crateDirectory: path.join(__dirname, "crate"),
+            forceMode: "production",
         })
     ],
     experiments: {

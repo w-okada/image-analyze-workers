@@ -3,44 +3,47 @@ import * as tf from '@tensorflow/tfjs';
 import { BrowserType } from './BrowserUtil';
 import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
 import { drawArrayToCanvas, imageToGrayScaleArray, padSymmetricImage } from './utils';
-import { JointBilateralFilter } from '../crate/pkg'
 
 const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
 
 let model:tf.GraphModel|null
-// import("../crate/pkg").then(async(module) => {
-//     console.log("MMMMMMMMMMMMMMMMMM1",module)
-//     mod = await module['default']
-//     console.log("MMMMMMMMMMMMMMMMMM2",mod)
-//     console.log("MMMMMMMMMMMMMMMMMM3",mod.greeting())
-//     console.log("MMMMMMMMMMMMMMMMMM3",mod.add(1,2))
-//     console.log("MMMMMMMMMMMMMMMMMM3",mod.sum1(Uint32Array.from([1,2,3,4,5])))
-//     console.log("MMMMMMMMMMMMMMMMMM3",mod.sum2(1))
 
-//     jbf = new mod.JointBilateralFilter(1,2,3,4)
-//     console.log("Config:::",jbf.get_config())
-// });
-
-class JBF {
-    private static _instance:JBF
+class JBFWasm {
+    private static _instance:JBFWasm
     private constructor(){}
     private mod?:any
-    private jbf?:JointBilateralFilter
-    
 
-    public static async  getInstance():Promise<JBF>{
+    private sm?:WebAssembly.Memory
+    srcMemory?:Float64Array 
+    segMemory?:Float64Array 
+    outMemory?:Float64Array
+    srcMemory_i32?:Float32Array 
+    segMemory_i32?:Float32Array 
+    outMemory_i32?:Float32Array
+
+    public static async getInstance():Promise<JBFWasm>{
         if(!this._instance){
             console.log("create instance")
-            this._instance = new JBF()
+            this._instance = new JBFWasm()
             const promise = await import("../crate/pkg")
             this._instance.mod = await promise['default']
-            // this._instance.jbf = new this._instance.mod.JointBilateralFilter(1,2,3,4)
+            console.log("module loeded",this._instance.mod)
+            const res = this._instance.mod.get_config()
+            this._instance.sm = this._instance.mod?.shared_memory() as WebAssembly.Memory
+            this._instance.srcMemory = new Float64Array(this._instance.sm.buffer, res[0]);
+            this._instance.segMemory = new Float64Array(this._instance.sm.buffer, res[1]);
+            this._instance.outMemory = new Float64Array(this._instance.sm.buffer, res[2]);
+
+            this._instance.srcMemory_i32 = new Float32Array(this._instance.sm.buffer, res[3]);
+            this._instance.segMemory_i32 = new Float32Array(this._instance.sm.buffer, res[4]);
+            this._instance.outMemory_i32 = new Float32Array(this._instance.sm.buffer, res[5]);
         }
         return this._instance
     }
 
-    getConfig = () => {
-        console.log("GET CONFIG:::", this.mod?.get_config())
+    doFilter = (w:number, h:number, sp:number, range:number) =>{
+        // this.mod.do_filter_float32(w, h ,sp, range)
+        this.mod.do_filter(w, h ,sp, range)
     }
 }
 
@@ -267,6 +270,8 @@ const predict_jbf_wasm = async (image:ImageBitmap, config: GoogleMeetSegmentatio
     // ctx.drawImage(image, 0, 0, off.width, off.height)
     // const imageData = ctx.getImageData(0, 0, off.width, off.height)
 
+    const jbf = await JBFWasm.getInstance()
+    
 
     const off = new OffscreenCanvas(image.width, image.height)
     const ctx = off.getContext("2d")!
@@ -296,12 +301,24 @@ const predict_jbf_wasm = async (image:ImageBitmap, config: GoogleMeetSegmentatio
         predTensor0 = predTensor0.mirrorPad([[spatialKern,spatialKern],[spatialKern,spatialKern]], 'symmetric')        
 
         predTensor0 = predTensor0.squeeze()
+
+        predTensor0 = tf.cast(predTensor0.mul(255),'float32')
+        newTensor   = tf.cast(newTensor, 'float32')
         seg = predTensor0.arraySync() as number[][]
         img = newTensor.arraySync()  as number[][]
     })
 
     const width  = params.jbfWidth
     const height = params.jbfHeight
+    jbf.srcMemory?.set(imageData.data)
+    jbf.segMemory?.set(seg!.flat())
+
+    // jbf.srcMemory_i32?.set(imageData.data)
+    // jbf.segMemory_i32?.set(seg!.flat())
+
+    jbf.doFilter(width, height, spatialKern, params.smoothingR)
+
+    matrix_js_map[`${params.smoothingR}`] = Array.from(new Array(2)).map((v,i) => Math.exp(i*i*-1*params.smoothingR))
 
     if(!matrix_js_map[`${params.smoothingR}`]){
         matrix_js_map[`${params.smoothingR}`] = Array.from(new Array(256)).map((v,i) => Math.exp(i*i*-1*params.smoothingR))
@@ -310,32 +327,13 @@ const predict_jbf_wasm = async (image:ImageBitmap, config: GoogleMeetSegmentatio
     const matrix_js = matrix_js_map[`${params.smoothingR}`]
     // const result:number[][][] = []
     const result = Array.from(new Array(height), () => new Array(width).fill(0));
-    for(let i=spatialKern; i<spatialKern+height; i++){
-        // console.log("row:",i)
-        for(let j=spatialKern; j<spatialKern+width; j++){
-            // console.log("col:",j)
-            const centerVal = img![i][j]
-            let norm = 0
-            let sum  = 0
-            for(let ki = 0 ; ki < spatialKern*2+1; ki++){
-                // console.log("krow:",ki)
-                for(let kj = 0 ; kj < spatialKern*2+1; kj++){
-                    // console.log("kcol:",kj)
-                    const index = Math.floor(Math.abs(img![i - spatialKern + ki][j-spatialKern + kj] - centerVal))
-                    const val = matrix_js[index]
-                    // console.log("kcol:a", val, index)
-                    // console.log("kcol:b1",kj, kresult, kresult[ki] ,kresult[ki][kj])
-                    // console.log("kcol:c",kj)
-                    norm += val
-                    // console.log("kcol:d",kj)
-                    sum += seg![i - spatialKern + ki][j-spatialKern + kj] * val
-                    // console.log("kcol:e",kj)
-                }
-            }
-            result[i - spatialKern][j - spatialKern] = sum/norm
+    for(let i=0; i<height; i++){
+        for(let j=0; j<width; j++){
+            result[i][j] = jbf.outMemory![i*width + j]
+            // result[i][j] = jbf.outMemory_i32![i*width + j]
         }
     }
-    // console.log(result)
+    //console.log(result)
     return result
 }
 
@@ -564,10 +562,7 @@ const predictWithData = async (data: Uint8ClampedArray , config: GoogleMeetSegme
 }
 
 onmessage = async (event) => {
-    //  console.log("event", event)
-    // const jbf = await JBF.getInstance()
-    // console.log("JBF!", jbf)
-    // console.log("JBF!", jbf.getConfig())
+
 
     if (event.data.message === WorkerCommand.INITIALIZE) {
         const config = event.data.config as GoogleMeetSegmentationConfig
@@ -598,7 +593,6 @@ onmessage = async (event) => {
             ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
         }else{ // Case.1
             if(params.smoothingS == 0 && params.smoothingR == 0){
-                //const prediction = await predict_jbf_wasm(image, config, params)
                 const prediction = await predict(image, config, params)
                 ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
             }else{
@@ -606,6 +600,7 @@ onmessage = async (event) => {
                     const prediction = await predict_jbf_js2(image, config, params)
                     ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
                 }else{
+                    // const prediction = await predict_jbf_wasm(image, config, params)
                     const prediction = await predict_jbf_js(image, config, params)
                     ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction })
                 }
