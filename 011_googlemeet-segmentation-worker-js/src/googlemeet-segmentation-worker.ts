@@ -1,7 +1,9 @@
 import { getBrowserType, BrowserType } from "./BrowserUtil";
 import * as tf from '@tensorflow/tfjs';
-import { GoogleMeetSegmentationConfig, GoogleMeetSegmentationFunctionType, GoogleMeetSegmentationOperationParams, WorkerCommand, WorkerResponse } from "./const";
+import { GoogleMeetSegmentationConfig, GoogleMeetSegmentationFunctionType, GoogleMeetSegmentationOperationParams, GoogleMeetSegmentationSmoothingType, WorkerCommand, WorkerResponse } from "./const";
 import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
+
+export { GoogleMeetSegmentationSmoothingType } from './const'
 
 export const generateGoogleMeetSegmentationDefaultConfig = ():GoogleMeetSegmentationConfig => {
     const defaultConf:GoogleMeetSegmentationConfig = {
@@ -26,13 +28,10 @@ export const generateDefaultGoogleMeetSegmentationParams = ():GoogleMeetSegmenta
         smoothingR          : 0,
         jbfWidth            : 128,
         jbfHeight           : 128,
-        resizeWithCanvas    : false,
 
         staticMemory        : false,
         lightWrapping       : false,
-        jbfWasm             : false,
-
-
+        smoothingType       : GoogleMeetSegmentationSmoothingType.JS
     }
     return defaultParams
 }

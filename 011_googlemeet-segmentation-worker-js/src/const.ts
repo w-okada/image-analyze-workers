@@ -28,15 +28,22 @@ export interface GoogleMeetSegmentationOperationParams{
     smoothingR          : number
     jbfWidth            : number
     jbfHeight           : number
-    resizeWithCanvas    : boolean
 
     staticMemory        : boolean
     lightWrapping       : boolean
-    jbfWasm             : boolean
+    smoothingType       : GoogleMeetSegmentationSmoothingType
 }
 
 export enum GoogleMeetSegmentationFunctionType{
     Segmentation,
     xxx, // Not implemented
+}
+
+
+export enum GoogleMeetSegmentationSmoothingType{
+    GPU,
+    JS,
+    WASM,
+    JS_CANVAS,
 }
 
