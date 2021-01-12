@@ -4,3 +4,4 @@ cd ../011_googlemeet-segmentation-worker-js; npm run build; cd -;\
 
 
 cp node_modules/\@dannadori/googlemeet-segmentation-worker-js/dist/googlemeet-segmentation-jbf.wasm public/;
+cp node_modules/\@dannadori/googlemeet-segmentation-worker-js/dist/googlemeet-segmentation-jbf.wasm public/static/js/;
