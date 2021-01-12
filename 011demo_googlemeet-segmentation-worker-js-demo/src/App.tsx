@@ -1,6 +1,6 @@
 import './App.css';
 import DemoBase, { ControllerUIProp } from './DemoBase';
-import { generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmentationDefaultConfig, GoogleMeetSegmentationWorkerManager } from '@dannadori/googlemeet-segmentation-worker-js'
+import { generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmentationDefaultConfig, GoogleMeetSegmentationSmoothingType, GoogleMeetSegmentationWorkerManager } from '@dannadori/googlemeet-segmentation-worker-js'
 
 class App extends DemoBase {
   manager:GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
@@ -121,21 +121,29 @@ class App extends DemoBase {
         },
       },
       {
-        title: "resizeWithCanvas",
-        currentIndexOrValue: 1,
-        values: ["on", "off"],
+        title: "smoothingType",
+        currentIndexOrValue: 0,
+        /// https://github.com/tensorflow/tensorflow/issues/39750
+        /// Slice is magnitude slower!!! Not support GPU!!
+        // values: ["JS", "WASM", "GPU", "JS_CANVAS"],
+        values: ["JS", "WASM", "JS_CANVAS"],
         callback: (val: string | number | MediaStream) => {
-          const resizeWithCanvas = this.controllerRef.current!.getCurrentValue("resizeWithCanvas")
-          this.params.resizeWithCanvas = (resizeWithCanvas === "on" ? true  : false) as boolean
-        },
-      },
-      {
-        title: "staticMemory",
-        currentIndexOrValue: 1,
-        values: ["on", "off"],
-        callback: (val: string | number | MediaStream) => {
-          const staticMemory = this.controllerRef.current!.getCurrentValue("staticMemory")
-          this.params.staticMemory = (staticMemory === "on" ? true  : false) as boolean
+          const smoothingType = this.controllerRef.current!.getCurrentValue("smoothingType")
+          this.params.smoothingType = (()=>{
+            switch(smoothingType){
+              case "JS":
+                return GoogleMeetSegmentationSmoothingType.JS
+              case "WASM":
+                return GoogleMeetSegmentationSmoothingType.WASM
+              case "GPU":
+                return GoogleMeetSegmentationSmoothingType.GPU
+              case "JS_CANVAS":
+                return GoogleMeetSegmentationSmoothingType.JS_CANVAS
+              default:
+                console.log("unknown smoothing type", smoothingType)
+                return GoogleMeetSegmentationSmoothingType.JS
+            }
+          })()
         },
       },
       {
@@ -161,16 +169,6 @@ class App extends DemoBase {
           console.log("unknwon input.", val)
         })
       },
-      {
-        title: "jbfWasm",
-        currentIndexOrValue: 1,
-        values: ["on", "off"],
-        callback: (val: string | number | MediaStream) => {
-          const jbfWasm = this.controllerRef.current!.getCurrentValue("jbfWasm")
-          this.params.jbfWasm = (jbfWasm === "on" ? true  : false) as boolean
-        },
-      },
-
     ]
     return menu
   }
@@ -187,16 +185,16 @@ class App extends DemoBase {
       for (let rowIndex = 0; rowIndex < this.canvas.height; rowIndex++) {
         for (let colIndex = 0; colIndex < this.canvas.width; colIndex++) {
           const pix_offset = ((rowIndex * this.canvas.width) + colIndex) * 4
-          if(prediction[rowIndex][colIndex]>0.5){
+          if(prediction[rowIndex][colIndex]>200){
             data[pix_offset + 0] = 70
             data[pix_offset + 1] = 30
             data[pix_offset + 2] = 30
             data[pix_offset + 3] = 255
-          }else if(prediction[rowIndex][colIndex]>0.4){
+          }else if(prediction[rowIndex][colIndex]>100){
               data[pix_offset + 0] = 255
               data[pix_offset + 1] = 255
               data[pix_offset + 2] = 255
-              data[pix_offset + 3] = 128
+              data[pix_offset + 3] = 200
           }else{
             data[pix_offset + 0] = 0
             data[pix_offset + 1] = 0
@@ -210,7 +208,7 @@ class App extends DemoBase {
         for (let colIndex = 0; colIndex < this.canvas.width; colIndex++) {
           const seg_offset = ((rowIndex * this.canvas.width) + colIndex)
           const pix_offset = ((rowIndex * this.canvas.width) + colIndex) * 4
-          if(prediction[rowIndex][colIndex]>0.5){
+          if(prediction[rowIndex][colIndex]>128){
             data[pix_offset + 0] = 70
             data[pix_offset + 1] = 30
             data[pix_offset + 2] = 30

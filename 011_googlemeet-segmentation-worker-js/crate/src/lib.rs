@@ -57,8 +57,8 @@ pub fn do_filter(w:u32, h:u32, sp:u32, range:u32){
         let gaussian_range   = 1.0 / (2.0*PI* (range as f64*range as f64)).sqrt() ;
 
         for i in 0..256u32{
-            // jbf.matrix[i as usize] = (-1.0*((i as f64*i as f64*gaussian_range) as f64)).exp();
-            jbf.matrix[i as usize] = (-1.0*((i as f64*i as f64*range as f64) as f64)).exp();
+            jbf.matrix[i as usize] = (-1.0*((i as f64*i as f64*gaussian_range) as f64)).exp();
+            //jbf.matrix[i as usize] = (-1.0*((i as f64*i as f64*range as f64) as f64)).exp();
         }
         jbf.range = range
     }
