@@ -32,6 +32,10 @@ export interface GoogleMeetSegmentationOperationParams{
     staticMemory        : boolean
     lightWrapping       : boolean
     smoothingType       : GoogleMeetSegmentationSmoothingType
+
+    originalWidth       : number
+    originalHeight      : number
+    
 }
 
 export enum GoogleMeetSegmentationFunctionType{

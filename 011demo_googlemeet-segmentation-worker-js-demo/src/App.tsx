@@ -7,7 +7,9 @@ class App extends DemoBase {
   canvas          = document.createElement("canvas")
   backgroundImage = document.createElement("img")
   backgroundCanvas = document.createElement("canvas")
-  virtualBackgroundCanvas = document.createElement("canvas")
+
+  personCanvas = document.createElement("canvas")
+  lightWrapCanvas = document.createElement("canvas")
   
   smoothing:boolean = false
   config = (()=>{
@@ -180,72 +182,102 @@ class App extends DemoBase {
     this.canvas.height = prediction.length
     const imageData = this.canvas.getContext("2d")!.getImageData(0, 0, this.canvas.width, this.canvas.height)
     const data = imageData.data
-
+    
+    // Light Wrap Generate
     if(this.params.lightWrapping){
+      this.lightWrapCanvas.width = this.canvas.width
+      this.lightWrapCanvas.height = this.canvas.height
+      const lightWrapImageData = this.lightWrapCanvas.getContext("2d")!.getImageData(0, 0, this.lightWrapCanvas.width, this.lightWrapCanvas.height)
+      const lightWrapdata = lightWrapImageData.data
+
       for (let rowIndex = 0; rowIndex < this.canvas.height; rowIndex++) {
         for (let colIndex = 0; colIndex < this.canvas.width; colIndex++) {
           const pix_offset = ((rowIndex * this.canvas.width) + colIndex) * 4
-          if(prediction[rowIndex][colIndex]>200){
-            data[pix_offset + 0] = 70
-            data[pix_offset + 1] = 30
-            data[pix_offset + 2] = 30
-            data[pix_offset + 3] = 255
-          }else if(prediction[rowIndex][colIndex]>100){
-              data[pix_offset + 0] = 255
-              data[pix_offset + 1] = 255
-              data[pix_offset + 2] = 255
-              data[pix_offset + 3] = 200
+          if(prediction[rowIndex][colIndex]>140){
+            lightWrapdata[pix_offset + 0] = 0
+            lightWrapdata[pix_offset + 1] = 0
+            lightWrapdata[pix_offset + 2] = 0
+            lightWrapdata[pix_offset + 3] = 0
+          }else if(prediction[rowIndex][colIndex]>128){
+            lightWrapdata[pix_offset + 0] = 0
+            lightWrapdata[pix_offset + 1] = 0
+            lightWrapdata[pix_offset + 2] = 0
+            lightWrapdata[pix_offset + 3] = 0
+            // lightWrapdata[pix_offset + 0] = 255
+            // lightWrapdata[pix_offset + 1] = 255
+            // lightWrapdata[pix_offset + 2] = 255
+            // lightWrapdata[pix_offset + 3] = 100
+          // }else if(prediction[rowIndex][colIndex]>80){
+          //   lightWrapdata[pix_offset + 0] = 255
+          //   lightWrapdata[pix_offset + 1] = 255
+          //   lightWrapdata[pix_offset + 2] = 255
+          //   lightWrapdata[pix_offset + 3] = 255
           }else{
-            data[pix_offset + 0] = 0
-            data[pix_offset + 1] = 0
-            data[pix_offset + 2] = 0
-            data[pix_offset + 3] = 0
+            lightWrapdata[pix_offset + 0] = 255
+            lightWrapdata[pix_offset + 1] = 255
+            lightWrapdata[pix_offset + 2] = 255
+            lightWrapdata[pix_offset + 3] = 255
           }
         }
       }
-    }else{
-      for (let rowIndex = 0; rowIndex < this.canvas.height; rowIndex++) {
-        for (let colIndex = 0; colIndex < this.canvas.width; colIndex++) {
-          const seg_offset = ((rowIndex * this.canvas.width) + colIndex)
-          const pix_offset = ((rowIndex * this.canvas.width) + colIndex) * 4
-          if(prediction[rowIndex][colIndex]>128){
-            data[pix_offset + 0] = 70
-            data[pix_offset + 1] = 30
-            data[pix_offset + 2] = 30
-            data[pix_offset + 3] = 255
-          }else{
-            data[pix_offset + 0] = 0
-            data[pix_offset + 1] = 0
-            data[pix_offset + 2] = 0
-            data[pix_offset + 3] = 0
-          }
+      const lightWrapimageDataTransparent = new ImageData(lightWrapdata, this.lightWrapCanvas.width, this.lightWrapCanvas.height);
+      this.lightWrapCanvas.getContext("2d")!.putImageData(lightWrapimageDataTransparent, 0, 0)
+    }
+    
+    for (let rowIndex = 0; rowIndex < this.canvas.height; rowIndex++) {
+      for (let colIndex = 0; colIndex < this.canvas.width; colIndex++) {
+        const seg_offset = ((rowIndex * this.canvas.width) + colIndex)
+        const pix_offset = ((rowIndex * this.canvas.width) + colIndex) * 4
+        if(prediction[rowIndex][colIndex]>128){
+          data[pix_offset + 0] = 0
+          data[pix_offset + 1] = 0
+          data[pix_offset + 2] = 0
+          data[pix_offset + 3] = 0
+        }else{
+          data[pix_offset + 0] = 255
+          data[pix_offset + 1] = 255
+          data[pix_offset + 2] = 255
+          data[pix_offset + 3] = 255
         }
       }
     }
+    
     
     const imageDataTransparent = new ImageData(data, this.canvas.width, this.canvas.height);
     this.canvas.getContext("2d")!.putImageData(imageDataTransparent, 0, 0)
 
     this.resultCanvasRef.current!.width = this.originalCanvas.current!.width
     this.resultCanvasRef.current!.height = this.originalCanvas.current!.height
+
+    this.personCanvas.width = this.resultCanvasRef.current!.width
+    this.personCanvas.height = this.resultCanvasRef.current!.height
+    this.personCanvas.getContext("2d")!.drawImage(this.canvas, 0, 0,  this.resultCanvasRef.current!.width,  this.resultCanvasRef.current!.height)
+    this.personCanvas.getContext("2d")!.globalCompositeOperation = "source-atop";
+    this.personCanvas.getContext("2d")!.drawImage(this.originalCanvas.current!, 0, 0,  this.resultCanvasRef.current!.width,  this.resultCanvasRef.current!.height)
+    this.personCanvas.getContext("2d")!.globalCompositeOperation = "source-over";
+      
     const ctx = this.resultCanvasRef.current!.getContext("2d")!
 
+    // Draw Background
     if(this.backgroundImage.src){
-      this.virtualBackgroundCanvas.width  = this.resultCanvasRef.current!.width
-      this.virtualBackgroundCanvas.height = this.resultCanvasRef.current!.height
-      const ctxv = this.virtualBackgroundCanvas.getContext("2d")!
-      ctxv.drawImage(this.canvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
-      ctxv.globalCompositeOperation = 'source-atop';
-      ctxv.drawImage(this.backgroundCanvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
-
-      ctx.drawImage(this.originalCanvas.current!, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
-      ctx.drawImage( this.virtualBackgroundCanvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
-      
-
+      ctx.drawImage(this.backgroundCanvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
     }else{
       ctx.drawImage(this.originalCanvas.current!, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
-      ctx.drawImage(this.canvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
+      ctx.fillStyle="#DD9999AA"
+      ctx.fillRect(0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
     }
+
+    // Draw light wrapping
+    if(this.params.lightWrapping){
+      ctx.filter = 'blur(2px)';
+      ctx.drawImage(this.lightWrapCanvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
+      ctx.filter = 'none';
+    }
+
+    // Draw Person
+
+    ctx.drawImage(this.personCanvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
+ 
   }
 
   count = 0
