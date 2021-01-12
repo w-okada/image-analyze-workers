@@ -32,6 +32,7 @@ export interface GoogleMeetSegmentationOperationParams{
 
     staticMemory        : boolean
     lightWrapping       : boolean
+    jbfWasm             : boolean
 }
 
 export enum GoogleMeetSegmentationFunctionType{
