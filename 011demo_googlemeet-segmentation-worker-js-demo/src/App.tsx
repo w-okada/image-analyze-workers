@@ -161,6 +161,15 @@ class App extends DemoBase {
           console.log("unknwon input.", val)
         })
       },
+      {
+        title: "jbfWasm",
+        currentIndexOrValue: 1,
+        values: ["on", "off"],
+        callback: (val: string | number | MediaStream) => {
+          const jbfWasm = this.controllerRef.current!.getCurrentValue("jbfWasm")
+          this.params.jbfWasm = (jbfWasm === "on" ? true  : false) as boolean
+        },
+      },
 
     ]
     return menu

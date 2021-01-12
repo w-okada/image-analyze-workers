@@ -30,6 +30,7 @@ export const generateDefaultGoogleMeetSegmentationParams = ():GoogleMeetSegmenta
 
         staticMemory        : false,
         lightWrapping       : false,
+        jbfWasm             : false,
 
 
     }
