@@ -3,7 +3,17 @@ import DemoBase, { ControllerUIProp } from './DemoBase';
 import { generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmentationDefaultConfig, GoogleMeetSegmentationSmoothingType, GoogleMeetSegmentationWorkerManager } from '@dannadori/googlemeet-segmentation-worker-js'
 
 class App extends DemoBase {
-  manager:GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
+  manager1: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
+  manager2: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
+  manager3: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
+  manager4: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
+  manager5: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
+
+  // @ts-ignore
+  managers = (()=>{
+    return [this.manager1, this.manager2, this.manager3, this.manager4, , this.manager5]
+  })()
+
   canvas          = document.createElement("canvas")
   backgroundImage = document.createElement("img")
   backgroundCanvas = document.createElement("canvas")
@@ -15,7 +25,7 @@ class App extends DemoBase {
   config = (()=>{
     const c = generateGoogleMeetSegmentationDefaultConfig()
     c.useTFWasmBackend = false
-    c.processOnLocal = true
+    c.processOnLocal = false
     // c.wasmPath = ""
     c.modelPath="./googlemeet-segmentation_128_32/model.json"
     c.wasmPath="./tfjs-backend-wasm.wasm"
@@ -25,6 +35,9 @@ class App extends DemoBase {
     const p = generateDefaultGoogleMeetSegmentationParams()
     p.processHeight = 128
     p.processWidth  = 128
+    p.lightWrapping = true
+    p.smoothingS = 1
+    p.smoothingR = 1
     return p
   })()
 
@@ -44,8 +57,8 @@ class App extends DemoBase {
   getCustomMenu = () => {
     const menu: ControllerUIProp[] = [
       {
-        title: "processOnLocal",
-        currentIndexOrValue: 0,
+        title: "processOnLocal(off:webworker)",
+        currentIndexOrValue: 1,
         values: ["on", "off"],
         callback: (val: string | number | MediaStream) => { },
       },
@@ -96,7 +109,7 @@ class App extends DemoBase {
       },
       {
         title: "smoothing_S",
-        currentIndexOrValue: 0,
+        currentIndexOrValue: 1,
         values: [0, 1, 3, 5, 10],
         callback: (val: string | number | MediaStream) => {
           const smoothing_S = this.controllerRef.current!.getCurrentValue("smoothing_S")
@@ -105,7 +118,7 @@ class App extends DemoBase {
       },
       {
         title: "smoothing_R",
-        currentIndexOrValue: 0,
+        currentIndexOrValue: 1,
         values: [0, 1, 3, 5, 10],
         callback: (val: string | number | MediaStream) => {
           const smoothing_R = this.controllerRef.current!.getCurrentValue("smoothing_R")
@@ -128,7 +141,7 @@ class App extends DemoBase {
         /// https://github.com/tensorflow/tensorflow/issues/39750
         /// Slice is magnitude slower!!! Not support GPU!!
         // values: ["JS", "WASM", "GPU", "JS_CANVAS"],
-        values: ["JS", "WASM", "JS_CANVAS"],
+        values: ["JS", "WASM(only for webworker)", "JS_CANVAS"],
         callback: (val: string | number | MediaStream) => {
           const smoothingType = this.controllerRef.current!.getCurrentValue("smoothingType")
           this.params.smoothingType = (()=>{
@@ -150,7 +163,7 @@ class App extends DemoBase {
       },
       {
         title: "lightWrapping",
-        currentIndexOrValue: 1,
+        currentIndexOrValue: 0,
         values: ["on", "off"],
         callback: (val: string | number | MediaStream) => {
           const lightWrapping = this.controllerRef.current!.getCurrentValue("lightWrapping")
