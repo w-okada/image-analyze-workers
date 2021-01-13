@@ -1,7 +1,6 @@
 # Google meet person segmentation
 
-![image](https://user-images.githubusercontent.com/48346627/103648756-afef7680-4fa0-11eb-8959-5583f9d51c8e.png)
-
+![image](https://user-images.githubusercontent.com/48346627/104487132-0b101180-5610-11eb-8182-b1be3470c9c9.png)
 
 ## Install
 ```
@@ -44,9 +43,21 @@ export interface GoogleMeetSegmentationConfig{
 
 
 export interface GoogleMeetSegmentationOperationParams{
-    type        : GoogleMeetSegmentationFunctionType
+    type                : GoogleMeetSegmentationFunctionType
     processWidth        : number
     processHeight       : number
+    smoothingS          : number
+    smoothingR          : number
+    jbfWidth            : number
+    jbfHeight           : number
+
+    staticMemory        : boolean
+    lightWrapping       : boolean
+    smoothingType       : GoogleMeetSegmentationSmoothingType
+
+    originalWidth       : number
+    originalHeight      : number
+    
 }
 
 export enum GoogleMeetSegmentationFunctionType{
@@ -54,6 +65,12 @@ export enum GoogleMeetSegmentationFunctionType{
     xxx, // Not implemented
 }
 
+export enum GoogleMeetSegmentationSmoothingType{
+    GPU,
+    JS,
+    WASM,
+    JS_CANVAS,
+}
 
 ```
 
