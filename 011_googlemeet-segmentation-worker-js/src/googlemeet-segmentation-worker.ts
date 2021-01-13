@@ -106,15 +106,15 @@ export class LocalWorker{
 
     //// (1) Only Google Meet Segmentation (not Joint Bilateral Filter)
     predict = async (targetCanvas:HTMLCanvasElement, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]> => {
-        // ImageData作成
-        this.canvas.width  = params.processWidth
-        this.canvas.height = params.processHeight
-        const ctx = this.canvas.getContext("2d")!
-        ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height)
+        // // ImageData作成
+        // this.canvas.width  = params.processWidth
+        // this.canvas.height = params.processHeight
+        // const ctx = this.canvas.getContext("2d")!
+        // ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height)
 
         let bm:number[][][]|null = null
         tf.tidy(()=>{
-            let tensor = tf.browser.fromPixels(this.canvas)
+            let tensor = tf.browser.fromPixels(targetCanvas)
             tensor = tf.image.resizeBilinear(tensor,[params.processWidth, params.processHeight])
             tensor = tensor.expandDims(0)
             tensor = tf.cast(tensor, 'float32')
@@ -241,8 +241,6 @@ export class LocalWorker{
 
         const width  = params.jbfWidth
         const height = params.jbfHeight
-        // jbf.srcMemory?.set(img!)
-        // jbf.segMemory?.set(seg!)
         ////// !!!!!! This Copy is bottle neck!!!
         jbf.srcMemory?.set(img!.flat())
         jbf.segMemory?.set(seg!.flat())
@@ -392,8 +390,9 @@ export class GoogleMeetSegmentationWorkerManager{
                         case GoogleMeetSegmentationSmoothingType.JS:
                             prediction = await this.localWorker.predict_jbf_js(targetCanvas, this.config, params)
                             break
-                        case GoogleMeetSegmentationSmoothingType.WASM:
-                            prediction = await this.localWorker.predict_jbf_wasm(targetCanvas, this.config, params)
+                        case GoogleMeetSegmentationSmoothingType.WASM: // Wasm for Local Works is currently not available(because not supported Multi Worker.)
+                            prediction = await this.localWorker.predict_jbf_js(targetCanvas, this.config, params)
+                            // prediction = await this.localWorker.predict_jbf_wasm(targetCanvas, this.config, params)
                             break
                         case GoogleMeetSegmentationSmoothingType.JS_CANVAS:
                             prediction = await this.localWorker.predict_jbf_js_canvas(targetCanvas, this.config, params)
