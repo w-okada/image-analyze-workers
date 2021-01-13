@@ -5,13 +5,14 @@ import { generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmenta
 class App extends DemoBase {
   manager1: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
   manager2: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
-  manager3: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
-  manager4: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
-  manager5: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
+  // manager3: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
+  // manager4: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
+  // manager5: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
 
   // @ts-ignore
   managers = (()=>{
-    return [this.manager1, this.manager2, this.manager3, this.manager4, , this.manager5]
+    // return [this.manager1, this.manager2, this.manager3, this.manager4, this.manager5]
+    return [this.manager1, this.manager2]
   })()
 
   canvas          = document.createElement("canvas")
