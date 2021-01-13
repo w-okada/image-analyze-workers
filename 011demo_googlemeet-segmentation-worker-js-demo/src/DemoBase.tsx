@@ -12,7 +12,7 @@ interface ImageAnalyzerModelManager {
 
 class DemoBase extends React.Component {
     imageElementRef = React.createRef<HTMLImageElement>()
-    videoElementRef = React.createRef<HTMLVideoElement>()
+    videoElementRef = React.createRef<HTMLVideoElement>()    
     originalCanvas = React.createRef<HTMLCanvasElement>()
     resultCanvasRef = React.createRef<HTMLCanvasElement>()
     targetElement?: HTMLImageElement | HTMLVideoElement
@@ -23,6 +23,8 @@ class DemoBase extends React.Component {
     controller?: any
 
     manager?: ImageAnalyzerModelManager
+    managers?: ImageAnalyzerModelManager[]
+    managerNum:number = 0
     config: any
     params: any
     IMAGE_PATH = "./yuka_kawamura.jpg"
@@ -116,6 +118,9 @@ class DemoBase extends React.Component {
                         this.videoElementRef.current!.src = path
                         this.videoElementRef.current!.currentTime=0
                         this.videoElementRef.current!.autoplay = true
+                        this.videoElementRef.current!.loop = true
+                        this.videoElementRef.current!.controls = true
+                        
                         this.videoElementRef.current!.play()
                         this.adjustCanvaSize(this.videoElementRef.current!)
                     }else{
@@ -148,12 +153,26 @@ class DemoBase extends React.Component {
     }
 
     private setup = (manager: ImageAnalyzerModelManager, config: any) => {
-        const managerPromise = manager.init(Object.assign({}, config))
+        const promises = []
         const devicePromise = getDeviceLists()
+        promises.push(devicePromise)
 
-        Promise.all([managerPromise, devicePromise]).then(res => {
+        if(this.managers){
+            console.log("managers!!!", this.managers)
+            this.managers.forEach((m) =>{
+                const managerPromise = m.init(Object.assign({}, config))
+                promises.push(managerPromise)
+            })
+            this.managerNum = this.managers.length
+    
+        }else{
+            const managerPromise = manager.init(Object.assign({}, config))
+            promises.push(managerPromise)
+        }
+
+        Promise.all(promises).then(res => {
             console.log(res)
-            this.deviceList = res[1]
+            this.deviceList = res[0]
             this.adjustCanvaSize(this.imageElementRef.current!)
             this.imageElementRef.current!.src = this.IMAGE_PATH
             this.targetElement = this.imageElementRef.current!
@@ -168,32 +187,76 @@ class DemoBase extends React.Component {
         this.setup(this.manager!, this.config)
     }
 
+    managerHolding:ImageAnalyzerModelManager[] = []
     predict = () => {
-        
-        this.originalCanvas.current!.getContext("2d")!.drawImage(this.targetElement!, 0, 0, this.originalCanvas.current!.width, this.originalCanvas.current!.height)
-        this.pfmRef.current!.start()
-        this.manager!.predict(this.originalCanvas.current!, this.params).then(prediction => {
-            this.handleResult(prediction)
-            this.pfmRef.current!.end()
+        if(this.managers){
+            const m = this.managers.shift()
+            // console.log("manager", this.managers)
+            if(m){
+                this.originalCanvas.current!.getContext("2d")!.drawImage(this.targetElement!, 0, 0, this.originalCanvas.current!.width, this.originalCanvas.current!.height)
+                this.pfmRef.current!.start()
 
-            if(this.reloadRequired === true){
-                this.preprocessBeforeReload()
-                this.manager!.init(Object.assign({}, this.config)).then(()=>{
-                    this.reloadRequired=false
+                if(this.reloadRequired === true){// リロードが必要な場合、すべてのmanagerをいったん退避。
+                    this.managerHolding.push(m)
+                    if(this.managerHolding.length === this.managerNum){　// 退避完了。
+                        while(true){
+                            this.preprocessBeforeReload()
+                            const m = this.managerHolding.shift() // それぞれリロードする。
+                            if(!m){                               // 退避したmanaggerがなくなったらリロードループを抜ける
+                                this.reloadRequired = false
+                                break
+                            }
+                            m.init(Object.assign({}, this.config)).then(()=>{ // リロードしてmanager列に復帰
+                                this.managers?.push(m)
+                            })
+                        }
+                    }
+                }else{
+                    m.predict(this.originalCanvas.current!, this.params).then(prediction => {
+                        this.handleResult(prediction)
+                        this.pfmRef.current!.end()
+                        this.managers?.push(m)
+                    }).catch(x => {
+                        console.log("Exception:", x)
+                    })
+                }
+            }else{
+                // console.log("worker is none")
+            }
+            setTimeout(() => {
+                this.predict()
+            }, 0)
+
+        }else{
+
+            this.originalCanvas.current!.getContext("2d")!.drawImage(this.targetElement!, 0, 0, this.originalCanvas.current!.width, this.originalCanvas.current!.height)
+            this.pfmRef.current!.start()
+            this.manager!.predict(this.originalCanvas.current!, this.params).then(prediction => {
+                this.handleResult(prediction)
+                this.pfmRef.current!.end()
+
+                if(this.reloadRequired === true){
+                    this.preprocessBeforeReload()
+                    this.manager!.init(Object.assign({}, this.config)).then(()=>{
+                        this.reloadRequired=false
+                        setTimeout(() => {
+                            this.predict()
+                        }, 0)
+                    })
+                }else{
                     setTimeout(() => {
                         this.predict()
                     }, 0)
-                })
-            }else{
-                setTimeout(() => {
-                    this.predict()
-                }, 0)
-            }
+                }
 
 
-        }).catch(x => {
-            console.log("Exception:", x)
-        })
+            }).catch(x => {
+                console.log("Exception:", x)
+            })
+
+        }
+
+
     }
     render() {
         console.log("rendor")
@@ -201,13 +264,16 @@ class DemoBase extends React.Component {
             <div>
                 <div>
                     <img ref={this.imageElementRef} style={{ display: "none" }} alt="" crossOrigin="anonymous" />
-                    <video ref={this.videoElementRef} style={{ display: "none" }} />
+                    {/* <video ref={this.videoElementRef} style={{ display: "none" }} /> */}
                     <canvas ref={this.originalCanvas} />
                     <canvas ref={this.resultCanvasRef} />
+                    <video ref={this.videoElementRef} />
                 </div>
                 <div>
-                    フリー素材ぱくたそ（www.pakutaso.com）model by 河村友歌
-        </div>
+                    <a href="https://github.com/w-okada/image-analyze-workers">github</a><br />
+                    <a href="https://www.flect.co.jp/"> FLECT, Co., Ltd.</a> <br/>
+                    フリー素材ぱくたそ（www.pakutaso.com）model by 河村友歌 <br />
+                </div>
                 {this.controller}
                 <PerformanceCanvas ref={this.pfmRef} />
             </div>

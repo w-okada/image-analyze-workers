@@ -8,7 +8,7 @@ class App extends DemoBase {
 
   config = (()=>{
     const c = generateMODNetDefaultConfig()
-    c.useTFWasmBackend = true
+    c.useTFWasmBackend = false
     // c.wasmPath = ""
     c.modelPath="/modnet/model.json"
     return c
@@ -31,14 +31,14 @@ class App extends DemoBase {
       {
         title: "modelPath",
         currentIndexOrValue: 0,
-        displayLabels:["u2net192", "u2net256", "u2net320", "u2net512", "u2net1024"],
-        values: ["/u2net-portrait_192/model.json", "/u2net-portrait_256/model.json", "/u2net-portrait_320/model.json", "/u2net-portrait_512/model.json", "/u2net-portrait_1024/model.json"],
+        displayLabels:["modnet"],
+        values: ["/modnet/model.json"],
         callback: (val: string | number | MediaStream) => {
         },
       },
       {
         title: "useTFWasmBackend",
-        currentIndexOrValue: 0,
+        currentIndexOrValue: 1,
         values: ["on", "off"],
         callback: (val: string | number | MediaStream) => { },
       },
@@ -51,27 +51,6 @@ class App extends DemoBase {
           const useTFWasmBackend = this.controllerRef.current!.getCurrentValue("useTFWasmBackend")
           this.config.useTFWasmBackend   = (useTFWasmBackend === "on" ? true  : false) as boolean
           this.config.modelPath = this.controllerRef.current!.getCurrentValue("modelPath") as string  
-
-
-          const path = this.config.modelPath
-          if(path.indexOf("192") > 0){
-            this.params.processWidth = 192
-            this.params.processHeight = 192
-          }else if(path.indexOf("256") > 0){
-            this.params.processWidth = 256
-            this.params.processHeight = 256
-          }else if(path.indexOf("320") > 0){
-            this.params.processWidth = 320
-            this.params.processHeight = 320
-          }else if(path.indexOf("512") > 0){
-            this.params.processWidth = 512
-            this.params.processHeight = 512
-          }else if(path.indexOf("1024") > 0){
-            this.params.processWidth = 1024
-            this.params.processHeight = 1024
-          }          
-
-
           this.requireReload()
         },
       },

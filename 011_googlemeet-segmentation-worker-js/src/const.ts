@@ -21,13 +21,33 @@ export interface GoogleMeetSegmentationConfig{
 
 
 export interface GoogleMeetSegmentationOperationParams{
-    type        : GoogleMeetSegmentationFunctionType
+    type                : GoogleMeetSegmentationFunctionType
     processWidth        : number
     processHeight       : number
+    smoothingS          : number
+    smoothingR          : number
+    jbfWidth            : number
+    jbfHeight           : number
+
+    staticMemory        : boolean
+    lightWrapping       : boolean
+    smoothingType       : GoogleMeetSegmentationSmoothingType
+
+    originalWidth       : number
+    originalHeight      : number
+    
 }
 
 export enum GoogleMeetSegmentationFunctionType{
     Segmentation,
     xxx, // Not implemented
+}
+
+
+export enum GoogleMeetSegmentationSmoothingType{
+    GPU,
+    JS,
+    WASM,
+    JS_CANVAS,
 }
 
