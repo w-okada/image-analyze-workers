@@ -176,7 +176,7 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t09_u2net-portrait/i
 
 ## Google meet person segmentation
 
-![image](https://user-images.githubusercontent.com/48346627/103648756-afef7680-4fa0-11eb-8959-5583f9d51c8e.png)
+![image](https://user-images.githubusercontent.com/48346627/104487132-0b101180-5610-11eb-8182-b1be3470c9c9.png)
 
 ### installation and usage 
 [See here](/011_googlemeet-segmentation-worker-js)
