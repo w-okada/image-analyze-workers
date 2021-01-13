@@ -48,9 +48,9 @@ class JBFWasm {
     private mod?:any
 
     private sm?:WebAssembly.Memory
-    srcMemory?:Float64Array 
-    segMemory?:Float64Array 
-    outMemory?:Float64Array
+    srcMemory?:Float32Array 
+    segMemory?:Float32Array 
+    outMemory?:Float32Array
 
     public static async getInstance():Promise<JBFWasm>{
         if(!this._instance){
@@ -61,9 +61,9 @@ class JBFWasm {
             console.log("module loeded",this._instance.mod)
             const res = this._instance.mod.get_config()
             this._instance.sm = this._instance.mod?.shared_memory() as WebAssembly.Memory
-            this._instance.srcMemory = new Float64Array(this._instance.sm.buffer, res[0]);
-            this._instance.segMemory = new Float64Array(this._instance.sm.buffer, res[1]);
-            this._instance.outMemory = new Float64Array(this._instance.sm.buffer, res[2]);
+            this._instance.srcMemory = new Float32Array(this._instance.sm.buffer, res[0]);
+            this._instance.segMemory = new Float32Array(this._instance.sm.buffer, res[1]);
+            this._instance.outMemory = new Float32Array(this._instance.sm.buffer, res[2]);
         }
         return this._instance
     }
@@ -231,15 +231,19 @@ export class LocalWorker{
             newTensor   = newTensor.mirrorPad([[spatialKern,spatialKern],[spatialKern,spatialKern]], 'symmetric')
             predTensor0 = predTensor0.mirrorPad([[spatialKern,spatialKern],[spatialKern,spatialKern]], 'symmetric')        
     
-            predTensor0 = predTensor0.squeeze()
-            predTensor0 = tf.cast(predTensor0.mul(255),'float32')
+            // predTensor0 = predTensor0.squeeze().flatten()
+            // predTensor0 = tf.cast(predTensor0.mul(255),'float32').flatten()
     
             seg = predTensor0.arraySync() as number[][]
             img = newTensor.arraySync()  as number[][]
+
         })
 
         const width  = params.jbfWidth
         const height = params.jbfHeight
+        // jbf.srcMemory?.set(img!)
+        // jbf.segMemory?.set(seg!)
+        ////// !!!!!! This Copy is bottle neck!!!
         jbf.srcMemory?.set(img!.flat())
         jbf.segMemory?.set(seg!.flat())
     

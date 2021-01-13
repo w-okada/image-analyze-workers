@@ -14,9 +14,9 @@ class JBFWasm {
     private mod?:any
 
     private sm?:WebAssembly.Memory
-    srcMemory?:Float64Array 
-    segMemory?:Float64Array 
-    outMemory?:Float64Array
+    srcMemory?:Float32Array 
+    segMemory?:Float32Array 
+    outMemory?:Float32Array
 
     public static async getInstance():Promise<JBFWasm>{
         if(!this._instance){
@@ -27,9 +27,9 @@ class JBFWasm {
             console.log("module loeded",this._instance.mod)
             const res = this._instance.mod.get_config()
             this._instance.sm = this._instance.mod?.shared_memory() as WebAssembly.Memory
-            this._instance.srcMemory = new Float64Array(this._instance.sm.buffer, res[0]);
-            this._instance.segMemory = new Float64Array(this._instance.sm.buffer, res[1]);
-            this._instance.outMemory = new Float64Array(this._instance.sm.buffer, res[2]);
+            this._instance.srcMemory = new Float32Array(this._instance.sm.buffer, res[0]);
+            this._instance.segMemory = new Float32Array(this._instance.sm.buffer, res[1]);
+            this._instance.outMemory = new Float32Array(this._instance.sm.buffer, res[2]);
         }
         return this._instance
     }

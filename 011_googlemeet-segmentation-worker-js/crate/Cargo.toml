@@ -19,7 +19,7 @@ crate-type = ["cdylib"]
 [profile.release]
 lto = true
 opt-level = 3
-overflow-checks = false
+#overflow-checks = false
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ["-O", "--enable-mutable-globals"]
