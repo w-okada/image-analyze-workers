@@ -195,7 +195,7 @@ class DemoBase extends React.Component {
             <div>
                 <div>
                     <img ref={this.imageElementRef} style={{ display: "none" }} alt="" crossOrigin="anonymous" />
-                    <video ref={this.videoElementRef} style={{ display: "none" }} />
+                    <video ref={this.videoElementRef} style={{ display: "none" }} loop/>
                     <canvas ref={this.originalCanvas} />
                     <canvas ref={this.resultCanvasRef} />
                 </div>

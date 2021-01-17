@@ -36,6 +36,8 @@ export interface GoogleMeetSegmentationOperationParams{
     originalWidth       : number
     originalHeight      : number
     
+    directToCanvs       : boolean
+    toCanvas            : HTMLCanvasElement|null
 }
 
 export enum GoogleMeetSegmentationFunctionType{

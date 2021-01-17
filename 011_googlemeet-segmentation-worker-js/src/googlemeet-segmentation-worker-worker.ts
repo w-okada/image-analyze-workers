@@ -3,6 +3,7 @@ import * as tf from '@tensorflow/tfjs';
 import { BrowserType } from './BrowserUtil';
 import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
 import { drawArrayToCanvas, imageToGrayScaleArray, padSymmetricImage } from './utils';
+import { browser } from '@tensorflow/tfjs';
 
 const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
 
@@ -46,8 +47,8 @@ const load_module = async (config: GoogleMeetSegmentationConfig) => {
       console.log("use cpu backend, wasm doesnot support enough function")
       require('@tensorflow/tfjs-backend-wasm')
       setWasmPath(config.wasmPath)
-      //await tf.setBackend("wasm")
-      await tf.setBackend("cpu")
+      await tf.setBackend("wasm")
+    //   await tf.setBackend("cpu")
     }else{
       console.log("use webgl backend")
       require('@tensorflow/tfjs-backend-webgl')

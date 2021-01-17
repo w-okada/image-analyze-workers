@@ -164,6 +164,7 @@ class DemoBase extends React.Component {
                 promises.push(managerPromise)
             })
             this.managerNum = this.managers.length
+            console.log("managers", this.managerNum)
     
         }else{
             const managerPromise = manager.init(Object.assign({}, config))
@@ -198,6 +199,7 @@ class DemoBase extends React.Component {
 
                 if(this.reloadRequired === true){// リロードが必要な場合、すべてのmanagerをいったん退避。
                     this.managerHolding.push(m)
+                    // console.log("managers!!", this.managerHolding.length, this.managerNum)
                     if(this.managerHolding.length === this.managerNum){　// 退避完了。
                         while(true){
                             this.preprocessBeforeReload()

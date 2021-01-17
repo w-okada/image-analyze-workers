@@ -3,16 +3,18 @@ import DemoBase, { ControllerUIProp } from './DemoBase';
 import { generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmentationDefaultConfig, GoogleMeetSegmentationSmoothingType, GoogleMeetSegmentationWorkerManager } from '@dannadori/googlemeet-segmentation-worker-js'
 
 class App extends DemoBase {
-  manager1: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
-  manager2: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
-  manager3: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
-  manager4: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
-  manager5: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
+  manager: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
+  // manager1: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
+  // manager2: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
+  // manager3: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
+  // manager4: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
+  // manager5: GoogleMeetSegmentationWorkerManager = new GoogleMeetSegmentationWorkerManager()
 
   // @ts-ignore
-  managers = (()=>{
-    return [this.manager1, this.manager2, this.manager3, this.manager4, , this.manager5]
-  })()
+  // managers = (()=>{
+  //   // return [this.manager1, this.manager2, this.manager3, this.manager4, this.manager5]
+  //   return [this.manager1, this.manager2]
+  // })()
 
   canvas          = document.createElement("canvas")
   backgroundImage = document.createElement("img")
@@ -20,12 +22,12 @@ class App extends DemoBase {
 
   personCanvas = document.createElement("canvas")
   lightWrapCanvas = document.createElement("canvas")
-  
+
   smoothing:boolean = false
   config = (()=>{
     const c = generateGoogleMeetSegmentationDefaultConfig()
     c.useTFWasmBackend = false
-    c.processOnLocal = false
+    c.processOnLocal = true
     // c.wasmPath = ""
     c.modelPath="./googlemeet-segmentation_128_32/model.json"
     c.wasmPath="./tfjs-backend-wasm.wasm"
@@ -58,7 +60,7 @@ class App extends DemoBase {
     const menu: ControllerUIProp[] = [
       {
         title: "processOnLocal(off:webworker)",
-        currentIndexOrValue: 1,
+        currentIndexOrValue: 0,
         values: ["on", "off"],
         callback: (val: string | number | MediaStream) => { },
       },
@@ -82,7 +84,7 @@ class App extends DemoBase {
         title: "reload model",
         currentIndexOrValue: 0,
         callback: (val: string | number | MediaStream) => {
-          const processOnLocal = this.controllerRef.current!.getCurrentValue("processOnLocal")
+          const processOnLocal = this.controllerRef.current!.getCurrentValue("processOnLocal(off:webworker)")
           this.config.processOnLocal     = (processOnLocal === "on" ? true  : false) as boolean
           const useTFWasmBackend = this.controllerRef.current!.getCurrentValue("useTFWasmBackend")
           this.config.useTFWasmBackend   = (useTFWasmBackend === "on" ? true  : false) as boolean
@@ -102,6 +104,12 @@ class App extends DemoBase {
               }else if(path.indexOf("96") > 0){
                 this.params.processHeight = 96
                 this.params.processWidth = 160
+              }
+
+              if(this.config.processOnLocal===true){
+                this.params.toCanvas = this.resultCanvasRef.current!
+              }else{
+                this.params.toCanvas = null
               }
             }
           )
@@ -168,6 +176,15 @@ class App extends DemoBase {
         callback: (val: string | number | MediaStream) => {
           const lightWrapping = this.controllerRef.current!.getCurrentValue("lightWrapping")
           this.params.lightWrapping = (lightWrapping === "on" ? true  : false) as boolean
+        },
+      },
+      {
+        title: "directToCanvas",
+        currentIndexOrValue: 1,
+        values: ["on", "off"],
+        callback: (val: string | number | MediaStream) => {
+          const directToCanvas = this.controllerRef.current!.getCurrentValue("directToCanvas")
+          this.params.directToCanvs = (directToCanvas === "on" ? true  : false) as boolean
         },
       },
       {
@@ -282,7 +299,7 @@ class App extends DemoBase {
 
     // Draw light wrapping
     if(this.params.lightWrapping){
-      ctx.filter = 'blur(2px)';
+      ctx.filter = 'blur(4px)';
       ctx.drawImage(this.lightWrapCanvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
       ctx.filter = 'none';
     }
@@ -295,7 +312,11 @@ class App extends DemoBase {
 
   count = 0
   handleResult = (prediction: any) => {
-    this.drawSegmentation(prediction)
+    if(this.config.processOnLocal===true && this.params.directToCanvs===true && this.params.smoothingR===0 && this.params.smoothingS===0){
+
+    }else{
+      this.drawSegmentation(prediction)
+    }
   }
 
 }

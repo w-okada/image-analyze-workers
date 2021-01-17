@@ -45,7 +45,9 @@ class App extends DemoBase {
   params = generateDefaultBodyPixParams()
 
   tmpCanvas = document.createElement("canvas")
-
+  backgroundImage = document.createElement("img")
+  backgroundCanvas = document.createElement("canvas")
+  personCanvas = document.createElement("canvas")
 
   IMAGE_PATH = "./yuka_kawamura.jpg"
   RESULT_OVERLAY = true
@@ -57,7 +59,7 @@ class App extends DemoBase {
     const menu: ControllerUIProp[] = [
       {
         title: "arch",
-        currentIndexOrValue: 1,
+        currentIndexOrValue: 0,
         values: ["MobileNetV1", "ResNet50"],
         callback: (val: string | number | MediaStream) => { },
       },
@@ -231,10 +233,37 @@ class App extends DemoBase {
         callback: (val: string | number | MediaStream) => {
           this.params.processHeight = val as number
         },
-      }
+      },      
+      {
+        title: "background",
+        currentIndexOrValue: 0,
+        values: ["image"],
+        fileValue: ["image"],
+        fileCallback:(fileType:string, path:string)=>{
+            if(fileType.startsWith("image")){
+              this.selectBackgroundImage(path)
+            }
+        },
+        callback: ((val: string | number | MediaStream) => {
+          console.log("unknwon input.", val)
+        })
+      },
     ]
     return menu
   }
+
+
+
+  private selectBackgroundImage(path:string){
+    this.backgroundImage.onload = () =>{
+      this.backgroundCanvas.width = this.backgroundImage.width
+      this.backgroundCanvas.height = this.backgroundImage.height
+      const ctx = this.backgroundCanvas.getContext("2d")!
+      ctx.drawImage(this.backgroundImage, 0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height)
+    }
+    this.backgroundImage.src = path
+  }
+
 
   drawSegmentation = (prediction: SemanticPersonSegmentation) => {
     this.tmpCanvas.width = prediction.width
@@ -262,14 +291,24 @@ class App extends DemoBase {
     const imageDataTransparent = new ImageData(data, prediction.width, prediction.height);
     this.tmpCanvas.getContext("2d")!.putImageData(imageDataTransparent, 0, 0)
 
+    this.personCanvas.width  = this.originalCanvas.current!.width
+    this.personCanvas.height = this.originalCanvas.current!.height
+    const personCtx = this.personCanvas.getContext("2d")!
+    personCtx.drawImage(this.tmpCanvas, 0, 0, this.personCanvas.width, this.personCanvas.height)
+    personCtx.globalCompositeOperation = 'source-in';
+    personCtx.drawImage(this.originalCanvas.current!, 0, 0, this.personCanvas.width, this.personCanvas.height)
+    this.personCanvas.getContext("2d")!.globalCompositeOperation = "source-over";
+
+
+
     this.resultCanvasRef.current!.width = this.originalCanvas.current!.width
     this.resultCanvasRef.current!.height = this.originalCanvas.current!.height
     const ctx = this.resultCanvasRef.current!.getContext("2d")!
-    ctx.drawImage(this.tmpCanvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
-    ctx.globalCompositeOperation = 'source-in';
-    ctx.drawImage(this.originalCanvas.current!, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
-  }
+    ctx.drawImage(this.backgroundCanvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
+    ctx.drawImage(this.personCanvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
 
+
+  }
   
   drawMultiSegmentation = (prediction:PersonSegmentation[]) =>{
     this.resultCanvasRef.current!.width = this.originalCanvas.current!.width
