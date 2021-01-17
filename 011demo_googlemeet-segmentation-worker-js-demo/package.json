@@ -5,6 +5,7 @@
   "homepage": "./",
   "dependencies": {
     "@dannadori/googlemeet-segmentation-worker-js": "^1.0.7",
+    "@tensorflow/tfjs": "^2.8.4",
     "@testing-library/jest-dom": "^5.11.8",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
