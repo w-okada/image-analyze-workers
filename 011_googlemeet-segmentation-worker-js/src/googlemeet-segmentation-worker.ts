@@ -37,6 +37,10 @@ export const generateDefaultGoogleMeetSegmentationParams = ():GoogleMeetSegmenta
         
         originalWidth       : 0,
         originalHeight      : 0,
+
+
+        directToCanvs: false,
+        toCanvas: null,
     }
     return defaultParams
 }
@@ -114,8 +118,8 @@ export class LocalWorker{
 
         let bm:number[][][]|null = null
         tf.tidy(()=>{
-            let tensor = tf.browser.fromPixels(targetCanvas)
-            tensor = tf.image.resizeBilinear(tensor,[params.processWidth, params.processHeight])
+            let tensorO = tf.browser.fromPixels(targetCanvas)
+            let tensor = tf.image.resizeBilinear(tensorO,[params.processHeight, params.processWidth])
             tensor = tensor.expandDims(0)
             tensor = tf.cast(tensor, 'float32')
             tensor = tensor.div(255)
@@ -123,11 +127,52 @@ export class LocalWorker{
             prediction = prediction.softmax()
             prediction = prediction.squeeze()
             let [predTensor0, predTensor1] = tf.split(prediction, 2, 2)
-            predTensor0 = tf.cast(predTensor0.mul(255),'float32')
-            bm = predTensor0.arraySync() as number[][][]
+
+
+            if(params.directToCanvs === true){
+                predTensor1 = tf.image.resizeBilinear(predTensor1,[targetCanvas.height, targetCanvas.width])
+                predTensor1 = predTensor1.mul(tensorO)
+                predTensor1 = tf.cast(predTensor1,'int32')
+                tf.browser.toPixels(predTensor1, params.toCanvas!)
+            }else{
+                predTensor0 = tf.cast(predTensor0.mul(255),'int32')
+                bm = predTensor0.arraySync() as number[][][]
+            }
         })
         return bm!
     }
+
+//     //// (1-2) Only Google Meet Segmentation (not Joint Bilateral Filter)
+//     demoCanvas = document.createElement("canvas")
+//     predict2 = async (targetCanvas:HTMLCanvasElement, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]> => {
+//         // // ImageData作成
+//         // this.canvas.width  = params.processWidth
+//         // this.canvas.height = params.processHeight
+//         // const ctx = this.canvas.getContext("2d")!
+//         // ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height)
+//         console.log("predict2")
+//         let bm:number[][][]|null = null
+//         tf.tidy(()=>{
+//             let tensor = tf.browser.fromPixels(targetCanvas)
+//             tensor = tf.image.resizeBilinear(tensor,[params.processHeight, params.processWidth])
+//             tensor = tensor.expandDims(0)
+//             tensor = tf.cast(tensor, 'float32')
+//             tensor = tensor.div(255)
+//             let prediction = this.model!.predict(tensor) as tf.Tensor
+//             prediction = prediction.softmax()
+//             prediction = prediction.squeeze()
+//             let [predTensor0, predTensor1] = tf.split(prediction, 2, 2)
+//             predTensor0 = tf.cast(predTensor0.mul(255),'int32')
+//             tf.browser.toPixels(predTensor0, params.toCanvas!)
+// //            bm = predTensor0.arraySync() as number[][][]
+//         })
+//         return bm!
+//     }
+
+
+
+
+
 
     //// (2) With GPU JBF
     ///// Not implement
@@ -329,13 +374,8 @@ export class LocalWorker{
                 result[i - spatialKern][j - spatialKern] = sum/norm
             }
         }
-
         return result
     }
-
-
-
-
 }
 
 export class GoogleMeetSegmentationWorkerManager{
