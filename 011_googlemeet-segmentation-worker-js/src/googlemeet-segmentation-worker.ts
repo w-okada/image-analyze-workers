@@ -109,6 +109,9 @@ export class LocalWorker{
     }
 
     //// (1) Only Google Meet Segmentation (not Joint Bilateral Filter)
+    perf = Array.from(new Array(50), () => 0)
+    perf2 = Array.from(new Array(50), () => 0)
+
     predict = async (targetCanvas:HTMLCanvasElement, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams):Promise<number[][][]> => {
         // // ImageData作成
         // this.canvas.width  = params.processWidth
@@ -117,13 +120,18 @@ export class LocalWorker{
         // ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height)
 
         let bm:number[][][]|null = null
+        const start = performance.now()
         tf.tidy(()=>{
             let tensorO = tf.browser.fromPixels(targetCanvas)
             let tensor = tf.image.resizeBilinear(tensorO,[params.processHeight, params.processWidth])
             tensor = tensor.expandDims(0)
             tensor = tf.cast(tensor, 'float32')
             tensor = tensor.div(255)
+            const start2 = performance.now()
             let prediction = this.model!.predict(tensor) as tf.Tensor
+            const end2 = performance.now()        
+            this.perf2.shift()            
+            this.perf2.push(end2-start2)
             prediction = prediction.softmax()
             prediction = prediction.squeeze()
             let [predTensor0, predTensor1] = tf.split(prediction, 2, 2)
@@ -139,6 +147,15 @@ export class LocalWorker{
                 bm = predTensor0.arraySync() as number[][][]
             }
         })
+        const end = performance.now()        
+        this.perf.shift()
+        this.perf.push(end-start)
+        const average = this.perf.reduce((p,c)=>{ return p+c}) / this.perf.length
+        console.log("inference average:", average, this.perf.length)
+        const average2 = this.perf2.reduce((p,c)=>{ return p+c}) / this.perf2.length
+        console.log("inference average2:", average2, this.perf2.length)
+
+        
         return bm!
     }
 
@@ -392,6 +409,7 @@ export class GoogleMeetSegmentationWorkerManager{
             this.workerGM.terminate()
         }
 
+
         if(this.config.processOnLocal == true){
             return new Promise<void>((onResolve, onFail) => {
                 this.localWorker.init(this.config!).then(() => {
@@ -401,7 +419,9 @@ export class GoogleMeetSegmentationWorkerManager{
         }
 
         // Bodypix 用ワーカー
+        console.log("init workermanager!1")
         this.workerGM = new Worker(this.config.workerPath, { type: 'module' })
+        console.log("init workermanager!2")
         this.workerGM!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
         const p = new Promise<void>((onResolve, onFail)=>{
             this.workerGM!.onmessage = (event) => {
@@ -471,8 +491,8 @@ export class GoogleMeetSegmentationWorkerManager{
                         const prediction = event.data.prediction
                         onResolve(prediction)
                     }else{
-                        console.log("celeb a mask Prediction something wrong..")
-                        onFail(event)
+                        console.log("Bodypix Prediction something wrong..", event.data.message, WorkerResponse.PREDICTED, event.data.uid, uid)
+//                        onFail(event)
                     }
                 }        
             })
@@ -496,8 +516,8 @@ export class GoogleMeetSegmentationWorkerManager{
                         const prediction = event.data.prediction
                         onResolve(prediction)
                     }else{
-                        console.log("celeb a mask Prediction something wrong..")
-                        onFail(event)
+                        console.log("Bodypix Prediction something wrong..", event.data.message, WorkerResponse.PREDICTED, event.data.uid, uid)
+                        // onFail(event)
                     }
                 }        
             })
