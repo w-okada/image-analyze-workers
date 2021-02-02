@@ -81,7 +81,7 @@ class LocalBP {
         })
     }
 
-
+    perf = Array.from(new Array(50), () => 0)
     predict = async (targetCanvas: HTMLCanvasElement, config:BodyPixConfig, params:BodyPixOperatipnParams) => {
         // ImageData作成
         const processWidth = (params.processWidth <= 0 || params.processHeight <= 0) ? targetCanvas.width : params.processWidth
@@ -96,7 +96,13 @@ class LocalBP {
       
         let prediction
         if(params.type === BodypixFunctionType.SegmentPerson){
-          prediction = await this.model!.segmentPerson(newImg, params.segmentPersonParams)
+            const start = performance.now()
+            prediction = await this.model!.segmentPerson(newImg, params.segmentPersonParams)
+            const end   = performance.now()
+            this.perf.shift()
+            this.perf.push(end-start)
+            const average = this.perf.reduce((p,c)=>{ return p+c}) / this.perf.length
+            console.log("inference average:", average, this.perf.length)            
         }else if(params.type === BodypixFunctionType.SegmentPersonParts){
           prediction = await this.model!.segmentPersonParts(newImg, params.segmentPersonPartsParams)
         }else if(params.type === BodypixFunctionType.SegmentMultiPerson){
@@ -133,8 +139,9 @@ export class BodypixWorkerManager {
             })
         }
         
-
+        console.log("load bodypix1")
         this.workerBP = new Worker(this.config.workerPath, { type: 'module' })
+        console.log("load bodypix2")
 
         this.workerBP!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
         return new Promise<void>((onResolve, onFail) => {
@@ -174,8 +181,8 @@ export class BodypixWorkerManager {
                     if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
                         onResolve(event.data.prediction)
                     } else {
-                        console.log("Bodypix Prediction something wrong..")
-                        onFail(event)
+                        console.log("Bodypix Prediction something wrong..", event.data.message, WorkerResponse.PREDICTED, event.data.uid, uid)
+                        // onFail(event)
                     }
                 }
             })
