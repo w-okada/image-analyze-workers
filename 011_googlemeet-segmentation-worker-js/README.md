@@ -11,9 +11,12 @@ $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm pub
 
 ## download model
 $ mkdir public/google-segmentation
-$ curl https://flect-lab-web.s3-us-west-2.amazonaws.com/googlemeet-segmentation_128_32/model.json > public/google-segmentation/model.json
-$ curl https://flect-lab-web.s3-us-west-2.amazonaws.com/googlemeet-segmentation_128_32/group1-shard1of1.bin > public/google-segmentation/group1-shard1of1.bin
+$ # curl https://flect-lab-web.s3-us-west-2.amazonaws.com/googlemeet-segmentation_128_32/model.json > public/google-segmentation/model.json
+$ # curl https://flect-lab-web.s3-us-west-2.amazonaws.com/googlemeet-segmentation_128_32/group1-shard1of1.bin > public/google-segmentation/group1-shard1of1.bin
 ```
+Temporary, the model files are not available from above URL. Please get them from web.
+
+
 ## API
 
 ```

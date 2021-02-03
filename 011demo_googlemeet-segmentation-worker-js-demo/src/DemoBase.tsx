@@ -273,7 +273,6 @@ class DemoBase extends React.Component {
                 </div>
                 <div>
                     <a href="https://github.com/w-okada/image-analyze-workers">github</a><br />
-                    <a href="https://www.flect.co.jp/"> FLECT, Co., Ltd.</a> <br/>
                     フリー素材ぱくたそ（www.pakutaso.com）model by 河村友歌 <br />
                 </div>
                 {this.controller}

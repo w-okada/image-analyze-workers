@@ -43,14 +43,14 @@ Note. some module is not provided as webworker for safari because of it's restri
     - [demo](#demo-8)
   - [Google meet person segmentation](#google-meet-person-segmentation)
     - [installation and usage](#installation-and-usage-9)
-    - [demo (temprally not available)](#demo-temprally-not-available)
+    - [demo](#demo-9)
 - [Experiments](#experiments)
   - [Exp.1 Multi-version based tfjs model](#exp1-multi-version-based-tfjs-model)
-    - [demo](#demo-9)
+    - [demo](#demo-10)
     - [src](#src)
     - [Citation](#citation-1)
   - [Exp.2 Performance improvement](#exp2-performance-improvement)
-    - [demo](#demo-10)
+    - [demo](#demo-11)
     - [src](#src-1)
     - [Citation](#citation-2)
 - [Reference](#reference-1)
@@ -181,7 +181,7 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t09_u2net-portrait/i
 ### installation and usage 
 [See here](/011_googlemeet-segmentation-worker-js)
 
-### demo (temprally not available)
+### demo
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/index.html
 
 
