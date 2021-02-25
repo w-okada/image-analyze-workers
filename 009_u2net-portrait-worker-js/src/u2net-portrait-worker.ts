@@ -62,7 +62,7 @@ export class LocalWorker{
         this.canvas.height = params.processHeight
         const ctx = this.canvas.getContext("2d")!
         ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height)
-        let bm:number[][][]
+        let bm:number[][]
         tf.tidy(()=>{
             let tensor = tf.browser.fromPixels(this.canvas)
             tensor = tensor.expandDims(0)
@@ -72,9 +72,9 @@ export class LocalWorker{
             let prediction = this.model!.predict(tensor) as tf.Tensor
             prediction = prediction.onesLike().sub(prediction)
             prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()))
-            bm = prediction.arraySync() as number[][][]
+            bm = prediction.arraySync() as number[][]
         })
-        return bm![0]
+        return bm!
     }
 }
 

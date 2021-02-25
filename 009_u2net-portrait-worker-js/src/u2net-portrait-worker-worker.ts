@@ -26,7 +26,7 @@ const predict = async (image:ImageBitmap, config: U2NetPortraitConfig, params: U
     ctx.drawImage(image, 0, 0, off.width, off.height)
     const imageData = ctx.getImageData(0, 0, off.width, off.height)
 
-    let bm:number[][][]|null = null
+    let bm:number[][]|null = null
     tf.tidy(()=>{
         let tensor = tf.browser.fromPixels(imageData)
 
@@ -38,9 +38,9 @@ const predict = async (image:ImageBitmap, config: U2NetPortraitConfig, params: U
         let prediction = model!.predict(tensor) as tf.Tensor
         prediction = prediction.onesLike().sub(prediction)
         prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()))
-        bm = prediction.arraySync() as number[][][]
+        bm = prediction.arraySync() as number[][]
     })
-    return bm![0]
+    return bm!
 }
 
 // Case.2 Use ImageBitmap (for Safari or special intent)

@@ -124,7 +124,7 @@ class App extends DemoBase {
 
   count = 0
   handleResult = (prediction: any) => {
-//    console.log(prediction[0])
+    // console.log(prediction[0])
     this.drawSegmentation(prediction[0])
   }
 
