@@ -28,3 +28,5 @@ public/googlemeet-segmentation-worker-worker.js
 public/tfjs-backend-wasm-simd.wasm
 public/tfjs-backend-wasm-threaded-simd.wasm
 public/tfjs-backend-wasm.wasm
+
+public/googlemeet-segmentation_*
