@@ -185,6 +185,10 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t09_u2net-portrait/i
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/index.html
 
 
+## Google meet person segmentation(TFLite)
+
+### demo
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11a_googlemeet-segmentation-tflite/index.html
 
 
 # Experiments
