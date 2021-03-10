@@ -44,13 +44,15 @@ Note. some module is not provided as webworker for safari because of it's restri
   - [Google meet person segmentation](#google-meet-person-segmentation)
     - [installation and usage](#installation-and-usage-9)
     - [demo](#demo-9)
+  - [Google meet person segmentation(TFLite)](#google-meet-person-segmentationtflite)
+    - [demo](#demo-10)
 - [Experiments](#experiments)
   - [Exp.1 Multi-version based tfjs model](#exp1-multi-version-based-tfjs-model)
-    - [demo](#demo-10)
+    - [demo](#demo-11)
     - [src](#src)
     - [Citation](#citation-1)
   - [Exp.2 Performance improvement](#exp2-performance-improvement)
-    - [demo](#demo-11)
+    - [demo](#demo-12)
     - [src](#src-1)
     - [Citation](#citation-2)
 - [Reference](#reference-1)
@@ -186,6 +188,7 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segme
 
 
 ## Google meet person segmentation(TFLite)
+![image](https://user-images.githubusercontent.com/48346627/110603124-03ad5480-81ca-11eb-993f-f7bf1f857b42.png)
 
 ### demo
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11a_googlemeet-segmentation-tflite/index.html
@@ -214,6 +217,8 @@ With webworker, we can improve performance when we use multiple models.
 ### demo
 
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/exp02_multi-worker-performance_sub/index.html
+
+
 
 ### src
 [src](/exp02_multi-tfjs-worker-performance)

@@ -5,8 +5,8 @@ export const generateGoogleMeetSegmentationTFLiteDefaultConfig = ():GoogleMeetSe
     const defaultConf:GoogleMeetSegmentationTFLiteConfig = {
         browserType         : getBrowserType(),
         processOnLocal      : false,
-        modelPath           : "/googlemeet-segmentation_128/model.json",
-        workerPath          : "./googlemeet-segmentation-worker-worker.js",
+        modelPath           : "/segm_lite_v681.tflite",
+        workerPath          : "./googlemeet-segmentation-tflite-worker-worker.js",
     }
     return defaultConf
 }
@@ -33,7 +33,9 @@ export class LocalWorker{
     tmpCanvas = document.createElement("canvas")
     resultArray:number[] = Array<number>(300*300)
 
+    ready = false
     init = async (config: GoogleMeetSegmentationTFLiteConfig) => {
+        this.ready = false
         if(!this.mod){
             this.mod = require('../resources/tflite.js');
         }
@@ -46,38 +48,42 @@ export class LocalWorker{
         const modelBufferOffset = this.tflite!._getModelBufferMemoryOffset()
         this.tflite!.HEAPU8.set(new Uint8Array(model), modelBufferOffset)
         const res = this.tflite!._loadModel(model.byteLength)
+        this.ready = true
         console.log('[WORKER_MANAGER]: Load Result:', res)
     }
 
     
 
     predict = async (src:HTMLCanvasElement | HTMLImageElement | HTMLVideoElement, config: GoogleMeetSegmentationTFLiteConfig, params: GoogleMeetSegmentationTFLiteOperationParams) => {
-        this.tmpCanvas.width = params.processWidth
-        this.tmpCanvas.height = params.processHeight
-        this.tflite!._setKernelSize(params.kernelSize)
-        this.tflite!._setUseSoftmax(params.useSoftmax?1:0)
-        this.tflite!._setUsePadding(params.usePadding?1:0)
-        this.tflite!._setThresholdWithoutSoftmax(params.threshold)
-        
-        const tmpCtx = this.tmpCanvas.getContext("2d")!
-        tmpCtx.drawImage(src, 0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
-        const imageData = tmpCtx.getImageData(0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
-        const inputImageBufferOffset = this.tflite!._getInputImageBufferOffset()
-        for (let i = 0; i < this.tmpCanvas.width * this.tmpCanvas.height; i++) {
-            this.tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 0] = imageData.data[i * 4 + 0]
-            this.tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 1] = imageData.data[i * 4 + 1]
-            this.tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 2] = imageData.data[i * 4 + 2]
-        }
-
-        this.tflite!._exec(this.tmpCanvas.width, this.tmpCanvas.height)
-
-        const outputLength = this.tmpCanvas.width * this.tmpCanvas.height
-        if(this.resultArray.length !== outputLength){
-            this.resultArray = Array<number>(outputLength)
-        }
-        const outputImageBufferOffset = this.tflite!._getOutputImageBufferOffset() 
-        for(let i = 0; i < outputLength; i++){
-            this.resultArray[i] = this.tflite!.HEAPU8[outputImageBufferOffset + i ]
+        if(this.ready){
+            this.tmpCanvas.width = params.processWidth
+            this.tmpCanvas.height = params.processHeight
+            this.tflite!._setKernelSize(params.kernelSize)
+            this.tflite!._setUseSoftmax(params.useSoftmax?1:0)
+            this.tflite!._setUsePadding(params.usePadding?1:0)
+            this.tflite!._setThresholdWithoutSoftmax(params.threshold)
+            
+            const tmpCtx = this.tmpCanvas.getContext("2d")!
+            tmpCtx.drawImage(src, 0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
+            const imageData = tmpCtx.getImageData(0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
+            const inputImageBufferOffset = this.tflite!._getInputImageBufferOffset()
+            for (let i = 0; i < this.tmpCanvas.width * this.tmpCanvas.height; i++) {
+                this.tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 0] = imageData.data[i * 4 + 0]
+                this.tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 1] = imageData.data[i * 4 + 1]
+                this.tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 2] = imageData.data[i * 4 + 2]
+            }
+    
+            this.tflite!._exec(this.tmpCanvas.width, this.tmpCanvas.height)
+    
+            const outputLength = this.tmpCanvas.width * this.tmpCanvas.height
+            if(this.resultArray.length !== outputLength){
+                this.resultArray = Array<number>(outputLength)
+            }
+            const outputImageBufferOffset = this.tflite!._getOutputImageBufferOffset() 
+            for(let i = 0; i < outputLength; i++){
+                this.resultArray[i] = this.tflite!.HEAPU8[outputImageBufferOffset + i ]
+            }
+    
         }
         return this.resultArray
     }
@@ -88,7 +94,7 @@ export class LocalWorker{
 
 export class GoogleMeetSegmentationTFLiteWorkerManager{
     private workerGML:Worker|null = null
-    private canvasOut = document.createElement("canvas")
+    tmpCanvas = document.createElement("canvas") // to resize canvas for WebWorker  
 
     private config = generateGoogleMeetSegmentationTFLiteDefaultConfig()
     private localWorker = new LocalWorker()
@@ -108,10 +114,11 @@ export class GoogleMeetSegmentationTFLiteWorkerManager{
 
         //// Remote
         this.workerGML = new Worker(this.config.workerPath, { type: 'module' })
-        
+        console.log("[manager] send initialize request")
         this.workerGML!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
         const p = new Promise<void>((onResolve, onFail)=>{
             this.workerGML!.onmessage = (event) => {
+                console.log("[manager] receive event", event)
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
                     onResolve()
@@ -125,35 +132,39 @@ export class GoogleMeetSegmentationTFLiteWorkerManager{
         return
     }
 
-    async predict(targetCanvas:HTMLCanvasElement | HTMLImageElement | HTMLVideoElement, params = generateDefaultGoogleMeetSegmentationTFLiteParams()){
+    async predict(src:HTMLCanvasElement | HTMLImageElement | HTMLVideoElement, params = generateDefaultGoogleMeetSegmentationTFLiteParams()){
         if(this.config.processOnLocal == true){
-            const res = await this.localWorker.predict(targetCanvas, this.config, params)
+            const res = await this.localWorker.predict(src, this.config, params)
             return res
         }else{
-//             const uid = performance.now()
-//             this.workerGML!.postMessage({ 
-//                 message: WorkerCommand.PREDICT, uid:uid,
-//                 config: this.config, params: params,
-//                 data: data, width: inImageData.width, height:inImageData.height
-//             }, [data.buffer])
-//             const p = new Promise((onResolve:(v:HTMLCanvasElement)=>void, onFail)=>{
-//                 this.workerGML!.onmessage = (event) => {
-//                     if(event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid){
-//                         const outData = event.data.converted as Uint8ClampedArray
-//                         const outImageData = new  ImageData(new Uint8ClampedArray(outData), inImageData.width, inImageData.height)
-//                         this.canvasOut.width  = outImageData.width
-//                         this.canvasOut.height = outImageData.height
-//                         const ctx = this.canvasOut.getContext("2d")!
-//                         ctx.putImageData(outImageData, 0, 0)
-//                         onResolve(this.canvasOut)
-// //                        console.log("worker!!!!", imageBitmap.width, imageBitmap.height)
-//                     }else{
-//                         console.log("opencv Prediction something wrong..")
-//                         onFail(event)
-//                     }
-//                 }        
-//             })
-//             return p
+            this.tmpCanvas.width = params.processWidth
+            this.tmpCanvas.height = params.processHeight
+            const tmpCtx = this.tmpCanvas.getContext("2d")!
+            tmpCtx.drawImage(src, 0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
+            const data = tmpCtx.getImageData(0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
+
+            const uid = performance.now()
+            this.workerGML!.postMessage({ 
+                message: WorkerCommand.PREDICT, uid:uid,
+                config: this.config, params: params,
+                data: data.data.buffer,
+            }, [data.data.buffer])
+
+            const p = new Promise((onResolve:(v:Uint8Array)=>void, onFail)=>{
+                this.workerGML!.onmessage = (event) => {
+                    if(event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid){
+                        const prediction = event.data.prediction as number[]
+                        onResolve(new Uint8Array(prediction))
+                    }else{
+                        //// Only Drop the request...
+                        console.log("something wrong..", event, event.data.message)
+                        const prediction = event.data.prediction as number[]
+                        onResolve(new Uint8Array(prediction))
+                    }
+                }        
+            })
+            const res = await p
+            return res
         }
     }
 }

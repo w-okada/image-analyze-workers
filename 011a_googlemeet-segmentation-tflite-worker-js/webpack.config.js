@@ -37,7 +37,8 @@ const worker = {
         extensions: [".ts", ".js"],
         fallback: {
             crypto: false,
-            path: false,
+            "path": require.resolve("path-browserify"),
+            // path: false,
             fs: false,
         }
     },

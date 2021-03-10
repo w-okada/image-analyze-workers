@@ -8,6 +8,7 @@ export const WorkerCommand = {
 export const WorkerResponse = {
     INITIALIZED      : 'initialized',
     PREDICTED   : 'predicted',
+    NOT_READY   : 'not_ready'
 }
 
 export interface GoogleMeetSegmentationTFLiteConfig{

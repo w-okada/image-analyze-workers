@@ -30,3 +30,6 @@ public/tfjs-backend-wasm-threaded-simd.wasm
 public/tfjs-backend-wasm.wasm
 
 public/googlemeet-segmentation_*
+
+sync.sh
+mod_build.sh
