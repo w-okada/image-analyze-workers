@@ -2,78 +2,40 @@
 
 ![image](https://user-images.githubusercontent.com/48346627/110603124-03ad5480-81ca-11eb-993f-f7bf1f857b42.png)
 
-## Install
-```
-## install
-$ npm install @dannadori/googlemeet-segmentation-worker-js
-$ cp node_modules/@dannadori/googlemeet-segmentation-worker-js/dist/googlemeet-segmentation-worker-worker.js public/
-$ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
-
-## download model
-$ mkdir public/google-segmentation
-$ # curl https://flect-lab-web.s3-us-west-2.amazonaws.com/googlemeet/googlemeet-segmentation_128_32/model.json > public/google-segmentation/model.json
-$ # curl https://flect-lab-web.s3-us-west-2.amazonaws.com/googlemeet/googlemeet-segmentation_128_32/group1-shard1of1.bin > public/google-segmentation/group1-shard1of1.bin
-```
-Temporary, the model files are not available from above URL. Please get them from web.
-
-
 ## API
 
 ```
-export declare const generateGoogleMeetSegmentationDefaultConfig: () => GoogleMeetSegmentationConfig;
-export declare const generateDefaultGoogleMeetSegmentationParams: () => GoogleMeetSegmentationOperationParams;
-export declare const createForegroundImage: (srcCanvas: HTMLCanvasElement, prediction: number[][][]) => ImageD
-
-export declare class GoogleMeetSegmentationWorkerManager {
-    init(config: GoogleMeetSegmentationConfig | null): Promise<void>;
-    predict(targetCanvas: HTMLCanvasElement, params?: GoogleMeetSegmentationOperationParams): Promise<number[][]>;
-}
-
+    init: (config: GoogleMeetSegmentationTFLiteConfig | null) => Promise<void>;
+    predict(src: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement, params?: 
 ```
 
 ## Configuration and Parameter
 
 ```
-
-export interface GoogleMeetSegmentationConfig{
+export interface GoogleMeetSegmentationTFLiteConfig{
     browserType         : BrowserType
     processOnLocal      : boolean
-    useTFWasmBackend    : boolean
-    wasmPath            : string
     modelPath           : string
     workerPath          : string
 }
 
 
-export interface GoogleMeetSegmentationOperationParams{
-    type                : GoogleMeetSegmentationFunctionType
+export interface GoogleMeetSegmentationTFLiteOperationParams{
+    type                : GoogleMeetSegmentationTFLiteFunctionType
     processWidth        : number
     processHeight       : number
-    smoothingS          : number
-    smoothingR          : number
-    jbfWidth            : number
-    jbfHeight           : number
-
-    staticMemory        : boolean
-    lightWrapping       : boolean
-    smoothingType       : GoogleMeetSegmentationSmoothingType
-
-    originalWidth       : number
-    originalHeight      : number
-    
+    kernelSize          : number
+    useSoftmax          : boolean
+    usePadding          : boolean
+    threshold           : number
+    useSIMD             : boolean
 }
 
-export enum GoogleMeetSegmentationFunctionType{
+export enum GoogleMeetSegmentationTFLiteFunctionType{
     Segmentation,
     xxx, // Not implemented
 }
 
-export enum GoogleMeetSegmentationSmoothingType{
-    GPU,
-    JS,
-    WASM,
-    JS_CANVAS,
-}
 
 ```
 
