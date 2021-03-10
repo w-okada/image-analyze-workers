@@ -49,6 +49,7 @@ interface WorkerProps {
     manager: GoogleMeetSegmentationTFLiteWorkerManager
     params : GoogleMeetSegmentationTFLiteOperationParams
     config : GoogleMeetSegmentationTFLiteConfig
+    count  : number
 }
 interface InputMedia{
     mediaType : VideoInputType
@@ -61,12 +62,14 @@ const App = () => {
     const [workerProps, setWorkerProps] = useState<WorkerProps>()
 
     const [ modelKey, setModelKey ]            = useState(Object.keys(models)[0])
-    const [ processSizeKey, setProcessSizeKey] = useState(Object.keys(processSize)[0])
-    const [ kernelSize, setKernelSize]         = useState(2)
-    const [ useSoftmax, setUseSoftmax]         = useState(false)
+    const [ processSizeKey, setProcessSizeKey] = useState(Object.keys(processSize)[3])
+    const [ kernelSize, setKernelSize]         = useState(0)
+    const [ useSoftmax, setUseSoftmax]         = useState(true)
     const [ usePadding, setUsePadding]         = useState(false)
     const [ threshold, setThreshold]           = useState(0.1)
     const [ useSIMD, setUseSIMD]               = useState(true)
+    const [ onLocal, setOnLocal]               = useState(false)
+    const [ lwBlur, setlwBlur]                 = useState(6)
 
     const [inputMedia, setInputMedia] = useState<InputMedia>({mediaType:"IMAGE", media:"yuka_kawamura.jpg"})
     const inputChange = (mediaType: VideoInputType, input:MediaStream|string) =>{
@@ -75,8 +78,9 @@ const App = () => {
     }
 
 
-    const [ strict, setStrict]               = useState(true)
+    const [ strict, setStrict]               = useState(false)
 
+    console.log("count", workerProps?.count)
 
     ///////////////////////////
     /// プロパティ設定      ///
@@ -84,9 +88,10 @@ const App = () => {
     //// モデル切り替え
     useEffect(()=>{
         const init = async () =>{
-            const m = new GoogleMeetSegmentationTFLiteWorkerManager()
+            const m = workerProps? workerProps.manager : new GoogleMeetSegmentationTFLiteWorkerManager()
+            const count = workerProps? workerProps.count + 1: 0
             const c = generateGoogleMeetSegmentationTFLiteDefaultConfig()
-            c.processOnLocal = true
+            c.processOnLocal = onLocal
             c.modelPath = models[modelKey]
             await m.init(c)
     
@@ -98,10 +103,12 @@ const App = () => {
             p.usePadding    = usePadding
             p.threshold     = threshold
             p.useSIMD       = useSIMD
-            setWorkerProps({manager:m, config:c, params:p})
+            const newProps = {manager:m, config:c, params:p, count:count}
+            console.log("CALLED new MANAGER", onLocal)
+            setWorkerProps(newProps)
         }
         init()
-    }, [modelKey])
+    }, [modelKey, onLocal])
 
     //// パラメータ変更
     useEffect(()=>{
@@ -235,7 +242,7 @@ const App = () => {
                 dstCtx.fillRect(0,0,dst.width,dst.height)
 
                 //// light Wrapping
-                dstCtx.filter = 'blur(4px)';
+                dstCtx.filter = `blur(${lwBlur}px)`;
                 dstCtx.drawImage(tmp, 0, 0, dst.width, dst.height)
                 dstCtx.filter = 'none';
 
@@ -257,14 +264,17 @@ const App = () => {
                     fps_start = performance.now()
     
                 }
-                renderRequestId = requestAnimationFrame(render)
+
+                // if(counter < 30){
+                    renderRequestId = requestAnimationFrame(render)
+                // }
             }
         }
         render()
         return ()=>{
             cancelAnimationFrame(renderRequestId)
         }
-    }, [workerProps, strict])
+    }, [workerProps, strict, lwBlur])
 
 
 
@@ -284,15 +294,17 @@ const App = () => {
                     <canvas className={classes.inputView} id="output"></canvas>
                 </div>
                 <div>
-                    <VideoInputSelect  title="input"       current={""}             onchange={inputChange}     options={videoInputList}/>
-                    <DropDown          title="model"       current={modelKey}       onchange={setModelKey}     options={models} />
-                    <DropDown          title="ProcessSize" current={processSizeKey} onchange={setProcessSizeKey} options={processSize} />
-                    <SingleValueSlider title="KernelSize"  current={kernelSize}     onchange={setKernelSize} min={0} max={9} step={1} />                
-                    <Toggle            title="Softmax"     current={useSoftmax}     onchange={setUseSoftmax} />
-                    <Toggle            title="Padding"     current={usePadding}     onchange={setUsePadding} />
-                    <SingleValueSlider title="Threshold"   current={threshold}      onchange={setThreshold} min={0.0} max={1.0} step={0.1} />
-                    <Toggle            title="SIMD"        current={useSIMD}        onchange={setUseSIMD} />
-                    <Toggle            title="Strict"        current={strict}        onchange={setStrict} />
+                    <VideoInputSelect  title="input"         current={""}             onchange={inputChange}     options={videoInputList}/>
+                    <DropDown          title="model"         current={modelKey}       onchange={setModelKey}     options={models} />
+                    <DropDown          title="ProcessSize"   current={processSizeKey} onchange={setProcessSizeKey} options={processSize} />
+                    <SingleValueSlider title="KernelSize"    current={kernelSize}     onchange={setKernelSize} min={0} max={9} step={1} />                
+                    <Toggle            title="onLocal"       current={onLocal}        onchange={setOnLocal} />
+                    <Toggle            title="Softmax"       current={useSoftmax}     onchange={setUseSoftmax} />
+                    <SingleValueSlider title="LWB"           current={lwBlur}         onchange={setlwBlur} min={0} max={20} step={1} />
+                    <Toggle            title="Padding"       current={usePadding}     onchange={setUsePadding} />
+                    <SingleValueSlider title="Threshold"     current={threshold}      onchange={setThreshold} min={0.0} max={1.0} step={0.1} />
+                    <Toggle            title="SIMD"          current={useSIMD}        onchange={setUseSIMD} />
+                    <Toggle            title="Strict"        current={strict}         onchange={setStrict} />
                 </div>
             </div>
 
