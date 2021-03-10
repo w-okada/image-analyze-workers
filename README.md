@@ -45,6 +45,7 @@ Note. some module is not provided as webworker for safari because of it's restri
     - [installation and usage](#installation-and-usage-9)
     - [demo](#demo-9)
   - [Google meet person segmentation(TFLite)](#google-meet-person-segmentationtflite)
+    - [installation and usage](#installation-and-usage-10)
     - [demo](#demo-10)
 - [Experiments](#experiments)
   - [Exp.1 Multi-version based tfjs model](#exp1-multi-version-based-tfjs-model)
@@ -189,6 +190,9 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segme
 
 ## Google meet person segmentation(TFLite)
 ![image](https://user-images.githubusercontent.com/48346627/110603124-03ad5480-81ca-11eb-993f-f7bf1f857b42.png)
+
+### installation and usage 
+[See here](/011a_googlemeet-segmentation-tflite-worker-js)
 
 ### demo
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11a_googlemeet-segmentation-tflite/index.html

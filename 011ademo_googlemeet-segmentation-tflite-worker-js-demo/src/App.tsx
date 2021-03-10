@@ -73,14 +73,10 @@ const App = () => {
 
     const [inputMedia, setInputMedia] = useState<InputMedia>({mediaType:"IMAGE", media:"yuka_kawamura.jpg"})
     const inputChange = (mediaType: VideoInputType, input:MediaStream|string) =>{
-        console.log("[inputchange]", mediaType, input)
         setInputMedia({mediaType:mediaType, media:input})
     }
 
-
     const [ strict, setStrict]               = useState(false)
-
-    console.log("count", workerProps?.count)
 
     ///////////////////////////
     /// プロパティ設定      ///
