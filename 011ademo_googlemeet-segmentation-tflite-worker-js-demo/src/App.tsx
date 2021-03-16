@@ -70,6 +70,7 @@ const App = () => {
     const [ useSIMD, setUseSIMD]               = useState(true)
     const [ onLocal, setOnLocal]               = useState(false)
     const [ lwBlur, setlwBlur]                 = useState(6)
+    const [ interpolation, setInterpolation]   = useState(1)
 
     const [inputMedia, setInputMedia] = useState<InputMedia>({mediaType:"IMAGE", media:"yuka_kawamura.jpg"})
     const inputChange = (mediaType: VideoInputType, input:MediaStream|string) =>{
@@ -119,8 +120,9 @@ const App = () => {
         p.usePadding    = usePadding
         p.threshold     = threshold
         p.useSIMD       = useSIMD
+        p.interpolation = interpolation
         setWorkerProps({...workerProps, params:p})
-    }, [processSizeKey, kernelSize, useSoftmax, usePadding, threshold])
+    }, [processSizeKey, kernelSize, useSoftmax, usePadding, threshold, interpolation])
 
 
     /// input設定
@@ -301,6 +303,8 @@ const App = () => {
                     <SingleValueSlider title="Threshold"     current={threshold}      onchange={setThreshold} min={0.0} max={1.0} step={0.1} />
                     <Toggle            title="SIMD"          current={useSIMD}        onchange={setUseSIMD} />
                     <Toggle            title="Strict"        current={strict}         onchange={setStrict} />
+                    <SingleValueSlider title="interpolation"   current={interpolation}      onchange={setInterpolation} min={0} max={4} step={1} />
+
                 </div>
             </div>
 
