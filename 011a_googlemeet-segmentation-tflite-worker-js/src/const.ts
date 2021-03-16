@@ -28,6 +28,7 @@ export interface GoogleMeetSegmentationTFLiteOperationParams{
     usePadding          : boolean
     threshold           : number
     useSIMD             : boolean
+    interpolation       : number
 }
 
 export enum GoogleMeetSegmentationTFLiteFunctionType{
@@ -48,6 +49,7 @@ export interface TFLite{
     _setUseSoftmax(int: number): number
     _setUsePadding(int: number): number
     _setThresholdWithoutSoftmax(float: number): number
+    _setInterpolation(int: number): number
 
     _getInputImageBufferOffset(): number
     _getOutputImageBufferOffset(): number

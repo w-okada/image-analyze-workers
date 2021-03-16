@@ -11,6 +11,7 @@ const predict = async (src:Uint8Array, config: GoogleMeetSegmentationTFLiteConfi
     tflite!._setUseSoftmax(params.useSoftmax?1:0)
     tflite!._setUsePadding(params.usePadding?1:0)
     tflite!._setThresholdWithoutSoftmax(params.threshold)
+    tflite!._setInterpolation(params.interpolation)
 
     const inputImageBufferOffset = tflite!._getInputImageBufferOffset()
     for (let i = 0; i < params.processWidth * params.processHeight; i++) {

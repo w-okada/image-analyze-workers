@@ -22,6 +22,7 @@ export const generateDefaultGoogleMeetSegmentationTFLiteParams = ():GoogleMeetSe
         usePadding          : false,
         threshold           : 0.1,
         useSIMD             : false,
+        interpolation       : 1
     }
     return defaultParams
 }
@@ -62,6 +63,8 @@ export class LocalWorker{
             this.tflite!._setUseSoftmax(params.useSoftmax?1:0)
             this.tflite!._setUsePadding(params.usePadding?1:0)
             this.tflite!._setThresholdWithoutSoftmax(params.threshold)
+            this.tflite!._setInterpolation(params.interpolation)
+
             
             const tmpCtx = this.tmpCanvas.getContext("2d")!
             tmpCtx.drawImage(src, 0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
