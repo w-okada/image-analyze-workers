@@ -47,13 +47,19 @@ Note. some module is not provided as webworker for safari because of it's restri
   - [Google meet person segmentation(TFLite)](#google-meet-person-segmentationtflite)
     - [installation and usage](#installation-and-usage-10)
     - [demo](#demo-10)
+- [TFLite Wasm](#tflite-wasm)
+  - [Google meet person segmentation(TFLite wasm)](#google-meet-person-segmentationtflite-wasm)
+    - [demo](#demo-11)
+  - [White-Box-Cartoon(TFLite wasm)](#white-box-cartoontflite-wasm)
+    - [demo](#demo-12)
+    - [License](#license-1)
 - [Experiments](#experiments)
   - [Exp.1 Multi-version based tfjs model](#exp1-multi-version-based-tfjs-model)
-    - [demo](#demo-11)
+    - [demo](#demo-13)
     - [src](#src)
     - [Citation](#citation-1)
   - [Exp.2 Performance improvement](#exp2-performance-improvement)
-    - [demo](#demo-12)
+    - [demo](#demo-14)
     - [src](#src-1)
     - [Citation](#citation-2)
 - [Reference](#reference-1)
@@ -197,6 +203,30 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segme
 ### demo
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11a_googlemeet-segmentation-tflite/index.html
 
+
+
+# TFLite Wasm
+## Google meet person segmentation(TFLite wasm)
+[see here]()
+
+### demo
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11a_googlemeet-segmentation-tflite/index.html
+
+##  White-Box-Cartoon(TFLite wasm)
+[see here]()
+
+### demo
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11a_googlemeet-segmentation-tflite/index.html
+
+### License
+
+White-box CartoonGAN
+
+```
+Copyright (C) Xinrui Wang All rights reserved. Licensed under the CC BY-NC-SA 4.0
+license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
+Commercial application is prohibited, please remain this license if you clone this repo
+```
 
 # Experiments
 ## Exp.1 Multi-version based tfjs model
