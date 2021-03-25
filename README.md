@@ -216,7 +216,7 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11a_googlemeet-segm
 [see here]()
 
 ### demo
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11a_googlemeet-segmentation-tflite/index.html
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/tfl002_white-box-cartoonization/index.html
 
 ### License
 
