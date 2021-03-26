@@ -62,18 +62,11 @@ export class LocalWorker{
     model:tf.GraphModel|null = null
     canvas = document.createElement("canvas")
 
-    init = (config: GoogleMeetSegmentationConfig) => {
-        const p = new Promise<void>((onResolve, onFail) => {
-            console.log("load module")
-            load_module(config).then(()=>{
-                tf.ready().then(async()=>{
-                    tf.env().set('WEBGL_CPU_FORWARD', false)
-                    this.model = await tf.loadGraphModel(config.modelPath)
-                    onResolve()                    
-                })
-            })
-        })
-        return p
+    init = async (config: GoogleMeetSegmentationConfig) => {
+        await load_module(config)
+        await tf.ready()
+        await tf.env().set('WEBGL_CPU_FORWARD', false)
+        this.model = await tf.loadGraphModel(config.modelPath)
     }
 
     segCanvas = document.createElement("canvas")

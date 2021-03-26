@@ -309,7 +309,7 @@ const App = () => {
                     {/* <SingleValueSlider title="KernelR"       current={kernelR}        onchange={setKernelR} min={0} max={9} step={1} />                 */}
                     <Toggle            title="onLocal"       current={onLocal}        onchange={setOnLocal} />
                     <SingleValueSlider title="LWB"           current={lwBlur}         onchange={setlwBlur} min={0} max={20} step={1} />
-                    <Toggle            title="SIMD"          current={useSIMD}        onchange={setUseSIMD} />
+                    {/* <Toggle            title="SIMD"          current={useSIMD}        onchange={setUseSIMD} /> */}
                     <Toggle            title="Strict"        current={strict}         onchange={setStrict} />
                     <FileChooser       title="background"  onchange={backgroundChange} />
                 </div>
