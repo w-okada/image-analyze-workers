@@ -217,3 +217,50 @@ export const VideoInputSelect:FC<VideoInputSelectProps> = ({title, current, opti
         </>
     )
 }
+
+
+
+interface FileChooserProps{
+    title:string
+    onchange:(newKey: VideoInputType, input:string) => void
+}
+export const FileChooser:FC<FileChooserProps> = ({title, onchange}) => {
+    const classes = useStyles();
+
+    const form = useMemo(()=>{
+        console.log("[FileChooser] render!", title)
+        const onFileClicked = () => {
+            const inputElem = document.createElement("input")
+            inputElem.type="file"
+            inputElem.onchange = () =>{
+                if(!inputElem.files){
+                    return
+                }
+                if(inputElem.files.length >0){
+                    const path = URL.createObjectURL(inputElem.files[0]);
+                    const fileType = inputElem.files[0].type
+                    if(fileType.startsWith("image")){
+                        onchange("IMAGE", path)
+                    }else if(fileType.startsWith("video")){
+                        onchange("MOVIE", path)
+                    }else{
+                        console.log("[App] unknwon file type", fileType)
+                    }
+                }
+            } 
+            inputElem.click()
+        }
+        return(
+            <div className={classes.formControl} >
+                <Typography gutterBottom> {`${title}`} </Typography>
+                <div className={classes.horizontalSpacer}/>
+                <Button variant="outlined" color="primary" className={classes.inputButton} onClick={onFileClicked}>File</Button>                
+            </div>
+        )
+    }, [])
+    return (
+        <> 
+            {form}
+        </>
+    )
+}

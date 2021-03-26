@@ -76,8 +76,6 @@ onmessage = async (event) => {
     
             ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: predBuffer.buffer }, [predBuffer.buffer])
         }
-
-        
     }
 }
 
