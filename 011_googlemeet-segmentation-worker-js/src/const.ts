@@ -22,12 +22,13 @@ export interface GoogleMeetSegmentationConfig{
 
 export interface GoogleMeetSegmentationOperationParams{
     type                : GoogleMeetSegmentationFunctionType
-    processWidth        : number
-    processHeight       : number
-    smoothingS          : number
-    smoothingR          : number
-    jbfWidth            : number
-    jbfHeight           : number
+    processWidth        : number  // InputSize to Model (128x128, 144x256, 96x160)
+    processHeight       : number  // InputSize to Model  (128x128, 144x256, 96x160)
+    smoothingS          : number  // kernelSize(Depricated)
+    // kernelSize          : number  // 
+    smoothingR          : number  // 
+    jbfWidth            : number  // JBFを適用するときのサイズ(大きいほど精度が上がる模様)
+    jbfHeight           : number  // JBFを適用するときのサイズ(大きいほど精度が上がる模様)
 
     staticMemory        : boolean
     lightWrapping       : boolean
