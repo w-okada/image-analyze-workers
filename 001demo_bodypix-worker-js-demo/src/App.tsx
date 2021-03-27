@@ -1,473 +1,591 @@
+import React, { useEffect, useState } from 'react';
 import './App.css';
-import {
-  BodypixWorkerManager, BodypixFunctionType, generateBodyPixDefaultConfig,
-  SemanticPersonSegmentation, ModelConfigMobileNetV1, generateDefaultBodyPixParams,
-  SemanticPartSegmentation, PersonSegmentation, BodyPixInternalResolution, PartSegmentation
-} from '@dannadori/bodypix-worker-js'
-import { BodyPixConfig } from '@dannadori/bodypix-worker-js/dist/const';
-import DemoBase, { ControllerUIProp } from './DemoBase';
+import { makeStyles } from '@material-ui/core';
+import { DropDown, FileChooser, SingleValueSlider, Toggle, VideoInputSelect } from './components/components';
+import { VideoInputType } from './const';
+import { useVideoInputList } from './hooks/useVideoInputList';
+import { BodypixFunctionType, BodyPixInternalResolution, BodypixWorkerManager, generateBodyPixDefaultConfig, generateDefaultBodyPixParams, PartSegmentation, PersonSegmentation, SemanticPartSegmentation, SemanticPersonSegmentation } from '@dannadori/bodypix-worker-js'
+import { BodyPixConfig, BodyPixOperatipnParams } from '@dannadori/bodypix-worker-js/dist/const';
 
+let GlobalLoopID:number = 0
 
 export const rainbow = [
-  [110, 64, 170], [143, 61, 178], [178, 60, 178], [210, 62, 167],
-  [238, 67, 149], [255, 78, 125], [255, 94, 99],  [255, 115, 75],
-  [255, 140, 56], [239, 167, 47], [217, 194, 49], [194, 219, 64],
-  [175, 240, 91], [135, 245, 87], [96, 247, 96],  [64, 243, 115],
-  [40, 234, 141], [28, 219, 169], [26, 199, 194], [33, 176, 213],
-  [47, 150, 224], [65, 125, 224], [84, 101, 214], [99, 81, 195]
+    [110, 64, 170], [143, 61, 178], [178, 60, 178], [210, 62, 167],
+    [238, 67, 149], [255, 78, 125], [255, 94, 99],  [255, 115, 75],
+    [255, 140, 56], [239, 167, 47], [217, 194, 49], [194, 219, 64],
+    [175, 240, 91], [135, 245, 87], [96, 247, 96],  [64, 243, 115],
+    [40, 234, 141], [28, 219, 169], [26, 199, 194], [33, 176, 213],
+    [47, 150, 224], [65, 125, 224], [84, 101, 214], [99, 81, 195]
 ];
 
-export const warm = [
-  [110, 64, 170], [106, 72, 183], [100, 81, 196], [92, 91, 206],
-  [84, 101, 214], [75, 113, 221], [66, 125, 224], [56, 138, 226],
-  [48, 150, 224], [40, 163, 220], [33, 176, 214], [29, 188, 205],
-  [26, 199, 194], [26, 210, 182], [28, 219, 169], [33, 227, 155],
-  [41, 234, 141], [51, 240, 128], [64, 243, 116], [79, 246, 105],
-  [96, 247, 97],  [115, 246, 91], [134, 245, 88], [155, 243, 88]
-];
-
-export const spectral = [
-  [158, 1, 66],    [181, 26, 71],   [202, 50, 74],   [219, 73, 74],
-  [232, 94, 73],   [242, 117, 75],  [248, 142, 83],  [251, 167, 96],
-  [253, 190, 112], [254, 210, 129], [254, 227, 149], [254, 240, 166],
-  [251, 248, 176], [243, 249, 172], [231, 245, 163], [213, 238, 159],
-  [190, 229, 160], [164, 218, 163], [137, 207, 165], [110, 192, 168],
-  [86, 173, 174],  [70, 150, 179],  [67, 127, 180],  [77, 103, 173]
-];
-
-class App extends DemoBase {
-  manager: BodypixWorkerManager = new BodypixWorkerManager()
-  config: BodyPixConfig = (() => {
-    const config = generateBodyPixDefaultConfig()
-    config.model = ModelConfigMobileNetV1
-    return config
-  })()
-  params = generateDefaultBodyPixParams()
-
-  tmpCanvas = document.createElement("canvas")
-  backgroundImage = document.createElement("img")
-  backgroundCanvas = document.createElement("canvas")
-  personCanvas = document.createElement("canvas")
-
-  IMAGE_PATH = "./yuka_kawamura.jpg"
-  RESULT_OVERLAY = true
-  currentFunction: BodypixFunctionType = BodypixFunctionType.SegmentPerson
-
-
-
-  getCustomMenu = () => {
-    const menu: ControllerUIProp[] = [
-      {
-        title: "arch",
-        currentIndexOrValue: 0,
-        values: ["MobileNetV1", "ResNet50"],
-        callback: (val: string | number | MediaStream) => { },
-      },
-      {
-        title: "outputStride",
-        currentIndexOrValue: 1,
-        values: [8, 16, 32],
-        callback: (val: string | number | MediaStream) => { },
-
-      },
-      {
-        title: "multiplier",
-        currentIndexOrValue: 0,
-        values: [1.0, 0.75, 0.50],
-        callback: (val: string | number | MediaStream) => { },
-      },
-      {
-        title: "quantBytes",
-        currentIndexOrValue: 0,
-        values: [4, 2, 1],
-        callback: (val: string | number | MediaStream) => { },
-      },
-      {
-        title: "processOnLocal",
-        currentIndexOrValue: 1,
-        values: ["on", "off"],
-        callback: (val: string | number | MediaStream) => { },
-      },
-      {
-        title: "reload model",
-        currentIndexOrValue: 0,
-        callback: (val: string | number | MediaStream) => {
-          const modelArch = this.controllerRef.current!.getCurrentValue("arch")
-          const outputStride = this.controllerRef.current!.getCurrentValue("outputStride")
-          const multiplier = this.controllerRef.current!.getCurrentValue("multiplier")
-          const quantBytes = this.controllerRef.current!.getCurrentValue("quantBytes")
-          const processOnLocal = this.controllerRef.current!.getCurrentValue("processOnLocal")
-          
-          this.config.model.architecture = modelArch as ('ResNet50' | 'MobileNetV1')
-          this.config.model.outputStride = outputStride as (32 | 16 | 8)
-          this.config.model.multiplier   = multiplier as (0.50 | 0.75 | 1.0)
-          this.config.model.quantBytes   = quantBytes as (4 | 2 | 1)
-          this.config.processOnLocal     = (processOnLocal === "on" ? true  : false) as boolean
-          console.log("new mocdel.... ", this.config.model)
-          this.requireReload()
-        },
-      },
-      {
-        title: "function",
-        currentIndexOrValue: 0,
-        values: ["segmentPerson", "segmentPersonParts", "segmentMultiPerson", "segmentMultiPersonParts"],
-        callback: (val: string | number | MediaStream) => {
-          if (val === "segmentPerson") {
-            this.params.type = BodypixFunctionType.SegmentPerson
-            this.currentFunction = BodypixFunctionType.SegmentPerson
-          } else if (val === "segmentPersonParts") {
-            this.params.type = BodypixFunctionType.SegmentPersonParts
-            this.currentFunction = BodypixFunctionType.SegmentPersonParts
-          } else if (val === "segmentMultiPerson") {
-            this.params.type = BodypixFunctionType.SegmentMultiPerson
-            this.currentFunction = BodypixFunctionType.SegmentMultiPerson
-          } else {
-            this.params.type = BodypixFunctionType.SegmentMultiPersonParts
-            this.currentFunction = BodypixFunctionType.SegmentMultiPersonParts
-          }
-        },
-      },
-      {
-        title: "flip",
-        currentIndexOrValue: 0,
-        values: ["on", "off"],
-        callback: (val: string | number | MediaStream) => {
-          if (val === "on") {
-            this.params.segmentPersonParams!.flipHorizontal = true
-            this.params.segmentPersonPartsParams!.flipHorizontal = true
-            this.params.segmentMultiPersonParams!.flipHorizontal = true
-            this.params.segmentMultiPersonPartsParams!.flipHorizontal = true
-          } else {
-            this.params.segmentPersonParams!.flipHorizontal = false
-            this.params.segmentPersonPartsParams!.flipHorizontal = false
-            this.params.segmentMultiPersonParams!.flipHorizontal = false
-            this.params.segmentMultiPersonPartsParams!.flipHorizontal = false
-          }
-        },
-      },
-      {
-        title: "internalResolution ",
-        currentIndexOrValue: 1,
-        values: ["low", "medium", "high", "full"],
-        callback: (val: string | number | MediaStream) => {
-          this.params.segmentPersonParams!.internalResolution = val as BodyPixInternalResolution
-          this.params.segmentPersonPartsParams!.internalResolution = val as BodyPixInternalResolution
-          this.params.segmentMultiPersonParams!.internalResolution = val as BodyPixInternalResolution
-          this.params.segmentMultiPersonPartsParams!.internalResolution = val as BodyPixInternalResolution
-        },
-      },   
-      {
-        title: "segmentationThreshold",
-        currentIndexOrValue: 0.7,
-        range: [0, 1, 0.1],
-        callback: (val: string | number | MediaStream) => {
-          this.params.segmentPersonParams!.segmentationThreshold = val as number
-          this.params.segmentPersonPartsParams!.segmentationThreshold = val as number
-          this.params.segmentMultiPersonParams!.segmentationThreshold = val as number
-          this.params.segmentMultiPersonPartsParams!.segmentationThreshold = val as number
-        },
-      },      
-      {
-        title: "max detection",
-        currentIndexOrValue: 10,
-        range: [1, 50, 1],
-        callback: (val: string | number | MediaStream) => {
-          this.params.segmentPersonParams!.maxDetections = val as number
-          this.params.segmentPersonPartsParams!.maxDetections = val as number
-          this.params.segmentMultiPersonParams!.maxDetections = val as number
-          this.params.segmentMultiPersonPartsParams!.maxDetections = val as number
-        },
-      },
-      {
-        title: "score threshold",
-        currentIndexOrValue: 0.3,
-        range: [0, 1, 0.1],
-        callback: (val: string | number | MediaStream) => {
-          this.params.segmentPersonParams!.scoreThreshold = val as number
-          this.params.segmentPersonPartsParams!.scoreThreshold = val as number
-          this.params.segmentMultiPersonParams!.scoreThreshold = val as number
-          this.params.segmentMultiPersonPartsParams!.scoreThreshold = val as number
-        },
-      },
-      {
-        title: "nms radius",
-        currentIndexOrValue: 20,
-        range: [1, 50, 1],
-        callback: (val: string | number | MediaStream) => {
-          this.params.segmentPersonParams!.nmsRadius = val as number
-          this.params.segmentPersonPartsParams!.nmsRadius = val as number
-          this.params.segmentMultiPersonParams!.nmsRadius = val as number
-          this.params.segmentMultiPersonPartsParams!.nmsRadius = val as number
-        },
-      },
-      {
-        title: "minKeypointScore",
-        currentIndexOrValue: 0.3,
-        range: [0, 1, 0.1],
-        callback: (val: string | number | MediaStream) => {
-          this.params.segmentMultiPersonParams!.minKeypointScore = val as number
-          this.params.segmentMultiPersonPartsParams!.minKeypointScore = val as number
-        },
-      },
-      {
-        title: "refineSteps",
-        currentIndexOrValue: 10,
-        range: [1, 50, 1],
-        callback: (val: string | number | MediaStream) => {
-          this.params.segmentMultiPersonParams!.refineSteps = val as number
-          this.params.segmentMultiPersonPartsParams!.refineSteps = val as number
-        },
-      },
-      {
-        title: "ProcessWidth",
-        currentIndexOrValue: 300,
-        range: [100, 1024, 10],
-        callback: (val: string | number | MediaStream) => {
-          this.params.processWidth = val as number
-        },
-      },
-      {
-        title: "ProcessHeight",
-        currentIndexOrValue: 300,
-        range: [100, 1024, 10],
-        callback: (val: string | number | MediaStream) => {
-          this.params.processHeight = val as number
-        },
-      },      
-      {
-        title: "background",
-        currentIndexOrValue: 0,
-        values: ["image"],
-        fileValue: ["image"],
-        fileCallback:(fileType:string, path:string)=>{
-            if(fileType.startsWith("image")){
-              this.selectBackgroundImage(path)
-            }
-        },
-        callback: ((val: string | number | MediaStream) => {
-          console.log("unknwon input.", val)
-        })
-      },
-    ]
-    return menu
-  }
-
-
-
-  private selectBackgroundImage(path:string){
-    this.backgroundImage.onload = () =>{
-      this.backgroundCanvas.width = this.backgroundImage.width
-      this.backgroundCanvas.height = this.backgroundImage.height
-      const ctx = this.backgroundCanvas.getContext("2d")!
-      ctx.drawImage(this.backgroundImage, 0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height)
-    }
-    this.backgroundImage.src = path
-  }
-
-
-  drawSegmentation = (prediction: SemanticPersonSegmentation) => {
-    this.tmpCanvas.width = prediction.width
-    this.tmpCanvas.height = prediction.height
-    const imageData = this.tmpCanvas.getContext("2d")!.getImageData(0, 0, prediction.width, prediction.height)
-    const data = imageData.data
-    for (let rowIndex = 0; rowIndex < prediction.height; rowIndex++) {
-      for (let colIndex = 0; colIndex < prediction.width; colIndex++) {
-        const seg_offset = ((rowIndex * prediction.width) + colIndex)
-        const pix_offset = ((rowIndex * prediction.width) + colIndex) * 4
-
-        if (prediction.data[seg_offset] === 0) {
-          data[pix_offset] = 0
-          data[pix_offset + 1] = 0
-          data[pix_offset + 2] = 0
-          data[pix_offset + 3] = 0
-        } else {
-          data[pix_offset] = 255
-          data[pix_offset + 1] = 255
-          data[pix_offset + 2] = 255
-          data[pix_offset + 3] = 255
-        }
-      }
-    }
-    const imageDataTransparent = new ImageData(data, prediction.width, prediction.height);
-    this.tmpCanvas.getContext("2d")!.putImageData(imageDataTransparent, 0, 0)
-
-    this.personCanvas.width  = this.originalCanvas.current!.width
-    this.personCanvas.height = this.originalCanvas.current!.height
-    const personCtx = this.personCanvas.getContext("2d")!
-    personCtx.drawImage(this.tmpCanvas, 0, 0, this.personCanvas.width, this.personCanvas.height)
-    personCtx.globalCompositeOperation = 'source-in';
-    personCtx.drawImage(this.originalCanvas.current!, 0, 0, this.personCanvas.width, this.personCanvas.height)
-    this.personCanvas.getContext("2d")!.globalCompositeOperation = "source-over";
-
-
-
-    this.resultCanvasRef.current!.width = this.originalCanvas.current!.width
-    this.resultCanvasRef.current!.height = this.originalCanvas.current!.height
-    const ctx = this.resultCanvasRef.current!.getContext("2d")!
-    ctx.drawImage(this.backgroundCanvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
-    ctx.drawImage(this.personCanvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
-
-
-  }
-  
-  drawMultiSegmentation = (prediction:PersonSegmentation[]) =>{
-    this.resultCanvasRef.current!.width = this.originalCanvas.current!.width
-    this.resultCanvasRef.current!.height = this.originalCanvas.current!.height
-    const ctx = this.resultCanvasRef.current!.getContext("2d")!
-
-    if(prediction.length > 0){
-      this.tmpCanvas.width = prediction[0].width
-      this.tmpCanvas.height = prediction[0].height
-      const imageData = this.tmpCanvas.getContext("2d")!.getImageData(0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
-      const data = imageData.data
-      // at first, make all data transparent
-      for (let rowIndex = 0; rowIndex < this.tmpCanvas.height; rowIndex++) {
-        for (let colIndex = 0; colIndex < this.tmpCanvas.width; colIndex++) {
-          const pix_offset = ((rowIndex * this.tmpCanvas.width) + colIndex) * 4
-          data[pix_offset] = 0
-          data[pix_offset + 1] = 0
-          data[pix_offset + 2] = 0
-          data[pix_offset + 3] = 0
-        }
-      }
-
-      // then draw each person segment
-      prediction.forEach(x=>{
-        for (let rowIndex = 0; rowIndex < this.tmpCanvas.height; rowIndex++) {
-          for (let colIndex = 0; colIndex < this.tmpCanvas.width; colIndex++) {
-            const seg_offset = ((rowIndex * this.tmpCanvas.width) + colIndex)
-            const pix_offset = ((rowIndex * this.tmpCanvas.width) + colIndex) * 4
-            if (x.data[seg_offset] !== 0) {
-              data[pix_offset] = 255
-              data[pix_offset + 1] = 255
-              data[pix_offset + 2] = 255
-              data[pix_offset + 3] = 255
-            }
-          }
-        } 
-      })
-      const imageDataTransparent = new ImageData(data, prediction[0].width, prediction[0].height);
-      this.tmpCanvas.getContext("2d")!.putImageData(imageDataTransparent, 0, 0)
-      ctx.drawImage(this.tmpCanvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
-      ctx.globalCompositeOperation = 'source-in';
-
-    }
-    ctx.drawImage(this.originalCanvas.current!, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
-  }
-
-
-  drawParts = (prediction: SemanticPartSegmentation) => {
-    this.tmpCanvas.width = prediction.width
-    this.tmpCanvas.height = prediction.height
-    const imageData = this.tmpCanvas.getContext("2d")!.getImageData(0, 0, prediction.width, prediction.height)
-    const data = imageData.data
-    for (let rowIndex = 0; rowIndex < prediction.height; rowIndex++) {
-      for (let colIndex = 0; colIndex < prediction.width; colIndex++) {
-        const seg_offset = ((rowIndex * prediction.width) + colIndex)
-        const pix_offset = ((rowIndex * prediction.width) + colIndex) * 4
-        const flag = prediction.data[seg_offset]
-        if (flag === -1) {
-          data[pix_offset] = 0
-          data[pix_offset + 1] = 0
-          data[pix_offset + 2] = 0
-          data[pix_offset + 3] = 0
-        } else {
-          data[pix_offset] =     rainbow[flag][0]
-          data[pix_offset + 1] = rainbow[flag][1]
-          data[pix_offset + 2] = rainbow[flag][2]
-          data[pix_offset + 3] = 100
-        }
-      }
-    }
-    const imageDataTransparent = new ImageData(data, prediction.width, prediction.height);
-    this.tmpCanvas.getContext("2d")!.putImageData(imageDataTransparent, 0, 0)
-
-    this.resultCanvasRef.current!.width = this.originalCanvas.current!.width
-    this.resultCanvasRef.current!.height = this.originalCanvas.current!.height
-    const ctx = this.resultCanvasRef.current!.getContext("2d")!
-    ctx.drawImage(this.originalCanvas.current!, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
-    ctx.drawImage(this.tmpCanvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
-  }
-
-  drawMultiPersonParts = (prediction:PartSegmentation[]) =>{
-    this.resultCanvasRef.current!.width = this.originalCanvas.current!.width
-    this.resultCanvasRef.current!.height = this.originalCanvas.current!.height
-    const ctx = this.resultCanvasRef.current!.getContext("2d")!
-    ctx.drawImage(this.originalCanvas.current!, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
-
-    if(prediction.length > 0){
-      this.tmpCanvas.width = prediction[0].width
-      this.tmpCanvas.height = prediction[0].height
-      const imageData = this.tmpCanvas.getContext("2d")!.getImageData(0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
-      const data = imageData.data
-      // at first, make all data transparent
-      for (let rowIndex = 0; rowIndex < this.tmpCanvas.height; rowIndex++) {
-        for (let colIndex = 0; colIndex < this.tmpCanvas.width; colIndex++) {
-          const pix_offset = ((rowIndex * this.tmpCanvas.width) + colIndex) * 4
-          data[pix_offset] = 0
-          data[pix_offset + 1] = 0
-          data[pix_offset + 2] = 0
-          data[pix_offset + 3] = 0
-        }
-      }
-
-      // then draw each person segment
-      prediction.forEach(x=>{
-        for (let rowIndex = 0; rowIndex < this.tmpCanvas.height; rowIndex++) {
-          for (let colIndex = 0; colIndex < this.tmpCanvas.width; colIndex++) {
-            const seg_offset = ((rowIndex * this.tmpCanvas.width) + colIndex)
-            const pix_offset = ((rowIndex * this.tmpCanvas.width) + colIndex) * 4
-            const flag = x.data[seg_offset]
-            if (flag !== -1) {
-              // data[pix_offset] = 100
-              // data[pix_offset + 1] = 0
-              // data[pix_offset + 2] = 0
-              // data[pix_offset + 3] = 100
-              try{
-                data[pix_offset] = rainbow[flag][0]
-                data[pix_offset + 1] = rainbow[flag][1]
-                data[pix_offset + 2] = rainbow[flag][2]
-                data[pix_offset + 3] = 100
-              }catch(e){
-                // console.log(e)
-                // console.log("EEEEEEE",flag)
-              }
-            }
-          }
-        } 
-      })
-      const imageDataTransparent = new ImageData(data, prediction[0].width, prediction[0].height);
-      this.tmpCanvas.getContext("2d")!.putImageData(imageDataTransparent, 0, 0)
-      ctx.drawImage(this.tmpCanvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
-    }
-  }
-
-  handleResult = (prediction: any) => {
-//    console.log(prediction)
-    try{
-      switch (this.currentFunction) {
-        case BodypixFunctionType.SegmentPerson:
-          prediction = prediction as SemanticPersonSegmentation
-          this.drawSegmentation(prediction)
-          break
-        case BodypixFunctionType.SegmentPersonParts:
-          prediction = prediction as SemanticPartSegmentation
-          this.drawParts(prediction)
-          break
-        case BodypixFunctionType.SegmentMultiPerson:
-          prediction = prediction as PersonSegmentation[]
-          this.drawMultiSegmentation(prediction)
-          break
-        case BodypixFunctionType.SegmentMultiPersonParts:
-          prediction = prediction as PartSegmentation[]
-          this.drawMultiPersonParts(prediction)
-          break
-      }
-    }catch(e){
-      console.log(e)
-    }
-  }
+const models: { [name: string]: string } = {
+    "MobileNetV1":"MobileNetV1",
+    "ResNet50":"ResNet50",
+}
+const functions: { [name: string]: string } = {
+    "segmentPerson"          : "" + BodypixFunctionType.SegmentPerson,
+    "segmentPersonParts"     : "" + BodypixFunctionType.SegmentPersonParts,
+    "segmentMultiPerson"     : "" + BodypixFunctionType.SegmentMultiPerson,
+    "segmentMultiPersonParts": "" + BodypixFunctionType.SegmentMultiPersonParts,
+}
+const outputStrides: { [name: string]: string } = {
+    "8":"8",
+    "16":"16",
+    "32":"32",
+}
+const multipliers: { [name: string]: string } = {
+    "0.5"  : "0.5",
+    "0.75" : "0.75",
+    "1.0"  : "1.0",
 }
 
+const quantBytes: { [name: string]: string } = {
+    "1":"1",
+    "2":"2",
+    "4":"4",
+}
+const internalResolutions: { [name: string]: string } = {
+    "low":"low",
+    "medium":"medium",
+    "high":"high",
+    "full":"full",
+}
+
+
+const useStyles = makeStyles((theme) => ({
+    inputView:{
+        maxWidth:512,
+        maxHeight:512,
+    }
+}));
+
+interface WorkerProps {
+    manager: BodypixWorkerManager
+    config : BodyPixConfig
+    params : BodyPixOperatipnParams
+    count  : number
+}
+interface InputMedia{
+    mediaType : VideoInputType
+    media     : MediaStream|string
+}
+
+const App = () => {
+    const classes = useStyles();
+    const { videoInputList } = useVideoInputList()
+    const [ workerProps, setWorkerProps] = useState<WorkerProps>()
+
+    const [ modelKey, setModelKey ]                           = useState(Object.keys(models)[0])
+    const [ functionKey, setFunctionKey ]                     = useState(Object.keys(functions)[0])
+    const [ outputStrideKey, setOutputStrideKey]              = useState(Object.keys(outputStrides)[1])
+    const [ multiplierKey, setMultiplierKey]                  = useState(Object.keys(multipliers)[0])
+    const [ quantByteKey, setQuantByteKey]                    = useState(Object.keys(quantBytes)[2])
+    const [ internalResolutionKey, setInternalResolutionKey]  = useState(Object.keys(internalResolutions)[1])
+
+    const [ onLocal, setOnLocal]                              = useState(true)
+    const [ useWasm, setUseWasm]                              = useState(false)
+    const [ flip, setFlip]                                    = useState(true)
+    const [ segmentationThreshold, setSegmentationThreshold]  = useState(0.7)
+    const [ maxDetection, setMaxDetection]                    = useState(10)
+    const [ socreThreshold, setScoreThreshold]                = useState(0.3)
+    const [ nmsRadius, setNmsRadius]                          = useState(50)
+    const [ minKeypointScore, setMinKeypointScore]            = useState(0.3)
+    const [ refineSteps, setRefineSteps]                      = useState(10)
+    const [ processWidth, setProcessWidth]                    = useState(300)
+    const [ processHeight, setProcessHeight]                  = useState(300)
+    const [ strict, setStrict]                                = useState(false)
+
+    const [inputMedia, setInputMedia] = useState<InputMedia>({mediaType:"IMAGE", media:"yuka_kawamura.jpg"})
+    const inputChange = (mediaType: VideoInputType, input:MediaStream|string) =>{
+        setInputMedia({mediaType:mediaType, media:input})
+    }
+
+    const backgroundChange = (mediaType: VideoInputType, input:string) =>{
+        console.log("background:", mediaType, input)
+        if(mediaType==="IMAGE"){
+            const img = document.getElementById("background") as HTMLImageElement
+            img.src = input
+        }
+    }
+    ///////////////////////////
+    /// プロパティ設定      ///
+    ///////////////////////////
+    //// モデル切り替え
+    useEffect(()=>{
+        const init = async () =>{
+            const m = workerProps? workerProps.manager : new BodypixWorkerManager()
+            const count = workerProps? workerProps.count + 1: 0
+            const c = generateBodyPixDefaultConfig()
+            c.processOnLocal = onLocal
+            c.model.architecture = models[modelKey] as ('ResNet50' | 'MobileNetV1')
+            c.model.outputStride = parseInt(outputStrides[outputStrideKey]) as 8 | 16 |32
+            c.model.multiplier = parseFloat(multipliers[multiplierKey]) as 0.5 | 0.75 | 1.0
+            c.model.quantBytes = parseInt(quantBytes[quantByteKey]) as 4 | 2 | 1
+            c.processOnLocal = onLocal
+            c.useTFWasmBackend = useWasm
+            await m.init(c)
+    
+            const p = generateDefaultBodyPixParams()
+            p.processWidth  = processWidth
+            p.processHeight = processHeight
+            p.type = parseInt(functions[functionKey])
+
+            // flip
+            p.segmentPersonParams!.flipHorizontal = flip
+            p.segmentPersonPartsParams!.flipHorizontal = flip
+            p.segmentMultiPersonParams!.flipHorizontal = flip
+            p.segmentMultiPersonPartsParams!.flipHorizontal = flip
+            // internalResolution
+            p.segmentPersonParams!.internalResolution = internalResolutions[internalResolutionKey] as BodyPixInternalResolution
+            p.segmentPersonPartsParams!.internalResolution = internalResolutions[internalResolutionKey] as BodyPixInternalResolution
+            p.segmentMultiPersonParams!.internalResolution = internalResolutions[internalResolutionKey] as BodyPixInternalResolution
+            p.segmentMultiPersonPartsParams!.internalResolution = internalResolutions[internalResolutionKey] as BodyPixInternalResolution
+            // segmentationThreshold
+            p.segmentPersonParams!.segmentationThreshold = segmentationThreshold
+            p.segmentPersonPartsParams!.segmentationThreshold = segmentationThreshold
+            p.segmentMultiPersonParams!.segmentationThreshold = segmentationThreshold
+            p.segmentMultiPersonPartsParams!.segmentationThreshold = segmentationThreshold
+            // maxDetection
+            p.segmentPersonParams!.maxDetections = maxDetection
+            p.segmentPersonPartsParams!.maxDetections = maxDetection
+            p.segmentMultiPersonParams!.maxDetections = maxDetection
+            p.segmentMultiPersonPartsParams!.maxDetections = maxDetection
+            // socreThreshold
+            p.segmentPersonParams!.scoreThreshold = socreThreshold
+            p.segmentPersonPartsParams!.scoreThreshold = socreThreshold
+            p.segmentMultiPersonParams!.scoreThreshold = socreThreshold
+            p.segmentMultiPersonPartsParams!.scoreThreshold = socreThreshold
+            // nmsRadius
+            p.segmentPersonParams!.nmsRadius = nmsRadius
+            p.segmentPersonPartsParams!.nmsRadius = nmsRadius
+            p.segmentMultiPersonParams!.nmsRadius = nmsRadius
+            p.segmentMultiPersonPartsParams!.nmsRadius = nmsRadius
+            // minKeypointScore
+            p.segmentMultiPersonParams!.minKeypointScore = minKeypointScore
+            p.segmentMultiPersonPartsParams!.minKeypointScore = minKeypointScore
+            // refineSteps
+            p.segmentMultiPersonParams!.refineSteps = refineSteps
+            p.segmentMultiPersonPartsParams!.refineSteps = refineSteps
+
+
+            const newProps = {manager:m, config:c, params:p, count:count}
+            setWorkerProps(newProps)
+        }
+        init()
+    }, [modelKey, onLocal, outputStrideKey, multiplierKey, quantByteKey, useWasm])
+
+    //// パラメータ変更
+    useEffect(()=>{
+        if(!workerProps){
+            return
+        }
+        const p = generateDefaultBodyPixParams()
+        p.processWidth  = processWidth
+        p.processHeight = processHeight
+        p.type = parseInt(functions[functionKey])
+
+        // flip
+        p.segmentPersonParams!.flipHorizontal = flip
+        p.segmentPersonPartsParams!.flipHorizontal = flip
+        p.segmentMultiPersonParams!.flipHorizontal = flip
+        p.segmentMultiPersonPartsParams!.flipHorizontal = flip
+        // internalResolution
+        p.segmentPersonParams!.internalResolution = internalResolutions[internalResolutionKey] as BodyPixInternalResolution
+        p.segmentPersonPartsParams!.internalResolution = internalResolutions[internalResolutionKey] as BodyPixInternalResolution
+        p.segmentMultiPersonParams!.internalResolution = internalResolutions[internalResolutionKey] as BodyPixInternalResolution
+        p.segmentMultiPersonPartsParams!.internalResolution = internalResolutions[internalResolutionKey] as BodyPixInternalResolution
+        // segmentationThreshold
+        p.segmentPersonParams!.segmentationThreshold = segmentationThreshold
+        p.segmentPersonPartsParams!.segmentationThreshold = segmentationThreshold
+        p.segmentMultiPersonParams!.segmentationThreshold = segmentationThreshold
+        p.segmentMultiPersonPartsParams!.segmentationThreshold = segmentationThreshold
+        // maxDetection
+        p.segmentPersonParams!.maxDetections = maxDetection
+        p.segmentPersonPartsParams!.maxDetections = maxDetection
+        p.segmentMultiPersonParams!.maxDetections = maxDetection
+        p.segmentMultiPersonPartsParams!.maxDetections = maxDetection
+        // socreThreshold
+        p.segmentPersonParams!.scoreThreshold = socreThreshold
+        p.segmentPersonPartsParams!.scoreThreshold = socreThreshold
+        p.segmentMultiPersonParams!.scoreThreshold = socreThreshold
+        p.segmentMultiPersonPartsParams!.scoreThreshold = socreThreshold
+        // nmsRadius
+        p.segmentPersonParams!.nmsRadius = nmsRadius
+        p.segmentPersonPartsParams!.nmsRadius = nmsRadius
+        p.segmentMultiPersonParams!.nmsRadius = nmsRadius
+        p.segmentMultiPersonPartsParams!.nmsRadius = nmsRadius
+        // minKeypointScore
+        p.segmentMultiPersonParams!.minKeypointScore = minKeypointScore
+        p.segmentMultiPersonPartsParams!.minKeypointScore = minKeypointScore
+        // refineSteps
+        p.segmentMultiPersonParams!.refineSteps = refineSteps
+        p.segmentMultiPersonPartsParams!.refineSteps = refineSteps
+
+        setWorkerProps({...workerProps, params:p})
+    }, [processWidth, processHeight, functionKey, flip, internalResolutionKey, segmentationThreshold, maxDetection, socreThreshold, nmsRadius, minKeypointScore, refineSteps])
+
+
+    /// input設定
+    useEffect(()=>{
+        const video = document.getElementById("input_video") as HTMLVideoElement
+        if(inputMedia.mediaType === "IMAGE"){
+            const img = document.getElementById("input_img") as HTMLImageElement
+            img.onloadeddata = () =>{
+                resizeDst(img)
+            }
+            img.src = inputMedia.media as string
+        }else if(inputMedia.mediaType === "MOVIE"){
+            const vid = document.getElementById("input_video") as HTMLVideoElement
+            vid.pause()
+            vid.srcObject=null
+            vid.src = inputMedia.media as string
+            vid.loop = true
+            vid.onloadeddata = () =>{
+                video.play()
+                resizeDst(vid)
+            }
+        }else{
+            const vid = document.getElementById("input_video") as HTMLVideoElement
+            vid.pause()
+            vid.srcObject = inputMedia.media as MediaStream
+            vid.onloadeddata = () =>{
+                video.play()
+                resizeDst(vid)
+            }
+        }
+    },[inputMedia])
+
+    /// resize
+    useEffect(()=>{
+        const input = document.getElementById("input_img") || document.getElementById("input_video")
+        resizeDst(input!)
+    })
+
+    //////////////
+    ///// util  //
+    //////////////
+    const resizeDst = (input:HTMLElement) =>{
+        const cs = getComputedStyle(input)
+        const width = parseInt(cs.getPropertyValue("width"))
+        const height = parseInt(cs.getPropertyValue("height"))
+        const dst = document.getElementById("output") as HTMLCanvasElement
+        const front = document.getElementById("front") as HTMLCanvasElement
+        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
+        
+        [dst, srcCache, front].forEach((c)=>{
+            c.width = width
+            c.height = height
+        })
+    }
+
+    //////////////////
+    //  pipeline    //
+    //////////////////
+
+    const drawSegmentation = async (workerProps:WorkerProps) => {
+        const src = document.getElementById("input_img") as HTMLImageElement || document.getElementById("input_video") as HTMLVideoElement
+        const background = document.getElementById("background") as HTMLImageElement
+        const dst = document.getElementById("output") as HTMLCanvasElement
+        const tmp = document.getElementById("tmp") as HTMLCanvasElement
+        const front = document.getElementById("front") as HTMLCanvasElement
+        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
+
+        const tmpCtx = tmp.getContext("2d")!
+        const frontCtx = front.getContext("2d")!
+        const dstCtx = dst.getContext("2d")!
+
+        srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height)
+        const prediction = await workerProps.manager.predict(srcCache!, workerProps.params) as SemanticPersonSegmentation
+        if(!prediction.data){
+            return
+        }
+        // console.log("PREDICTION", prediction)
+
+        // generate mask
+        const image = new ImageData(prediction.width, prediction.height)
+        for(let i=0; i < prediction.data.length; i++){
+            if(prediction.data[i] === 0){
+                image.data[i * 4 + 0] = 0
+                image.data[i * 4 + 1] = 0
+                image.data[i * 4 + 2] = 0
+                image.data[i * 4 + 3] = 0
+            }else{
+                image.data[i * 4 + 0] = 255
+                image.data[i * 4 + 1] = 255
+                image.data[i * 4 + 2] = 255
+                image.data[i * 4 + 3] = 255
+            }
+        }
+        tmp.width = prediction.width
+        tmp.height = prediction.height
+        tmpCtx.putImageData(image, 0, 0)
+
+        // Generate front Image
+        frontCtx.clearRect(0, 0, front.width, front.height)
+        frontCtx.drawImage(tmp, 0, 0, front.width, front.height)
+        frontCtx.globalCompositeOperation = "source-atop";
+        frontCtx.drawImage(srcCache, 0, 0,  front.width, front.height)
+        frontCtx.globalCompositeOperation = "source-over"; 
+
+        // Generate Output
+        dstCtx.clearRect(0, 0, dst.width, dst.height)
+        dstCtx.drawImage(background, 0, 0, dst.width, dst.height)
+        dstCtx.drawImage(front, 0, 0, dst.width, dst.height)
+    }
+
+    const drawParts = async (workerProps:WorkerProps) => {
+        const src = document.getElementById("input_img") as HTMLImageElement || document.getElementById("input_video") as HTMLVideoElement
+        const background = document.getElementById("background") as HTMLImageElement
+        const dst = document.getElementById("output") as HTMLCanvasElement
+        const tmp = document.getElementById("tmp") as HTMLCanvasElement
+        const front = document.getElementById("front") as HTMLCanvasElement
+        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
+
+        const tmpCtx = tmp.getContext("2d")!
+        const frontCtx = front.getContext("2d")!
+        const dstCtx = dst.getContext("2d")!
+
+        srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height)
+        const prediction = await workerProps.manager.predict(srcCache!, workerProps.params) as SemanticPartSegmentation
+        if(!prediction.data){
+            return
+        }
+
+        // generate mask
+        const image = new ImageData(prediction.width, prediction.height)
+        for(let i=0; i < prediction.data.length; i++){
+            const flag = prediction.data[i]
+            if(flag === -1){
+                image.data[i * 4 + 0] = 0
+                image.data[i * 4 + 1] = 0
+                image.data[i * 4 + 2] = 0
+                image.data[i * 4 + 3] = 0
+            }else{
+                image.data[i * 4 + 0] = rainbow[flag][0]
+                image.data[i * 4 + 1] = rainbow[flag][1]
+                image.data[i * 4 + 2] = rainbow[flag][2]
+                image.data[i * 4 + 3] = 100
+            }
+        }
+        tmp.width = prediction.width
+        tmp.height = prediction.height
+        tmpCtx.putImageData(image, 0, 0)
+
+        // Generate Output
+        dstCtx.clearRect(0, 0, dst.width, dst.height)
+        // dstCtx.drawImage(background, 0, 0, dst.width, dst.height)
+        dstCtx.drawImage(srcCache, 0, 0, dst.width, dst.height)
+        dstCtx.drawImage(tmp, 0, 0, dst.width, dst.height)
+    }
+
+    const drawMultiSegmentation = async (workerProps:WorkerProps) => {
+        const src = document.getElementById("input_img") as HTMLImageElement || document.getElementById("input_video") as HTMLVideoElement
+        const background = document.getElementById("background") as HTMLImageElement
+        const dst = document.getElementById("output") as HTMLCanvasElement
+        const tmp = document.getElementById("tmp") as HTMLCanvasElement
+        const front = document.getElementById("front") as HTMLCanvasElement
+        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
+
+        const tmpCtx = tmp.getContext("2d")!
+        const frontCtx = front.getContext("2d")!
+        const dstCtx = dst.getContext("2d")!
+
+        srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height)
+        const prediction = await workerProps.manager.predict(srcCache!, workerProps.params) as PersonSegmentation[]
+        // console.log("PREDICTION", prediction)
+
+        tmpCtx.clearRect(0, 0, tmp.width, tmp.height)
+        if(prediction.length > 0){
+            // generate mask
+            //// First ALL CLEAR
+            if(!prediction[0].width){
+                return
+            }
+            const image = new ImageData(prediction[0].width, prediction[0].height)
+            image.data.fill(0)
+
+            //// THEN draw each person segment
+            prediction.forEach(x=>{
+                for(let i = 0; i<x.data.length;i++){
+                    if(x.data[i] !== 0){
+                        image.data[i * 4 + 0] = 255
+                        image.data[i * 4 + 1] = 255
+                        image.data[i * 4 + 2] = 255
+                        image.data[i * 4 + 3] = 255
+                    }
+                }
+            })
+
+            tmp.width = prediction[0].width
+            tmp.height = prediction[0].height
+            tmpCtx.putImageData(image, 0, 0)
+        }
+
+        // Generate front Image
+        frontCtx.clearRect(0, 0, front.width, front.height)
+        frontCtx.drawImage(tmp, 0, 0, front.width, front.height)
+        frontCtx.globalCompositeOperation = "source-atop";
+        frontCtx.drawImage(srcCache, 0, 0,  front.width, front.height)
+        frontCtx.globalCompositeOperation = "source-over"; 
+
+        // Generate Output
+        dstCtx.clearRect(0, 0, dst.width, dst.height)
+        dstCtx.drawImage(background, 0, 0, dst.width, dst.height)
+        dstCtx.drawImage(front, 0, 0, dst.width, dst.height)
+    }    
+
+
+
+    const drawMultiPersonParts = async (workerProps:WorkerProps) => {
+        const src = document.getElementById("input_img") as HTMLImageElement || document.getElementById("input_video") as HTMLVideoElement
+        const background = document.getElementById("background") as HTMLImageElement
+        const dst = document.getElementById("output") as HTMLCanvasElement
+        const tmp = document.getElementById("tmp") as HTMLCanvasElement
+        const front = document.getElementById("front") as HTMLCanvasElement
+        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
+
+        const tmpCtx = tmp.getContext("2d")!
+        const frontCtx = front.getContext("2d")!
+        const dstCtx = dst.getContext("2d")!
+
+        srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height)
+        const prediction = await workerProps.manager.predict(srcCache!, workerProps.params) as PartSegmentation[]
+
+        tmpCtx.clearRect(0, 0, tmp.width, tmp.height)
+        if(prediction.length > 0){
+            if(!prediction[0].width){
+                return
+            }
+            const image = new ImageData(prediction[0].width, prediction[0].height)
+            image.data.fill(0)
+
+            //// THEN draw each person segment
+            prediction.forEach(x=>{
+                for(let i = 0; i<x.data.length;i++){
+                    const flag = x.data[i]
+                    if(flag !== -1){
+                        image.data[i * 4 + 0] = rainbow[flag][0]
+                        image.data[i * 4 + 1] = rainbow[flag][1]
+                        image.data[i * 4 + 2] = rainbow[flag][2]
+                        image.data[i * 4 + 3] = 100
+                    }
+                }
+            })
+            tmp.width = prediction[0].width
+            tmp.height = prediction[0].height
+            tmpCtx.putImageData(image, 0, 0)
+        }
+
+        // Generate Output
+        dstCtx.clearRect(0, 0, dst.width, dst.height)
+        // dstCtx.drawImage(background, 0, 0, dst.width, dst.height)
+        dstCtx.drawImage(srcCache, 0, 0, dst.width, dst.height)
+        dstCtx.drawImage(tmp, 0, 0, dst.width, dst.height)
+    }
+
+    useEffect(()=>{
+        console.log("[Pipeline] Start", workerProps)
+        let renderRequestId: number
+        const LOOP_ID = performance.now()
+        GlobalLoopID = LOOP_ID
+        let counter = 0
+        let fps_start = performance.now()
+
+        const render = async () => {
+            console.log("RENDER::::", LOOP_ID, renderRequestId,  workerProps?.params)
+            const start = performance.now()
+
+            const dst = document.getElementById("output") as HTMLCanvasElement
+            if(workerProps){
+                if(dst.width > 0 && dst.height>0){
+                    switch(workerProps.params.type){
+                        case BodypixFunctionType.SegmentPerson:
+                            await drawSegmentation(workerProps)
+                            break
+                        case BodypixFunctionType.SegmentPersonParts:
+                            await drawParts(workerProps)
+                            break
+                        case BodypixFunctionType.SegmentMultiPerson:
+                            await drawMultiSegmentation(workerProps)
+                            break
+                        case BodypixFunctionType.SegmentMultiPersonParts:
+                            await drawMultiPersonParts(workerProps)
+                            break
+                        default:
+                            break
+                    }
+                }
+                if(GlobalLoopID === LOOP_ID){
+                    renderRequestId = requestAnimationFrame(render)
+                }
+            }
+        }
+        render()
+        return ()=>{
+            console.log("CANCEL", renderRequestId)
+            cancelAnimationFrame(renderRequestId)
+        }
+    }, [workerProps, strict])
+
+
+
+
+    /////////////
+    // render  //
+    /////////////
+    return (
+        <div>
+            <div style={{display:"flex"}}>
+                <div style={{display:"flex"}}>
+                    {inputMedia.mediaType === "IMAGE" ? 
+                        <img  className={classes.inputView} id="input_img"></img>
+                        :
+                        <video  className={classes.inputView} id="input_video"></video>
+                    }
+                    <canvas className={classes.inputView} id="output"></canvas>
+                </div>
+                <div>
+                    <VideoInputSelect  title="input"         current={""}             onchange={inputChange}     options={videoInputList}/>
+                    <DropDown          title="model"         current={modelKey}       onchange={setModelKey}     options={models} />
+                    <DropDown          title="func"         current={functionKey}       onchange={setFunctionKey}     options={functions} />
+                    <DropDown          title="outputStride"         current={outputStrideKey}       onchange={setOutputStrideKey}     options={outputStrides} />
+                    <DropDown          title="multiplier"         current={multiplierKey}       onchange={setMultiplierKey}     options={multipliers} />
+                    <DropDown          title="quantByte"         current={quantByteKey}       onchange={setQuantByteKey}     options={quantBytes} />
+                    <DropDown          title="resolution"         current={internalResolutionKey}       onchange={setInternalResolutionKey}     options={internalResolutions} />
+
+                    <Toggle            title="onLocal"       current={onLocal}        onchange={setOnLocal} />
+                    {/* <Toggle            title="useWasm"       current={useWasm}        onchange={setUseWasm} /> */}
+                    {/* <Toggle            title="flip"       current={flip}        onchange={setFlip} /> */}
+
+                    <SingleValueSlider title="segThreshold"    current={segmentationThreshold}     onchange={setSegmentationThreshold} min={0} max={1} step={0.1} />                
+                    <SingleValueSlider title="maxDetection"    current={maxDetection}     onchange={setMaxDetection} min={1} max={20} step={1} />
+                    <SingleValueSlider title="scoThreshold"    current={socreThreshold}     onchange={setScoreThreshold} min={0} max={1} step={0.1} />
+                    <SingleValueSlider title="nmsRadius"    current={nmsRadius}     onchange={setNmsRadius} min={1} max={50} step={1} />
+                    <SingleValueSlider title="minKeypointScore"    current={minKeypointScore}     onchange={setMinKeypointScore} min={0.1} max={0.9} step={0.1} />
+                    <SingleValueSlider title="refineSteps"    current={refineSteps}     onchange={setRefineSteps} min={1} max={20} step={1} />
+                    
+
+                    <SingleValueSlider title="processWidth"    current={processWidth}     onchange={setProcessWidth} min={100} max={1024} step={10} />
+                    <SingleValueSlider title="processHeight"    current={processHeight}     onchange={setProcessHeight} min={100} max={1024} step={10} />
+                    
+                    {/* <Toggle            title="Strict"        current={strict}         onchange={setStrict} /> */}
+                    <FileChooser       title="background"  onchange={backgroundChange} />
+                </div>
+            </div>
+
+            <div style={{display:"flex"}}>
+                <canvas className={classes.inputView} id="tmp" hidden></canvas>
+                <canvas className={classes.inputView} id="front" hidden></canvas>
+                <canvas className={classes.inputView} id="src-cache" hidden></canvas>
+                <img className={classes.inputView} id="background" src="img/north-star-2869817_640.jpg" hidden></img>
+
+            </div>
+            <div >
+                <div id="info"> </div>
+                <div id="info2"> </div>
+            </div>
+        </div>
+        );
+}
 
 export default App;

@@ -1,24 +1,23 @@
 {
-  "name": "bodypix-worker-js-demo",
+  "name": "001demo_bodypix-worker-js-demo2",
   "version": "0.1.0",
   "private": true,
   "homepage": "./",
   "dependencies": {
-    "@dannadori/bodypix-worker-js": "^1.0.28",
-    "@tensorflow/tfjs": "^2.8.4",
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.3.2",
-    "@testing-library/user-event": "^7.1.2",
-    "@types/jest": "^24.0.0",
-    "@types/node": "^12.19.14",
-    "@types/react": "^16.14.2",
-    "@types/react-dom": "^16.9.10",
-    "react": "^16.14.0",
-    "react-dom": "^16.14.0",
-    "react-scripts": "3.4.3",
-    "semantic-ui-css": "^2.4.1",
-    "semantic-ui-react": "^2.0.2",
-    "typescript": "~3.7.2"
+    "@dannadori/bodypix-worker-js": "^1.0.29",
+    "@material-ui/core": "^4.11.3",
+    "@testing-library/jest-dom": "^5.11.10",
+    "@testing-library/react": "^11.2.5",
+    "@testing-library/user-event": "^12.8.3",
+    "@types/jest": "^26.0.22",
+    "@types/node": "^12.20.6",
+    "@types/react": "^17.0.3",
+    "@types/react-dom": "^17.0.3",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-scripts": "4.0.3",
+    "typescript": "^4.2.3",
+    "web-vitals": "^1.1.1"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -27,7 +26,10 @@
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
   },
   "browserslist": {
     "production": [
