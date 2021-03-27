@@ -2,33 +2,39 @@ import { GoogleMeetSegmentationTFLiteConfig, GoogleMeetSegmentationTFLiteOperati
 
 const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
 let tflite:TFLite | null = null
+let tfliteSIMD:TFLite | null = null
 let ready:boolean = false
 let resultArray:number[] = Array<number>(300*300)
 
 const predict = async (src:Uint8Array, config: GoogleMeetSegmentationTFLiteConfig, params: GoogleMeetSegmentationTFLiteOperationParams) => {
+    let currentTFLite 
+    if(params.useSIMD){
+        currentTFLite = tfliteSIMD
+    }else{
+        currentTFLite = tflite
+    }
+    currentTFLite!._setKernelSize(params.kernelSize)
+    currentTFLite!._setUseSoftmax(params.useSoftmax?1:0)
+    currentTFLite!._setUsePadding(params.usePadding?1:0)
+    currentTFLite!._setThresholdWithoutSoftmax(params.threshold)
+    currentTFLite!._setInterpolation(params.interpolation)
 
-    tflite!._setKernelSize(params.kernelSize)
-    tflite!._setUseSoftmax(params.useSoftmax?1:0)
-    tflite!._setUsePadding(params.usePadding?1:0)
-    tflite!._setThresholdWithoutSoftmax(params.threshold)
-    tflite!._setInterpolation(params.interpolation)
-
-    const inputImageBufferOffset = tflite!._getInputImageBufferOffset()
+    const inputImageBufferOffset = currentTFLite!._getInputImageBufferOffset()
     for (let i = 0; i < params.processWidth * params.processHeight; i++) {
-        tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 0] = src[i * 4 + 0]
-        tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 1] = src[i * 4 + 1]
-        tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 2] = src[i * 4 + 2]
+        currentTFLite!.HEAPU8[inputImageBufferOffset + i * 3 + 0] = src[i * 4 + 0]
+        currentTFLite!.HEAPU8[inputImageBufferOffset + i * 3 + 1] = src[i * 4 + 1]
+        currentTFLite!.HEAPU8[inputImageBufferOffset + i * 3 + 2] = src[i * 4 + 2]
     }
 
-    tflite!._exec(params.processWidth, params.processHeight)
+    currentTFLite!._exec(params.processWidth, params.processHeight)
 
     const outputLength = params.processWidth * params.processHeight
     if(resultArray.length !== outputLength){
         resultArray = Array<number>(outputLength)
     }
-    const outputImageBufferOffset = tflite!._getOutputImageBufferOffset() 
+    const outputImageBufferOffset = currentTFLite!._getOutputImageBufferOffset() 
     for(let i = 0; i < outputLength; i++){
-        resultArray[i] = tflite!.HEAPU8[outputImageBufferOffset + i ]
+        resultArray[i] = currentTFLite!.HEAPU8[outputImageBufferOffset + i ]
     }
     return resultArray
 }
@@ -54,6 +60,17 @@ onmessage = async (event) => {
         tflite!.HEAPU8.set(new Uint8Array(model), modelBufferOffset)
         const res = tflite!._loadModel(model.byteLength)
         console.log('[WORKER]: Load Result:', res)
+
+        if(config.enableSIMD){
+            console.log("[WORKER_MANAGER]: LOAD SIMD_MOD")
+            const modSIMD = require('../resources/tflite-simd.js');
+            console.log("[WORKER_MANAGER]:", modSIMD)
+            tfliteSIMD  = await modSIMD()
+            const modelSIMDBufferOffset = tfliteSIMD!._getModelBufferMemoryOffset()
+            tfliteSIMD!.HEAPU8.set(new Uint8Array(model), modelSIMDBufferOffset)
+            const res = tfliteSIMD!._loadModel(model.byteLength)
+            console.log("[WORKER_MANAGER]: LOAD SIMD_MOD DONE")
+        }
 
         ready = true
         ctx.postMessage({ message: WorkerResponse.INITIALIZED })

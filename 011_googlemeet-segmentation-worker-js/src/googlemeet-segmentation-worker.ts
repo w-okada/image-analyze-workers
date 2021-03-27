@@ -79,6 +79,11 @@ export class LocalWorker{
         const rangeKern = params.smoothingR
         let seg:number[][]|null = null
         let img:number[][]|null = null
+
+        const perf1_start = performance.now()
+        let perf2_start = 0
+        let perf2_end = 0
+
         tf.tidy(()=>{
             let orgTensor = tf.browser.fromPixels(targetCanvas)
             let tensor = tf.image.resizeBilinear(orgTensor,[params.processHeight, params.processWidth])
@@ -86,7 +91,9 @@ export class LocalWorker{
             tensor = tensor.expandDims(0)        
             tensor = tf.cast(tensor, 'float32')
             tensor = tensor.div(255.0)
+            perf2_start = performance.now()
             let prediction = this.model!.predict(tensor) as tf.Tensor
+            perf2_end = performance.now()
             prediction = prediction.softmax()
             prediction = prediction.squeeze()
             let [predTensor0, predTensor1] = tf.split(prediction, 2, 2)
@@ -94,6 +101,9 @@ export class LocalWorker{
             predTensor0 = predTensor0.squeeze()
             seg = predTensor0.arraySync() as number[][]
         })
+        const perf1_end = performance.now()
+        console.log("[WORKER] PERFORMANCE", `${perf1_end-perf1_start}`, `${perf2_end-perf2_start}`)
+
         if(spatialKern===0 && rangeKern===0){
             return seg!
         }
@@ -194,6 +204,7 @@ export class GoogleMeetSegmentationWorkerManager{
             // Case.1 Process on local thread.
             try{
                 // const prediction = await this.localWorker.predict_jbf_js(targetCanvas, this.config, params)
+                console.log("WORKERSS INITIALIZED------------------------------------------------")
                 const prediction = await this.localWorker.predict_jbf_js_canvas(targetCanvas, this.config, params)
                 return prediction
             }catch(e){

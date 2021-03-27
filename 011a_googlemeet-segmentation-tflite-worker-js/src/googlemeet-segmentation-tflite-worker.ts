@@ -7,6 +7,7 @@ export const generateGoogleMeetSegmentationTFLiteDefaultConfig = ():GoogleMeetSe
         processOnLocal      : false,
         modelPath           : "/segm_lite_v681.tflite",
         workerPath          : "./googlemeet-segmentation-tflite-worker-worker.js",
+        enableSIMD          : false,
     }
     return defaultConf
 }
@@ -29,7 +30,9 @@ export const generateDefaultGoogleMeetSegmentationTFLiteParams = ():GoogleMeetSe
 
 export class LocalWorker{
     mod:any
+    modSIMD:any
     tflite?:TFLite
+    tfliteSIMD?:TFLite
     tfliteLoaded = false
     tmpCanvas = document.createElement("canvas")
     resultArray:number[] = Array<number>(300*300)
@@ -49,6 +52,17 @@ export class LocalWorker{
         const modelBufferOffset = this.tflite!._getModelBufferMemoryOffset()
         this.tflite!.HEAPU8.set(new Uint8Array(model), modelBufferOffset)
         const res = this.tflite!._loadModel(model.byteLength)
+
+        if(config.enableSIMD){
+            console.log("[WORKER_MANAGER]: LOAD SIMD_MOD")
+            this.modSIMD = require('../resources/tflite-simd.js');
+            console.log("[WORKER_MANAGER]:", this.modSIMD)
+            this.tfliteSIMD  = await this.modSIMD()
+            const modelSIMDBufferOffset = this.tfliteSIMD!._getModelBufferMemoryOffset()
+            this.tfliteSIMD!.HEAPU8.set(new Uint8Array(model), modelSIMDBufferOffset)
+            const res = this.tfliteSIMD!._loadModel(model.byteLength)
+            console.log("[WORKER_MANAGER]: LOAD SIMD_MOD DONE")
+        }
         this.ready = true
         console.log('[WORKER_MANAGER]: Load Result:', res)
     }
@@ -57,34 +71,40 @@ export class LocalWorker{
 
     predict = async (src:HTMLCanvasElement | HTMLImageElement | HTMLVideoElement, config: GoogleMeetSegmentationTFLiteConfig, params: GoogleMeetSegmentationTFLiteOperationParams) => {
         if(this.ready){
+            let tflite
+            if(params.useSIMD){
+                tflite=this.tfliteSIMD
+            }else{
+                tflite=this.tflite
+            }
             this.tmpCanvas.width = params.processWidth
             this.tmpCanvas.height = params.processHeight
-            this.tflite!._setKernelSize(params.kernelSize)
-            this.tflite!._setUseSoftmax(params.useSoftmax?1:0)
-            this.tflite!._setUsePadding(params.usePadding?1:0)
-            this.tflite!._setThresholdWithoutSoftmax(params.threshold)
-            this.tflite!._setInterpolation(params.interpolation)
+            tflite!._setKernelSize(params.kernelSize)
+            tflite!._setUseSoftmax(params.useSoftmax?1:0)
+            tflite!._setUsePadding(params.usePadding?1:0)
+            tflite!._setThresholdWithoutSoftmax(params.threshold)
+            tflite!._setInterpolation(params.interpolation)
 
             
             const tmpCtx = this.tmpCanvas.getContext("2d")!
             tmpCtx.drawImage(src, 0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
             const imageData = tmpCtx.getImageData(0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
-            const inputImageBufferOffset = this.tflite!._getInputImageBufferOffset()
+            const inputImageBufferOffset = tflite!._getInputImageBufferOffset()
             for (let i = 0; i < this.tmpCanvas.width * this.tmpCanvas.height; i++) {
-                this.tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 0] = imageData.data[i * 4 + 0]
-                this.tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 1] = imageData.data[i * 4 + 1]
-                this.tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 2] = imageData.data[i * 4 + 2]
+                tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 0] = imageData.data[i * 4 + 0]
+                tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 1] = imageData.data[i * 4 + 1]
+                tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 2] = imageData.data[i * 4 + 2]
             }
     
-            this.tflite!._exec(this.tmpCanvas.width, this.tmpCanvas.height)
+            tflite!._exec(this.tmpCanvas.width, this.tmpCanvas.height)
     
             const outputLength = this.tmpCanvas.width * this.tmpCanvas.height
             if(this.resultArray.length !== outputLength){
                 this.resultArray = Array<number>(outputLength)
             }
-            const outputImageBufferOffset = this.tflite!._getOutputImageBufferOffset() 
+            const outputImageBufferOffset = tflite!._getOutputImageBufferOffset() 
             for(let i = 0; i < outputLength; i++){
-                this.resultArray[i] = this.tflite!.HEAPU8[outputImageBufferOffset + i ]
+                this.resultArray[i] = tflite!.HEAPU8[outputImageBufferOffset + i ]
             }
     
         }

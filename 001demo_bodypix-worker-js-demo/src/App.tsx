@@ -78,8 +78,8 @@ const App = () => {
     const [ modelKey, setModelKey ]                           = useState(Object.keys(models)[0])
     const [ functionKey, setFunctionKey ]                     = useState(Object.keys(functions)[0])
     const [ outputStrideKey, setOutputStrideKey]              = useState(Object.keys(outputStrides)[1])
-    const [ multiplierKey, setMultiplierKey]                  = useState(Object.keys(multipliers)[0])
-    const [ quantByteKey, setQuantByteKey]                    = useState(Object.keys(quantBytes)[2])
+    const [ multiplierKey, setMultiplierKey]                  = useState(Object.keys(multipliers)[1])
+    const [ quantByteKey, setQuantByteKey]                    = useState(Object.keys(quantBytes)[1])
     const [ internalResolutionKey, setInternalResolutionKey]  = useState(Object.keys(internalResolutions)[1])
 
     const [ onLocal, setOnLocal]                              = useState(true)
@@ -295,7 +295,14 @@ const App = () => {
         const dstCtx = dst.getContext("2d")!
 
         srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height)
+
+        const inference_start = performance.now()
         const prediction = await workerProps.manager.predict(srcCache!, workerProps.params) as SemanticPersonSegmentation
+        const inference_end = performance.now()
+        const info1 = document.getElementById("info") as HTMLCanvasElement
+        info1.innerText = `processing time: ${inference_end - inference_start}`
+
+
         if(!prediction.data){
             return
         }
@@ -519,6 +526,10 @@ const App = () => {
                     renderRequestId = requestAnimationFrame(render)
                 }
             }
+            
+            const end = performance.now()
+            const info2 = document.getElementById("info2") as HTMLCanvasElement
+            info2.innerText = `processing time: ${end-start}`
         }
         render()
         return ()=>{

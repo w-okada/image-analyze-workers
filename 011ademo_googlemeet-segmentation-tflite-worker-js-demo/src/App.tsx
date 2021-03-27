@@ -9,6 +9,8 @@ import { VideoInputType } from './const';
 import { useVideoInputList } from './hooks/useVideoInputList';
 import { worker } from 'cluster';
 
+let GlobalLoopID:number = 0
+
 const models: { [name: string]: string } = {
     "[96x160]_original"    : `${process.env.PUBLIC_URL}/models/96x160/segm_lite_v681.tflite`,
     "[96x160]_pinto_f32"   : `${process.env.PUBLIC_URL}/models/96x160/model_float32.tflite`,
@@ -67,8 +69,8 @@ const App = () => {
     const [ useSoftmax, setUseSoftmax]         = useState(true)
     const [ usePadding, setUsePadding]         = useState(false)
     const [ threshold, setThreshold]           = useState(0.1)
-    const [ useSIMD, setUseSIMD]               = useState(true)
-    const [ onLocal, setOnLocal]               = useState(false)
+    const [ useSIMD, setUseSIMD]               = useState(false)
+    const [ onLocal, setOnLocal]               = useState(true)
     const [ lwBlur, setlwBlur]                 = useState(6)
     const [ interpolation, setInterpolation]   = useState(1)
 
@@ -90,6 +92,8 @@ const App = () => {
             const c = generateGoogleMeetSegmentationTFLiteDefaultConfig()
             c.processOnLocal = onLocal
             c.modelPath = models[modelKey]
+            c.enableSIMD = true
+            
             await m.init(c)
     
             const p = generateDefaultGoogleMeetSegmentationTFLiteParams()
@@ -122,7 +126,7 @@ const App = () => {
         p.useSIMD       = useSIMD
         p.interpolation = interpolation
         setWorkerProps({...workerProps, params:p})
-    }, [processSizeKey, kernelSize, useSoftmax, usePadding, threshold, interpolation])
+    }, [processSizeKey, kernelSize, useSoftmax, usePadding, threshold, interpolation, useSIMD])
 
 
     /// input設定
@@ -186,11 +190,12 @@ const App = () => {
         console.log("[Pipeline] Start", workerProps)
         let renderRequestId: number
         const LOOP_ID = performance.now()
+        GlobalLoopID = LOOP_ID
         let counter = 0
         let fps_start = performance.now()
 
         const render = async () => {
-            // console.log("RENDER::::", LOOP_ID,  workerProps?.params)
+            console.log("RENDER::::", LOOP_ID, renderRequestId, workerProps?.params)
             const start = performance.now()
 
             if(workerProps){
@@ -200,6 +205,7 @@ const App = () => {
                 const front = document.getElementById("front") as HTMLCanvasElement
                 const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
 
+                const inference_start = performance.now()
                 let prediction
                 if(strict){
                     srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height)
@@ -207,6 +213,9 @@ const App = () => {
                 }else{
                     prediction = await workerProps.manager.predict(src!, workerProps.params)
                 }
+                const inference_end = performance.now()
+                const info = document.getElementById("info") as HTMLCanvasElement
+                info.innerText = `processing time: ${inference_end - inference_start}`
 
 
                 // 結果からマスク作成
@@ -247,29 +256,17 @@ const App = () => {
                 // 前景書き込み                
                 dstCtx.drawImage(front, 0, 0, dst.width, dst.height)
 
-                const end = performance.now()
-                const info = document.getElementById("info") as HTMLCanvasElement
-                info.innerText = `processing time: ${end-start}`
-                
-                counter += 1
-                if(counter === 100){
-                    const fps_end = performance.now()
-                    const fps = (100 * 1000) / (fps_end - fps_start)
-                    const info2 = document.getElementById("info2") as HTMLCanvasElement
-                    info2.innerText = `fps: ${fps}`
-
-                    counter = 0
-                    fps_start = performance.now()
-    
-                }
-
-                // if(counter < 30){
+                if(GlobalLoopID === LOOP_ID){
                     renderRequestId = requestAnimationFrame(render)
-                // }
+                }
             }
+            const end = performance.now()
+            const info2 = document.getElementById("info2") as HTMLCanvasElement
+            info2.innerText = `processing time: ${end - start}`
         }
         render()
         return ()=>{
+            console.log("CANCEL", renderRequestId)
             cancelAnimationFrame(renderRequestId)
         }
     }, [workerProps, strict, lwBlur])

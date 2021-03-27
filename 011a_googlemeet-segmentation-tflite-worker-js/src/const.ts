@@ -16,6 +16,7 @@ export interface GoogleMeetSegmentationTFLiteConfig{
     processOnLocal      : boolean
     modelPath           : string
     workerPath          : string
+    enableSIMD          : boolean
 }
 
 
