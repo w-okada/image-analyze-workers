@@ -4,62 +4,79 @@ import { BrowserType, getBrowserType } from "./BrowserUtil";
 import { SemanticPersonSegmentation } from "@tensorflow-models/body-pix";
 
 export { ModelConfigResNet, ModelConfigMobileNetV1, ModelConfigMobileNetV1_05, BodypixFunctionType } from './const'
-export { BrowserType, getBrowserType} from './BrowserUtil';
+export { BrowserType, getBrowserType } from './BrowserUtil';
 export { IMAGE_PATH } from "./DemoUtil"
-export {SemanticPersonSegmentation, SemanticPartSegmentation, PersonSegmentation, PartSegmentation} from '@tensorflow-models/body-pix'
+export { SemanticPersonSegmentation, SemanticPartSegmentation, PersonSegmentation, PartSegmentation } from '@tensorflow-models/body-pix'
 export { BodyPixInternalResolution } from '@tensorflow-models/body-pix/dist/types';
 
-export const generateBodyPixDefaultConfig = ():BodyPixConfig => {
-    const defaultConf:BodyPixConfig = {
-        browserType         : getBrowserType(),
-        model               : ModelConfigMobileNetV1_05,
-        processOnLocal      : false,
-        workerPath          : "./bodypix-worker-worker.js"
+import * as tf from '@tensorflow/tfjs';
+
+
+const load_module = async (config: BodyPixConfig) => {
+    if (config.useTFWasmBackend) {
+        console.log("use wasm backend")
+        require('@tensorflow/tfjs-backend-wasm')
+        await tf.setBackend("wasm")
+    } else {
+        console.log("use webgl backend")
+        require('@tensorflow/tfjs-backend-webgl')
+        await tf.setBackend("webgl")
+    }
+}
+
+export const generateBodyPixDefaultConfig = (): BodyPixConfig => {
+    const defaultConf: BodyPixConfig = {
+        browserType: getBrowserType(),
+        model: ModelConfigMobileNetV1_05,
+        processOnLocal: false,
+        workerPath: "./bodypix-worker-worker.js",
+        useTFWasmBackend: false,
+
     }
     return defaultConf
 }
 
-export const generateDefaultBodyPixParams = () =>{
+export const generateDefaultBodyPixParams = () => {
     const defaultParams: BodyPixOperatipnParams = {
         type: BodypixFunctionType.SegmentPerson,
-        segmentPersonParams:{
-            flipHorizontal : false,
+        segmentPersonParams: {
+            flipHorizontal: false,
             internalResolution: "medium",
             segmentationThreshold: 0.7,
             maxDetections: 10,
             scoreThreshold: 0.3,
             nmsRadius: 20,
         },
-        segmentPersonPartsParams:{
-            flipHorizontal : false,
+        segmentPersonPartsParams: {
+            flipHorizontal: false,
             internalResolution: "medium",
             segmentationThreshold: 0.7,
             maxDetections: 10,
             scoreThreshold: 0.3,
             nmsRadius: 20,
         },
-        segmentMultiPersonParams:{
-            flipHorizontal : false,
-            internalResolution: "medium",
-            segmentationThreshold: 0.7,
-            maxDetections: 10,
-            scoreThreshold: 0.3,
-            nmsRadius: 20,
-            minKeypointScore: 0.3,
-            refineSteps:10
-        },
-        segmentMultiPersonPartsParams:{
-            flipHorizontal : false,
+        segmentMultiPersonParams: {
+            flipHorizontal: false,
             internalResolution: "medium",
             segmentationThreshold: 0.7,
             maxDetections: 10,
             scoreThreshold: 0.3,
             nmsRadius: 20,
             minKeypointScore: 0.3,
-            refineSteps:10
+            refineSteps: 10
         },
-        processWidth        : 300,
-        processHeight       : 300,
+        segmentMultiPersonPartsParams: {
+            flipHorizontal: false,
+            internalResolution: "medium",
+            segmentationThreshold: 0.7,
+            maxDetections: 10,
+            scoreThreshold: 0.3,
+            nmsRadius: 20,
+            minKeypointScore: 0.3,
+            refineSteps: 10
+        },
+        processWidth: 300,
+        processHeight: 300,
 
     }
     return defaultParams
@@ -67,22 +84,19 @@ export const generateDefaultBodyPixParams = () =>{
 
 class LocalBP {
     model: bodyPix.BodyPix | null = null
-    canvas: HTMLCanvasElement = (()=>{
+    canvas: HTMLCanvasElement = (() => {
         const newCanvas = document.createElement("canvas")
-        newCanvas.style.display="none"
+        newCanvas.style.display = "none"
         return newCanvas
     })()
-    
-    init = (config: BodyPixConfig) => {
-        return bodyPix.load(config.model).then(res => {
-            console.log("bodypix loaded locally", config)
-            this.model = res
-            return
-        })
+
+    init = async (config: BodyPixConfig) => {
+        await load_module(config)
+        this.model = await bodyPix.load(config.model)
     }
 
     perf = Array.from(new Array(50), () => 0)
-    predict = async (targetCanvas: HTMLCanvasElement, config:BodyPixConfig, params:BodyPixOperatipnParams) => {
+    predict = async (targetCanvas: HTMLCanvasElement, config: BodyPixConfig, params: BodyPixOperatipnParams) => {
         // ImageData作成
         const processWidth = (params.processWidth <= 0 || params.processHeight <= 0) ? targetCanvas.width : params.processWidth
         const processHeight = (params.processWidth <= 0 || params.processHeight <= 0) ? targetCanvas.height : params.processHeight
@@ -93,44 +107,45 @@ class LocalBP {
         const ctx = this.canvas.getContext("2d")!
         ctx.drawImage(targetCanvas, 0, 0, processWidth, processHeight)
         const newImg = ctx.getImageData(0, 0, processWidth, processHeight)
-      
+
         let prediction
-        if(params.type === BodypixFunctionType.SegmentPerson){
+        if (params.type === BodypixFunctionType.SegmentPerson) {
             const start = performance.now()
             prediction = await this.model!.segmentPerson(newImg, params.segmentPersonParams)
-            const end   = performance.now()
+            const end = performance.now()
             this.perf.shift()
-            this.perf.push(end-start)
-            const average = this.perf.reduce((p,c)=>{ return p+c}) / this.perf.length
-            console.log("inference average:", average, this.perf.length)            
-        }else if(params.type === BodypixFunctionType.SegmentPersonParts){
-          prediction = await this.model!.segmentPersonParts(newImg, params.segmentPersonPartsParams)
-        }else if(params.type === BodypixFunctionType.SegmentMultiPerson){
-          prediction = await this.model!.segmentMultiPerson(newImg, params.segmentMultiPersonParams)
-        }else if(params.type === BodypixFunctionType.SegmentMultiPersonParts){
-          prediction = await this.model!.segmentMultiPersonParts(newImg, params.segmentMultiPersonPartsParams)
-        }else{// segmentPersonに倒す
-          prediction = await this.model!.segmentPerson(newImg, params.segmentPersonParams)
+            this.perf.push(end - start)
+            const average = this.perf.reduce((p, c) => { return p + c }) / this.perf.length
+            // console.log("inference average:", average, this.perf.length)
+        } else if (params.type === BodypixFunctionType.SegmentPersonParts) {
+            prediction = await this.model!.segmentPersonParts(newImg, params.segmentPersonPartsParams)
+        } else if (params.type === BodypixFunctionType.SegmentMultiPerson) {
+            prediction = await this.model!.segmentMultiPerson(newImg, params.segmentMultiPersonParams)
+        } else if (params.type === BodypixFunctionType.SegmentMultiPersonParts) {
+            prediction = await this.model!.segmentMultiPersonParts(newImg, params.segmentMultiPersonPartsParams)
+        } else {// segmentPersonに倒す
+            prediction = await this.model!.segmentPerson(newImg, params.segmentPersonParams)
         }
         return prediction
-      }
+    }
 }
 
 export class BodypixWorkerManager {
     private workerBP: Worker | null = null
 
-    config:BodyPixConfig = generateBodyPixDefaultConfig()
+    config: BodyPixConfig = generateBodyPixDefaultConfig()
     private localBP = new LocalBP()
 
-    init(config:BodyPixConfig|null = null) {
-        if(config != null){
+    init = async (config: BodyPixConfig | null = null) => {
+        if (config != null) {
             this.config = config
         }
-        if(this.workerBP){
+        if (this.workerBP) {
             this.workerBP.terminate()
         }
+        this.workerBP = null
 
-        if(this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal == true){
+        if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal == true) {
             // safariはwebworkerでWebGLが使えないのでworkerは使わない。
             return new Promise<void>((onResolve, onFail) => {
                 this.localBP.init(this.config!).then(() => {
@@ -138,16 +153,17 @@ export class BodypixWorkerManager {
                 })
             })
         }
-        
+
         console.log("load bodypix1")
-        this.workerBP = new Worker(this.config.workerPath, { type: 'module' })
+        const workerBP = new Worker(this.config.workerPath, { type: 'module' })
         console.log("load bodypix2")
 
-        this.workerBP!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
-        return new Promise<void>((onResolve, onFail) => {
-            this.workerBP!.onmessage = (event) => {
+        workerBP!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
+        const p = new Promise<void>((onResolve, onFail) => {
+            workerBP!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
+                    this.workerBP = workerBP
                     onResolve()
                 } else {
                     console.log("Bodypix Initialization something wrong..")
@@ -155,26 +171,28 @@ export class BodypixWorkerManager {
                 }
             }
         })
+        await p
+        return
     }
 
-    predict(targetCanvas: HTMLCanvasElement, params:BodyPixOperatipnParams) {
-        if(this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal == true){
-            const p = new Promise(async (onResolve: (v: any) => void, onFail) => {
-                const prediction = await this.localBP.predict(targetCanvas, this.config, params)
-                onResolve(prediction)
-            })
-            return p
-        }else{
+    predict = async (targetCanvas: HTMLCanvasElement, params: BodyPixOperatipnParams) => {
+        if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal == true) {
+            const prediction = await this.localBP.predict(targetCanvas, this.config, params)
+            return prediction
+        } else {
+            if(!this.workerBP){
+                return Array.from(new Array(params.processWidth), () => new Array(params.processHeight).fill(1));                
+            }
             const offscreen = new OffscreenCanvas(targetCanvas.width, targetCanvas.height)
             const offctx = offscreen.getContext("2d")!
             offctx.drawImage(targetCanvas, 0, 0, targetCanvas.width, targetCanvas.height)
             const imageBitmap = offscreen.transferToImageBitmap()
             const uid = performance.now()
-            const p = new Promise((onResolve: (v:any) => void, onFail) => {
+            const p = new Promise((onResolve, onFail) => {
                 this.workerBP!.postMessage({
                     message: WorkerCommand.PREDICT, uid: uid,
-                    params:params, image: imageBitmap,
-                    config:this.config
+                    params: params, image: imageBitmap,
+                    config: this.config
                 }, [imageBitmap])
 
                 this.workerBP!.onmessage = (event) => {
@@ -194,35 +212,35 @@ export class BodypixWorkerManager {
 
 
 //// Utility for Demo
-export const createForegroundImage = (srcCanvas:HTMLCanvasElement, prediction:SemanticPersonSegmentation) =>{
+export const createForegroundImage = (srcCanvas: HTMLCanvasElement, prediction: SemanticPersonSegmentation) => {
     const tmpCanvas = document.createElement("canvas")
     tmpCanvas.width = prediction.width
     tmpCanvas.height = prediction.height
     const imageData = tmpCanvas.getContext("2d")!.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height)
     const data = imageData.data
     for (let rowIndex = 0; rowIndex < prediction.height; rowIndex++) {
-      for (let colIndex = 0; colIndex < prediction.width; colIndex++) {
-        const seg_offset = ((rowIndex * prediction.width) + colIndex)
-        const pix_offset = ((rowIndex * prediction.width) + colIndex) * 4
-  
-        if (prediction.data[seg_offset] === 0) {
-          data[pix_offset] = 0
-          data[pix_offset + 1] = 0
-          data[pix_offset + 2] = 0
-          data[pix_offset + 3] = 0
-        } else {
-          data[pix_offset] = 255
-          data[pix_offset + 1] = 255
-          data[pix_offset + 2] = 255
-          data[pix_offset + 3] = 255
+        for (let colIndex = 0; colIndex < prediction.width; colIndex++) {
+            const seg_offset = ((rowIndex * prediction.width) + colIndex)
+            const pix_offset = ((rowIndex * prediction.width) + colIndex) * 4
+
+            if (prediction.data[seg_offset] === 0) {
+                data[pix_offset] = 0
+                data[pix_offset + 1] = 0
+                data[pix_offset + 2] = 0
+                data[pix_offset + 3] = 0
+            } else {
+                data[pix_offset] = 255
+                data[pix_offset + 1] = 255
+                data[pix_offset + 2] = 255
+                data[pix_offset + 3] = 255
+            }
         }
-      }
     }
     const imageDataTransparent = new ImageData(data, prediction.width, prediction.height);
     tmpCanvas.getContext("2d")!.putImageData(imageDataTransparent, 0, 0)
-  
+
     const outputCanvas = document.createElement("canvas")
-  
+
     outputCanvas.width = srcCanvas.width
     outputCanvas.height = srcCanvas.height
     const ctx = outputCanvas.getContext("2d")!
@@ -231,6 +249,6 @@ export const createForegroundImage = (srcCanvas:HTMLCanvasElement, prediction:Se
     ctx.drawImage(srcCanvas, 0, 0, outputCanvas.width, outputCanvas.height)
     const outputImage = outputCanvas.getContext("2d")!.getImageData(0, 0, outputCanvas.width, outputCanvas.height)
     tmpCanvas.remove()
-    outputCanvas.remove()  
+    outputCanvas.remove()
     return outputImage
-  }
+}

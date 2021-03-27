@@ -1,6 +1,6 @@
 {
    "name": "@dannadori/bodypix-worker-js",
-   "version": "1.0.28",
+   "version": "1.0.30",
    "description": "",
    "main": "dist/bodypix-worker.js",
    "scripts": {
@@ -35,12 +35,12 @@
       "worker-plugin": "^5.0.0"
    },
    "dependencies": {
-      "@tensorflow-models/body-pix": "^2.0.5",
-      "@tensorflow/tfjs": "^2.8.2",
-      "@tensorflow/tfjs-backend-wasm": "^2.8.2",
-      "@tensorflow/tfjs-converter": "~1.2.1",
-      "@tensorflow/tfjs-core": "~1.2.1",
-      "@types/node": "^14.14.20",
+      "@tensorflow-models/body-pix": "^2.1.0",
+      "@tensorflow/tfjs": "^3.3.0",
+      "@tensorflow/tfjs-backend-wasm": "^3.3.0",
+      "@tensorflow/tfjs-converter": "^3.3.0",
+      "@tensorflow/tfjs-core": "^3.3.0",
+      "@types/node": "^14.14.36",
       "await-semaphore": "^0.1.3"
    }
 }

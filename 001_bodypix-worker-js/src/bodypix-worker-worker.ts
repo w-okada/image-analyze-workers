@@ -1,10 +1,23 @@
 import { WorkerCommand, WorkerResponse, BodypixFunctionType, BodyPixConfig, BodyPixOperatipnParams } from './const'
 import * as bodyPix from '@tensorflow-models/body-pix'
 import * as tf from '@tensorflow/tfjs';
+import { BrowserType } from './BrowserUtil';
 
 const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
 
 let model: bodyPix.BodyPix | null
+
+const load_module = async (config: BodyPixConfig) => {
+  if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
+    console.log("use wasm backend")
+    require('@tensorflow/tfjs-backend-wasm')
+    await tf.setBackend("wasm")
+  }else{
+    console.log("use webgl backend")
+    require('@tensorflow/tfjs-backend-webgl')
+    await tf.setBackend("webgl")
+  }
+}
 
 const generateImage = (image:ImageBitmap, prediction: bodyPix.SemanticPersonSegmentation) => {
 
@@ -71,6 +84,8 @@ const predict = async (image: ImageBitmap, config: BodyPixConfig, params:BodyPix
 
 onmessage = async (event) => {
   if (event.data.message === WorkerCommand.INITIALIZE) {
+    const config = event.data.config as BodyPixConfig
+    await load_module(config)
     bodyPix.load(event.data.config.model).then(res => {
       console.log("bodypix loaded default", event.data.config)
       model = res

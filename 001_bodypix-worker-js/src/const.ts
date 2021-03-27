@@ -17,7 +17,7 @@ export interface BodyPixConfig{
     model               : ModelConfig
     processOnLocal      : boolean
     workerPath          : string
-
+    useTFWasmBackend    : boolean
 }
 
 export const ModelConfigResNet: ModelConfig = {
