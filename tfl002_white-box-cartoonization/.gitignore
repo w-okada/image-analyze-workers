@@ -21,3 +21,13 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+wasm/emscripten_toolchain
+sync.sh
+wasm/bazel-tflite_src
+wasm/bazel-testlogs
+wasm/bazel-out
+wasm/bazel-bin
+
+
+

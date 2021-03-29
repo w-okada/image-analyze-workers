@@ -1,4 +1,5 @@
-# Build wasm
+# TFLite Wasm for White Box Cartoonization
+## Build wasm
 ```
 $ npm run build_docker
 $ npm run start_docker
@@ -8,15 +9,17 @@ $ npm run build_wasm_simd
 $ npm run stop_docker
 ```
 
-# Demo
+## Demo
 [Visit here](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/tfl002_white-box-cartoonization/index.html) or run below.
 
 ```
 $ npm start
 ```
+## Reference
 
 
-# License
+
+## License
 
 White-box CartoonGAN
 ```
