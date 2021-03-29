@@ -49,7 +49,7 @@ class App extends DemoBase {
       {
         title: "ProcessResolution",
         currentIndexOrValue: 3,
-        values: [64, 128, 256, 320, 440, 512],
+        values: [64, 128, 192, 256, 320, 440, 512],
         callback: (val: string | number | MediaStream) => {
           this.params.processWidth = val as number
           this.params.processHeight = val as number
