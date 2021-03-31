@@ -128,6 +128,7 @@ export class GoogleMeetSegmentationTFLiteWorkerManager{
         if(this.workerGML){
             this.workerGML.terminate()
         }
+        this.workerGML = null
 
         //// Local
         if(this.config.processOnLocal == true){
@@ -136,14 +137,15 @@ export class GoogleMeetSegmentationTFLiteWorkerManager{
         }
 
         //// Remote
-        this.workerGML = new Worker(this.config.workerPath, { type: 'module' })
+        const workerGML = new Worker(this.config.workerPath, { type: 'module' })
         console.log("[manager] send initialize request")
-        this.workerGML!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
+        workerGML!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
         const p = new Promise<void>((onResolve, onFail)=>{
-            this.workerGML!.onmessage = (event) => {
+            workerGML!.onmessage = (event) => {
                 console.log("[manager] receive event", event)
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
+                    this.workerGML = workerGML
                     onResolve()
                 }else{
                     console.log("opencv Initialization something wrong..")
@@ -159,36 +161,39 @@ export class GoogleMeetSegmentationTFLiteWorkerManager{
         if(this.config.processOnLocal == true){
             const res = await this.localWorker.predict(src, this.config, params)
             return res
-        }else{
-            this.tmpCanvas.width = params.processWidth
-            this.tmpCanvas.height = params.processHeight
-            const tmpCtx = this.tmpCanvas.getContext("2d")!
-            tmpCtx.drawImage(src, 0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
-            const data = tmpCtx.getImageData(0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
-
-            const uid = performance.now()
-            this.workerGML!.postMessage({ 
-                message: WorkerCommand.PREDICT, uid:uid,
-                config: this.config, params: params,
-                data: data.data.buffer,
-            }, [data.data.buffer])
-
-            const p = new Promise((onResolve:(v:Uint8Array)=>void, onFail)=>{
-                this.workerGML!.onmessage = (event) => {
-                    if(event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid){
-                        const prediction = event.data.prediction as number[]
-                        onResolve(new Uint8Array(prediction))
-                    }else{
-                        //// Only Drop the request...
-                        console.log("something wrong..", event, event.data.message)
-                        const prediction = event.data.prediction as number[]
-                        onResolve(new Uint8Array(prediction))
-                    }
-                }        
-            })
-            const res = await p
-            return res
         }
+        if(!this.workerGML){
+            return null
+        }
+
+        this.tmpCanvas.width = params.processWidth
+        this.tmpCanvas.height = params.processHeight
+        const tmpCtx = this.tmpCanvas.getContext("2d")!
+        tmpCtx.drawImage(src, 0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
+        const data = tmpCtx.getImageData(0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
+
+        const uid = performance.now()
+        this.workerGML!.postMessage({ 
+            message: WorkerCommand.PREDICT, uid:uid,
+            config: this.config, params: params,
+            data: data.data.buffer,
+        }, [data.data.buffer])
+
+        const p = new Promise((onResolve:(v:Uint8Array)=>void, onFail)=>{
+            this.workerGML!.onmessage = (event) => {
+                if(event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid){
+                    const prediction = event.data.prediction as number[]
+                    onResolve(new Uint8Array(prediction))
+                }else{
+                    //// Only Drop the request...
+                    console.log("something wrong..", event, event.data.message)
+                    const prediction = event.data.prediction as number[]
+                    onResolve(new Uint8Array(prediction))
+                }
+            }        
+        })
+        const res = await p
+        return res
     }
 }
 
