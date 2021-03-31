@@ -16,7 +16,6 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-const OUT_WIDTH  = 512
 const OUT_HEIGHT = 512
 
 
@@ -34,7 +33,6 @@ interface InputMedia{
 
 
 const App = () => {
-    const NUM_KEYPOINTS = 468;
 
     const classes = useStyles();
     const { videoInputList } = useVideoInputList()
