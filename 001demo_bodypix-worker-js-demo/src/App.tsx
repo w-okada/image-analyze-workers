@@ -70,6 +70,7 @@ interface InputMedia{
     media     : MediaStream|string
 }
 
+
 const App = () => {
     const classes = useStyles();
     const { videoInputList } = useVideoInputList()
@@ -221,7 +222,8 @@ const App = () => {
         p.segmentMultiPersonParams!.refineSteps = refineSteps
         p.segmentMultiPersonPartsParams!.refineSteps = refineSteps
 
-        setWorkerProps({...workerProps, params:p})
+        // setWorkerProps({...workerProps, params:p})
+        workerProps.params = p
     }, [processWidth, processHeight, functionKey, flip, internalResolutionKey, segmentationThreshold, maxDetection, socreThreshold, nmsRadius, minKeypointScore, refineSteps])
 
 
