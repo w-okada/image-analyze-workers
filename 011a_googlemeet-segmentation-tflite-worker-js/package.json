@@ -1,6 +1,6 @@
 {
   "name": "@dannadori/googlemeet-segmentation-tflite-worker-js",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "",
   "main": "dist/googlemeet-segmentation-tflite-worker.js",
   "scripts": {
