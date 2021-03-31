@@ -5,6 +5,9 @@ const manager  = {
     entry: './src/bodypix-worker.ts',
     resolve: {
         extensions: [".ts", ".js"],
+        fallback: { 
+            "os": false 
+        }
     },
     module: {
         rules: [
@@ -26,6 +29,9 @@ const worker  = {
     entry: './src/bodypix-worker-worker.ts',
     resolve: {
         extensions: [".ts", ".js"],
+        fallback: { 
+            "os": false 
+        }
     },
     module: {
         rules: [
