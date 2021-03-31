@@ -72,6 +72,7 @@ export class LocalWorker{
             let prediction = this.model!.predict(tensor) as tf.Tensor
             prediction = prediction.onesLike().sub(prediction)
             prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()))
+            prediction = prediction.squeeze()
             bm = prediction.arraySync() as number[][]
         })
         return bm!
@@ -86,29 +87,28 @@ export class U2NetPortraitWorkerManager{
     private canvas = document.createElement("canvas")
     private config = generateU2NetPortraitDefaultConfig()
     private localWorker = new LocalWorker()
-    init(config: U2NetPortraitConfig|null){
+    init = async (config: U2NetPortraitConfig|null) =>{
         if(config != null){
             this.config = config
         }
         if(this.workerU2){
             this.workerU2.terminate()
         }
+        this.workerU2 = null
 
         if(this.config.processOnLocal == true){
-            return new Promise<void>((onResolve, onFail) => {
-                this.localWorker.init(this.config!).then(() => {
-                    onResolve()
-                })
-            })
+            await this.localWorker.init(this.config!)
+            return
         }
 
         // Bodypix 用ワーカー
-        this.workerU2 = new Worker(this.config.workerPath, { type: 'module' })
-        this.workerU2!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
+        const workerU2 = new Worker(this.config.workerPath, { type: 'module' })
+        workerU2!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
         const p = new Promise<void>((onResolve, onFail)=>{
-            this.workerU2!.onmessage = (event) => {
+            workerU2!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
+                    this.workerU2 = workerU2
                     onResolve()
                 }else{
                     console.log("celeb a mask Initialization something wrong..")
@@ -119,16 +119,18 @@ export class U2NetPortraitWorkerManager{
         return p
     }
 
-    predict(targetCanvas:HTMLCanvasElement, params = generateDefaultU2NetPortraitParams()):Promise<number[][]>{
+    predict = async (targetCanvas:HTMLCanvasElement, params = generateDefaultU2NetPortraitParams()) =>{
         if(this.config.processOnLocal == true){
             // Case.1 Process on local thread.
-            const p = new Promise(async(onResolve:(v:number[][])=>void, onFail)=>{
-                const prediction = await this.localWorker.predict(targetCanvas, this.config, params)
-                onResolve(prediction)
-            })
-            return p            
-//            return null
-        }else if(this.config.browserType === BrowserType.SAFARI){
+            const prediction = await this.localWorker.predict(targetCanvas, this.config, params)
+            return prediction
+        }
+        if(!this.workerU2){
+            return null
+        }
+        
+        
+        if(this.config.browserType === BrowserType.SAFARI){
             // Case.2 Process on worker thread, Safari (Send dataArray) 
             this.canvas.width = params.processWidth
             this.canvas.height = params.processHeight

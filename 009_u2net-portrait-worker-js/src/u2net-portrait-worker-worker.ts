@@ -38,6 +38,7 @@ const predict = async (image:ImageBitmap, config: U2NetPortraitConfig, params: U
         let prediction = model!.predict(tensor) as tf.Tensor
         prediction = prediction.onesLike().sub(prediction)
         prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()))
+        prediction = prediction.squeeze()
         bm = prediction.arraySync() as number[][]
     })
     return bm!
@@ -47,7 +48,7 @@ const predict = async (image:ImageBitmap, config: U2NetPortraitConfig, params: U
 const predictWithData = async (data: Uint8ClampedArray , config: U2NetPortraitConfig, params: U2NetPortraitOperationParams) => {
     const imageData = new ImageData(data, params.processWidth, params.processHeight)
 
-    let bm:number[][][]|null = null
+    let bm:number[][]|null = null
     tf.tidy(()=>{
         let tensor = tf.browser.fromPixels(imageData)
         tensor = tensor.expandDims(0)
@@ -57,10 +58,10 @@ const predictWithData = async (data: Uint8ClampedArray , config: U2NetPortraitCo
         let prediction = model!.predict(tensor) as tf.Tensor
         prediction = prediction.onesLike().sub(prediction)
         prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()))
-        
-        bm = prediction.arraySync() as number[][][]
+        prediction = prediction.squeeze()
+        bm = prediction.arraySync() as number[][]
     })
-    return bm![0]
+    return bm!
 }
 
 onmessage = async (event) => {

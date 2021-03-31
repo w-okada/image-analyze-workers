@@ -6,6 +6,7 @@ const manager = {
     entry: './src/u2net-portrait-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
+        fallback: { "os": false }
     },
     module: {
         rules: [
@@ -30,6 +31,7 @@ const worker = {
     entry: './src/u2net-portrait-worker-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
+        fallback: { "os": false }
     },
     module: {
         rules: [
