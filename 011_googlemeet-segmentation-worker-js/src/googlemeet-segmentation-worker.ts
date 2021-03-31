@@ -185,6 +185,7 @@ export class GoogleMeetSegmentationWorkerManager{
             workerGM!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
+                    this.workerGM = workerGM
                     onResolve()
                 }else{
                     console.log("celeb a mask Initialization something wrong..")
@@ -193,29 +194,20 @@ export class GoogleMeetSegmentationWorkerManager{
             }
         })
         workerGM!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
-        await p
-        this.workerGM = workerGM
         return
     }
 
-    predict = async (targetCanvas:HTMLCanvasElement, params = generateDefaultGoogleMeetSegmentationParams()):Promise<number[][]>=>{
+    predict = async (targetCanvas:HTMLCanvasElement, params = generateDefaultGoogleMeetSegmentationParams())=>{
         if(this.config.processOnLocal == true){
             console.log("current backend[main thread]:",tf.getBackend())
             // Case.1 Process on local thread.
-            try{
-                // const prediction = await this.localWorker.predict_jbf_js(targetCanvas, this.config, params)
-                console.log("WORKERSS INITIALIZED------------------------------------------------")
-                const prediction = await this.localWorker.predict_jbf_js_canvas(targetCanvas, this.config, params)
-                return prediction
-            }catch(e){
-                console.log("prediction exception:",e)
-                return Array.from(new Array(params.jbfWidth), () => new Array(params.jbfHeight).fill(1));
-            }
-        }else if(this.config.browserType === BrowserType.SAFARI){
-            if(!this.workerGM){
-                return Array.from(new Array(params.jbfWidth), () => new Array(params.jbfHeight).fill(1));                
-            }
-
+            const prediction = await this.localWorker.predict_jbf_js_canvas(targetCanvas, this.config, params)
+            return prediction
+        }
+        if(!this.workerGM){
+            return null
+        }
+        if(this.config.browserType === BrowserType.SAFARI){
             const imageData = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height)
             const dataArray = imageData.data
             const uid = performance.now()
@@ -241,9 +233,6 @@ export class GoogleMeetSegmentationWorkerManager{
             return p
         }else{
             // Case.3 Process on worker thread, Chrome (Send ImageBitmap)
-            if(!this.workerGM){
-                return Array.from(new Array(params.jbfWidth), () => new Array(params.jbfHeight).fill(1));                
-            }
             const off = new OffscreenCanvas(targetCanvas.width, targetCanvas.height)
             off.getContext("2d")!.drawImage(targetCanvas, 0, 0, targetCanvas.width, targetCanvas.height)
             const imageBitmap = off.transferToImageBitmap()
