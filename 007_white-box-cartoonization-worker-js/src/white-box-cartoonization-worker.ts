@@ -44,17 +44,11 @@ export class LocalCT{
     model:tf.GraphModel|null = null
     canvas = document.createElement("canvas")
 
-    init = (config: CartoonConfig) => {
-        const p = new Promise<void>((onResolve, onFail) => {
-            load_module(config).then(()=>{
-                tf.ready().then(async()=>{
-                    tf.env().set('WEBGL_CPU_FORWARD', false)
-                    this.model = await tf.loadGraphModel(config.modelPath)
-                    onResolve()                    
-                })
-            })
-        })
-        return p
+    init = async (config: CartoonConfig) => {
+        await load_module(config)
+        await tf.ready()
+        tf.env().set('WEBGL_CPU_FORWARD', false)
+        this.model = await tf.loadGraphModel(config.modelPath)
     }
 
     predict = async (targetCanvas:HTMLCanvasElement, config: CartoonConfig, params: CartoonOperatipnParams) => {
@@ -89,37 +83,34 @@ export class LocalCT{
     }
 }
 
-
-
 export class CartoonWorkerManager{
     private workerCT:Worker|null = null
     private canvasOut = document.createElement("canvas")
     private canvas = document.createElement("canvas")
     private config = generateCartoonDefaultConfig()
     private localCT = new LocalCT()
-    init(config: CartoonConfig|null){
+    init = async(config: CartoonConfig|null) =>{
         if(config != null){
             this.config = config
         }
         if(this.workerCT){
             this.workerCT.terminate()
         }
+        this.workerCT = null
 
         if(this.config.processOnLocal == true){
-            return new Promise<void>((onResolve, onFail) => {
-                this.localCT.init(this.config!).then(() => {
-                    onResolve()
-                })
-            })
+            await this.localCT.init(this.config!)
+            return 
         }
 
         // Bodypix 用ワーカー
-        this.workerCT = new Worker(this.config.workerPath, { type: 'module' })
-        this.workerCT!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
+        const workerCT = new Worker(this.config.workerPath, { type: 'module' })
+        workerCT!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
         const p = new Promise<void>((onResolve, onFail)=>{
-            this.workerCT!.onmessage = (event) => {
+            workerCT!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
+                    this.workerCT = workerCT
                     onResolve()
                 }else{
                     console.log("cartoon Initialization something wrong..")
@@ -130,20 +121,22 @@ export class CartoonWorkerManager{
         return p
     }
 
-    predict(targetCanvas:HTMLCanvasElement, params = generateDefaultCartoonParams()):Promise<HTMLCanvasElement>{
+    predict = async (targetCanvas:HTMLCanvasElement, params = generateDefaultCartoonParams())=>{
         if(this.config.processOnLocal == true){
-            // Case.1 Process on local thread.
-            const p = new Promise(async(onResolve:(v:HTMLCanvasElement)=>void, onFail)=>{
-                const convertedCanvas = await this.localCT.predict(targetCanvas, this.config, params)
-                this.canvasOut.width = targetCanvas.width
-                this.canvasOut.height = targetCanvas.height
-                const ctx = this.canvasOut.getContext("2d")!
-                ctx.drawImage(convertedCanvas, 0, 0, this.canvasOut.width, this.canvasOut.height)
-                onResolve(this.canvasOut)
-            })
-            return p            
-//            return null
-        }else if(this.config.browserType === BrowserType.SAFARI){
+            const convertedCanvas = await this.localCT.predict(targetCanvas, this.config, params)
+            this.canvasOut.width = targetCanvas.width
+            this.canvasOut.height = targetCanvas.height
+            const ctx = this.canvasOut.getContext("2d")!
+            ctx.drawImage(convertedCanvas, 0, 0, this.canvasOut.width, this.canvasOut.height)
+            return this.canvasOut
+
+        }
+
+        if(!this.workerCT){
+            return null
+        }
+        
+        if(this.config.browserType === BrowserType.SAFARI){
             // Case.2 Process on worker thread, Safari (Send dataArray) 
             this.canvas.width = params.processWidth
             this.canvas.height = params.processHeight

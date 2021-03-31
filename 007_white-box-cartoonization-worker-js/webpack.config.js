@@ -6,6 +6,7 @@ const manager = {
     entry: './src/white-box-cartoonization-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
+        fallback: { "os": false }
     },
     module: {
         rules: [
@@ -27,6 +28,7 @@ const worker = {
     entry: './src/white-box-cartoonization-worker-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
+        fallback: { "os": false }
     },
     module: {
         rules: [
