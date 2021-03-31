@@ -7,7 +7,7 @@ import * as poseNet from '@tensorflow-models/posenet'
 import * as tf from '@tensorflow/tfjs';
 
 export { Pose, getAdjacentKeyPoints } from '@tensorflow-models/posenet'
-export { ModelConfigResNet50, ModelConfigMobileNetV1, PoseNetOperatipnParams, PoseNetFunctionType } from './const'
+export { ModelConfigResNet50, ModelConfigMobileNetV1, PoseNetOperatipnParams, PoseNetConfig, PoseNetFunctionType } from './const'
 
 export const generatePoseNetDefaultConfig = (): PoseNetConfig => {
     const defaultConf: PoseNetConfig = {
@@ -93,29 +93,27 @@ export class PoseNetWorkerManager {
     private config: PoseNetConfig = generatePoseNetDefaultConfig()
     private localPN = new LocalPN()
     private canvas = document.createElement("canvas")
-    init(config: PoseNetConfig | null = null) {
+    init = async (config: PoseNetConfig | null = null) => {
         if (config != null) {
             this.config = config
         }
         if (this.workerPN) {
             this.workerPN.terminate()
         }
+        this.workerPN = null
 
-//        if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal === true) {
         if (this.config.processOnLocal === true) {
-            return new Promise<void>((onResolve, onFail) => {
-                this.localPN.init(this.config!).then(() => {
-                    onResolve()
-                })
-            })
+            await this.localPN.init(this.config!)
+            return
         }
 
-        this.workerPN = new Worker(this.config.workerPath, { type: 'module' })
-        this.workerPN!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
+        const workerPN = new Worker(this.config.workerPath, { type: 'module' })
+        workerPN!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
         const p = new Promise<void>((onResolve, onFail) => {
-            this.workerPN!.onmessage = (event) => {
+            workerPN!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
+                    this.workerPN = workerPN
                     onResolve()
                 } else {
                     console.log("Bodypix Initialization something wrong..")
@@ -126,29 +124,29 @@ export class PoseNetWorkerManager {
         return p
     }
 
-    predict(targetCanvas: HTMLCanvasElement, params: PoseNetOperatipnParams = generateDefaultPoseNetParams()) {
+    predict = async (targetCanvas: HTMLCanvasElement, params: PoseNetOperatipnParams = generateDefaultPoseNetParams()) =>{
         // if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal === true) {
         if (this.config.processOnLocal === true) {
-            //Case.1 Main thread
-                const p = new Promise(async (onResolve: (v: poseNet.Pose[]) => void, onFail) => {
-                const prediction = await this.localPN.predict(targetCanvas, this.config, params)
-                onResolve(prediction)
-            })
-            return p
-        } else if(this.config.browserType === BrowserType.SAFARI){
+            const prediction = await this.localPN.predict(targetCanvas, this.config, params)
+            return prediction
+        }
+
+        if(!this.workerPN){
+            return null
+        }
+        
+        if(this.config.browserType === BrowserType.SAFARI){
             // Case.2 Safari on worker thread
             //// input resolutionにリサイズするのでここでのリサイズはしない
             const data = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height).data
             const uid = performance.now()
             const p = new Promise(async (onResolve: (v: poseNet.Pose[]) => void, onFail) => {
-
                 this.workerPN!.postMessage({
                     message: WorkerCommand.PREDICT, uid: uid,
                     config: this.config,
                     params: params,
                     data: data, width:targetCanvas.width, height:targetCanvas.height
                 }, [data.buffer])
-
                 this.workerPN!.onmessage = (event) => {
                     if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
                         onResolve(event.data.prediction)

@@ -72,15 +72,11 @@ const predictForSafari = async (data: Uint8ClampedArray, width: number, height: 
 onmessage = async (event) => {
     if (event.data.message === WorkerCommand.INITIALIZE) {
         console.log("Initialize model!.", event)
-        // await load_module(event.data.config as PoseNetConfig)
-        tf.ready().then(()=>{
-            tf.env().set('WEBGL_CPU_FORWARD', false)
-            poseNet.load(event.data.config.model).then(res => {
-                console.log("new model:",res)
-                model = res
-                ctx.postMessage({ message: WorkerResponse.INITIALIZED })
-            })
-        })
+        await tf.ready()
+        tf.env().set('WEBGL_CPU_FORWARD', false)
+        model = await poseNet.load(event.data.config.model)
+        ctx.postMessage({ message: WorkerResponse.INITIALIZED })
+
     } else if (event.data.message === WorkerCommand.PREDICT) {
 
         const config: PoseNetConfig = event.data.config
