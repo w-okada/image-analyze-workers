@@ -1,209 +1,344 @@
+import React, { useEffect, useState } from 'react';
 import './App.css';
-import {PoseNetWorkerManager, generatePoseNetDefaultConfig, generateDefaultPoseNetParams, 
-  Pose, getAdjacentKeyPoints, ModelConfigResNet50,
-  PoseNetOperatipnParams, PoseNetFunctionType } from '@dannadori/posenet-worker-js'
-import { PoseNetConfig  } from '@dannadori/posenet-worker-js/dist/const';
+import { makeStyles } from '@material-ui/core';
+import { DropDown, SingleValueSlider, Toggle, VideoInputSelect } from './components/components';
+import { VideoInputType } from './const';
+import { useVideoInputList } from './hooks/useVideoInputList';
+import { generateDefaultPoseNetParams, generatePoseNetDefaultConfig, PoseNetWorkerManager, PoseNetConfig, PoseNetFunctionType, PoseNetOperatipnParams, getAdjacentKeyPoints } from '@dannadori/posenet-worker-js';
 
-import DemoBase, { ControllerUIProp } from './DemoBase';
-
-
-
-class App extends DemoBase {
-  manager: PoseNetWorkerManager = new PoseNetWorkerManager()
-  config:PoseNetConfig = (()=>{
-    const config = generatePoseNetDefaultConfig()
-//    this.config.model = ModelConfigResNet50
-    config.model = ModelConfigResNet50    
-    return config
-  })()
-  
-  params:PoseNetOperatipnParams = generateDefaultPoseNetParams()
-
-  IMAGE_PATH   = "./yuka_kawamura.jpg"
-  RESULT_OVERLAY = true
+let GlobalLoopID:number = 0
 
 
-  getCustomMenu = () =>{
-    const menu:ControllerUIProp[]= [
-      {
-        title:"arch",
-        currentIndexOrValue: 1,
-        values:["MobileNetV1", "ResNet50"],
-        callback: (val:string|number|MediaStream)=>{},
-      },
-      {
-        title:"outputStride",
-        currentIndexOrValue:1,
-        values: [8, 16, 32],
-        callback: (val:string|number|MediaStream)=>{},
-  
-      },
-      {
-        title:"multiplier",
-        currentIndexOrValue: 0,
-        values: [1.0, 0.75, 0.50],
-        callback: (val:string|number|MediaStream)=>{},
-      },
-      {
-        title:"quantBytes",
-        currentIndexOrValue:4,
-        values: [4, 2, 1],
-        callback: (val:string|number|MediaStream)=>{},
-      },
-      {
-        title:"inputResolution(w)",
-        currentIndexOrValue:257,
-        range: [257, 640, 1],
-        callback: (val:string|number|MediaStream)=>{},
-      },
-      {
-        title:"inputResolution(h)",
-        currentIndexOrValue:257,
-        range: [257, 480, 1],
-        callback: (val:string|number|MediaStream)=>{},
-      },
-      {
-        title: "processOnLocal",
-        currentIndexOrValue: 1,
-        values: ["on", "off"],
-        callback: (val: string | number | MediaStream) => { },
-      },
-      // {
-      //   title: "useTFWasmBackend",
-      //   currentIndexOrValue: 1,
-      //   values: ["on", "off"],
-      //   callback: (val: string | number | MediaStream) => { },
-      // },
-      {
-        title:"reload model",
-        currentIndexOrValue:0,
-        callback: (val:string|number|MediaStream)=>{
-          const modelArch = this.controllerRef.current!.getCurrentValue("arch")
-          const outputStride = this.controllerRef.current!.getCurrentValue("outputStride")
-          const multiplier = this.controllerRef.current!.getCurrentValue("multiplier")
-          const quantBytes = this.controllerRef.current!.getCurrentValue("quantBytes")
-          const w = this.controllerRef.current!.getCurrentValue("inputResolution(w)")
-          const h = this.controllerRef.current!.getCurrentValue("inputResolution(h)")       
-          const processOnLocal = this.controllerRef.current!.getCurrentValue("processOnLocal")
-          // const useTFWasmBackend = this.controllerRef.current!.getCurrentValue("useTFWasmBackend")
-
-          console.log(modelArch)
-          this.config.model.architecture = modelArch as ('ResNet50' | 'MobileNetV1')
-          this.config.model.outputStride = outputStride as (32 | 16 | 8)
-          this.config.model.multiplier = multiplier as ( 0.50 | 0.75 | 1.0)
-          this.config.model.quantBytes = quantBytes as (4 | 2 | 1)
-          this.config.model.inputResolution = { width:w as number, height: h as number }
-          this.config.processOnLocal     = (processOnLocal === "on" ? true  : false) as boolean
-          // this.config.useTFWasmBackend   = (useTFWasmBackend === "on" ? true  : false) as boolean
-
-          this.requireReload()
-        },
-      },
-      {
-        title:"function",
-        currentIndexOrValue:0,
-        values: ["single person", "multiple person"],
-        callback: (val:string|number|MediaStream)=>{
-          if(val === "single person"){
-            this.params.type = PoseNetFunctionType.SinglePerson
-          }else{
-            this.params.type = PoseNetFunctionType.MultiPerson
-          }
-        },
-      },
-      {
-        title:"flip",
-        currentIndexOrValue:0,
-        values: ["on", "off"],
-        callback: (val:string|number|MediaStream)=>{
-          if(val === "on"){
-            this.params.singlePersonParams!.flipHorizontal = true
-            this.params.multiPersonParams!.flipHorizontal = true
-          }else{
-            this.params.singlePersonParams!.flipHorizontal = false
-            this.params.multiPersonParams!.flipHorizontal = false
-          }
-        },
-      },
-      {
-        title:"max detection",
-        currentIndexOrValue:5,
-        range: [1, 10, 1],
-        callback: (val:string|number|MediaStream)=>{
-          this.params.multiPersonParams!.maxDetections = val as number
-        },
-      },
-      {
-        title:"score threshold",
-        currentIndexOrValue:0.5,
-        range: [0, 1, 0.1],
-        callback: (val:string|number|MediaStream)=>{
-          this.params.multiPersonParams!.scoreThreshold = val as number
-        },
-        
-      },
-      {
-        title:"nms radius",
-        currentIndexOrValue:20,
-        range: [1, 50, 1],
-        callback: (val:string|number|MediaStream)=>{
-          this.params.multiPersonParams!.nmsRadius = val as number
-        },
-      }
-    ]
-    return menu
-  }
-
-  drawPoints = (prediction:Pose, width:number, height:number) => {
-    const keypoints = prediction.keypoints
-
-    for (let i = 0; i < keypoints.length; i++) {
-      const keypoint = keypoints[i];
-  
-      // const scaleX = width/this.config.processWidth
-      // const scaleY = height/this.config.processHeight
-      const scaleX = 1
-      const scaleY = 1  
-
-      const x = keypoint.position.x;
-      const y = keypoint.position.y;
-      const ctx = this.resultCanvasRef.current!.getContext("2d")!
-//      console.log(x,y)
-      ctx.fillStyle = "rgba(0,0,255,0.3)";
-      ctx.fillRect(
-        x * scaleX,
-        y * scaleY,
-        6,6)
+const useStyles = makeStyles((theme) => ({
+    inputView:{
+        maxWidth:512,
+        maxHeight:512,
     }
-  }
-  drawSkeleton = (prediction:Pose, width:number, height:number) => {
-    const adjacentKeyPoints = getAdjacentKeyPoints(prediction.keypoints, 0.0)
-    // const scaleX = width/this.config.processWidth
-    // const scaleY = height/this.config.processHeight
-    const scaleX = 1
-    const scaleY = 1
+}));
 
-    const ctx = this.resultCanvasRef.current!.getContext("2d")!
-    adjacentKeyPoints.forEach(keypoints => {
-      ctx.beginPath();
-      ctx.moveTo(keypoints[0].position.x * scaleX, keypoints[0].position.y * scaleY);
-      ctx.lineTo(keypoints[1].position.x * scaleX, keypoints[1].position.y * scaleY);
-      ctx.lineWidth = 6;
-      ctx.strokeStyle = "rgba(255,0,0,0.3)";
-      ctx.stroke();
-    })
-  }
-  
-  handleResult =(prediction:Pose[])=>{
-    this.resultCanvasRef.current!.getContext("2d")!.drawImage(this.originalCanvas.current!, 0, 0, this.originalCanvas.current!.width, this.originalCanvas.current!.height)
-    
-    prediction.forEach((x:Pose)=>{
-      this.drawPoints(x, this.imageElementRef.current!.width, this.imageElementRef.current!.height)
-      this.drawSkeleton(x, this.imageElementRef.current!.width, this.imageElementRef.current!.height)
-    })
-  }
+const OUT_WIDTH  = 512
+const OUT_HEIGHT = 512
+
+const models: { [name: string]: 'ResNet50' | 'MobileNetV1' } = {
+    "MobileNetV1":"MobileNetV1",
+    "ResNet50":"ResNet50",
+}
+const functions: { [name: string]: PoseNetFunctionType } = {
+    "SinglePerson":PoseNetFunctionType.SinglePerson,
+    "MultiPerson":PoseNetFunctionType.MultiPerson,
+}
+const outputStrides: { [name: string]: 8 | 16 | 32 } = {
+    "8":  8,
+    "16": 16,
+    "32": 32,
+}
+const multipliers: { [name: string]: 1 | 0.75 | 0.5 } = {
+    "0.5"  : 0.5,
+    "0.75" : 0.75,
+    "1.0"  : 1.0,
+}
+
+const quantBytes: { [name: string]: 1 | 2 | 4 } = {
+    "1": 1,
+    "2": 2,
+    "4": 4,
 }
 
 
+
+interface WorkerProps {
+    manager: PoseNetWorkerManager
+    config : PoseNetConfig
+    params : PoseNetOperatipnParams
+    count  : number
+}
+
+interface InputMedia{
+    mediaType : VideoInputType
+    media     : MediaStream|string
+}
+
+
+const App = () => {
+    const NUM_KEYPOINTS = 468;
+
+    const classes = useStyles();
+    const { videoInputList } = useVideoInputList()
+    const [ workerProps, setWorkerProps] = useState<WorkerProps>()
+
+    const [ modelKey, setModelKey] = useState(Object.keys(models)[0])
+    const [ functionKey, setFunctionKey ]                     = useState(Object.keys(functions)[0])
+    const [ outputStrideKey, setOutputStrideKey]              = useState(Object.keys(outputStrides)[1])
+    const [ multiplierKey, setMultiplierKey]                  = useState(Object.keys(multipliers)[1])
+    const [ quantByteKey, setQuantByteKey]                    = useState(Object.keys(quantBytes)[1])
+    const [ internalWidth, setInternalWidth]                  = useState(257)
+    const [ internalHeight, setInternalHeight]                = useState(257)
+
+    const [ onLocal, setOnLocal]                              = useState(true)
+    const [ useWasm, setUseWasm]                              = useState(false)
+    const [ flip, setFlip]                                    = useState(false)
+    const [ maxDetection, setMaxDetection]                    = useState(10)
+    const [ socreThreshold, setScoreThreshold]                = useState(0.3)
+    const [ nmsRadius, setNmsRadius]                          = useState(50)
+
+    // const [ processWidth, setProcessWidth]                    = useState(300)
+    // const [ processHeight, setProcessHeight]                  = useState(300)
+    const [ strict, setStrict]                                = useState(false)
+
+    const [inputMedia, setInputMedia] = useState<InputMedia>({mediaType:"IMAGE", media:"yuka_kawamura.jpg"})
+    const inputChange = (mediaType: VideoInputType, input:MediaStream|string) =>{
+        setInputMedia({mediaType:mediaType, media:input})
+    }
+
+    ///////////////////////////
+    /// プロパティ設定      ///
+    ///////////////////////////
+    //// モデル切り替え
+    useEffect(()=>{
+        const init = async () =>{
+            const m = workerProps? workerProps.manager : new PoseNetWorkerManager()
+            const count = workerProps? workerProps.count + 1: 0
+            const c = generatePoseNetDefaultConfig()
+            c.processOnLocal = onLocal
+            c.useTFWasmBackend = useWasm
+            c.model.architecture = models[modelKey]
+            c.model.multiplier = multipliers[multiplierKey]
+            c.model.outputStride = outputStrides[outputStrideKey]
+            c.model.quantBytes = quantBytes[quantByteKey]
+            c.model.inputResolution = {width:internalWidth, height:internalHeight}
+            await m.init(c)
+    
+            const p = generateDefaultPoseNetParams()
+            p.type = functions[functionKey]
+            p.singlePersonParams.flipHorizontal = flip
+            p.multiPersonParams.flipHorizontal = flip
+            p.multiPersonParams.maxDetections = maxDetection
+            p.multiPersonParams.nmsRadius = nmsRadius
+            p.multiPersonParams.scoreThreshold = socreThreshold
+
+            const newProps = {manager:m, config:c, params:p, count:count}
+            setWorkerProps(newProps)
+        }
+        init()
+    }, [onLocal, useWasm, modelKey, multiplierKey, outputStrideKey, quantByteKey, internalWidth, internalHeight])
+
+    //// パラメータ変更
+    useEffect(()=>{
+        if(!workerProps){
+            return
+        }
+        const p = generateDefaultPoseNetParams()
+        p.type = functions[functionKey]
+        p.singlePersonParams.flipHorizontal = flip
+        p.multiPersonParams.flipHorizontal = flip
+        p.multiPersonParams.maxDetections = maxDetection
+        p.multiPersonParams.nmsRadius = nmsRadius
+        p.multiPersonParams.scoreThreshold = socreThreshold
+
+        // setWorkerProps({...workerProps, params:p})
+        workerProps.params = p
+    }, [flip, maxDetection, functionKey, nmsRadius, socreThreshold])
+
+
+    /// input設定
+    useEffect(()=>{
+        const video = document.getElementById("input_video") as HTMLVideoElement
+        if(inputMedia.mediaType === "IMAGE"){
+            const img = document.getElementById("input_img") as HTMLImageElement
+            img.onloadeddata = () =>{
+                resizeDst(img)
+            }
+            img.src = inputMedia.media as string
+        }else if(inputMedia.mediaType === "MOVIE"){
+            const vid = document.getElementById("input_video") as HTMLVideoElement
+            vid.pause()
+            vid.srcObject=null
+            vid.src = inputMedia.media as string
+            vid.loop = true
+            vid.onloadeddata = () =>{
+                video.play()
+                resizeDst(vid)
+            }
+        }else{
+            const vid = document.getElementById("input_video") as HTMLVideoElement
+            vid.pause()
+            vid.srcObject = inputMedia.media as MediaStream
+            vid.onloadeddata = () =>{
+                video.play()
+                resizeDst(vid)
+            }
+        }
+    },[inputMedia])
+
+    /// resize
+    useEffect(()=>{
+        const input = document.getElementById("input_img") || document.getElementById("input_video")
+        resizeDst(input!)
+    })
+
+    //////////////
+    ///// util  //
+    //////////////
+    const resizeDst = (input:HTMLElement) =>{
+        const cs = getComputedStyle(input)
+        const width = parseInt(cs.getPropertyValue("width"))
+        const height = parseInt(cs.getPropertyValue("height"))
+        const dst = document.getElementById("output") as HTMLCanvasElement
+        const front = document.getElementById("front") as HTMLCanvasElement
+        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
+        
+        [dst, srcCache, front].forEach((c)=>{
+            c.width = width
+            c.height = height
+        })
+    }
+
+    //////////////////
+    //  pipeline    //
+    //////////////////
+
+    useEffect(()=>{
+        console.log("[Pipeline] Start", workerProps)
+        let renderRequestId: number
+        const LOOP_ID = performance.now()
+        GlobalLoopID = LOOP_ID
+        let counter = 0
+        let fps_start = performance.now()
+
+        const render = async () => {
+            console.log("RENDER::::", LOOP_ID, renderRequestId,  workerProps?.params)
+            const start = performance.now()
+
+            const dst = document.getElementById("output") as HTMLCanvasElement
+            if(workerProps){
+                if(dst.width > 0 && dst.height>0){
+
+                    const src = document.getElementById("input_img") as HTMLImageElement || document.getElementById("input_video") as HTMLVideoElement
+                    const background = document.getElementById("background") as HTMLImageElement
+                    // const dst = document.getElementById("output") as HTMLCanvasElement
+                    const dst_div = document.getElementById("output-div") as HTMLDivElement
+                    const dst = document.getElementById("output") as HTMLCanvasElement
+                    const tmp = document.getElementById("tmp") as HTMLCanvasElement
+                    const front = document.getElementById("front") as HTMLCanvasElement
+                    const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
+            
+                    const tmpCtx = tmp.getContext("2d")!
+                    const frontCtx = front.getContext("2d")!
+                    const dstCtx   = dst.getContext("2d")!
+            
+                    srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height)
+            
+                    const inference_start = performance.now()
+                    const prediction = await workerProps.manager.predict(srcCache!, workerProps.params)
+                    const inference_end = performance.now()
+                    const info1 = document.getElementById("info") as HTMLCanvasElement
+                    info1.innerText = `processing time: ${inference_end - inference_start}`
+
+                    if(prediction){
+                        // dstCtx.clearRect(0, 0, dst.width, dst.height)
+                        dstCtx.drawImage(src, 0, 0, dst.width, dst.height)
+
+                        prediction.forEach((x)=>{
+                            // Draw Point
+                            const keypoints = x.keypoints
+                            keypoints.forEach(k =>{
+                                const x = k.position.x
+                                const y = k.position.y
+                                dstCtx.fillStyle = "rgba(0,0,255,0.3)"
+                                dstCtx.fillRect(x, y, 6, 6)
+                            })
+
+
+                            // Draw Skeleton
+                            const adjacentKeyPoints = getAdjacentKeyPoints(x.keypoints, 0.0)
+                            const scaleX = 1
+                            const scaleY = 1  
+                            adjacentKeyPoints.forEach(keypoints => {
+                                dstCtx.beginPath();
+                                dstCtx.moveTo(keypoints[0].position.x * scaleX, keypoints[0].position.y * scaleY);
+                                dstCtx.lineTo(keypoints[1].position.x * scaleX, keypoints[1].position.y * scaleY);
+                                dstCtx.lineWidth = 6;
+                                dstCtx.strokeStyle = "rgba(255,0,0,0.3)";
+                                dstCtx.stroke();
+                              })
+
+                        })
+
+                        
+                        
+                    }
+
+
+        
+                }
+                if(GlobalLoopID === LOOP_ID){
+                    renderRequestId = requestAnimationFrame(render)
+                }
+            }
+            
+            const end = performance.now()
+            const info2 = document.getElementById("info2") as HTMLCanvasElement
+            info2.innerText = `processing time: ${end-start}`
+        }
+        render()
+        return ()=>{
+            console.log("CANCEL", renderRequestId)
+            cancelAnimationFrame(renderRequestId)
+        }
+    }, [workerProps, strict])
+
+
+
+
+    /////////////
+    // render  //
+    /////////////
+    return (
+        <div>
+            <div style={{display:"flex"}}>
+                <div style={{display:"flex"}}>
+                    {inputMedia.mediaType === "IMAGE" ? 
+                        <img  className={classes.inputView} id="input_img"></img>
+                        :
+                        <video  className={classes.inputView} id="input_video"></video>
+                    }
+                    <canvas className={classes.inputView} id="output"></canvas>
+                </div>
+                <div className={classes.inputView}>
+                    <VideoInputSelect  title="input"                 current={""}             onchange={inputChange}     options={videoInputList}/>
+                    <DropDown          title="model"         current={modelKey}       onchange={setModelKey}     options={models} />
+                    <DropDown          title="func"         current={functionKey}       onchange={setFunctionKey}     options={functions} />
+                    <DropDown          title="outputStride"         current={outputStrideKey}       onchange={setOutputStrideKey}     options={outputStrides} />
+                    <DropDown          title="multiplier"         current={multiplierKey}       onchange={setMultiplierKey}     options={multipliers} />
+                    <DropDown          title="quantByte"         current={quantByteKey}       onchange={setQuantByteKey}     options={quantBytes} />
+
+                    <SingleValueSlider title="resolutionW"              current={internalWidth}       onchange={setInternalWidth} min={128} max={512} step={10} />
+                    <SingleValueSlider title="resolutionH"              current={internalHeight}       onchange={setInternalHeight} min={128} max={512} step={10} />
+                    <SingleValueSlider title="maxDetection"    current={maxDetection}     onchange={setMaxDetection} min={1} max={20} step={1} />
+                    <SingleValueSlider title="scoThreshold"    current={socreThreshold}     onchange={setScoreThreshold} min={0} max={1} step={0.1} />
+                    <SingleValueSlider title="nmsRadius"    current={nmsRadius}     onchange={setNmsRadius} min={1} max={50} step={1} />
+
+                    <Toggle            title="onLocal"               current={onLocal}        onchange={setOnLocal} />
+
+
+                    {/* <Toggle            title="Strict"        current={strict}         onchange={setStrict} /> */}
+                </div>
+            </div>
+            <div className={classes.inputView} id="output-div"></div>
+
+            <div style={{display:"flex"}}>
+                <canvas className={classes.inputView} id="tmp" hidden></canvas>
+                <canvas className={classes.inputView} id="front" hidden></canvas>
+                <canvas className={classes.inputView} id="src-cache" hidden></canvas>
+                <img className={classes.inputView} id="background" src="img/north-star-2869817_640.jpg" hidden></img>
+
+            </div>
+            <div >
+                <div id="info"> </div>
+                <div id="info2"> </div>
+            </div>
+        </div>
+        );
+}
 
 export default App;
