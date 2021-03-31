@@ -1,9 +1,7 @@
 import { WorkerResponse, WorkerCommand, FacemeshConfig, FacemeshFunctionType, FacemeshOperatipnParams, } from "./const"
-//import * as facemesh from '@tensorflow-models/facemesh'
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection'
 import { getBrowserType, BrowserType } from "./BrowserUtil";
 import * as tf from '@tensorflow/tfjs';
-// import { Coords3D } from "@tensorflow-models/facemesh/dist/util";
 import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
 import { AnnotatedPrediction } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh";
 import { Coords3D } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh/util";
@@ -11,10 +9,9 @@ import { Coords3D } from "@tensorflow-models/face-landmarks-detection/dist/media
 export { FacemeshConfig, FacemeshFunctionType, FacemeshOperatipnParams } from './const'
 export { BrowserType, getBrowserType } from './BrowserUtil';
 export { IMAGE_PATH } from "./DemoUtil"
-// export { AnnotatedPrediction } from "@tensorflow-models/facemesh"
 export { AnnotatedPrediction } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh";
 export { Coords3D } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh/util";
-// export { Coords3D } from '@tensorflow-models/facemesh/dist/util';
+
 export const generateFacemeshDefaultConfig = (): FacemeshConfig => {
     const defaultConf: FacemeshConfig = {
         browserType: getBrowserType(),
@@ -47,27 +44,20 @@ export const generateDefaultFacemeshParams = () => {
 }
 
 export class LocalFM {
-    //model: facemesh.FaceMesh | null = null
     model: faceLandmarksDetection.FaceLandmarksDetector | null = null
     canvas: HTMLCanvasElement = (() => {
         const newCanvas = document.createElement("canvas")
         newCanvas.style.display = "none"
-        //document!.getRootNode()!.lastChild!.appendChild(newCanvas)
         return newCanvas
     })()
 
-    init = (config: FacemeshConfig) => {
-//        return facemesh.load(config.model).then(res => {
-        return faceLandmarksDetection.load().then(res =>{
-            console.log("facemesh loaded locally", config)
-            this.model = res
-
-            return
-        })
+    init = async (config: FacemeshConfig) => {
+        this.model = await faceLandmarksDetection.load()
+        console.log("facemesh loaded locally", config)
     }
 
 
-    predict = async (targetCanvas: HTMLCanvasElement, config: FacemeshConfig, params: FacemeshOperatipnParams): Promise<any> => {
+    predict = async (targetCanvas: HTMLCanvasElement, config: FacemeshConfig, params: FacemeshOperatipnParams): Promise<AnnotatedPrediction[]> => {
         console.log("current backend[main thread]:",tf.getBackend())
 
         // ImageData作成  
@@ -90,9 +80,6 @@ export class LocalFM {
     }
 }
 
-
-
-
 export class FacemeshWorkerManager {
     private workerFM: Worker | null = null
     private canvas = document.createElement("canvas")
@@ -101,12 +88,13 @@ export class FacemeshWorkerManager {
     private localFM = new LocalFM()
 
     private initializeModel_internal = () => {
-        this.workerFM = new Worker(this.config.workerPath, { type: 'module' })
-        this.workerFM!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
+        const workerFM = new Worker(this.config.workerPath, { type: 'module' })
+        workerFM!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
         const p = new Promise<void>((onResolve, onFail) => {
-            this.workerFM!.onmessage = (event) => {
+            workerFM!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
+                    this.workerFM = workerFM
                     onResolve()
                 } else {
                     console.log("Facemesh Initialization something wrong..")
@@ -119,78 +107,50 @@ export class FacemeshWorkerManager {
 
     // I afraid facemesh model invoke memory leak... 
     // For work around, set the model_reload_interval. If set 0, no reload.
-    init = (config: FacemeshConfig | null) => {
+    init = async (config: FacemeshConfig | null) => {
         if (config != null) {
             this.config = config
         }
         if (this.workerFM) {
             this.workerFM.terminate()
         }
+        this.workerFM = null
 
 
         // run on main thread
         //// wasm on safari is enough fast, so run on main thread is not mandatory
         if (this.config.processOnLocal === true) {
-            return new Promise<void>((onResolve, onFail) => {
-                let p
-                if (this.config.useTFWasmBackend) {
-                    console.log("use wasm backend", this.config.wasmPath)
-                    require('@tensorflow/tfjs-backend-wasm')
-                    setWasmPath(this.config.wasmPath)
-                    p = tf.setBackend("wasm")
-                } else {
-                    console.log("use webgl backend")
-                    require('@tensorflow/tfjs-backend-webgl')
-                    p = tf.setBackend("webgl")
-                }
-                
-                p.then(()=>{
-                    tf.ready().then(() => {
-                        this.localFM!.init(this.config!).then(() => {
-                            onResolve()
-                        })
-                    })
-                })
-            })
+            if (this.config.useTFWasmBackend) {
+                console.log("use wasm backend", this.config.wasmPath)
+                require('@tensorflow/tfjs-backend-wasm')
+                setWasmPath(this.config.wasmPath)
+                await tf.setBackend("wasm")
+            } else {
+                console.log("use webgl backend")
+                require('@tensorflow/tfjs-backend-webgl')
+                await tf.setBackend("webgl")
+            }
+            await tf.ready()
+            await this.localFM!.init(this.config!)
+            return
         }
 
         // run on worker thread
         return this.initializeModel_internal()
     }
 
-    model_reload_interval = 0
-    model_refresh_counter = 0
-    private liveCheck = async () => {
-        if (this.model_refresh_counter > this.config.modelReloadInterval && this.config.modelReloadInterval > 0) {
-            console.log("reload model! this is a work around for memory leak.")
-            this.model_refresh_counter = 0
-            if (this.config.browserType === BrowserType.SAFARI && this.config.processOnLocal === true) {
-                return new Promise<void>((onResolve, onFail) => {
-                    tf.ready().then(() => {
-                        this.localFM.init(this.config!).then(() => {
-                            onResolve()
-                        })
-                    })
-                })
-            } else {
-                this.workerFM?.terminate()
-                return this.initializeModel_internal()
-            }
-        } else {
-            this.model_refresh_counter += 1
-        }
-    }
-
-    predict = (targetCanvas: HTMLCanvasElement, params: FacemeshOperatipnParams) => {
+    predict = async (targetCanvas: HTMLCanvasElement, params: FacemeshOperatipnParams) => {
         if (this.config.processOnLocal === true) {
             //Case.1 Main thread
-            const p = new Promise(async (onResolve: (v: any) => void, onFail) => {
-                await this.liveCheck()
-                const prediction = await this.localFM.predict(targetCanvas, this.config, params)
-                onResolve(prediction)
-            })
-            return p
-        } else if (this.config.browserType == BrowserType.SAFARI) {
+            const prediction = await this.localFM.predict(targetCanvas, this.config, params)
+            return prediction
+        } 
+        
+        if(!this.workerFM){
+            return null
+        }
+
+        if (this.config.browserType == BrowserType.SAFARI) {
             // Case.2 Safari on worker thread
             // safariはwebworkerでcanvas(offscreencanvas)が使えないので、縮小・拡大が面倒。ここでやっておく。
             let data: Uint8ClampedArray
@@ -206,8 +166,6 @@ export class FacemeshWorkerManager {
             const uid = performance.now()
 
             const p = new Promise(async (onResolve: (v: AnnotatedPrediction[]) => void, onFail) => {
-                await this.liveCheck()
-
                 this.workerFM!.postMessage({
                     message: WorkerCommand.PREDICT, uid: uid,
                     config: this.config,
@@ -234,8 +192,6 @@ export class FacemeshWorkerManager {
 
             const uid = performance.now()
             const p = new Promise(async (onResolve: (v: AnnotatedPrediction[]) => void, onFail) => {
-                await this.liveCheck()
-
                 this.workerFM!.postMessage({
                     message: WorkerCommand.PREDICT, uid: uid,
                     config: this.config,

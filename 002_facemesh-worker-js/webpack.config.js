@@ -5,6 +5,8 @@ const manager = {
     entry: './src/facemesh-worker.ts',
     resolve: {
         extensions: [".ts", ".js"],
+        fallback: { "os": false }
+
     },
     module: {
         rules: [
@@ -27,6 +29,7 @@ const worker = {
     entry: './src/facemesh-worker-worker.ts',
     resolve: {
         extensions: [".ts", ".js"],
+        fallback: { "os": false }
     },
     module: {
         rules: [
