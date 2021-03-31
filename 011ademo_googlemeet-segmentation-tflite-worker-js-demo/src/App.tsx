@@ -216,7 +216,12 @@ const App = () => {
                 const inference_end = performance.now()
                 const info = document.getElementById("info") as HTMLCanvasElement
                 info.innerText = `processing time: ${inference_end - inference_start}`
-
+                if(!prediction){
+                    if(GlobalLoopID === LOOP_ID){
+                        renderRequestId = requestAnimationFrame(render)
+                    }
+                    return
+                }
 
                 // 結果からマスク作成
                 const res = new ImageData(workerProps.params.processWidth, workerProps.params.processHeight)
