@@ -85,29 +85,28 @@ export class BisenetV2CelebAMaskWorkerManager{
     private canvas = document.createElement("canvas")
     private config = generateBisenetV2CelebAMaskDefaultConfig()
     private localCT = new LocalCT()
-    init(config: BisenetV2CelebAMaskConfig|null){
+    init = async (config: BisenetV2CelebAMaskConfig|null) => {
         if(config != null){
             this.config = config
         }
         if(this.workerCT){
             this.workerCT.terminate()
         }
+        this.workerCT = null
 
         if(this.config.processOnLocal == true){
-            return new Promise<void>((onResolve, onFail) => {
-                this.localCT.init(this.config!).then(() => {
-                    onResolve()
-                })
-            })
+            await this.localCT.init(this.config!)
+            return
         }
 
         // Bodypix 用ワーカー
-        this.workerCT = new Worker(this.config.workerPath, { type: 'module' })
-        this.workerCT!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
+        const workerCT = new Worker(this.config.workerPath, { type: 'module' })
+        workerCT!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
         const p = new Promise<void>((onResolve, onFail)=>{
-            this.workerCT!.onmessage = (event) => {
+            workerCT!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
+                    this.workerCT = workerCT
                     onResolve()
                 }else{
                     console.log("celeb a mask Initialization something wrong..")
@@ -118,16 +117,17 @@ export class BisenetV2CelebAMaskWorkerManager{
         return p
     }
 
-    predict(targetCanvas:HTMLCanvasElement, params = generateDefaultBisenetV2CelebAMaskParams()):Promise<number[][]>{
+    predict = async (targetCanvas:HTMLCanvasElement, params = generateDefaultBisenetV2CelebAMaskParams())=>{
         if(this.config.processOnLocal == true){
             // Case.1 Process on local thread.
-            const p = new Promise(async(onResolve:(v:number[][])=>void, onFail)=>{
-                const prediction = await this.localCT.predict(targetCanvas, this.config, params)
-                onResolve(prediction)
-            })
-            return p            
-//            return null
-        }else if(this.config.browserType === BrowserType.SAFARI){
+            const prediction = await this.localCT.predict(targetCanvas, this.config, params)
+            return prediction
+        }
+        if(!this.workerCT){
+            return null
+        }
+        
+        if(this.config.browserType === BrowserType.SAFARI){
             // Case.2 Process on worker thread, Safari (Send dataArray) 
             this.canvas.width = params.processWidth
             this.canvas.height = params.processHeight

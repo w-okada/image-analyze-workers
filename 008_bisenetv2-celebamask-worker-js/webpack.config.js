@@ -6,6 +6,8 @@ const manager = {
     entry: './src/bisenetv2-celebamask-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
+        fallback: { "os": false }
+
     },
     module: {
         rules: [
@@ -28,6 +30,7 @@ const worker = {
     entry: './src/bisenetv2-celebamask-worker-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
+        fallback: { "os": false }
     },
     module: {
         rules: [
