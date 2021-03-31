@@ -129,7 +129,6 @@ export class CartoonWorkerManager{
             const ctx = this.canvasOut.getContext("2d")!
             ctx.drawImage(convertedCanvas, 0, 0, this.canvasOut.width, this.canvasOut.height)
             return this.canvasOut
-
         }
 
         if(!this.workerCT){
@@ -170,7 +169,7 @@ export class CartoonWorkerManager{
                         console.log("cartoon Prediction something wrong..")
                         onFail(event)
                     }
-                }        
+                }
             })
             return p
         }else{
