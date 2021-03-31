@@ -5,6 +5,7 @@ const manager = {
     entry: './src/handpose-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
+        fallback: { "os": false }
     },
     module: {
         rules: [
@@ -27,6 +28,7 @@ const worker = {
     entry: './src/handpose-worker-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
+        fallback: { "os": false }
     },
     module: {
         rules: [

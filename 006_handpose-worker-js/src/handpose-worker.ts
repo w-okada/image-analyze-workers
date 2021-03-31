@@ -58,7 +58,7 @@ export class LocalHP {
     }
 
 
-    predict = async (targetCanvas: HTMLCanvasElement, config: HandPoseConfig, params: HandPoseOperatipnParams): Promise<any> => {
+    predict = async (targetCanvas: HTMLCanvasElement, config: HandPoseConfig, params: HandPoseOperatipnParams): Promise<handpose.AnnotatedPrediction[]> => {
         console.log("current backend[main thread]:",tf.getBackend())
         // ImageData作成  
         const processWidth = (params.processWidth <= 0 || params.processHeight <= 0) ? targetCanvas.width : params.processWidth
@@ -83,12 +83,13 @@ export class HandPoseWorkerManager {
     private localHP = new LocalHP()
 
     private initializeModel_internal = () => {
-        this.workerHP = new Worker(this.config.workerPath, { type: 'module' })
-        this.workerHP!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
+        const workerHP = new Worker(this.config.workerPath, { type: 'module' })
+        workerHP!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
         const p = new Promise<void>((onResolve, onFail) => {
-            this.workerHP!.onmessage = (event) => {
+            workerHP!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
+                    this.workerHP = workerHP
                     onResolve()
                 } else {
                     console.log("Handpose Initialization something wrong..")
@@ -98,7 +99,7 @@ export class HandPoseWorkerManager {
         })
         return p
     }
-    init = (config: HandPoseConfig | null) => {
+    init = async (config: HandPoseConfig | null) => {
         if (config != null) {
             this.config = config
         }
@@ -106,31 +107,24 @@ export class HandPoseWorkerManager {
         if (this.workerHP) {
             this.workerHP.terminate()
         }
+        this.workerHP = null
 
         // run on main thread
         //// wasm on safari is not enough fast, but run on main thread is not mandatory
         if (this.config.processOnLocal === true) {
-            return new Promise<void>((onResolve, onFail) => {
-                let p
-                if (this.config.useTFWasmBackend) {
-                    console.log("use wasm backend", this.config.wasmPath)
-                    require('@tensorflow/tfjs-backend-wasm')
-                    setWasmPath(this.config.wasmPath)
-                    p = tf.setBackend("wasm")
-                } else {
-                    console.log("use webgl backend")
-                    require('@tensorflow/tfjs-backend-webgl')
-                    p = tf.setBackend("webgl")
-                }
-                
-                p.then(()=>{
-                    tf.ready().then(() => {
-                        this.localHP!.init(this.config!).then(() => {
-                            onResolve()
-                        })
-                    })
-                })
-            })
+            if (this.config.useTFWasmBackend) {
+                console.log("use wasm backend", this.config.wasmPath)
+                require('@tensorflow/tfjs-backend-wasm')
+                setWasmPath(this.config.wasmPath)
+                await tf.setBackend("wasm")
+            } else {
+                console.log("use webgl backend")
+                require('@tensorflow/tfjs-backend-webgl')
+                await tf.setBackend("webgl")
+            }
+            await tf.ready()
+            await this.localHP!.init(this.config!)
+            return
         }
 
         // run on worker thread
@@ -162,15 +156,16 @@ export class HandPoseWorkerManager {
     }
 
 
-    predict = (targetCanvas: HTMLCanvasElement, params: HandPoseOperatipnParams) => {
+    predict = async(targetCanvas: HTMLCanvasElement, params: HandPoseOperatipnParams) => {
         if (this.config.processOnLocal === true) {
-            const p = new Promise(async (onResolve: (v: any) => void, onFail) => {
-                await this.liveCheck()
-                const prediction = await this.localHP.predict(targetCanvas, this.config, params)
-                onResolve(prediction)
-            })
-            return p
-        } else if (this.config.browserType == BrowserType.SAFARI) {
+            const prediction = await this.localHP.predict(targetCanvas, this.config, params)
+            return prediction
+        }
+        if(!this.workerHP){
+            return null
+        }
+        
+        if (this.config.browserType == BrowserType.SAFARI) {
             // safariはwebworkerでcanvas(offscreencanvas)が使えないので、縮小・拡大が面倒。ここでやっておく。
             let data: Uint8ClampedArray
             if (params.processHeight > 0 && params.processWidth > 0) {
@@ -183,7 +178,7 @@ export class HandPoseWorkerManager {
                 data = ctx.getImageData(0, 0, targetCanvas.width, targetCanvas.height)!.data
             }
             const uid = performance.now()
-            const p = new Promise(async (onResolve: (v: any) => void, onFail) => {
+            const p = new Promise(async (onResolve: (v: handpose.AnnotatedPrediction[]) => void, onFail) => {
                 await this.liveCheck()
 
                 this.workerHP!.postMessage({
@@ -210,7 +205,7 @@ export class HandPoseWorkerManager {
             const imageBitmap = offscreen.transferToImageBitmap()
 
             const uid = performance.now()
-            const p = new Promise(async (onResolve: (v: any) => void, onFail) => {
+            const p = new Promise(async (onResolve: (v: handpose.AnnotatedPrediction[]) => void, onFail) => {
                 await this.liveCheck()
                 this.workerHP!.postMessage({
                     message: WorkerCommand.PREDICT, uid: uid,
