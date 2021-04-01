@@ -1,119 +1,266 @@
+import React, { useEffect, useState } from 'react';
 import './App.css';
-import DemoBase, { ControllerUIProp } from './DemoBase';
-import { generateDefaultMODNetParams, generateMODNetDefaultConfig, MODNetWorkerManager } from '@dannadori/modnet-worker-js'
+import { makeStyles } from '@material-ui/core';
+import { DropDown, FileChooser, SingleValueSlider, Toggle, VideoInputSelect } from './components/components';
+import { VideoInputType } from './const';
+import { useVideoInputList } from './hooks/useVideoInputList';
+import { worker } from 'cluster';
+import { generateDefaultMODNetParams, generateMODNetDefaultConfig, MODNetWorkerManager } from '@dannadori/modnet-worker-js';
+import { MODNetConfig, MODNetOperationParams } from '@dannadori/modnet-worker-js/dist/const';
 
-class App extends DemoBase {
-  manager:MODNetWorkerManager = new MODNetWorkerManager()
-  canvas = document.createElement("canvas")
+let GlobalLoopID: number = 0
 
-  config = (()=>{
-    const c = generateMODNetDefaultConfig()
-    c.useTFWasmBackend = false
-    // c.wasmPath = ""
-    c.modelPath="/modnet/model.json"
-    return c
-  })()
-  params = (()=>{
-    const p = generateDefaultMODNetParams()
-    p.processHeight=512
-    p.processWidth=512
-    return p
-  })()
-
-  getCustomMenu = () => {
-    const menu: ControllerUIProp[] = [
-      {
-        title: "processOnLocal",
-        currentIndexOrValue: 1,
-        values: ["on", "off"],
-        callback: (val: string | number | MediaStream) => { },
-      },
-      {
-        title: "modelPath",
-        currentIndexOrValue: 0,
-        displayLabels:["modnet"],
-        values: ["/modnet/model.json"],
-        callback: (val: string | number | MediaStream) => {
-        },
-      },
-      {
-        title: "useTFWasmBackend",
-        currentIndexOrValue: 1,
-        values: ["on", "off"],
-        callback: (val: string | number | MediaStream) => { },
-      },
-      {
-        title: "reload model",
-        currentIndexOrValue: 0,
-        callback: (val: string | number | MediaStream) => {
-          const processOnLocal = this.controllerRef.current!.getCurrentValue("processOnLocal")
-          this.config.processOnLocal     = (processOnLocal === "on" ? true  : false) as boolean
-          const useTFWasmBackend = this.controllerRef.current!.getCurrentValue("useTFWasmBackend")
-          this.config.useTFWasmBackend   = (useTFWasmBackend === "on" ? true  : false) as boolean
-          this.config.modelPath = this.controllerRef.current!.getCurrentValue("modelPath") as string  
-          this.requireReload()
-        },
-      },
-    ]
-    return menu
-  }
-
-
-
-  drawSegmentation = (prediction: number[][]) => {
-    this.canvas.width = prediction[0].length
-    this.canvas.height = prediction.length
-    const imageData = this.canvas.getContext("2d")!.getImageData(0, 0, this.canvas.width, this.canvas.height)
-    const data = imageData.data
-    for (let rowIndex = 0; rowIndex < this.canvas.height; rowIndex++) {
-      for (let colIndex = 0; colIndex < this.canvas.width; colIndex++) {
-        const seg_offset = ((rowIndex * this.canvas.width) + colIndex)
-        const pix_offset = ((rowIndex * this.canvas.width) + colIndex) * 4
-        if(prediction[rowIndex][colIndex] > 0.000){
-
-          data[pix_offset + 0] = prediction[rowIndex][colIndex] *255
-          data[pix_offset + 1] = prediction[rowIndex][colIndex] *255
-          data[pix_offset + 2] = prediction[rowIndex][colIndex] *255
-          data[pix_offset + 3] = 255 - prediction[rowIndex][colIndex] *255
-          // data[pix_offset + 3] = 255
-
-          // data[pix_offset + 0] = 0
-          // data[pix_offset + 1] = 0
-          // data[pix_offset + 2] = 0
-          // data[pix_offset + 3] = 0
-        }else{
-          data[pix_offset + 0] = 0
-          data[pix_offset + 1] = 0
-          data[pix_offset + 2] = 0
-          data[pix_offset + 3] = 255
-          // data[pix_offset + 0] = 0
-          // data[pix_offset + 1] = 0
-          // data[pix_offset + 2] = 0
-          // data[pix_offset + 3] = 255  
-        }
-      }
-    }
-    const imageDataTransparent = new ImageData(data, this.canvas.width, this.canvas.height);
-    this.canvas.getContext("2d")!.putImageData(imageDataTransparent, 0, 0)
-
-    this.resultCanvasRef.current!.width = this.originalCanvas.current!.width
-    this.resultCanvasRef.current!.height = this.originalCanvas.current!.height
-    const ctx = this.resultCanvasRef.current!.getContext("2d")!
-    ctx.drawImage(this.originalCanvas.current!, 0, 0, this.originalCanvas.current!.width, this.originalCanvas.current!.height)
-    ctx.drawImage(this.canvas, 0, 0, this.resultCanvasRef.current!.width, this.resultCanvasRef.current!.height)
-  }
-
-  count = 0
-  handleResult = (prediction: any) => {
-    console.log(prediction)
-    this.drawSegmentation(prediction)
-  }
-
-  componentDidMount(){
-
-    super.componentDidMount()
-  }
+const models: { [name: string]: string } = {
+    "16": `${process.env.PUBLIC_URL}/tfjs_model_float16/model.json`,
+    "32": `${process.env.PUBLIC_URL}/tfjs_model_float32/model.json`,
 }
 
+const processSize: { [name: string]: number[] } = {
+    "16": [512, 512],
+    "32": [512, 512],
+}
+
+
+const useStyles = makeStyles((theme) => ({
+    inputView: {
+        maxWidth: 512
+    }
+}));
+
+interface WorkerProps {
+    manager: MODNetWorkerManager
+    config: MODNetConfig
+    params: MODNetOperationParams
+    count: number
+}
+interface InputMedia {
+    mediaType: VideoInputType
+    media: MediaStream | string
+}
+
+const App = () => {
+    const classes = useStyles();
+    const { videoInputList } = useVideoInputList()
+    const [workerProps, setWorkerProps] = useState<WorkerProps>()
+
+    const [modelKey, setModelKey] = useState(Object.keys(models)[0])
+    const [onLocal, setOnLocal] = useState(true)
+    const [strict, setStrict] = useState(false)
+
+    const [inputMedia, setInputMedia] = useState<InputMedia>({ mediaType: "IMAGE", media: "yuka_kawamura.jpg" })
+    const inputChange = (mediaType: VideoInputType, input: MediaStream | string) => {
+        setInputMedia({ mediaType: mediaType, media: input })
+    }
+
+    const backgroundChange = (mediaType: VideoInputType, input: string) => {
+        console.log("background:", mediaType, input)
+        if (mediaType === "IMAGE") {
+            const img = document.getElementById("background") as HTMLImageElement
+            img.src = input
+        }
+    }
+    ///////////////////////////
+    /// プロパティ設定      ///
+    ///////////////////////////
+    //// モデル切り替え
+    useEffect(() => {
+        const init = async () => {
+            const m = workerProps ? workerProps.manager : new MODNetWorkerManager()
+            const count = workerProps ? workerProps.count + 1 : 0
+            const c = generateMODNetDefaultConfig()
+            c.processOnLocal = onLocal
+            c.modelPath = models[modelKey]
+            console.log("NEW MODE LOAD1")
+            await m.init(c)
+            console.log("NEW MODE LOAD2")
+
+            const p = generateDefaultMODNetParams()
+            p.processWidth = processSize[modelKey][0]
+            p.processHeight = processSize[modelKey][1]
+            const newProps = { manager: m, config: c, params: p, count: count }
+            setWorkerProps(newProps)
+        }
+        init()
+    }, [modelKey, onLocal])
+
+    //// パラメータ変更
+    useEffect(() => {
+        // if (!workerProps) {
+        //     return
+        // }
+        // const p = generateDefaultMODNetParams()
+        // p.processWidth = processSize[modelKey][0]
+        // p.processHeight = processSize[modelKey][1]
+        // setWorkerProps({ ...workerProps, params: p })
+    }, [])
+
+
+    /// input設定
+    useEffect(() => {
+        const video = document.getElementById("input_video") as HTMLVideoElement
+        if (inputMedia.mediaType === "IMAGE") {
+            const img = document.getElementById("input_img") as HTMLImageElement
+            img.onloadeddata = () => {
+                resizeDst(img)
+            }
+            img.src = inputMedia.media as string
+        } else if (inputMedia.mediaType === "MOVIE") {
+            const vid = document.getElementById("input_video") as HTMLVideoElement
+            vid.pause()
+            vid.srcObject = null
+            vid.src = inputMedia.media as string
+            vid.loop = true
+            vid.onloadeddata = () => {
+                video.play()
+                resizeDst(vid)
+            }
+        } else {
+            const vid = document.getElementById("input_video") as HTMLVideoElement
+            vid.pause()
+            vid.srcObject = inputMedia.media as MediaStream
+            vid.onloadeddata = () => {
+                video.play()
+                resizeDst(vid)
+            }
+        }
+    }, [inputMedia])
+
+    /// resize
+    useEffect(() => {
+        const input = document.getElementById("input_img") || document.getElementById("input_video")
+        resizeDst(input!)
+    })
+
+    //////////////
+    ///// util  //
+    //////////////
+    const resizeDst = (input: HTMLElement) => {
+        const cs = getComputedStyle(input)
+        const width = parseInt(cs.getPropertyValue("width"))
+        const height = parseInt(cs.getPropertyValue("height"))
+        const dst = document.getElementById("output") as HTMLCanvasElement
+        const tmp = document.getElementById("tmp") as HTMLCanvasElement
+        const front = document.getElementById("front") as HTMLCanvasElement
+        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
+
+        [dst, tmp, front, srcCache].forEach((c) => {
+            c.width = width
+            c.height = height
+        })
+    }
+
+    //////////////////
+    //  pipeline    //
+    //////////////////
+    useEffect(() => {
+        console.log("[Pipeline] Start", workerProps)
+        let renderRequestId: number
+        const LOOP_ID = performance.now()
+        GlobalLoopID = LOOP_ID
+        let counter = 0
+        let fps_start = performance.now()
+
+        const render = async () => {
+            // console.log("RENDER::::", LOOP_ID,  workerProps?.params)
+            const start = performance.now()
+
+            if (workerProps) {
+                const src = document.getElementById("input_img") as HTMLImageElement || document.getElementById("input_video") as HTMLVideoElement
+                const background = document.getElementById("background") as HTMLImageElement
+                const dst = document.getElementById("output") as HTMLCanvasElement
+                const tmp = document.getElementById("tmp") as HTMLCanvasElement
+                const front = document.getElementById("front") as HTMLCanvasElement
+                const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
+
+                let prediction
+                const inference_start = performance.now()
+                srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height)
+                prediction = await workerProps.manager.predict(srcCache!, workerProps.params)
+                const inference_end = performance.now()
+                const info1 = document.getElementById("info") as HTMLCanvasElement
+                info1.innerText = `processing time: ${inference_end - inference_start}`
+
+                // 結果からマスク作成
+                const res = new ImageData(workerProps.params.processWidth, workerProps.params.processHeight)
+                try {
+                    for (let i = 0; i < workerProps.params.processHeight; i++) {
+                        for (let j = 0; j < workerProps.params.processWidth; j++) {
+                            const offset = i * workerProps.params.processWidth + j
+                            res.data[offset * 4 + 0] = 0
+                            res.data[offset * 4 + 1] = 0
+                            res.data[offset * 4 + 2] = 0
+                            res.data[offset * 4 + 3] = prediction![i][j] * 255
+                        }
+                    }
+                } catch {
+
+                }
+                tmp.width = workerProps.params.processWidth
+                tmp.height = workerProps.params.processHeight
+                tmp.getContext("2d")!.putImageData(res, 0, 0)
+
+                dst.getContext("2d")!.clearRect(0, 0, dst.width, dst.height)
+                dst.getContext("2d")!.drawImage(background, 0, 0, dst.width, dst.height)
+
+                front.getContext("2d")!.drawImage(tmp, 0, 0, front.width, front.height)
+                front.getContext("2d")!.globalCompositeOperation = "source-atop";
+                front.getContext("2d")!.drawImage(srcCache, 0, 0, front.width, front.height)
+                front.getContext("2d")!.globalCompositeOperation = "source-over";
+                dst.getContext("2d")!.drawImage(front, 0, 0, dst.width, dst.height)
+
+                if (GlobalLoopID === LOOP_ID) {
+                    renderRequestId = requestAnimationFrame(render)
+                }
+            }
+            const end = performance.now()
+            const info2 = document.getElementById("info2") as HTMLCanvasElement
+            info2.innerText = `processing time: ${end - start}`
+        }
+        render()
+        return () => {
+            cancelAnimationFrame(renderRequestId)
+        }
+    }, [workerProps, strict])
+
+
+
+
+    /////////////
+    // render  //
+    /////////////
+    return (
+        <div>
+            <div style={{ display: "flex" }}>
+                <div style={{ display: "flex" }}>
+                    {inputMedia.mediaType === "IMAGE" ?
+                        <img className={classes.inputView} id="input_img"></img>
+                        :
+                        <video className={classes.inputView} id="input_video"></video>
+                    }
+                    <canvas className={classes.inputView} id="output"></canvas>
+                </div>
+                <div>
+                    <VideoInputSelect title="input" current={""} onchange={inputChange} options={videoInputList} />
+                    <DropDown title="model" current={modelKey} onchange={setModelKey} options={models} />
+                    <Toggle title="onLocal" current={onLocal} onchange={setOnLocal} />
+                    <Toggle title="Strict" current={strict} onchange={setStrict} />
+                    <FileChooser title="background" onchange={backgroundChange} />
+                </div>
+            </div>
+
+            <div style={{ display: "flex" }}>
+                <canvas className={classes.inputView} id="tmp" hidden></canvas>
+                <canvas className={classes.inputView} id="front" hidden></canvas>
+                <canvas className={classes.inputView} id="src-cache" hidden></canvas>
+                <img className={classes.inputView} id="background" src="img/north-star-2869817_640.jpg" hidden></img>
+
+            </div>
+            <div >
+                <div id="info"> </div>
+                <div id="info2"> </div>
+            </div>
+        </div>
+    );
+}
 
 export default App;
