@@ -180,7 +180,7 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t08_bisenetv2-celeba
 
 
 ## MODNet
-![image](https://user-images.githubusercontent.com/48346627/113264082-84fd9000-930d-11eb-93a7-98dbe57510fd.png)
+![image](https://user-images.githubusercontent.com/48346627/113265897-9c3d7d00-930f-11eb-95ca-98529cccb7a6.png)
 
 ### installation and usage 
 [See here](/010_modnet-worker-js)
