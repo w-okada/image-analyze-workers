@@ -100,18 +100,6 @@ export class FacemeshRenderer{
         this.matPrj[0] =  2.0 / w; // 拡大縮小
         this.matPrj[5] = -2.0 / h; // 拡大縮小
 
-
-        
-//         const dummyCanvas = document.createElement("canvas")
-//         const texid_dummy = gl.createTexture()!
-//         gl.bindTexture(gl.TEXTURE_2D, texid_dummy)
-//         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-//         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-//         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-//         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-//         gl.texImage2D (gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, dummyCanvas)
-// //        gl.generateMipmap (gl.TEXTURE_2D)
-
         this.vbo_vtx = gl.createBuffer()!
         this.vbo_uv  = gl.createBuffer()!
         this.vbo_idx = gl.createBuffer()!
@@ -146,19 +134,20 @@ export class FacemeshRenderer{
             }
             alpha_array[i] = alpha
         }
-
         gl.bindBuffer (gl.ARRAY_BUFFER, this.vbo_alpha)
         gl.bufferData (gl.ARRAY_BUFFER, new Float32Array(alpha_array), gl.STATIC_DRAW)
-
         // return vbo_alpha;
     }
 
-    /////
+    /**
+     * Create Texture with Mask Image
+     * @param gl WebGL Context
+     * @param maskImage Mask Image
+     * @param maskPrediction Prediction
+     */
     setMask = (gl:WebGLRenderingContext, maskImage:HTMLCanvasElement, maskPrediction:AnnotatedPrediction[]) =>{
-        console.log("setMask", maskPrediction)
+        // Create Texture
         const masktexId = gl.createTexture()!;
-
-
         gl.bindTexture(gl.TEXTURE_2D, masktexId);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -170,7 +159,6 @@ export class FacemeshRenderer{
         this.masktexId = masktexId
         this.masktexImage = maskImage
         this.maskPrediction = maskPrediction
-
     }
 
 
@@ -182,32 +170,13 @@ export class FacemeshRenderer{
         scaleY:number
         ) =>{
             gl.clear (gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-            // let texid = gl.createTexture()!;
-            // gl.bindTexture(gl.TEXTURE_2D, texid);
-            // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            // gl.bindTexture(gl.TEXTURE_2D, texid);
-            // gl.texImage2D (gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, videoFrameCanvas);
-            // //gl.generateMipmap (gl.TEXTURE_2D);    
-
-            this.create_vbo_alpha_array(gl, TRIANGULATION)
-            this.render_2d_scene (gl, videoFramePrediction, 
-                videoFrameCanvas.width, videoFrameCanvas.height, 
-                this.maskPrediction!, scaleX, scaleY);
+            this.create_vbo_alpha_array(gl, TRIANGULATION) // alpha for edge
+            this.render_2d_scene (gl, videoFramePrediction, this.maskPrediction!);
     }
 
 
-    render_2d_scene (gl:WebGLRenderingContext, face_predictions:AnnotatedPrediction[], 
-        tex_w:number, tex_h:number, mask_predictions:AnnotatedPrediction[], scaleX:number, scaleY:number){
+    render_2d_scene (gl:WebGLRenderingContext, face_predictions:AnnotatedPrediction[], mask_predictions:AnnotatedPrediction[]){
             
-            const s_srctex_region = this.calc_size_to_fit (tex_w, tex_h, tex_w, tex_h);
-
-            let tx = s_srctex_region.tex_x;
-            let ty = s_srctex_region.tex_y;
-
             gl.disable (gl.DEPTH_TEST);
 
             let mask_color = [this.mask_color_brightness, this.mask_color_brightness, this.mask_color_brightness, this.mask_color_alpha];
@@ -224,8 +193,8 @@ export class FacemeshRenderer{
                     let face_uv  = new Array(keypoints.length * 2);
                     for (let i = 0; i < keypoints.length; i++){
                         let p = keypoints[i];
-                        face_vtx[3 * i + 0] = p[0] * scaleX + tx;
-                        face_vtx[3 * i + 1] = p[1] * scaleY + ty;
+                        face_vtx[3 * i + 0] = p[0];
+                        face_vtx[3 * i + 1] = p[1];
                         face_vtx[3 * i + 2] = p[2];
 
                         let q = mask_keypoints[i];
@@ -238,46 +207,6 @@ export class FacemeshRenderer{
                 }
             }
     }
-
-
-
-    calc_size_to_fit = (src_w:number, src_h:number, win_w:number, win_h:number) => {
-        let win_aspect = win_w / win_h;
-        let tex_aspect = src_w / src_h;
-        let scale;
-        let scaled_w, scaled_h;
-        let offset_x, offset_y;
-    
-        if (win_aspect > tex_aspect){
-            scale = win_h / src_h;
-            scaled_w = scale * src_w;
-            scaled_h = scale * src_h;
-            offset_x = (win_w - scaled_w) * 0.5;
-            offset_y = 0;
-        }else{
-            scale = win_w / src_w;
-            scaled_w = scale * src_w;
-            scaled_h = scale * src_h;
-            offset_x = 0;
-            offset_y = (win_h - scaled_h) * 0.5;
-        }
-    
-        let region = {
-            width  : win_w,     /* full rect width  with margin */
-            height : win_h,     /* full rect height with margin */
-            tex_x  : offset_x,  /* start position of valid texture */
-            tex_y  : offset_y,  /* start position of valid texture */
-            tex_w  : scaled_w,  /* width  of valid texture */
-            tex_h  : scaled_h,  /* height of valid texture */
-            scale  : scale,
-        }
-        return region;
-    }
-
-
-
-
-
 
     /////
     draw_facemesh_tri_tex = (gl:WebGLRenderingContext, texid:any, vtx:any[], uv:any[], color:number[])=> {
