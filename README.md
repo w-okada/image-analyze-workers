@@ -53,13 +53,16 @@ Note. some module is not provided as webworker for safari because of it's restri
   - [White-Box-Cartoon(TFLite wasm)](#white-box-cartoontflite-wasm)
     - [demo](#demo-12)
     - [License](#license-1)
+- [Libs](#libs)
+  - [FaceSwap](#faceswap)
+    - [demo](#demo-13)
 - [Experiments](#experiments)
   - [Exp.1 Multi-version based tfjs model](#exp1-multi-version-based-tfjs-model)
-    - [demo](#demo-13)
+    - [demo](#demo-14)
     - [src](#src)
     - [Citation](#citation-1)
   - [Exp.2 Performance improvement](#exp2-performance-improvement)
-    - [demo](#demo-14)
+    - [demo](#demo-15)
     - [src](#src-1)
     - [Citation](#citation-2)
 - [Reference](#reference-1)
@@ -228,6 +231,11 @@ Copyright (C) Xinrui Wang All rights reserved. Licensed under the CC BY-NC-SA 4.
 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 Commercial application is prohibited, please remain this license if you clone this repo
 ```
+# Libs
+## FaceSwap
+Faceswap by using facemesh worker
+### demo
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/lib001_faceswap/index.html
 
 # Experiments
 ## Exp.1 Multi-version based tfjs model
