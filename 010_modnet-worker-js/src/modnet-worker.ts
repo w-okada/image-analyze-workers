@@ -62,19 +62,18 @@ export class LocalWorker{
         this.canvas.height = params.processHeight
         const ctx = this.canvas.getContext("2d")!
         ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height)
-        let bm:number[][][]
+        let bm:number[][]
         tf.tidy(()=>{
             let tensor = tf.browser.fromPixels(this.canvas)
             tensor = tensor.expandDims(0)
             tensor = tf.cast(tensor, 'float32')
             tensor = tensor.div(tf.max(tensor))
             tensor = tensor.sub(0.485).div(0.229)
-            let prediction = this.model!.predict(tensor) as tf.Tensor
-            prediction = prediction.onesLike().sub(prediction)
-            prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()))
-            bm = prediction.arraySync() as number[][][]
+            let prediction = this.model!.predict(tensor) as tf.Tensor[]
+            bm = prediction[2].reshape([512,512]).arraySync() as number[][]
+
         })
-        return bm![0]
+        return bm!
     }
 }
 
@@ -86,29 +85,29 @@ export class MODNetWorkerManager{
     private canvas = document.createElement("canvas")
     private config = generateMODNetDefaultConfig()
     private localWorker = new LocalWorker()
-    init(config: MODNetConfig|null){
+    init = async (config: MODNetConfig|null) =>{
         if(config != null){
             this.config = config
         }
         if(this.workerMN){
             this.workerMN.terminate()
         }
+        this.workerMN = null
 
         if(this.config.processOnLocal == true){
-            return new Promise<void>((onResolve, onFail) => {
-                this.localWorker.init(this.config!).then(() => {
-                    onResolve()
-                })
-            })
+            await this.localWorker.init(this.config!)
+            return
         }
 
         // Bodypix 用ワーカー
-        this.workerMN = new Worker(this.config.workerPath, { type: 'module' })
-        this.workerMN!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
+        const workerMN = new Worker(this.config.workerPath, { type: 'module' })
+        // this.workerMN = new Worker("../dist/modnet-worker-worker.js", { type: 'module' })
+        workerMN!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
         const p = new Promise<void>((onResolve, onFail)=>{
-            this.workerMN!.onmessage = (event) => {
+            workerMN!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
+                    this.workerMN = workerMN
                     onResolve()
                 }else{
                     console.log("celeb a mask Initialization something wrong..")
@@ -119,16 +118,16 @@ export class MODNetWorkerManager{
         return p
     }
 
-    predict(targetCanvas:HTMLCanvasElement, params = generateDefaultMODNetParams()):Promise<number[][]>{
+    predict = async (targetCanvas:HTMLCanvasElement, params = generateDefaultMODNetParams()) => {
         if(this.config.processOnLocal == true){
-            // Case.1 Process on local thread.
-            const p = new Promise(async(onResolve:(v:number[][])=>void, onFail)=>{
-                const prediction = await this.localWorker.predict(targetCanvas, this.config, params)
-                onResolve(prediction)
-            })
-            return p            
-//            return null
-        }else if(this.config.browserType === BrowserType.SAFARI){
+            const prediction = await this.localWorker.predict(targetCanvas, this.config, params)
+            return prediction
+        }
+        if(!this.workerMN){
+            return null
+        }
+
+        else if(this.config.browserType === BrowserType.SAFARI){
             // Case.2 Process on worker thread, Safari (Send dataArray) 
             this.canvas.width = params.processWidth
             this.canvas.height = params.processHeight

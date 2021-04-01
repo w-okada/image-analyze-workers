@@ -27,54 +27,35 @@ const predict = async (image:ImageBitmap, config: MODNetConfig, params: MODNetOp
     ctx.drawImage(image, 0, 0, off.width, off.height)
     const imageData = ctx.getImageData(0, 0, off.width, off.height)
 
-    let bm:number[][][]|null = null
-    tf.tidy(()=>{
-        let tensor = tf.browser.fromPixels(imageData)
-
-        tensor = tensor.expandDims(0)
-        tensor = tf.cast(tensor, 'float32')
-        tensor = tensor.div(tf.max(tensor).div(2))
-        tensor = tensor.sub(1.0)
-        // tensor = tensor.div(tf.max(tensor))
-        // tensor = tensor.sub(0.485).div(0.229)
-
-        let prediction = model!.predict(tensor) as tf.Tensor[]
-        console.log(prediction)
-        // prediction = prediction.onesLike().sub(prediction)
-        // prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()))
-        bm = prediction[2].arraySync() as number[][][]
-        let bm0 = prediction[0].arraySync() as number[][]
-        let bm1 = prediction[1].arraySync() as number[][]
-        let bm2 = prediction[2].arraySync() as number[][]
-        console.log("------------------")
-        console.log(bm0)
-        console.log(bm1)
-        console.log(bm2)
-        console.log("------------------")
-
-    })
-    console.log("aaaa",bm)
-    return bm![0]
-}
-
-// Case.2 Use ImageBitmap (for Safari or special intent)
-const predictWithData = async (data: Uint8ClampedArray , config: MODNetConfig, params: MODNetOperationParams) => {
-    const imageData = new ImageData(data, params.processWidth, params.processHeight)
-
-    let bm:number[][][]|null = null
+    let bm:number[][]|null = null
     tf.tidy(()=>{
         let tensor = tf.browser.fromPixels(imageData)
         tensor = tensor.expandDims(0)
         tensor = tf.cast(tensor, 'float32')
         tensor = tensor.div(tf.max(tensor))
         tensor = tensor.sub(0.485).div(0.229)
-        let prediction = model!.predict(tensor) as tf.Tensor
-        prediction = prediction.onesLike().sub(prediction)
-        prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()))
-        
-        bm = prediction.arraySync() as number[][][]
+        let prediction = model!.predict(tensor) as tf.Tensor[]
+        bm = prediction[2].reshape([512,512]).arraySync() as number[][]
+
     })
-    return bm![0]
+    return bm!
+}
+
+// Case.2 Use ImageBitmap (for Safari or special intent)
+const predictWithData = async (data: Uint8ClampedArray , config: MODNetConfig, params: MODNetOperationParams) => {
+    const imageData = new ImageData(data, params.processWidth, params.processHeight)
+
+    let bm:number[][]|null = null
+    tf.tidy(()=>{
+        let tensor = tf.browser.fromPixels(imageData)
+        tensor = tensor.expandDims(0)
+        tensor = tf.cast(tensor, 'float32')
+        tensor = tensor.div(tf.max(tensor))
+        tensor = tensor.sub(0.485).div(0.229)
+        let prediction = model!.predict(tensor) as tf.Tensor[]
+        bm = prediction[2].reshape([512,512]).arraySync() as number[][]        
+    })
+    return bm!
 }
 
 onmessage = async (event) => {
