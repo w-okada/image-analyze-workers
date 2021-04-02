@@ -1,8 +1,8 @@
 import { generate_shader } from "./ShaderUtil";
-import { TRIANGULATION } from "./traiangulation";
 
 import { Coords3D, AnnotatedPrediction } from '@dannadori/facemesh-worker-js'
 import { matrix_identity, matrix_mult } from "./MatrixUtil";
+import { TRIANGULATION } from "./triangulation";
 
 export class FacemeshRenderer{
 
