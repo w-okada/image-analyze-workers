@@ -98,7 +98,7 @@ export const SingleValueSlider:FC<SingleValueSliderProps> = ({title, current, mi
         console.log("[ingleValueSlider] render!", title)
         return(
             <div className={classes.formControl} >
-                <Typography gutterBottom> {`${title}[${current.toFixed(1)}]`} </Typography>
+                <Typography gutterBottom> {`${title}`} </Typography>
                 <div className={classes.horizontalSpacer}/>
                 <Slider
                     valueLabelDisplay="auto"
@@ -108,7 +108,9 @@ export const SingleValueSlider:FC<SingleValueSliderProps> = ({title, current, mi
                     value={current}
                     onChange={(e:any, newVal:number|number[])=>{onchange(newVal as number)}}
                 />
+                <Typography gutterBottom> {`[${current.toFixed(1)}]`} </Typography>
             </div>
+                
         )
 
     }, [current])

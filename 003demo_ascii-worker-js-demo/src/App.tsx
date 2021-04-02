@@ -38,8 +38,8 @@ const App = () => {
     const { videoInputList } = useVideoInputList()
     const [ workerProps, setWorkerProps] = useState<WorkerProps>()
 
-    const [ fontSize, setFontSize] = useState(6)
-    const [ ascii, setAscii] = useState(true)
+    const [ fontSize, setFontSize]                            = useState(6)
+    const [ ascii, setAscii]                                  = useState(false)
     const [ onLocal, setOnLocal]                              = useState(true)
     const [ useWasm, setUseWasm]                              = useState(false)
     const [ processWidth, setProcessWidth]                    = useState(300)
@@ -184,15 +184,15 @@ const App = () => {
                     info1.innerText = `processing time: ${inference_end - inference_start}`
 
                     if(prediction){
-                        tmpCtx.font = fontSize + "px monospace"
+                        tmpCtx.font = workerProps.params.fontSize + "px monospace"
                         tmpCtx.textBaseline = "top"
-                        tmp.width = tmpCtx.measureText(prediction[0]+" ").width
-                        tmp.height = prediction.length * fontSize
+                        tmp.width = tmpCtx.measureText(prediction[0]).width
+                        tmp.height = prediction.length * workerProps.params.fontSize 
                         tmpCtx.clearRect(0, 0, dst.width, dst.height)
                         tmpCtx.fillStyle = "rgb(0, 0, 0)";
-                        tmpCtx.font = fontSize + "px monospace"
+                        tmpCtx.font = workerProps.params.fontSize + "px monospace"
                         for(let n=0; n<prediction.length; n++){
-                            tmpCtx.fillText(prediction[n], 0, n * fontSize)
+                            tmpCtx.fillText(prediction[n], 0, n * workerProps.params.fontSize )
                         }
                         dstCtx.clearRect(0, 0, dst.width, dst.height)
                         dstCtx.drawImage(tmp, 0, 0, dst.width, dst.height)
