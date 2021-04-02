@@ -59,7 +59,7 @@ const App = () => {
     const [ workerProps, setWorkerProps] = useState<WorkerProps>()
 
     const [ modelKey, setModelKey] = useState(Object.keys(models)[0])
-    const [ processSizeKey, setProcessSizeKey] = useState(Object.keys(processSizes)[0])
+    const [ processSizeKey, setProcessSizeKey] = useState(Object.keys(processSizes)[3])
 
     const [ onLocal, setOnLocal]                              = useState(true)
     const [ useWasm, setUseWasm]                              = useState(false)
