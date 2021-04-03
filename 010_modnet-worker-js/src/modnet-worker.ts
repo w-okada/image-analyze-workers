@@ -69,8 +69,8 @@ export class LocalWorker{
             tensor = tf.cast(tensor, 'float32')
             tensor = tensor.div(tf.max(tensor))
             tensor = tensor.sub(0.485).div(0.229)
-            let prediction = this.model!.predict(tensor) as tf.Tensor[]
-            bm = prediction[2].reshape([512,512]).arraySync() as number[][]
+            let prediction = this.model!.predict(tensor) as tf.Tensor
+            bm = prediction.reshape([params.processWidth, params.processHeight]).arraySync() as number[][]
 
         })
         return bm!
