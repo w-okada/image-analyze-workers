@@ -11,13 +11,27 @@ import { MODNetConfig, MODNetOperationParams } from '@dannadori/modnet-worker-js
 let GlobalLoopID: number = 0
 
 const models: { [name: string]: string } = {
-    "16": `${process.env.PUBLIC_URL}/tfjs_model_float16/model.json`,
-    "32": `${process.env.PUBLIC_URL}/tfjs_model_float32/model.json`,
+    "webcam_256_16": `${process.env.PUBLIC_URL}/webcam_256_16/model.json`,
+    "webcam_256_32": `${process.env.PUBLIC_URL}/webcam_256_32/model.json`,
+    "webcam_512_16": `${process.env.PUBLIC_URL}/webcam_512_16/model.json`,
+    "webcam_512_32": `${process.env.PUBLIC_URL}/webcam_512_32/model.json`,
+
+    "portrait_256_16": `${process.env.PUBLIC_URL}/portrait_256_16/model.json`,
+    "portrait_256_32": `${process.env.PUBLIC_URL}/portrait_256_32/model.json`,
+    "portrait_512_16": `${process.env.PUBLIC_URL}/portrait_512_16/model.json`,
+    "portrait_512_32": `${process.env.PUBLIC_URL}/portrait_512_32/model.json`,
 }
 
 const processSize: { [name: string]: number[] } = {
-    "16": [512, 512],
-    "32": [512, 512],
+    "webcam_256_16": [256, 256],
+    "webcam_256_32": [256, 256],
+    "webcam_512_16": [512, 512],
+    "webcam_512_32": [512, 512],
+
+    "portrait_256_16": [256, 256],
+    "portrait_256_32": [256, 256],
+    "portrait_512_16": [512, 512],
+    "portrait_512_32": [512, 512],
 }
 
 
@@ -44,7 +58,7 @@ const App = () => {
     const [workerProps, setWorkerProps] = useState<WorkerProps>()
 
     const [modelKey, setModelKey] = useState(Object.keys(models)[0])
-    const [onLocal, setOnLocal] = useState(true)
+    const [onLocal, setOnLocal] = useState(false)
     const [strict, setStrict] = useState(false)
 
     const [inputMedia, setInputMedia] = useState<InputMedia>({ mediaType: "IMAGE", media: "yuka_kawamura.jpg" })
@@ -197,11 +211,13 @@ const App = () => {
                 }
                 tmp.width = workerProps.params.processWidth
                 tmp.height = workerProps.params.processHeight
+                tmp.getContext("2d")!.clearRect(0, 0, tmp.width, tmp.height)
                 tmp.getContext("2d")!.putImageData(res, 0, 0)
 
                 dst.getContext("2d")!.clearRect(0, 0, dst.width, dst.height)
                 dst.getContext("2d")!.drawImage(background, 0, 0, dst.width, dst.height)
 
+                front.getContext("2d")!.clearRect(0, 0, front.width, front.height)
                 front.getContext("2d")!.drawImage(tmp, 0, 0, front.width, front.height)
                 front.getContext("2d")!.globalCompositeOperation = "source-atop";
                 front.getContext("2d")!.drawImage(srcCache, 0, 0, front.width, front.height)
