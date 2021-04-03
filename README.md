@@ -41,6 +41,7 @@ Note. some module is not provided as webworker for safari because of it's restri
   - [MODNet](#modnet)
     - [installation and usage](#installation-and-usage-8)
     - [demo](#demo-8)
+    - [Licnece](#licnece)
   - [U^2-Net Portrait Drawing](#u2-net-portrait-drawing)
     - [installation and usage](#installation-and-usage-9)
     - [demo](#demo-9)
@@ -190,6 +191,11 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t08_bisenetv2-celeba
 Note: Very heavy processing to open.
 
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t10_modnet/index.html
+
+### Licnece
+This project (code, pre-trained models, demos, etc.) is released under the Creative Commons Attribution NonCommercial ShareAlike 4.0 license.
+
+NOTE: The license will be changed to allow commercial use after this work is accepted by a conference or a journal.
 
 
 ## U^2-Net Portrait Drawing

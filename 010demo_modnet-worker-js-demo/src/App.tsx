@@ -11,11 +11,19 @@ import { MODNetConfig, MODNetOperationParams } from '@dannadori/modnet-worker-js
 let GlobalLoopID: number = 0
 
 const models: { [name: string]: string } = {
+    "webcam_128_16": `${process.env.PUBLIC_URL}/webcam_128_16/model.json`,
+    "webcam_128_32": `${process.env.PUBLIC_URL}/webcam_128_32/model.json`,
+    "webcam_192_16": `${process.env.PUBLIC_URL}/webcam_192_16/model.json`,
+    "webcam_192_32": `${process.env.PUBLIC_URL}/webcam_192_32/model.json`,
     "webcam_256_16": `${process.env.PUBLIC_URL}/webcam_256_16/model.json`,
     "webcam_256_32": `${process.env.PUBLIC_URL}/webcam_256_32/model.json`,
     "webcam_512_16": `${process.env.PUBLIC_URL}/webcam_512_16/model.json`,
     "webcam_512_32": `${process.env.PUBLIC_URL}/webcam_512_32/model.json`,
 
+    "portrait_128_16": `${process.env.PUBLIC_URL}/portrait_128_16/model.json`,
+    "portrait_128_32": `${process.env.PUBLIC_URL}/portrait_128_32/model.json`,
+    "portrait_192_16": `${process.env.PUBLIC_URL}/portrait_192_16/model.json`,
+    "portrait_192_32": `${process.env.PUBLIC_URL}/portrait_192_32/model.json`,
     "portrait_256_16": `${process.env.PUBLIC_URL}/portrait_256_16/model.json`,
     "portrait_256_32": `${process.env.PUBLIC_URL}/portrait_256_32/model.json`,
     "portrait_512_16": `${process.env.PUBLIC_URL}/portrait_512_16/model.json`,
@@ -23,11 +31,19 @@ const models: { [name: string]: string } = {
 }
 
 const processSize: { [name: string]: number[] } = {
+    "webcam_128_16": [128, 128],
+    "webcam_128_32": [128, 128],
+    "webcam_192_16": [192, 192],
+    "webcam_192_32": [192, 192],
     "webcam_256_16": [256, 256],
     "webcam_256_32": [256, 256],
     "webcam_512_16": [512, 512],
     "webcam_512_32": [512, 512],
 
+    "portrait_128_16": [128, 128],
+    "portrait_128_32": [128, 128],
+    "portrait_192_16": [192, 192],
+    "portrait_192_32": [192, 192],
     "portrait_256_16": [256, 256],
     "portrait_256_32": [256, 256],
     "portrait_512_16": [512, 512],
