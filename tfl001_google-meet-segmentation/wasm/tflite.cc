@@ -156,7 +156,8 @@ extern "C"
     int exec(int width, int height){
         int tensorWidth  = interpreter->input_tensor(0)->dims->data[2];
         int tensorHeight = interpreter->input_tensor(0)->dims->data[1];
-        // printf("[WASM] TensorSize (%d, %d)\n", tensorWidth, tensorHeight);
+        int output_ch     = interpreter->output_tensor(0)->dims->data[3];
+        // printf("[WASM] TensorSize (%d, %d, %d)\n", tensorWidth, tensorHeight, output_ch);
         // printf("[WASM] SCALE (%f, %f)\n", scaleW, scaleH);
 
 
@@ -169,7 +170,6 @@ extern "C"
         inputImage32F = inputImage32F / 255.0;
         cv::resize(inputImage32F, resizedInput, resizedInput.size(), 0, 0, interpolation);
 
-        
         // (2) Infer
         CHECK_TFLITE_ERROR(interpreter->Invoke() == kTfLiteOk);
 
@@ -177,18 +177,27 @@ extern "C"
         float *output = interpreter->typed_output_tensor<float>(0);
         unsigned char *segBuffer = &outputSegBuffer[0];
         if(useSoftmax == 1){
-            for(int i=0; i < tensorWidth * tensorHeight ; i++){
-                float background = *output;
-                output++;
-                float person     = *output;
-                output++;
+            if(output_ch ==2) {
+                for(int i=0; i < tensorWidth * tensorHeight ; i++){
+                    float background = *output;
+                    output++;
+                    float person     = *output;
+                    output++;
 
-                float shift = background > person ? background : person;
-                float backgroundExp = std::exp(background - shift);
-                float personExp = std::exp(person - shift);
-                unsigned char val = (255 * personExp) / (backgroundExp + personExp);
-                *segBuffer = val;
-                segBuffer++;
+                    float shift = background > person ? background : person;
+                    float backgroundExp = std::exp(background - shift);
+                    float personExp = std::exp(person - shift);
+                    unsigned char val = (255 * personExp) / (backgroundExp + personExp);
+                    *segBuffer = val;
+                    segBuffer++;
+                }
+            }else{
+                for(int i=0; i < tensorWidth * tensorHeight ; i++){
+                    float person     = *output;
+                    output++;
+                    *segBuffer = person * 255;
+                    segBuffer++;
+                }
             }
         }else{
             for(int i=0; i < tensorWidth * tensorHeight ; i++){

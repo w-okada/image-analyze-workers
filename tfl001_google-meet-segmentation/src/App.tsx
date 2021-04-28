@@ -26,6 +26,10 @@ const models: { [name: string]: string } = {
     "[144x256]_pinto_f16q" : `${process.env.PUBLIC_URL}/models/144x256/model_float16_quant.tflite`,
     "[144x256]_pinto_intq" : `${process.env.PUBLIC_URL}/models/144x256/model_integer_quant.tflite`,
     "[144x256]_pinto_weiq" : `${process.env.PUBLIC_URL}/models/144x256/model_weight_quant.tflite`,
+
+    "[256x256]_original"   : `${process.env.PUBLIC_URL}/models/256x256/selfiesegmentation_mlkit-256x256-2021_01_19-v1215.f16.tflite`,
+
+        
 }
 
 const processSize: { [name: string]: number[] } = {
