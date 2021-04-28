@@ -237,6 +237,8 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11a_googlemeet-segm
 ### demo
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/tfl001_google-meet-segmentation/index.html
 
+Added Selfie Segmentation[modelcard](https://developers.google.com/ml-kit/images/vision/selfie-segmentation/selfie-model-card.pdf)
+
 
 ##  White-Box-Cartoon(TFLite wasm)
 [see here]()
