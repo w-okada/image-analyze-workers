@@ -65,6 +65,10 @@ Once you have obtained the model in a legitimate way, place it in the folder bel
 $ cp meet.tflite public/meet.tflite
 ```
 
+Currently(27th/Apr./2021) MLKit Selfie Segmentation model is published under Apache-2.0. 256x256
+[modelcard](https://developers.google.com/ml-kit/images/vision/selfie-segmentation/selfie-model-card.pdf)
+
+
 ### Add source image to public. 
 In this time, the name is "srcImage.jpg"
 
