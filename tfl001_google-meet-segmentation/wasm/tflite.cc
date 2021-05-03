@@ -231,7 +231,7 @@ extern "C"
 
         // (5) Grayscale input image
         cv::Mat grayImage(height, width, CV_8UC1, grayedInputImageBuffer);
-        cv::cvtColor(inputImage, grayImage, cv::COLOR_RGB2GRAY);
+        cv::cvtColor(inputImage, grayImage, cv::COLOR_RGBA2GRAY);
 
         // (6) padding
         int paddedWidth = width + (kernelSize * 2);
