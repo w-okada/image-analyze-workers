@@ -176,8 +176,8 @@ extern "C"
         // (3) Generate segmentation
         float *output = interpreter->typed_output_tensor<float>(0);
         unsigned char *segBuffer = &outputSegBuffer[0];
-        if(useSoftmax == 1){
-            if(output_ch ==2) {
+        if(output_ch ==2) {
+            if(useSoftmax == 1){
                 cv::Mat outputMat(tensorHeight, tensorWidth, CV_32FC2, output);
                 cv::Mat channels[2]; // 0:background, 1:person
                 cv::split(outputMat, channels);
@@ -193,22 +193,16 @@ extern "C"
                 cv::divide(expPersonShift, sumMat, softmaxMat);
                 softmaxMat.convertTo(segBufferMat, CV_8U, 255, 0);
             }else{
-                cv::Mat outputMat(tensorHeight, tensorWidth, CV_32FC1, output);
-                cv::Mat segBufferMat(tensorHeight, tensorWidth, CV_8UC1, segBuffer);
-                outputMat.convertTo(segBufferMat, CV_8U, 255, 0);
-            }
-        }else{
-            if(output_ch ==2) {
                 cv::Mat outputMat(tensorHeight, tensorWidth, CV_32FC2, output);
                 cv::Mat channels[2];
                 cv::split(outputMat, channels);
                 cv::Mat segBufferMat(tensorHeight, tensorWidth, CV_8UC1, segBuffer);
                 channels[1].convertTo(segBufferMat, CV_8U, 255, 0);
-            }else{
-                cv::Mat outputMat(tensorHeight, tensorWidth, CV_32FC1, output);
-                cv::Mat segBufferMat(tensorHeight, tensorWidth, CV_8UC1, segBuffer);
-                outputMat.convertTo(segBufferMat, CV_8U, 255, 0);
             }
+        }else{
+            cv::Mat outputMat(tensorHeight, tensorWidth, CV_32FC1, output);
+            cv::Mat segBufferMat(tensorHeight, tensorWidth, CV_8UC1, segBuffer);
+            outputMat.convertTo(segBufferMat, CV_8U, 255, 0);
         }
 
 
