@@ -199,13 +199,24 @@ extern "C"
                 cv::Mat outputMat(tensorHeight, tensorWidth, CV_32FC2, output);
                 cv::Mat channels[2];
                 cv::split(outputMat, channels);
+                cv::Mat segBufferForThreshMat(tensorHeight, tensorWidth, CV_8UC1);
+                channels[1].convertTo(segBufferForThreshMat, CV_8U, 255, 0);
                 cv::Mat segBufferMat(tensorHeight, tensorWidth, CV_8UC1, segBuffer);
-                channels[1].convertTo(segBufferMat, CV_8U, 255, 0);
+                unsigned char thresholdValue = static_cast<unsigned char>(255 * thresholdWithoutSoftmax);
+                cv::threshold(segBufferForThreshMat, segBufferMat, thresholdValue, 255, cv::THRESH_BINARY);
             }
         }else{
             cv::Mat outputMat(tensorHeight, tensorWidth, CV_32FC1, output);
-            cv::Mat segBufferMat(tensorHeight, tensorWidth, CV_8UC1, segBuffer);
-            outputMat.convertTo(segBufferMat, CV_8U, 255, 0);
+            if(useSoftmax == 1) {
+                cv::Mat segBufferMat(tensorHeight, tensorWidth, CV_8UC1, segBuffer);
+                outputMat.convertTo(segBufferMat, CV_8U, 255, 0);
+            }else{
+                cv::Mat segBufferForThreshMat(tensorHeight, tensorWidth, CV_8UC1);
+                outputMat.convertTo(segBufferForThreshMat, CV_8U, 255, 0);
+                cv::Mat segBufferMat(tensorHeight, tensorWidth, CV_8UC1, segBuffer);
+                unsigned char thresholdValue = static_cast<unsigned char>(255 * thresholdWithoutSoftmax);
+                cv::threshold(segBufferForThreshMat, segBufferMat, thresholdValue, 255, cv::THRESH_BINARY);
+            }
         }
 
 
