@@ -30,7 +30,7 @@ namespace{
     char modelBuffer[1024 * 1024 * 1];
 
     ///// Buffer for image processing
-    unsigned char inputImageBuffer[3 * MAX_WIDTH * MAX_HEIGHT];                                       // Input image Buffer
+    unsigned char inputImageBuffer[4 * MAX_WIDTH * MAX_HEIGHT];                                       // Input image Buffer
     float         inputImageBuffer32F[3 * MAX_WIDTH * MAX_HEIGHT]; 
     unsigned char grayedInputImageBuffer[1 * MAX_WIDTH * MAX_HEIGHT];                                 // Grayscaled Image Buffer
     unsigned char paddedGrayedInputImageBuffer[1 * MAX_WIDTH_WITH_PADDING * MAX_HEIGHT_WITH_PADDING]; // Padded image Buffer
@@ -163,10 +163,13 @@ extern "C"
 
         // (1) Resize
         float *input = interpreter->typed_input_tensor<float>(0);
-        cv::Mat inputImage(height, width, CV_8UC3, inputImageBuffer);
+        cv::Mat inputImage(height, width, CV_8UC4, inputImageBuffer);
+        cv::Mat inputImageRGB(height, width, CV_8UC3);
+        int fromTo[] = {0,0, 1,1, 2,2};
+        cv::mixChannels(&inputImage, 1, &inputImageRGB, 1, fromTo, 3);
         cv::Mat inputImage32F(height, width, CV_32FC3, inputImageBuffer32F);
         cv::Mat resizedInput(tensorHeight, tensorWidth, CV_32FC3, input);
-        inputImage.convertTo(inputImage32F, CV_32FC3);
+        inputImageRGB.convertTo(inputImage32F, CV_32FC3);
         inputImage32F = inputImage32F / 255.0;
         cv::resize(inputImage32F, resizedInput, resizedInput.size(), 0, 0, interpolation);
 

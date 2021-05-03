@@ -227,11 +227,7 @@ const App = () => {
                 /// データインプット
                 const imageData = dataCtx.getImageData(0, 0, data.width, data.height)                
                 const inputImageBufferOffset = currentTFLite._getInputImageBufferOffset()
-                for (let i = 0; i < data.width * data.height; i++) {
-                    currentTFLite.HEAPU8[inputImageBufferOffset + i * 3 + 0] = imageData.data[i * 4 + 0]
-                    currentTFLite.HEAPU8[inputImageBufferOffset + i * 3 + 1] = imageData.data[i * 4 + 1]
-                    currentTFLite.HEAPU8[inputImageBufferOffset + i * 3 + 2] = imageData.data[i * 4 + 2]
-                }
+                currentTFLite.HEAPU8.set(imageData.data, inputImageBufferOffset);
 
                 /// inferecence
                 const start = performance.now();
