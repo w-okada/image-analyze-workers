@@ -200,12 +200,21 @@ extern "C"
                 }
             }
         }else{
-            for(int i=0; i < tensorWidth * tensorHeight ; i++){
-                output++;
-                float person     = *output;
-                output++;
-                *segBuffer = person > thresholdWithoutSoftmax ? 255 : 0;
-                segBuffer++;
+            if(output_ch ==2) {
+                for(int i=0; i < tensorWidth * tensorHeight ; i++){
+                    output++;
+                    float person     = *output;
+                    output++;
+                    *segBuffer = person > thresholdWithoutSoftmax ? 255 : 0;
+                    segBuffer++;
+                }
+            }else{
+                for(int i=0; i < tensorWidth * tensorHeight ; i++){
+                    float person     = *output;
+                    output++;
+                    *segBuffer = person > thresholdWithoutSoftmax ? 255 : 0;
+                    segBuffer++;
+                }
             }
         }
 
