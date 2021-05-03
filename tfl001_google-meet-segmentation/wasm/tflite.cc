@@ -235,94 +235,19 @@ extern "C"
 
         // (6) padding
         int paddedWidth = width + (kernelSize * 2);
-        if(usePadding == 1){
-            ////// Input Image
-            ///////// イメージの上下部分をパディング
-            for(int x = kernelSize; x < kernelSize + width; x++){ // 列番号を特定
-                //// TOP 部分のパディング
-                for(int y = 0; y < kernelSize; y++){
-                    int distance = kernelSize - y;
-                    int copyFrom = (distance - 1) % height;
-                    paddedGrayedInputImageBuffer[ paddedWidth * y + x] = grayedInputImageBuffer[width * copyFrom + (x-kernelSize)];
-                }
-                //// Image 部分
-                for(int y = kernelSize; y < (kernelSize + height); y++){
-                    paddedGrayedInputImageBuffer[ paddedWidth * y + x] = grayedInputImageBuffer[width * (y-kernelSize) + (x-kernelSize)];
-                }
-                //// Bottom 部分のパディング
-                for(int y = kernelSize + height; y < kernelSize + height + kernelSize; y++){
-                    int distance = y - (kernelSize + height);
-                    int copyFrom = (height - (distance % height)) - 1;
-                    paddedGrayedInputImageBuffer[ paddedWidth * y + x] = grayedInputImageBuffer[width * copyFrom + (x-kernelSize)];
-                }
-            }
-            /////// イメージの左右部分をパディング
-            for (int y = 0; y < kernelSize + height + kernelSize; y++){
-                ///// Left部分のパディング
-                for(int x = 0; x < kernelSize; x++){
-                    int distance = kernelSize - x;
-                    int copyFrom = (distance - 1) % width;
-                    paddedGrayedInputImageBuffer[ paddedWidth * y + x] = grayedInputImageBuffer[width * (y-kernelSize) + copyFrom];
-                }
-                ///// Right部分のパディング
-                for(int x = kernelSize + width; x < kernelSize + width + kernelSize; x++){
-                    int distance = x - (kernelSize + width);
-                    int copyFrom = (distance % width) - 1;
-                    paddedGrayedInputImageBuffer[ paddedWidth * y + x] = grayedInputImageBuffer[width * (y-kernelSize) + copyFrom];
-                }
-            }
+        int paddedHeight = height + (kernelSize * 2);
 
-            ////// Segmentation
-            ///////// イメージの上下部分をパディング
-            for(int x = kernelSize; x < kernelSize + width; x++){ // 列番号を特定
-                //// TOP 部分のパディング
-                for(int y = 0; y < kernelSize; y++){
-                    int distance = kernelSize - y;
-                    int copyFrom = (distance - 1) % height;
-                    paddedResizedSegBuffer[ paddedWidth * y + x] = resizedSegBuffer[width * copyFrom + (x-kernelSize)];
-                }
-                //// Image 部分
-                for(int y = kernelSize; y < (kernelSize + height); y++){
-                    paddedResizedSegBuffer[ paddedWidth * y + x] = resizedSegBuffer[width * (y-kernelSize) + (x-kernelSize)];
-                }
-                //// Bottom 部分のパディング
-                for(int y = kernelSize + height; y < kernelSize + height + kernelSize; y++){
-                    int distance = y - (kernelSize + height);
-                    int copyFrom = (height - (distance % height)) - 1;
-                    paddedResizedSegBuffer[ paddedWidth * y + x] = resizedSegBuffer[width * copyFrom + (x-kernelSize)];
-                }
-            }
-            /////// イメージの左右部分をパディング
-            for (int y = 0; y < kernelSize + height + kernelSize; y++){
-                ///// Left部分のパディング
-                for(int x = 0; x < kernelSize; x++){
-                    int distance = kernelSize - x;
-                    int copyFrom = (distance - 1) % width;
-                    paddedResizedSegBuffer[ paddedWidth * y + x] = resizedSegBuffer[width * (y-kernelSize) + copyFrom];
-                }
-                ///// Right部分のパディング
-                for(int x = kernelSize + width; x < kernelSize + width + kernelSize; x++){
-                    int distance = x - (kernelSize + width);
-                    int copyFrom = (distance % width) - 1;
-                    paddedResizedSegBuffer[ paddedWidth * y + x] = resizedSegBuffer[width * (y-kernelSize) + copyFrom];
-                }
-            }
-        }else{ 
-            ////// Input Image
-            for(int x = kernelSize; x < kernelSize + width; x++){ // 列番号を特定
-                //// Image 部分
-                for(int y = kernelSize; y < (kernelSize + height); y++){
-                    paddedGrayedInputImageBuffer[ paddedWidth * y + x] = grayedInputImageBuffer[width * (y-kernelSize) + (x-kernelSize)];
-                }
-            }
-            ////// Segmentation
-            for(int x = kernelSize; x < kernelSize + width; x++){ // 列番号を特定
-                //// Image 部分
-                for(int y = kernelSize; y < (kernelSize + height); y++){
-                    paddedResizedSegBuffer[ paddedWidth * y + x] = resizedSegBuffer[width * (y-kernelSize) + (x-kernelSize)];
-                }
-            }
-        }
+        ////// Input Image
+        cv::Mat grayedInputImageMat(height, width, CV_8UC1, grayedInputImageBuffer);
+        cv::Mat paddedGrayedInputImageMat(paddedHeight, paddedWidth, CV_8UC1, paddedGrayedInputImageBuffer);
+
+        ////// Segmentation
+        cv::Mat resizedSegMat(height, width, CV_8UC1, resizedSegBuffer);
+        cv::Mat paddedResizedSegMat(paddedHeight, paddedWidth, CV_8UC1, paddedResizedSegBuffer);
+
+        int borderType = (usePadding == 1 ? cv::BORDER_REFLECT : cv::BORDER_CONSTANT);
+        cv::copyMakeBorder(grayedInputImageMat, paddedGrayedInputImageMat, kernelSize, kernelSize, kernelSize, kernelSize, borderType, 0);
+        cv::copyMakeBorder(resizedSegMat, paddedResizedSegMat, kernelSize, kernelSize, kernelSize, kernelSize, borderType, 0);
 
         // (7) Simple Joint Bilateral Filter # Tobe fixed
         unsigned char grayOutputImageBuffer[width * height];
