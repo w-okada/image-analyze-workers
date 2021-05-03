@@ -239,13 +239,7 @@ const App = () => {
                 /// データ取得
                 const outputImageBufferOffset = currentTFLite._getOutputImageBufferOffset() 
                 // const outputImageBufferOffset = tflite._getGrayedImageBufferOffset() 
-                const segmentationMask = new ImageData(data.width, data.height)
-                for (let i = 0; i < data.width * data.height; i++) {
-                    segmentationMask.data[i * 4 + 0] = 255
-                    segmentationMask.data[i * 4 + 1] = 255
-                    segmentationMask.data[i * 4 + 2] = 255
-                    segmentationMask.data[i * 4 + 3] = currentTFLite.HEAPU8[outputImageBufferOffset + i + 0]
-                }
+                const segmentationMask = new ImageData(new Uint8ClampedArray(currentTFLite.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + data.width * data.height * 4)), data.width, data.height)
                 dataCtx.putImageData(segmentationMask, 0, 0)
                 resizedResultCtx.clearRect(0, 0, resizedResult.width, resizedResult.height)
                 resizedResultCtx.drawImage(data, 0, 0, resizedResult.width, resizedResult.height)

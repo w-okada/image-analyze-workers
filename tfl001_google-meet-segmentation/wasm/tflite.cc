@@ -39,7 +39,7 @@ namespace{
     unsigned char resizedSegBuffer[1 * MAX_WIDTH * MAX_HEIGHT];                                       // resized softmaxed output
     unsigned char paddedResizedSegBuffer[1 * MAX_WIDTH_WITH_PADDING * MAX_HEIGHT_WITH_PADDING];       // Padded image buffer
 
-    unsigned char outputImageBuffer[1 * MAX_WIDTH * MAX_HEIGHT];                                      // final output buffer
+    unsigned char outputImageBuffer[4 * MAX_WIDTH * MAX_HEIGHT];                                      // final output buffer
 
 
     // ////// 拡大縮小用　インデックス変換キャッシュ
@@ -215,8 +215,12 @@ extern "C"
         if(kernelSize <= 0){ // Without JBF
             unsigned char *outputImageBuf = &outputImageBuffer[0];
             cv::Mat grayMat(tensorHeight, tensorWidth, CV_8UC1, outputSegBuffer);
-            cv::Mat outMat(height, width, CV_8UC1, outputImageBuf);
-            cv::resize(grayMat, outMat, outMat.size(), 0, 0, interpolation);
+            cv::Mat resizedGrayMat(height, width, CV_8UC1);
+            cv::resize(grayMat, resizedGrayMat, resizedGrayMat.size(), 0, 0, interpolation);
+            cv::Mat mat255(height, width, CV_8UC1, 255);
+            cv::Mat channels[] = {mat255, mat255, mat255, resizedGrayMat};
+            cv::Mat outMat(height, width, CV_8UC4, outputImageBuf);
+            cv::merge(channels, 4, outMat);
             return 0;                    // fin
         }else{ // With JBF
             unsigned char *resizedSegBuf = &resizedSegBuffer[0];
@@ -321,7 +325,8 @@ extern "C"
         }
 
         // (7) Simple Joint Bilateral Filter # Tobe fixed
-        unsigned char *outputImageBuf = &outputImageBuffer[0];
+        unsigned char grayOutputImageBuffer[width * height];
+        unsigned char* grayOutputImageBuf = &grayOutputImageBuffer[0];
         for(int y = kernelSize; y < kernelSize + height; y++){
             for(int x = kernelSize; x < kernelSize + width; x++){
                 int centerVal = paddedGrayedInputImageBuffer[(paddedWidth * y) + x];
@@ -338,11 +343,15 @@ extern "C"
                     }
                 }
                 int pixelValue = sum / norm;
-                *outputImageBuf = pixelValue;
-                outputImageBuf++;
-
+                *grayOutputImageBuf = pixelValue;
+                grayOutputImageBuf++;
             }
         }
+        cv::Mat grayOutputMat(height, width, CV_8UC1, grayOutputImageBuffer);
+        cv::Mat mat255(height, width, CV_8UC1, 255);
+        cv::Mat channels[] = {mat255, mat255, mat255, grayOutputMat};
+        cv::Mat outMat(height, width, CV_8UC4, outputImageBuffer);
+        cv::merge(channels, 4, outMat);
 
         return 0;
     }
