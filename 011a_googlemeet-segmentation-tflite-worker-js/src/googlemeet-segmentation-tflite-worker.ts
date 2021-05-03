@@ -90,11 +90,7 @@ export class LocalWorker{
             tmpCtx.drawImage(src, 0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
             const imageData = tmpCtx.getImageData(0, 0, this.tmpCanvas.width, this.tmpCanvas.height)
             const inputImageBufferOffset = tflite!._getInputImageBufferOffset()
-            for (let i = 0; i < this.tmpCanvas.width * this.tmpCanvas.height; i++) {
-                tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 0] = imageData.data[i * 4 + 0]
-                tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 1] = imageData.data[i * 4 + 1]
-                tflite!.HEAPU8[inputImageBufferOffset + i * 3 + 2] = imageData.data[i * 4 + 2]
-            }
+            tflite!.HEAPU8.set(imageData.data, inputImageBufferOffset);
     
             tflite!._exec(this.tmpCanvas.width, this.tmpCanvas.height)
     
@@ -104,7 +100,7 @@ export class LocalWorker{
             }
             const outputImageBufferOffset = tflite!._getOutputImageBufferOffset() 
             for(let i = 0; i < outputLength; i++){
-                this.resultArray[i] = tflite!.HEAPU8[outputImageBufferOffset + i ]
+                this.resultArray[i] = tflite!.HEAPU8[outputImageBufferOffset + i * 4 + 3]
             }
     
         }

@@ -20,11 +20,7 @@ const predict = async (src:Uint8Array, config: GoogleMeetSegmentationTFLiteConfi
     currentTFLite!._setInterpolation(params.interpolation)
 
     const inputImageBufferOffset = currentTFLite!._getInputImageBufferOffset()
-    for (let i = 0; i < params.processWidth * params.processHeight; i++) {
-        currentTFLite!.HEAPU8[inputImageBufferOffset + i * 3 + 0] = src[i * 4 + 0]
-        currentTFLite!.HEAPU8[inputImageBufferOffset + i * 3 + 1] = src[i * 4 + 1]
-        currentTFLite!.HEAPU8[inputImageBufferOffset + i * 3 + 2] = src[i * 4 + 2]
-    }
+    currentTFLite!.HEAPU8.set(src, inputImageBufferOffset);
 
     currentTFLite!._exec(params.processWidth, params.processHeight)
 
@@ -34,7 +30,7 @@ const predict = async (src:Uint8Array, config: GoogleMeetSegmentationTFLiteConfi
     }
     const outputImageBufferOffset = currentTFLite!._getOutputImageBufferOffset() 
     for(let i = 0; i < outputLength; i++){
-        resultArray[i] = currentTFLite!.HEAPU8[outputImageBufferOffset + i ]
+        resultArray[i] = currentTFLite!.HEAPU8[outputImageBufferOffset + i * 4 + 3]
     }
     return resultArray
 }
