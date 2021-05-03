@@ -178,43 +178,36 @@ extern "C"
         unsigned char *segBuffer = &outputSegBuffer[0];
         if(useSoftmax == 1){
             if(output_ch ==2) {
-                for(int i=0; i < tensorWidth * tensorHeight ; i++){
-                    float background = *output;
-                    output++;
-                    float person     = *output;
-                    output++;
+                cv::Mat outputMat(tensorHeight, tensorWidth, CV_32FC2, output);
+                cv::Mat channels[2]; // 0:background, 1:person
+                cv::split(outputMat, channels);
 
-                    float shift = background > person ? background : person;
-                    float backgroundExp = std::exp(background - shift);
-                    float personExp = std::exp(person - shift);
-                    unsigned char val = (255 * personExp) / (backgroundExp + personExp);
-                    *segBuffer = val;
-                    segBuffer++;
-                }
+                cv::Mat shiftMat, personShift, backgroundShift, expPersonShift, expBackgroundShift, sumMat, softmaxMat;
+                cv::Mat segBufferMat(tensorHeight, tensorWidth, CV_8UC1, segBuffer);
+                cv::max(channels[0], channels[1], shiftMat);
+                cv::subtract(channels[0], shiftMat, backgroundShift);
+                cv::subtract(channels[1], shiftMat, personShift);
+                cv::exp(backgroundShift, expBackgroundShift);
+                cv::exp(personShift, expPersonShift);
+                cv::add(expBackgroundShift, expPersonShift, sumMat);
+                cv::divide(expPersonShift, sumMat, softmaxMat);
+                softmaxMat.convertTo(segBufferMat, CV_8U, 255, 0);
             }else{
-                for(int i=0; i < tensorWidth * tensorHeight ; i++){
-                    float person     = *output;
-                    output++;
-                    *segBuffer = person * 255;
-                    segBuffer++;
-                }
+                cv::Mat outputMat(tensorHeight, tensorWidth, CV_32FC1, output);
+                cv::Mat segBufferMat(tensorHeight, tensorWidth, CV_8UC1, segBuffer);
+                outputMat.convertTo(segBufferMat, CV_8U, 255, 0);
             }
         }else{
             if(output_ch ==2) {
-                for(int i=0; i < tensorWidth * tensorHeight ; i++){
-                    output++;
-                    float person     = *output;
-                    output++;
-                    *segBuffer = person > thresholdWithoutSoftmax ? 255 : 0;
-                    segBuffer++;
-                }
+                cv::Mat outputMat(tensorHeight, tensorWidth, CV_32FC2, output);
+                cv::Mat channels[2];
+                cv::split(outputMat, channels);
+                cv::Mat segBufferMat(tensorHeight, tensorWidth, CV_8UC1, segBuffer);
+                channels[1].convertTo(segBufferMat, CV_8U, 255, 0);
             }else{
-                for(int i=0; i < tensorWidth * tensorHeight ; i++){
-                    float person     = *output;
-                    output++;
-                    *segBuffer = person > thresholdWithoutSoftmax ? 255 : 0;
-                    segBuffer++;
-                }
+                cv::Mat outputMat(tensorHeight, tensorWidth, CV_32FC1, output);
+                cv::Mat segBufferMat(tensorHeight, tensorWidth, CV_8UC1, segBuffer);
+                outputMat.convertTo(segBufferMat, CV_8U, 255, 0);
             }
         }
 
