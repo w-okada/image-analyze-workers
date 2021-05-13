@@ -47,8 +47,6 @@ $ cd demo/
 $ npm install
 $ npm install @dannadori/googlemeet-segmentation-tflite-worker-js
 $ cp node_modules/\@dannadori/googlemeet-segmentation-tflite-worker-js/dist/googlemeet-segmentation-tflite-worker-worker.js public/
-$ cp node_modules/\@dannadori/googlemeet-segmentation-tflite-worker-js/resources/tflite.wasm public/
-$ cp node_modules/\@dannadori/googlemeet-segmentation-tflite-worker-js/resources/tflite-simd.wasm public/
 $ mkdir -p public/static/js/
 $ cp node_modules/\@dannadori/googlemeet-segmentation-tflite-worker-js/resources/tflite.wasm public/static/js
 $ cp node_modules/\@dannadori/googlemeet-segmentation-tflite-worker-js/resources/tflite-simd.wasm public/static/js
