@@ -2,45 +2,41 @@
 
 ![image]()
 
-
 Note: Safari is not supported with webworker. This porcess needs offscreencanvas.
 
 ## API
-<!-- 
+
 ```
-    init: (config: GoogleMeetSegmentationTFLiteConfig | null) => Promise<void>;
-    predict(src: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement, params?: 
+init: (config: BarcodeScannerConfig | null) => Promise<void>;
+predict: (src: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement, params?: BarcodeScannerOperationParams) => Promise<BarcodeInfo[]>;
+
 ```
 
 ## Configuration and Parameter
-
 ```
-export interface GoogleMeetSegmentationTFLiteConfig{
-    browserType         : BrowserType
-    processOnLocal      : boolean
-    modelPath           : string
-    workerPath          : string
+export interface BarcodeScannerConfig {
+    browserType: BrowserType;
+    processOnLocal: boolean;
+    modelPath: string;
+    workerPath: string;
+    enableSIMD: boolean;
 }
-
-
-export interface GoogleMeetSegmentationTFLiteOperationParams{
-    type                : GoogleMeetSegmentationTFLiteFunctionType
-    processWidth        : number
-    processHeight       : number
-    kernelSize          : number
-    useSoftmax          : boolean
-    usePadding          : boolean
-    threshold           : number
-    useSIMD             : boolean
+export interface BarcodeScannerOperationParams {
+    type: BarcodeScannerType;
+    processWidth: number;
+    processHeight: number;
+    scale: number;
+    sizeThresold: number;
+    interpolation: number;
+    useSIMD: boolean;
 }
-
-export enum GoogleMeetSegmentationTFLiteFunctionType{
-    Segmentation,
-    xxx, // Not implemented
+export declare enum BarcodeScannerType {
+    original = 0,
+    zbar = 1,
+    zxing = 2
 }
+```
 
-
-``` -->
 
 ## Step by step
 ### Create environment and install package
@@ -56,140 +52,16 @@ $ cp node_modules/\@dannadori/barcode-scanner-worker-js/resources/tflite-simd.wa
 ```
 
 ### Download Model
+Model file is under "CC BY-NC-SA 4.0" license.
 
-
-Detail descussion is here ([issue](https://github.com/tensorflow/tfjs/issues/4177)).
-
-Once you have obtained the model in a legitimate way, place it in the folder below.
-
-```
-$ cp meet.tflite public/meet.tflite
-```
-
-Currently(27th/Apr./2021) MLKit Selfie Segmentation model is published under Apache-2.0. 256x256
-[modelcard](https://developers.google.com/ml-kit/images/vision/selfie-segmentation/selfie-model-card.pdf)
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t12_barcode-scanner/models/barcode172_light.tflite
 
 
 ### Add source image to public. 
 In this time, the name is "srcImage.jpg"
 
 ### Edit src/App.tsx
-Sample code is here.
-
-```
-import React, { useEffect, useState } from 'react';
-import './App.css';
-import { generateDefaultGoogleMeetSegmentationTFLiteParams, generateGoogleMeetSegmentationTFLiteDefaultConfig, GoogleMeetSegmentationTFLiteWorkerManager } from "@dannadori/googlemeet-segmentation-tflite-worker-js"
-import { GoogleMeetSegmentationTFLiteConfig, GoogleMeetSegmentationTFLiteOperationParams } from '@dannadori/googlemeet-segmentation-tflite-worker-js/dist/const';
-
-
-interface WorkerProps {
-    manager: GoogleMeetSegmentationTFLiteWorkerManager
-    params : GoogleMeetSegmentationTFLiteOperationParams
-    config : GoogleMeetSegmentationTFLiteConfig
-}
-
-const App = () => {
-    const [workerProps, setWorkerProps] = useState<WorkerProps>()
-
-    useEffect(()=>{
-        const init = async () =>{
-            const m = workerProps? workerProps.manager : new GoogleMeetSegmentationTFLiteWorkerManager()
-            const c = generateGoogleMeetSegmentationTFLiteDefaultConfig()
-            c.processOnLocal = true
-            c.modelPath = "./meet.tflite"
-            await m.init(c)
-    
-            const p = generateDefaultGoogleMeetSegmentationTFLiteParams()
-            p.processWidth  = 256
-            p.processHeight = 256
-            p.kernelSize    = 0
-            p.useSoftmax    = true
-            p.usePadding    = false
-            p.threshold     = 0.5
-            p.useSIMD       = false
-            const newProps = {manager:m, config:c, params:p}
-            setWorkerProps(newProps)
-        }
-        init()
-    }, [])
-
-    useEffect(()=>{
-        const input = document.getElementById("input") 
-        resizeDst(input!)
-    })
-
-    const resizeDst = (input:HTMLElement) =>{
-        const cs = getComputedStyle(input)
-        const width = parseInt(cs.getPropertyValue("width"))
-        const height = parseInt(cs.getPropertyValue("height"))
-        const dst = document.getElementById("output") as HTMLCanvasElement
-        
-        [dst].forEach((c)=>{
-            c.width = width
-            c.height = height
-        })
-    }
-
-    useEffect(()=>{
-        console.log("[Pipeline] Start", workerProps)
-        let renderRequestId:number
-        const render = async () => {
-            console.log("pipeline...", workerProps)
-            if(workerProps){
-                console.log("pipeline...1")
-                const src = document.getElementById("input") as HTMLImageElement
-                const dst = document.getElementById("output") as HTMLCanvasElement
-                const tmp = document.getElementById("tmp") as HTMLCanvasElement
-                let prediction = await workerProps.manager.predict(src!, workerProps.params)
-
-                // 結果からマスク作成
-                const res = new ImageData(workerProps.params.processWidth, workerProps.params.processHeight)
-                for(let i = 0;i < workerProps.params.processWidth * workerProps.params.processHeight; i++){
-                    res.data[i * 4 + 0] = 0
-                    res.data[i * 4 + 1] = 0
-                    res.data[i * 4 + 2] = 0
-                    res.data[i * 4 + 3] = prediction![i]
-                }
-
-                tmp.width  = workerProps.params.processWidth 
-                tmp.height = workerProps.params.processHeight
-                tmp.getContext("2d")!.putImageData(res, 0, 0)
-
-                dst.getContext("2d")!.clearRect(0, 0, dst.width, dst.height)
-                dst.getContext("2d")!.drawImage(tmp, 0, 0, dst.width, dst.height)
-
-                renderRequestId = requestAnimationFrame(render)
-            }
-        }
-        render()
-        return ()=>{
-            cancelAnimationFrame(renderRequestId)
-        }
-    }, [workerProps])
-
-
-
-
-    /////////////
-    // render  //
-    /////////////
-    return (
-        <div>
-            <div style={{display:"flex"}}>
-                <div style={{display:"flex"}}>
-                    <img    width="300px" height="300px" id="input" src="srcImage.jpg"></img>
-                    <canvas width="300px" height="300px" id="output"></canvas>
-                    <canvas width="300px" height="300px" id="tmp" hidden></canvas>
-                </div>
-            </div>
-        </div>
-        );
-}
-
-export default App;
-
-```
+TBD
 
 ### build and start
 
