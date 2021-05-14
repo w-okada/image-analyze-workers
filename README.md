@@ -54,6 +54,7 @@ Note. some module is not provided as webworker for safari because of it's restri
   - [Multi Barcode Scanner](#multi-barcode-scanner)
     - [installation and usage](#installation-and-usage-12)
     - [demo](#demo-12)
+    - [demo(movie)](#demomovie)
     - [Licnece](#licnece-1)
 - [TFLite Wasm](#tflite-wasm)
   - [Google meet person segmentation(TFLite wasm)](#google-meet-person-segmentationtflite-wasm)
@@ -242,6 +243,16 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11a_googlemeet-segm
 
 ### demo
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t12_barcode-scanner/index.html
+
+### demo(movie)
+- Pixel3
+https://youtu.be/IrPLMUuWaJk
+
+- Pixel4
+https://youtu.be/Xxz1hFUAnKk
+
+
+
 
 ### Licnece
 This project (code, pre-trained models, demos, etc.) is released under the Creative Commons Attribution NonCommercial ShareAlike 4.0 license.
