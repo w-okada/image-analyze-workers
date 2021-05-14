@@ -1,6 +1,6 @@
 # BarcodeScanner
 
-![image]()
+![image](https://user-images.githubusercontent.com/48346627/118266526-b1ecb780-b4f5-11eb-9c25-d32a42e852ce.gif)
 
 Note: Safari is not supported with webworker. This porcess needs offscreencanvas.
 
