@@ -236,7 +236,8 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11a_googlemeet-segm
 
 
 ## Multi Barcode Scanner
-![image]()
+![image](https://user-images.githubusercontent.com/48346627/118266526-b1ecb780-b4f5-11eb-9c25-d32a42e852ce.gif)
+
 
 ### installation and usage 
 [See here](/012_barcode-scanner-worker-js)
