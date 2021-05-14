@@ -159,15 +159,19 @@ $ npm publish --access=public
 ## デモ開発
 
 ```
-$ create-react-app 005demo_posenet-worker-js-demo/  --typescript
-$ cd 005demo_posenet-worker-js-demo/
+$ npx create-react-app 012demo_barcode-scanner-worker-js-demo --template typescript
+$ cd 012demo_barcode-scanner-worker-js-demo/
 $ cat package.json
   "homepage": "./",
 $ npm install
 # npm install @material-ui/core
 $ npm install @dannadori/posenet-worker-js
 # from other package, copy and edit (1),(5)
-#  (1)mod_build.sh, (2)app.py, (3)server.crt, (4))server.key, (5)sync.sh (6) DemoBase.tsx
+#####  (1)mod_build.sh, (2)app.py, (3)server.crt, (4))server.key, (5)sync.sh (6) DemoBase.tsx
+#  (1)mod_build.sh, (5)sync.sh
+##### .gitigonre 
+#  sync.sh
+#  mod_build.sh
 
 
 # edit src
