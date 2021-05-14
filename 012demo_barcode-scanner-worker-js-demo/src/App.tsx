@@ -65,7 +65,7 @@ const App = () => {
 
 
 
-    const [inputMedia, setInputMedia] = useState<InputMedia>({mediaType:"IMAGE", media:"./img/sample.png"})
+    const [inputMedia, setInputMedia] = useState<InputMedia>({mediaType:"IMAGE", media:"./img/barcode_01.jpg"})
     const inputChange = (mediaType: VideoInputType, input:MediaStream|string) =>{
         setInputMedia({mediaType:mediaType, media:input})
     }
