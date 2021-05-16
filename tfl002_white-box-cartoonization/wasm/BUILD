@@ -37,6 +37,6 @@ cc_binary(
     "@org_tensorflow//tensorflow/lite:framework",
     "@org_tensorflow//tensorflow/lite:tflite_with_xnnpack",
     "@org_tensorflow//tensorflow/lite/kernels:builtin_ops",
-    "@opencv//:opencv",
+    "@opencv//:opencv_simd",
   ],
 )

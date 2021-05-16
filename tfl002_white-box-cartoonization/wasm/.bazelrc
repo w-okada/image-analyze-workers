@@ -1,4 +1,4 @@
-build:wasm --crosstool_top=//emscripten_toolchain:everything
+build:wasm --crosstool_top=@emsdk//emscripten_toolchain:everything
 
 build:wasm --cpu=wasm
 

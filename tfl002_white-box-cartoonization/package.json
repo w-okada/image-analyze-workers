@@ -20,16 +20,19 @@
     "web-vitals": "^1.1.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "build_docker": "docker build -t tflite_wasm docker",
-    "start_docker": "docker run -dit -v $PWD/wasm:/tflite_src -v $PWD/public/tflite:/tflite_build --name tflite_wasm tflite_wasm bash",
-    "stop_docker": "docker rm -f tflite_wasm",
-    "setup_wasm": "docker exec tflite_wasm cp /emsdk/bazel/emscripten_toolchain /tflite_src -r",
-    "build_wasm": "docker exec -w /tflite_src tflite_wasm bazel build --config=wasm -c opt :tflite                         && docker exec tflite_wasm tar xvf /tflite_src/bazel-bin/tflite  -C /tflite_build",
-    "build_wasm_simd": "docker exec -w /tflite_src tflite_wasm bazel build --config=wasm -c opt --copt='-msimd128' :tflite-simd && docker exec tflite_wasm tar xvf /tflite_src/bazel-bin/tflite-simd -C /tflite_build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start":             "react-scripts start",
+    "build":             "react-scripts build",
+    "build_docker":      "docker build -t tflite_wasm docker",
+    "start_docker":      "docker run -dit -v $PWD/wasm:/tflite_src -v $PWD/public/tflite:/tflite_build --name tflite_wasm      tflite_wasm bash",
+    "start_docker_simd": "docker run -dit -v $PWD/wasm:/tflite_src -v $PWD/public/tflite:/tflite_build --name tflite_wasm_simd tflite_wasm bash",
+    "setup_wasm":        "docker exec tflite_wasm cp /emsdk/bazel/emscripten_toolchain /tflite_src -r",    
+    "setup_wasm_simd":   "docker exec tflite_wasm_simd cp /emsdk/bazel/emscripten_toolchain /tflite_src -r",    
+    "stop_docker":       "docker rm -f tflite_wasm",
+    "stop_docker_simd":  "docker rm -f tflite_wasm_simd",
+    "build_wasm":        "docker exec -w /tflite_src tflite_wasm      bazel build --config=wasm -c opt                    :tflite      && docker exec tflite_wasm      tar xvf /tflite_src/bazel-bin/tflite      -C /tflite_build",
+    "build_wasm_simd":   "docker exec -w /tflite_src tflite_wasm_simd bazel build --config=wasm -c opt --copt='-msimd128' :tflite-simd && docker exec tflite_wasm_simd tar xvf /tflite_src/bazel-bin/tflite-simd -C /tflite_build",
+    "test":              "react-scripts test",
+    "eject":             "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
