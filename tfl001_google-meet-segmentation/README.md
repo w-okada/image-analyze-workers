@@ -1,12 +1,13 @@
-# TFLite Wasm for White Box Cartoonization
+# TFLite Wasm for Google Meet Segmentation
 ## Build wasm
 ```
 $ npm run build_docker
 $ npm run start_docker
-$ npm run setup_wasm
+$ npm run start_docker_simd
 $ npm run build_wasm
 $ npm run build_wasm_simd
 $ npm run stop_docker
+$ npm run stop_docker_simd
 ```
 
 ## Demo

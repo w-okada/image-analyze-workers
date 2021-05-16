@@ -25,3 +25,9 @@ yarn-error.log*
 wasm/emscripten_toolchain
 sync.sh
 wasm/bazel-tflite_src
+
+
+bazel-testlogs
+bazel-out
+bazel-bin
+
