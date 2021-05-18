@@ -1,0 +1,55 @@
+{
+  "name": "tfl001_google-meet-segmentation",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "./",
+  "dependencies": {
+    "@material-ui/core": "^4.11.3",
+    "@testing-library/jest-dom": "^5.11.10",
+    "@testing-library/react": "^11.2.6",
+    "@testing-library/user-event": "^13.1.1",
+    "@types/emscripten": "^1.39.4",
+    "@types/jest": "^26.0.22",
+    "@types/node": "^14.14.37",
+    "@types/react": "^17.0.3",
+    "@types/react-dom": "^17.0.3",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-scripts": "4.0.3",
+    "typescript": "^4.2.3",
+    "web-vitals": "^1.1.1"
+  },
+  "scripts": {
+    "start":             "react-scripts start",
+    "build":             "react-scripts build",
+    "build_docker":      "docker build -t tflite_wasm docker",
+    "start_docker":      "docker run -dit -v $PWD/wasm:/tflite_src -v $PWD/public/tflite:/tflite_build --name tflite_wasm      tflite_wasm bash",
+    "start_docker_simd": "docker run -dit -v $PWD/wasm:/tflite_src -v $PWD/public/tflite:/tflite_build --name tflite_wasm_simd tflite_wasm bash",
+    "setup_wasm":        "docker exec tflite_wasm cp /emsdk/bazel/emscripten_toolchain /tflite_src -r",    
+    "setup_wasm_simd":   "docker exec tflite_wasm_simd cp /emsdk/bazel/emscripten_toolchain /tflite_src -r",    
+    "stop_docker":       "docker rm -f tflite_wasm",
+    "stop_docker_simd":  "docker rm -f tflite_wasm_simd",
+    "build_wasm":        "docker exec -w /tflite_src tflite_wasm      bazel build --config=wasm -c opt                    :tflite      && docker exec tflite_wasm      tar xvf /tflite_src/bazel-bin/tflite      -C /tflite_build",
+    "build_wasm_simd":   "docker exec -w /tflite_src tflite_wasm_simd bazel build --config=wasm -c opt --copt='-msimd128' :tflite-simd && docker exec tflite_wasm_simd tar xvf /tflite_src/bazel-bin/tflite-simd -C /tflite_build",
+    "test":              "react-scripts test",
+    "eject":             "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
