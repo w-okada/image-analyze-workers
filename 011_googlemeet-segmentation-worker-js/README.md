@@ -80,7 +80,7 @@ export enum GoogleMeetSegmentationSmoothingType{
 ## Step by step
 ### Create environment and install package
 ```
-$ create-react-app demo --template typescript
+$ npx create-react-app demo --template typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/googlemeet-segmentation-worker-js
@@ -114,6 +114,7 @@ class App extends React.Component{
     c.useTFWasmBackend = false
     c.wasmPath = ""
     c.modelPath="/google-segmentation/model.json"
+    c.processOnLocal=true
     return c
   })()
   params = (()=>{
@@ -137,9 +138,14 @@ class App extends React.Component{
           srcImage, 0, 0, this.srcCanvas.width, this.dstCanvas.height)
         return this.manager.predict(this.srcCanvas, this.params)
       }).then((res)=>{
-        const foreground = createForegroundImage(this.srcCanvas, res)
-        this.dstCanvas.getContext("2d")!.putImageData(foreground, 0, 0)
-        this.srcCanvas.getContext("2d")!.drawImage(this.dstCanvas, 0, 0, this.srcCanvas.width, this.srcCanvas.height)
+        if(res){
+          console.log("res is good")
+          const foreground = createForegroundImage(this.srcCanvas, res)
+          this.dstCanvas.getContext("2d")!.putImageData(foreground, 0, 0)
+          this.srcCanvas.getContext("2d")!.drawImage(this.dstCanvas, 0, 0, this.srcCanvas.width, this.srcCanvas.height)
+        }else{
+          console.log("res is not")
+        }
       })
     }
     srcImage.src = "./srcImage.jpg"
