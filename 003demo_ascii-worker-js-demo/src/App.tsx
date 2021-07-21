@@ -97,9 +97,9 @@ const App = () => {
             const img = document.getElementById("input_img") as HTMLImageElement
             img.onloadeddata = () =>{
                 resizeDst(img)
+                setGuiUpdateCount(guiUpdateCount+1)
             }
             img.src = inputMedia.media as string
-            setGuiUpdateCount(guiUpdateCount+1)
         }else if(inputMedia.mediaType === "MOVIE"){
             const vid = document.getElementById("input_video") as HTMLVideoElement
             vid.pause()
@@ -160,17 +160,18 @@ const App = () => {
 
             const dst = document.getElementById("output") as HTMLCanvasElement
             if(workerProps){
-                if(dst.width > 0 && dst.height>0){
-
+                if(dst.width === 0){
                     const src = document.getElementById("input_img") as HTMLImageElement || document.getElementById("input_video") as HTMLVideoElement
-                    // const dst = document.getElementById("output") as HTMLCanvasElement
+                    resizeDst(src)
+                }
+                if(dst.width > 0 && dst.height>0){
+                    const src = document.getElementById("input_img") as HTMLImageElement || document.getElementById("input_video") as HTMLVideoElement
                     const dst_div = document.getElementById("output-div") as HTMLDivElement
-                    const dst = document.getElementById("output") as HTMLCanvasElement
                     const tmp = document.getElementById("tmp") as HTMLCanvasElement
                     const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
             
                     const tmpCtx = tmp.getContext("2d")!
-                    const dstCtx   = dst.getContext("2d")!
+                    const dstCtx = dst.getContext("2d")!
             
                     srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height)
             
@@ -193,7 +194,6 @@ const App = () => {
                         }
                         dstCtx.clearRect(0, 0, dst.width, dst.height)
                         dstCtx.drawImage(tmp, 0, 0, dst.width, dst.height)
-
                         if(ascii){
                             const charCount = prediction[0].length
                             const fontSize = Math.ceil(OUT_HEIGHT/charCount)
@@ -264,6 +264,9 @@ const App = () => {
             <div >
                 <div id="info"> </div>
                 <div id="info2"> </div>
+            </div>
+            <div >
+                v20210721_1
             </div>
         </div>
         );
