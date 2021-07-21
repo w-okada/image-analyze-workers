@@ -1,26 +1,23 @@
 {
-  "name": "facemesh-worker-js-demo",
+  "name": "002demo_facemesh-worker-js-demo3",
   "version": "0.1.0",
   "private": true,
   "homepage": "./",
   "dependencies": {
-    "@dannadori/facemesh-worker-js": "^1.0.37",
-    "@material-ui/core": "^4.11.3",
-    "@tensorflow-models/facemesh": "0.0.4",
-    "@tensorflow/tfjs-backend-wasm": "^3.3.0",
-    "@testing-library/jest-dom": "^5.11.10",
-    "@testing-library/react": "^11.2.6",
-    "@testing-library/user-event": "^13.1.1",
-    "@types/jest": "^26.0.22",
-    "@types/node": "^14.14.37",
-    "@types/react": "^17.0.3",
-    "@types/react-dom": "^17.0.3",
+    "@dannadori/facemesh-worker-js": "^1.0.38",
+    "@material-ui/core": "^4.12.2",
+    "@testing-library/jest-dom": "^5.14.1",
+    "@testing-library/react": "^12.0.0",
+    "@testing-library/user-event": "^13.2.0",
+    "@types/jest": "^26.0.24",
+    "@types/node": "^16.4.0",
+    "@types/react": "^17.0.14",
+    "@types/react-dom": "^17.0.9",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
-    "semantic-ui-css": "^2.4.1",
-    "semantic-ui-react": "^2.0.3",
-    "typescript": "~4.2.3"
+    "typescript": "^4.3.5",
+    "web-vitals": "^2.1.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -29,7 +26,10 @@
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
   },
   "browserslist": {
     "production": [

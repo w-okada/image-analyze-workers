@@ -58,7 +58,7 @@ export enum FacemeshFunctionType{
 ## Step by step
 ### Create environment and install package
 ```
-$ create-react-app demo/  --typescript
+$ npx create-react-app demo  --template typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/facemesh-worker-js

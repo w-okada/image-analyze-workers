@@ -217,7 +217,7 @@ const App = () => {
     const [ processWidth, setProcessWidth]                    = useState(300)
     const [ processHeight, setProcessHeight]                  = useState(300)
     const [ iris, setIris]                                    = useState(false)
-    const [ strict, setStrict]                                = useState(false)
+    const [ strict, setStrict]                                = useState(false) // eslint-disable-line
 
     const [inputMedia, setInputMedia] = useState<InputMedia>({mediaType:"IMAGE", media:"yuka_kawamura.jpg"})
     const inputChange = (mediaType: VideoInputType, input:MediaStream|string) =>{
@@ -251,7 +251,7 @@ const App = () => {
             setWorkerProps(newProps)
         }
         init()
-    }, [onLocal, useWasm, maxContinuousCheck, confidence, maxFaces, iouThreshold, scoreThreshold])
+    }, [onLocal, useWasm, maxContinuousCheck, confidence, maxFaces, iouThreshold, scoreThreshold]) // eslint-disable-line
 
     //// パラメータ変更
     useEffect(()=>{
@@ -265,7 +265,7 @@ const App = () => {
 
         // setWorkerProps({...workerProps, params:p})
         workerProps.params = p
-    }, [processWidth, processHeight, iris])
+    }, [processWidth, processHeight, iris]) // eslint-disable-line
 
 
     /// input設定
@@ -330,8 +330,6 @@ const App = () => {
         let renderRequestId: number
         const LOOP_ID = performance.now()
         GlobalLoopID = LOOP_ID
-        let counter = 0
-        let fps_start = performance.now()
 
         const render = async () => {
             console.log("RENDER::::", LOOP_ID, renderRequestId,  workerProps?.params)
@@ -342,14 +340,9 @@ const App = () => {
                 if(dst.width > 0 && dst.height>0){
 
                     const src = document.getElementById("input_img") as HTMLImageElement || document.getElementById("input_video") as HTMLVideoElement
-                    const background = document.getElementById("background") as HTMLImageElement
                     const dst = document.getElementById("output") as HTMLCanvasElement
-                    const tmp = document.getElementById("tmp") as HTMLCanvasElement
-                    const front = document.getElementById("front") as HTMLCanvasElement
                     const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
             
-                    const tmpCtx = tmp.getContext("2d")!
-                    const frontCtx = front.getContext("2d")!
                     const dstCtx = dst.getContext("2d")!
             
                     srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height)
@@ -447,7 +440,7 @@ const App = () => {
             <div style={{display:"flex"}}>
                 <div style={{display:"flex"}}>
                     {inputMedia.mediaType === "IMAGE" ? 
-                        <img  className={classes.inputView} id="input_img"></img>
+                        <img  className={classes.inputView} alt="input_img" id="input_img"></img>
                         :
                         <video  className={classes.inputView} id="input_video"></video>
                     }
@@ -474,7 +467,7 @@ const App = () => {
                 <canvas className={classes.inputView} id="tmp" hidden></canvas>
                 <canvas className={classes.inputView} id="front" hidden></canvas>
                 <canvas className={classes.inputView} id="src-cache" hidden></canvas>
-                <img className={classes.inputView} id="background" src="img/north-star-2869817_640.jpg" hidden></img>
+                <img className={classes.inputView} alt="background" id="background" src="img/north-star-2869817_640.jpg" hidden></img>
 
             </div>
             <div >
