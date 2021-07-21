@@ -153,7 +153,7 @@ export class AsciiArtWorkerManager{
     private localAA = new LocalAA()
     private config:AsciiConfig = generateAsciiArtDefaultConfig()
 
-    init = (config: AsciiConfig|null) => {
+    init = async  (config: AsciiConfig|null) => {
         if(config != null){
             this.config = config
         }
@@ -165,7 +165,7 @@ export class AsciiArtWorkerManager{
 
         // safariはwebworkerでCanvasが使えないのでworkerは使わない。
         if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal === true) {
-            return
+            return 
         }
 
         // AsciiArt 用ワーカー
