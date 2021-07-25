@@ -12,7 +12,7 @@ export interface TFLite extends EmscriptenModule {
     _getOutputMemoryOffset():number
 
     _loadModel(bufferSize: number): number
-    _exec(widht: number, height: number): number
+    _exec(widht: number, height: number, scale:number, mode:number): number
 }
 
 function useTFLite() {
@@ -49,16 +49,16 @@ function useTFLite() {
                 setTFLite(tflite)
             })
         })
-        // try{
-        //     createTFLiteSIMDModule().then(tflite_simd=>{
-        //         loadModel(tflite_simd, modelPath).then(()=>{
-        //             setTFLiteSIMD(tflite_simd)
-        //         })
-        //     })
-        // }catch(e){
-        //     console.log("[useTFLite] simd error",e)
-        //     setTFLiteSIMD(undefined)
-        // }
+        try{
+            createTFLiteSIMDModule().then(tflite_simd=>{
+                loadModel(tflite_simd, modelPath).then(()=>{
+                    setTFLiteSIMD(tflite_simd)
+                })
+            })
+        }catch(e){
+            console.log("[useTFLite] simd error",e)
+            setTFLiteSIMD(undefined)
+        }
     }, [modelPath])
 
 

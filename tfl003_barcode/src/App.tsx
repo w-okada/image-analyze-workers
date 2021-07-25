@@ -8,16 +8,11 @@ import { VideoInputType } from './const';
 
 
 const models: { [name: string]: string } = {
-    "192x192"    : `${process.env.PUBLIC_URL}/models/out2_fp16.tflite`,
-    // "192x192"    : `${process.env.PUBLIC_URL}/models/whitebox192.tflite`,
-    
-  // "256x256"    : `${process.env.PUBLIC_URL}/models/whitebox256.tflite`,
+    "172x172"    : `${process.env.PUBLIC_URL}/models/barcode172_light.tflite`,
 }
 
 const processSize: { [name: string]: number[] } = {
-    "192x192": [192, 192],
-    // "192x192": [300, 300],
-    // "256x256": [256, 256],
+    "172x172": [172, 172],
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -43,7 +38,7 @@ export const App = () => {
         mediaType : VideoInputType
         media     : MediaStream|string
     }
-    const [inputMedia, setInputMedia] = useState<InputMedia>({mediaType:"IMAGE", media:"img/yuka_kawamura.jpg"})
+    const [inputMedia, setInputMedia] = useState<InputMedia>({mediaType:"IMAGE", media:"img/barcode_01.jpg"})
     const inputChange = (mediaType: VideoInputType, input:MediaStream|string) =>{
         console.log("[inputchange]", mediaType, input)
         setInputMedia({mediaType:mediaType, media:input})
@@ -58,7 +53,7 @@ export const App = () => {
         const modelPath = models[modelKey]
         console.log("path change", modelPath)
         setModelPath(modelPath)
-    },[modelKey])
+    },[modelKey]) // eslint-disable-line
 
     /// For model setting change
     useEffect(()=>{
@@ -101,12 +96,6 @@ export const App = () => {
         }
     },[inputMedia])
 
-    /// For output change
-    // useEffect(()=>{
-    //     const dst = document.getElementById("output") as HTMLCanvasElement
-    //     // NOOP
-    // },[])
-
     /// resize
     useEffect(()=>{
         const input = document.getElementById("input_img") || document.getElementById("input_video")
@@ -121,8 +110,15 @@ export const App = () => {
         const width = parseInt(cs.getPropertyValue("width"))
         const height = parseInt(cs.getPropertyValue("height"))
         const dst = document.getElementById("output") as HTMLCanvasElement
+        const front = document.getElementById("front") as HTMLCanvasElement
+        const src_cache = document.getElementById("src-cache") as HTMLCanvasElement
+
         dst.width  = width
         dst.height = height
+        front.width  = width
+        front.height = height
+        src_cache.width = width
+        src_cache.height = height
     }
 
 
@@ -137,9 +133,10 @@ export const App = () => {
         const src = document.getElementById("input_img") as HTMLImageElement || document.getElementById("input_video") as HTMLVideoElement
         const dst = document.getElementById("output") as HTMLCanvasElement
         const tmp = document.getElementById("tmp") as HTMLCanvasElement
+        const src_cache = document.getElementById("src-cache") as HTMLCanvasElement
+        const src_cacheCtx = src_cache.getContext("2d")!
         const tmpCtx = tmp.getContext("2d")!
         const outCtx = dst.getContext("2d")!
-
         const render = () => {
             console.log("RENDER::::", LOOP_ID)
             let currentTFLite
@@ -153,26 +150,28 @@ export const App = () => {
                 tmp.height = processSize[modelKey][1]
                 tmpCtx.drawImage(src, 0, 0, tmp.width, tmp.height)
 
+                // outCtx.filter = `blur(10px)`;
+                // outCtx.drawImage(tmp, 0, 0, dst.width, dst.height)
+                // outCtx.filter = `none`;
+                outCtx.clearRect(0, 0, dst.width, dst.height)
+
+                src_cacheCtx.drawImage(tmp, 0, 0, dst.width, dst.height)
+
                 /// Input data
-                const imageData = tmpCtx.getImageData(0, 0, tmp.width, tmp.height)
+                const imageData = tmpCtx.getImageData(0, 0, tmp.width, tmp.height)                
                 const inputImageBufferOffset = currentTFLite._getInputImageBufferOffset()
-                for (let i = 0; i < tmp.width * tmp.height; i++) {
-                    currentTFLite.HEAPU8[inputImageBufferOffset + i * 3 + 0] = imageData.data[i * 4 + 0]
-                    currentTFLite.HEAPU8[inputImageBufferOffset + i * 3 + 1] = imageData.data[i * 4 + 1]
-                    currentTFLite.HEAPU8[inputImageBufferOffset + i * 3 + 2] = imageData.data[i * 4 + 2]
-                }
+                currentTFLite.HEAPU8.set(imageData.data, inputImageBufferOffset);
 
                 /// inferecence
-                const start = performance.now(); 
                 console.log("EXEC START")
                 try{
-                    currentTFLite._exec(tmp.width, tmp.height)
+                    // currentTFLite._exec(tmp.width, tmp.height, 3, 1)
+                    // currentTFLite._exec(tmp.width, tmp.height, 2, 0)
+                    currentTFLite._exec(tmp.width, tmp.height, 2, 1)
                 }catch(e){
                     console.log(e)
                 }
                 console.log("EXEC END")
-                const end   = performance.now();
-                const duration = end - start
                 /////infoDiv.innerText = `MS: ${duration}`
 
 
@@ -180,21 +179,16 @@ export const App = () => {
                 /// Output data
                 const outputImageBufferOffset = currentTFLite._getOutputImageBufferOffset() 
                 // const outputImageBufferOffset = tflite._getGrayedImageBufferOffset() 
-                const segmentationMask = new ImageData(tmp.width, tmp.height)
-                for (let i = 0; i < tmp.width * tmp.height; i++) {
+                const segmentationMask = new ImageData(new Uint8ClampedArray(currentTFLite.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + tmp.width * tmp.height * 4)), tmp.width, tmp.height)
+                console.log(segmentationMask)
 
-                    segmentationMask.data[i * 4 + 0] =  (currentTFLite.HEAPU8[outputImageBufferOffset + i ] + 0) 
-                    segmentationMask.data[i * 4 + 1] =  (currentTFLite.HEAPU8[outputImageBufferOffset + i ] + 0) 
-                    segmentationMask.data[i * 4 + 2] =  (currentTFLite.HEAPU8[outputImageBufferOffset + i ] + 0) 
-                    segmentationMask.data[i * 4 + 3] =  255                
-                    }
                 tmpCtx.putImageData(segmentationMask, 0, 0)
-                outCtx.clearRect(0, 0, dst.width, dst.height)
+                // frontCtx.clearRect(0, 0, front.width, front.height)
+                // frontCtx.drawImage(tmp, 0, 0, front.width, front.height)
                 outCtx.drawImage(tmp, 0, 0, dst.width, dst.height)
-
-                const info = document.getElementById("info") as HTMLCanvasElement
-                info.innerText = `processing time: ${duration}` 
-
+                // const info = document.getElementById("info") as HTMLCanvasElement
+                // info.innerText = `processing time: ${duration}` 
+            
 //                console.log("size; tmp, dst",tmpCanvas.width, tmpCanvas.height,dst.width, dst.height)
             }else{
                 // console.log("not ready", tflite, src, dst)
@@ -205,7 +199,7 @@ export const App = () => {
         return ()=>{
             cancelAnimationFrame(renderRequestId)
         }
-    }, [tflite, inputMedia, useSIMD])
+    }, [tflite, inputMedia, useSIMD]) // eslint-disable-line
 
 
 
@@ -242,10 +236,6 @@ export const App = () => {
             </div>
         </div>
     )
-
-//   return(
-//     <div>
-//             AAAAAAAAAAAa</div>)
 }
 
 export default App;

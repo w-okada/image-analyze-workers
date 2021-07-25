@@ -21,9 +21,6 @@ local_repository(
 load("@org_tensorflow//tensorflow:workspace.bzl", "tf_workspace")
 tf_workspace(tf_repo_name = "org_tensorflow")
 
-
-
-
 http_archive(
     name = "build_bazel_rules_nodejs",
     sha256 = "0f2de53628e848c1691e5729b515022f5a77369c76a09fbe55611e12731c90e3",
@@ -55,3 +52,14 @@ new_local_repository(
     build_file = "opencv.BUILD",
 )
 
+new_local_repository(
+    name = "zbar",
+    path = "/ZBar",
+    build_file = "zbar.BUILD",
+)
+
+new_local_repository(
+    name = "zxing",
+    path = "/zxing-cpp-emscripten",
+    build_file = "zxing.BUILD",
+)
