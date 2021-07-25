@@ -151,7 +151,7 @@ export class PoseNetWorkerManager {
                     if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
                         onResolve(event.data.prediction)
                     } else {
-                        console.log("Facemesh Prediction something wrong..")
+                        console.log(`Posenet Prediction something wrong.. ${event.data.message}, ${event.data.uid}, ${uid}`)
                         onFail(event)
                     }
                 }
@@ -174,8 +174,8 @@ export class PoseNetWorkerManager {
                     if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
                         onResolve(event.data.prediction)
                     } else {
-                        console.log("Bodypix Prediction something wrong..")
-                        onFail(event)
+                        console.log(`Posenet Prediction something wrong.. ${event.data.message}, ${event.data.uid}, ${uid}`)
+                        // onFail(event)
                     }
                 }
             })
