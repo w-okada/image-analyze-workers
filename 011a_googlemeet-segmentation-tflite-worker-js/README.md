@@ -42,7 +42,7 @@ export enum GoogleMeetSegmentationTFLiteFunctionType{
 ## Step by step
 ### Create environment and install package
 ```
-$ create-react-app demo --template typescript
+$ npx create-react-app demo --template typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/googlemeet-segmentation-tflite-worker-js
