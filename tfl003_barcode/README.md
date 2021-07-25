@@ -3,7 +3,7 @@
 ### Note! ###
 this folder is deprecated
 
-new barcode scanner's repository is [here](https://github.com/w-okada/barcode-scanner-lib/tree/master/wasm)
+new barcode scanner's repository is [here](https://github.com/w-okada/barcode-scanner-lib)
 
 ## Build wasm
 ```
