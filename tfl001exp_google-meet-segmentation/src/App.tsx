@@ -5,7 +5,6 @@ import { makeStyles} from '@material-ui/core';
 import { useVideoInputList } from './hooks/useVideoInputList';
 import { VideoInputType } from './const';
 import { VideoInputSelect, DropDown, SingleValueSlider, Toggle, FileChooser } from './components/components';
-import { light } from '@material-ui/core/styles/createPalette';
 
 
 const models: { [name: string]: string } = {
@@ -83,7 +82,7 @@ const App = () => {
     useEffect(()=>{
         const modelPath = models[modelKey]
         setModelPath(modelPath)
-    },[modelKey])
+    },[modelKey]) // eslint-disable-line
 
     /// TFLite設定
     useEffect(()=>{
@@ -139,7 +138,7 @@ const App = () => {
 
     /// output設定
     useEffect(()=>{
-        const dst = document.getElementById("output") as HTMLCanvasElement
+        // const dst = document.getElementById("output") as HTMLCanvasElement
         // setDst(dst)
     },[])
 
@@ -159,7 +158,6 @@ const App = () => {
         const dst = document.getElementById("output") as HTMLCanvasElement
         const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
         const resizedResult = document.getElementById("resized-result") as HTMLCanvasElement
-        const lightWrapping = document.getElementById("light-wrapping") as HTMLCanvasElement
         
         Array.from([srcCache, dst, resizedResult]).forEach((e)=>{
             e.width = width
@@ -175,8 +173,6 @@ const App = () => {
         console.log("[Pipeline] Start")
         let renderRequestId: number
         const LOOP_ID = performance.now()
-        let counter = 0
-        let fps_start = performance.now()
 
         const src = document.getElementById("input_img") as HTMLImageElement || document.getElementById("input_video") as HTMLVideoElement
         const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
@@ -251,9 +247,9 @@ const App = () => {
                 const end2   = performance.now();
                 const duration2 = end2 - start2
                 const info = document.getElementById("info") as HTMLCanvasElement
-                info.innerText = `inference time: ` + `${duration}`
+                info.innerText = `inference time: ${duration}`
                 const info2 = document.getElementById("info2") as HTMLCanvasElement
-                info2.innerText = `processing time: ` + `${duration2}`                
+                info2.innerText = `processing time: ${duration2}`                
             }else{
                 // console.log("not ready", tflite, src, dst)
             }
@@ -263,7 +259,7 @@ const App = () => {
         return ()=>{
             cancelAnimationFrame(renderRequestId)
         }
-    }, [tflite, processSizeKey, inputMedia, useSIMD, lightWrapping, strict])
+    }, [tflite, processSizeKey, inputMedia, useSIMD, lightWrapping, strict]) // eslint-disable-line
 
 
     ///////////////
@@ -274,7 +270,7 @@ const App = () => {
             <div style={{display:"flex"}}>
                 <div style={{display:"flex"}}>
                     {inputMedia.mediaType === "IMAGE" ? 
-                        <img  className={classes.inputView} id="input_img"></img>
+                        <img  className={classes.inputView} alt="input_img" id="input_img"></img>
                         :
                         <video  className={classes.inputView} id="input_video"></video>
                     }
@@ -301,7 +297,7 @@ const App = () => {
 
                 {/* <canvas className={classes.inputView} id="front" hidden></canvas> */}
                 <canvas className={classes.inputView} id="src-cache" hidden></canvas>
-                <img className={classes.inputView} id="background" src="img/north-star-2869817_640.jpg" hidden></img>
+                <img className={classes.inputView} alt="background" id="background" src="img/north-star-2869817_640.jpg" hidden></img>
 
             </div>
 
