@@ -31,3 +31,4 @@ bazel-testlogs
 bazel-out
 bazel-bin
 
+sync.sh
