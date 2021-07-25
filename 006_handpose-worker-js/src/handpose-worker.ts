@@ -4,6 +4,8 @@ import * as handpose from "@tensorflow-models/handpose";
 import * as tf from '@tensorflow/tfjs';
 import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
 
+export {HandPoseConfig, HandPoseOperatipnParams}
+
 export const generateHandPoseDefaultConfig = (): HandPoseConfig => {
     const defaultConf: HandPoseConfig = {
         browserType: getBrowserType(),
@@ -193,7 +195,7 @@ export class HandPoseWorkerManager {
                         onResolve(event.data.prediction)
                     } else {
                         console.log("Handpose Prediction something wrong..")
-                        onFail(event)
+                        // onFail(event)
                     }
                 }
             })
@@ -219,7 +221,7 @@ export class HandPoseWorkerManager {
                         onResolve(event.data.prediction)
                     } else {
                         console.log("Handpose Prediction something wrong..")
-                        onFail(event)
+                        // onFail(event)
                     }
                 }
             })

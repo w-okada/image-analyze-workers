@@ -56,7 +56,7 @@ export interface EstimateHandsParams{
 ## Step by step
 ### Create environment and install package
 ```
-$ create-react-app demo/  --typescript
+$ npx create-react-app 006demo_handpose-worker-js-demo  --template typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/handpose-worker-js
