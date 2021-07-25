@@ -3,6 +3,8 @@ import * as tf from '@tensorflow/tfjs';
 import { MODNetConfig, MODNetFunctionType, MODNetOperationParams, WorkerCommand, WorkerResponse } from "./const";
 import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
 
+export { MODNetConfig, MODNetOperationParams }
+
 export const generateMODNetDefaultConfig = ():MODNetConfig => {
     const defaultConf:MODNetConfig = {
         browserType         : getBrowserType(),
