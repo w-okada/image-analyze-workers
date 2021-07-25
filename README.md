@@ -38,13 +38,13 @@ Note. some module is not provided as webworker for safari because of it's restri
     - [installation and usage](#installation-and-usage-7)
     - [demo](#demo-7)
     - [reference](#reference)
-  - [MODNet](#modnet)
+  - [U^2-Net Portrait Drawing](#u2-net-portrait-drawing)
     - [installation and usage](#installation-and-usage-8)
     - [demo](#demo-8)
-    - [Licnece](#licnece)
-  - [U^2-Net Portrait Drawing](#u2-net-portrait-drawing)
+  - [MODNet](#modnet)
     - [installation and usage](#installation-and-usage-9)
     - [demo](#demo-9)
+    - [Licnece](#licnece)
   - [Google meet person segmentation](#google-meet-person-segmentation)
     - [installation and usage](#installation-and-usage-10)
     - [demo](#demo-10)
@@ -184,6 +184,16 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t08_bisenetv2-celeba
 ### reference
 [Enable arbitry resolution](https://github.com/w-okada/bisenetv2-tensorflow)
 
+## U^2-Net Portrait Drawing
+
+![image](https://user-images.githubusercontent.com/48346627/101999201-fba25d80-3d1d-11eb-8e63-445cb6abf204.png)
+
+### installation and usage 
+[See here](/009_u2net-portrait-worker-js)
+
+### demo
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t09_u2net-portrait/index.html
+
 
 ## MODNet
 ![image](https://user-images.githubusercontent.com/48346627/113265897-9c3d7d00-930f-11eb-95ca-98529cccb7a6.png)
@@ -202,16 +212,6 @@ This project (code, pre-trained models, demos, etc.) is released under the Creat
 
 NOTE: The license will be changed to allow commercial use after this work is accepted by a conference or a journal.
 
-
-## U^2-Net Portrait Drawing
-
-![image](https://user-images.githubusercontent.com/48346627/101999201-fba25d80-3d1d-11eb-8e63-445cb6abf204.png)
-
-### installation and usage 
-[See here](/009_u2net-portrait-worker-js)
-
-### demo
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t09_u2net-portrait/index.html
 
 ## Google meet person segmentation
 
@@ -261,7 +261,7 @@ This project (code, pre-trained models, demos, etc.) is released under the Creat
 
 # TFLite Wasm
 ## Google meet person segmentation(TFLite wasm)
-[see here]()
+[see here](https://github.com/w-okada/image-analyze-workers/tree/master/tfl001_google-meet-segmentation)
 
 ### demo
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/tfl001_google-meet-segmentation/index.html
@@ -270,7 +270,7 @@ Added Selfie Segmentation[modelcard](https://developers.google.com/ml-kit/images
 
 
 ##  White-Box-Cartoon(TFLite wasm)
-[see here]()
+[see here](https://github.com/w-okada/image-analyze-workers/tree/master/tfl002_white-box-cartoonization)
 
 ### demo
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/tfl002_white-box-cartoonization/index.html
