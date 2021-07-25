@@ -60,7 +60,7 @@ export declare enum U2NetPortraitFunctionType {
 ## Step by step
 ### Create environment and install package
 ```
-$ create-react-app demo/  --typescript
+$ npx create-react-app demo --template typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/u2net-portrait-worker-js
