@@ -56,7 +56,7 @@ const App = () => {
         const modelPath = models[modelKey]
         console.log("path change", modelPath)
         setModelPath(modelPath)
-    },[modelKey])
+    },[modelKey]) // eslint-disable-line
 
     /// For model setting change
     useEffect(()=>{
@@ -197,7 +197,7 @@ const App = () => {
         return ()=>{
             cancelAnimationFrame(renderRequestId)
         }
-    }, [tflite, inputMedia, useSIMD])
+    }, [tflite, inputMedia, useSIMD]) // eslint-disable-line
 
 
 
