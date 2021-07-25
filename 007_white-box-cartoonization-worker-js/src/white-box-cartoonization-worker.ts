@@ -2,7 +2,7 @@ import { WorkerResponse, WorkerCommand, CartoonConfig, CartoonOperatipnParams, C
 import { getBrowserType, BrowserType } from "./BrowserUtil";
 import * as tf from '@tensorflow/tfjs';
 
-export {  } from './const'
+export { CartoonConfig, CartoonOperatipnParams  } from './const'
 export { BrowserType, getBrowserType} from './BrowserUtil';
 
 export const generateCartoonDefaultConfig = ():CartoonConfig => {
