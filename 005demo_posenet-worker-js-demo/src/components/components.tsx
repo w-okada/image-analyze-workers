@@ -46,7 +46,7 @@ export const DropDown:FC<DropDownProps> = ({title, current, options, onchange}) 
                 </Select>
             </FormControl>
         )
-    },[current])
+    },[current]) // eslint-disable-line
     return (
         <> 
             {form}
@@ -75,7 +75,7 @@ export const Toggle:FC<SwitchProps> = ({title, current, onchange}) =>{
             />
             </div>
         )
-    },[current])
+    },[current]) // eslint-disable-line
     return(
         <>
             {form}
@@ -111,7 +111,7 @@ export const SingleValueSlider:FC<SingleValueSliderProps> = ({title, current, mi
             </div>
         )
 
-    }, [current])
+    }, [current]) // eslint-disable-line
 
     return(
         <>
@@ -210,7 +210,7 @@ export const VideoInputSelect:FC<VideoInputSelectProps> = ({title, current, opti
                 }
             </FormControl>
         )
-    }, [current, targetType, options, targetCamera])
+    }, [current, targetType, options, targetCamera]) // eslint-disable-line
     return (
         <> 
             {form}
@@ -257,7 +257,7 @@ export const FileChooser:FC<FileChooserProps> = ({title, onchange}) => {
                 <Button variant="outlined" color="primary" className={classes.inputButton} onClick={onFileClicked}>File</Button>                
             </div>
         )
-    }, [])
+    }, []) // eslint-disable-line
     return (
         <> 
             {form}
