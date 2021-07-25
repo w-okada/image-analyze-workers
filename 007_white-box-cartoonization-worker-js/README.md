@@ -60,7 +60,7 @@ export enum CartoonFunctionType{
 ## Step by step
 ### Create environment and install package
 ```
-$ npx create-react-app 007demo_white-box-cartoonization-worker-js-demo3  --template typescript
+$ npx create-react-app demo  --template typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/white-box-cartoonization-worker-js
