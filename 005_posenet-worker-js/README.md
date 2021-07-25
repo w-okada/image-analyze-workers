@@ -51,6 +51,7 @@ export interface PoseNetOperatipnParams{
 ### Create environment and install package
 ```
 $ create-react-app demo/  --typescript
+$ npx create-react-app 005demo_posenet-worker-js-demo  --template typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/posenet-worker-js

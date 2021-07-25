@@ -152,7 +152,7 @@ export class PoseNetWorkerManager {
                         onResolve(event.data.prediction)
                     } else {
                         console.log(`Posenet Prediction something wrong.. ${event.data.message}, ${event.data.uid}, ${uid}`)
-                        onFail(event)
+                        // onFail(event)
                     }
                 }
             })
