@@ -80,7 +80,7 @@ export enum GoogleMeetSegmentationSmoothingType{
 ## Step by step
 ### Create environment and install package
 ```
-$ npx create-react-app demo --template typescript
+$ npx create-react-app 011demo_googlemeet-segmentation-worker-js-demo3  --template typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/googlemeet-segmentation-worker-js
