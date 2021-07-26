@@ -3,8 +3,6 @@ import { TRIANGULATION } from "./traiangulation";
 import { matrix_identity, matrix_mult } from "./MatrixUtil";
 import { Coords3D, AnnotatedPrediction } from '@dannadori/facemesh-worker-js'
 
-
-
 export class FacemeshRenderer{
 
     private strVS = `

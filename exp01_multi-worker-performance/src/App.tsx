@@ -1,7 +1,7 @@
 import './App.css';
 import DemoBase, { ControllerUIProp } from './DemoBase';
 import { BodypixWorkerManager, generateBodyPixDefaultConfig, generateDefaultBodyPixParams, SemanticPersonSegmentation  } from '@dannadori/bodypix-worker-js'
-import { FacemeshWorkerManager, generateFacemeshDefaultConfig, generateDefaultFacemeshParams, AnnotatedPrediction, Coords3D, FacemeshOperatipnParams } from '@dannadori/facemesh-worker-js'
+import { FacemeshWorkerManager, generateFacemeshDefaultConfig, generateDefaultFacemeshParams, FacemeshOperatipnParams } from '@dannadori/facemesh-worker-js'
 import { AsciiArtWorkerManager, generateAsciiArtDefaultConfig, generateDefaultAsciiArtParams } from '@dannadori/asciiart-worker-js'
 import { OpenCVWorkerManager, generateOpenCVDefaultConfig, generateDefaultOpenCVParams } from '@dannadori/opencv-worker-js'
 import { HandPoseWorkerManager, generateHandPoseDefaultConfig, generateDefaultHandPoseParams } from '@dannadori/handpose-worker-js'
@@ -164,7 +164,9 @@ class App extends DemoBase {
       await this.facemeshForMask.predict(this.maskCanvas, this.facemeshForMaskParams)
       await this.facemeshForMask.predict(this.maskCanvas, this.facemeshForMaskParams)
       const prediction = await this.facemeshForMask.predict(this.maskCanvas, this.facemeshForMaskParams)
-      this.faceswap.setMask(this.maskCanvas, prediction)
+      if(prediction){
+        this.faceswap.setMask(this.maskCanvas, prediction)
+      }
     }catch(e){
       console.log(e)
     }finally{
