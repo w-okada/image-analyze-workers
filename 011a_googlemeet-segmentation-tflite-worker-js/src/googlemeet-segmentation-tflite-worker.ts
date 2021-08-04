@@ -1,4 +1,4 @@
-import { getBrowserType } from "./BrowserUtil"
+import { BrowserType, getBrowserType } from "./BrowserUtil"
 import { GoogleMeetSegmentationTFLiteConfig, GoogleMeetSegmentationTFLiteFunctionType, GoogleMeetSegmentationTFLiteOperationParams, TFLite, WorkerCommand, WorkerResponse } from "./const"
 
 export const generateGoogleMeetSegmentationTFLiteDefaultConfig = ():GoogleMeetSegmentationTFLiteConfig => {
@@ -40,11 +40,15 @@ export class LocalWorker{
     ready = false
     init = async (config: GoogleMeetSegmentationTFLiteConfig) => {
         this.ready = false
-        if(!this.mod){
+        const browserType = getBrowserType()
+        if(!this.mod && browserType == BrowserType.SAFARI){
+            this.mod = require('../resources/tflite_for_safari.js');
+        }else if(!this.mod &&  browserType != BrowserType.SAFARI){
             this.mod = require('../resources/tflite.js');
         }
+
         this.tflite = await this.mod()
-        console.log("[WORKER_MANAGER]:", this.mod)
+        // console.log("[WORKER_MANAGER]:", this.mod)
         console.log("[WORKER_MANAGER]: Test Access", this.tflite, this.tflite!._getInputImageBufferOffset())
         const modelResponse = await fetch(config.modelPath)
         const model = await modelResponse.arrayBuffer()
@@ -55,8 +59,12 @@ export class LocalWorker{
 
         if(config.enableSIMD){
             console.log("[WORKER_MANAGER]: LOAD SIMD_MOD")
-            this.modSIMD = require('../resources/tflite-simd.js');
-            console.log("[WORKER_MANAGER]:", this.modSIMD)
+            if(browserType == BrowserType.SAFARI){
+                this.modSIMD = require('../resources/tflite_for_safari.js');
+            }else{
+                this.modSIMD = require('../resources/tflite-simd.js');
+            }
+            // console.log("[WORKER_MANAGER]:", this.modSIMD)
             this.tfliteSIMD  = await this.modSIMD()
             const modelSIMDBufferOffset = this.tfliteSIMD!._getModelBufferMemoryOffset()
             this.tfliteSIMD!.HEAPU8.set(new Uint8Array(model), modelSIMDBufferOffset)

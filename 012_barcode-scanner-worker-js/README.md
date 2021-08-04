@@ -47,9 +47,9 @@ $ npm install
 $ npm install @dannadori/barcode-scanner-worker-js
 $ cp node_modules/\@dannadori/barcode-scanner-worker-js/dist/barcode-scanner-worker-worker.js public/
 $ mkdir -p public/static/js
-$ cp node_modules/\@dannadori/barcode-scanner-worker-js/resources/tflite.wasm* public/static/js
-$ cp node_modules/\@dannadori/barcode-scanner-worker-js/resources/tflite-simd.wasm* public/static/js
-$ cp node_modules/\@dannadori/barcode-scanner-worker-js/resources/tflite_for_safari.wasm* public/static/js
+$ cp node_modules/\@dannadori/barcode-scanner-worker-js/resources/tflite.wasm public/static/js
+$ cp node_modules/\@dannadori/barcode-scanner-worker-js/resources/tflite-simd.wasm public/static/js
+$ cp node_modules/\@dannadori/barcode-scanner-worker-js/resources/tflite_for_safari.wasm public/static/js
 ```
 
 ### Download Model
