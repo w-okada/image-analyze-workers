@@ -3,23 +3,45 @@ FROM tensorflow/tensorflow:devel
 
 RUN apt-get update -y && apt-get install -y cmake emacs mlocate
 
+
+## For Chrome, Firefox
 ### EMSCRIPTEN
-RUN git clone https://github.com/emscripten-core/emsdk.git -b 2.0.14 --depth 1
-WORKDIR /emsdk
+WORKDIR /
+RUN git clone https://github.com/emscripten-core/emsdk.git -b 2.0.14 --depth 1 emsdk2.0.14
+WORKDIR /emsdk2.0.14
+RUN ./emsdk install latest
+RUN ./emsdk activate latest
+### openCV
+WORKDIR /
+RUN git clone https://github.com/opencv/opencv.git -b 4.5.1 --depth 1 opencv_for_emsdk2.0.14
+WORKDIR /opencv_for_emsdk2.0.14
+RUN python3  platforms/js/build_js.py build_wasm             --emscripten_dir=/emsdk2.0.14/upstream/emscripten --config_only
+RUN python3  platforms/js/build_js.py build_wasm_simd --simd --emscripten_dir=/emsdk2.0.14/upstream/emscripten --config_only
+ENV OPENCV_JS_WHITELIST /opencv_for_emsdk2.0.14/platforms/js/opencv_js.config.py
+RUN cd build_wasm && /emsdk2.0.14/upstream/emscripten/emmake make -j$(nproc) && /emsdk2.0.14/upstream/emscripten/emmake make install
+RUN cd build_wasm_simd && /emsdk2.0.14/upstream/emscripten/emmake make -j$(nproc) && /emsdk2.0.14/upstream/emscripten/emmake make install
+
+## For Safari
+### EMSCRIPTEN
+WORKDIR /
+RUN git clone https://github.com/emscripten-core/emsdk.git -b 1.40.1 --depth 1 emsdk1.40.1
+WORKDIR /emsdk1.40.1
 RUN ./emsdk install latest
 RUN ./emsdk activate latest
 
-
 ### openCV
 WORKDIR /
-RUN git clone https://github.com/opencv/opencv.git -b 4.5.1 --depth 1
-RUN git -C /opencv checkout -b 4.5.1
-WORKDIR /opencv
-RUN python3  platforms/js/build_js.py build_wasm --emscripten_dir=/emsdk/upstream/emscripten --config_only
-RUN python3  platforms/js/build_js.py build_wasm_simd --simd --emscripten_dir=/emsdk/upstream/emscripten --config_only
-ENV OPENCV_JS_WHITELIST /opencv/platforms/js/opencv_js.config.py
-RUN cd build_wasm && /emsdk/upstream/emscripten/emmake make -j && /emsdk/upstream/emscripten/emmake make install
-RUN cd build_wasm_simd && /emsdk/upstream/emscripten/emmake make -j && /emsdk/upstream/emscripten/emmake make install
+RUN git clone https://github.com/opencv/opencv.git -b 4.5.1 --depth 1 opencv_for_emsdk1.40.1
+WORKDIR /opencv_for_emsdk1.40.1
+RUN python3  platforms/js/build_js.py build_wasm             --emscripten_dir=/emsdk1.40.1/upstream/emscripten --config_only
+RUN python3  platforms/js/build_js.py build_wasm_simd --simd --emscripten_dir=/emsdk1.40.1/upstream/emscripten --config_only
+ENV OPENCV_JS_WHITELIST /opencv_for_emsdk1.40.1/platforms/js/opencv_js.config.py
+RUN cd build_wasm && /emsdk1.40.1/upstream/emscripten/emmake make -j$(nproc) && /emsdk1.40.1/upstream/emscripten/emmake make install
+RUN sed -i -e "2660,2661d" /opencv_for_emsdk1.40.1/modules/core/include/opencv2/core/hal/intrin_wasm.hpp
+RUN cd build_wasm_simd && /emsdk1.40.1/upstream/emscripten/emmake make -j$(nproc) && /emsdk1.40.1/upstream/emscripten/emmake make install
+
+
+
 
 ### Tensorflow
 WORKDIR /
@@ -40,8 +62,8 @@ WORKDIR /ZBar
 ###### Don't treat warnings as errors!
 RUN sed -i "s/ -Werror//" $(pwd)/configure.ac
 RUN autoreconf -i
-RUN /emsdk/upstream/emscripten/emconfigure ./configure --without-x --without-jpeg --without-imagemagick --without-npapi --without-gtk --without-python --without-qt --without-xshm --disable-video --disable-pthread
-RUN /emsdk/upstream/emscripten/emmake make -j && /emsdk/upstream/emscripten/emmake make install
+RUN /emsdk2.0.14/upstream/emscripten/emconfigure ./configure --without-x --without-jpeg --without-imagemagick --without-npapi --without-gtk --without-python --without-qt --without-xshm --disable-video --disable-pthread
+RUN /emsdk2.0.14/upstream/emscripten/emmake make -j && /emsdk2.0.14/upstream/emscripten/emmake make install
 
 
 
@@ -49,12 +71,12 @@ RUN /emsdk/upstream/emscripten/emmake make -j && /emsdk/upstream/emscripten/emma
 WORKDIR /
 RUN git clone https://github.com/yushulx/zxing-cpp-emscripten
 WORKDIR /zxing-cpp-emscripten/build-wasm
-RUN sed -i "s/emconfigure/\/emsdk\/upstream\/emscripten\/emcmake/" configure.sh
-RUN sed -i "s/emmake/\/emsdk\/upstream\/emscripten\/emmake/" build.sh
+RUN sed -i "s/emconfigure/\/emsdk2.0.14\/upstream\/emscripten\/emcmake/" configure.sh
+RUN sed -i "s/emmake/\/emsdk2.0.14\/upstream\/emscripten\/emmake/" build.sh
 RUN sed -i '/project(zxing)/a\set(EMSCRIPTEN 1)' CMakeLists.txt
 # RUN sed -i 's/set(CMAKE_AR "emcc")/set(CMAKE_AR "\/emsdk\/upstream\/emscripten\/emcc")/' CMakeLists.txt
 
-RUN sed -i 's/set(CMAKE_AR "emcc")/set(CMAKE_AR "\/emsdk\/upstream\/emscripten\/emar")/' CMakeLists.txt
+RUN sed -i 's/set(CMAKE_AR "emcc")/set(CMAKE_AR "\/emsdk2.0.14\/upstream\/emscripten\/emar")/' CMakeLists.txt
 RUN sed -i 's/set(CMAKE_STATIC_LIBRARY_SUFFIX ".bc")/set(CMAKE_STATIC_LIBRARY_SUFFIX ".a")/' CMakeLists.txt
 RUN sed -i 's/set(CMAKE_C_CREATE_STATIC_LIBRARY "<CMAKE_AR> -o <TARGET> <LINK_FLAGS> <OBJECTS>")/set(CMAKE_C_CREATE_STATIC_LIBRARY "<CMAKE_AR> rcs <TARGET> <LINK_FLAGS> <OBJECTS>")/' CMakeLists.txt
 RUN sed -i 's/set(CMAKE_CXX_CREATE_STATIC_LIBRARY "<CMAKE_AR> -o <TARGET> <LINK_FLAGS> <OBJECTS>")/set(CMAKE_CXX_CREATE_STATIC_LIBRARY "<CMAKE_AR> rcs <TARGET> <LINK_FLAGS> <OBJECTS>")/' CMakeLists.txt

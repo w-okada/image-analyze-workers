@@ -46,12 +46,21 @@ npm_install(
 )
 
 
+# opencv
 new_local_repository(
-    name = "opencv",
-    path = "/opencv",
+    name = "opencv_for_emsdk2",
+    path = "/opencv_for_emsdk2.0.14",
     build_file = "opencv.BUILD",
 )
 
+new_local_repository(
+    name = "opencv_for_emsdk1",
+    path = "/opencv_for_emsdk1.40.1",
+    build_file = "opencv.BUILD",
+)
+
+
+# barcodes
 new_local_repository(
     name = "zbar",
     path = "/ZBar",
