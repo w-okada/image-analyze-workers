@@ -6,11 +6,10 @@ This folder is for blog [japanese](https://cloud.flect.co.jp/entry/2021/05/19/12
 ```
 $ npm run build_docker
 $ npm run start_docker
-$ npm run start_docker_simd
 $ npm run build_wasm
 $ npm run build_wasm_simd
+$ npm run build_wasm_for_safari
 $ npm run stop_docker
-$ npm run stop_docker_simd
 ```
 
 ## Demo
@@ -30,4 +29,5 @@ For example, there are the converted model at the model PINTO's zoo.
 Detail descussion is here ([issue](https://github.com/tensorflow/tfjs/issues/4177)).
 
 Once you have obtained the model in a legitimate way, place it in the folder below.
+
 
