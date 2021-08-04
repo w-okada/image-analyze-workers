@@ -3,11 +3,10 @@
 ```
 $ npm run build_docker
 $ npm run start_docker
-$ npm run start_docker_simd
 $ npm run build_wasm
 $ npm run build_wasm_simd
+$ npm run build_wasm_for_safari
 $ npm run stop_docker
-$ npm run stop_docker_simd
 ```
 
 ## Demo
