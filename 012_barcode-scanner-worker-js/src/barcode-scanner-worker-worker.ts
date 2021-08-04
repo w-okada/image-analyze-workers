@@ -1,3 +1,4 @@
+import { BrowserType, getBrowserType } from "./BrowserUtil";
 import {  BarcodeInfo, BarcodeScannerConfig, BarcodeScannerOperationParams, BarcodeScannerType, TFLite, WorkerCommand, WorkerResponse } from "./const";
 
 const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
@@ -227,11 +228,19 @@ onmessage = async (event) => {
         ready = false
         const config = event.data.config as BarcodeScannerConfig
 
-        const mod = require('../resources/tflite.js');
-        console.log("[WORKER] module initializing...", mod)
+        console.log("[WORKER] module initializing...")
+
+        let mod;
+        const browserType = config.browserType
+        if(!mod && browserType == BrowserType.SAFARI){
+            mod = require('../resources/tflite_for_safari.js');
+        }else if(!mod &&  browserType != BrowserType.SAFARI){
+            mod = require('../resources/tflite.js');
+        }
+
 
         tflite = await mod()
-        console.log("[WORKER]: mod", mod)
+        // console.log("[WORKER]: mod", mod)
         console.log("[WORKER]: Test Access", tflite, tflite!._getInputImageBufferOffset())
 
         const modelResponse = await fetch(config.modelPath)
@@ -245,8 +254,16 @@ onmessage = async (event) => {
 
         if(config.enableSIMD){
             console.log("[WORKER_MANAGER]: LOAD SIMD_MOD")
-            const modSIMD = require('../resources/tflite-simd.js');
-            console.log("[WORKER_MANAGER]:", modSIMD)
+            let modSIMD ;
+
+            if(browserType == BrowserType.SAFARI){
+                modSIMD = require('../resources/tflite_for_safari.js');
+            }else{
+                modSIMD = require('../resources/tflite-simd.js');
+            }
+
+
+            // console.log("[WORKER_MANAGER]:", modSIMD)
             tfliteSIMD  = await modSIMD()
             const modelSIMDBufferOffset = tfliteSIMD!._getModelBufferMemoryOffset()
             tfliteSIMD!.HEAPU8.set(new Uint8Array(model), modelSIMDBufferOffset)
