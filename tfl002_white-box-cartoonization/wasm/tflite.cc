@@ -55,9 +55,6 @@ extern "C"
     int exec(int width, int height){
         int tensorWidth  = interpreter->input_tensor(0)->dims->data[2];
         int tensorHeight = interpreter->input_tensor(0)->dims->data[1];
-        // printf("[WASM] TensorSize (%d, %d)\n", tensorWidth, tensorHeight);
-        // printf("[WASM] SCALE (%f, %f)\n", scaleW, scaleH);
-
 
         //// Resize
         cv::Mat inputImage(height, width, CV_8UC3, (unsigned char*)inputImageBuffer);
