@@ -1,7 +1,7 @@
 # TFLite Wasm for barcode scanner
 
 ### Note! ###
-this folder is deprecated
+This folder is deprecated. Not maintained.
 
 new barcode scanner's repository is [here](https://github.com/w-okada/barcode-scanner-lib)
 
