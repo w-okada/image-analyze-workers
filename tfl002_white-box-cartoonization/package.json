@@ -27,8 +27,7 @@
     "stop_docker":       "docker rm -f tflite_wasm",
     "build_wasm":             "docker exec -w /tflite_src tflite_wasm      bazel build --config=wasm -c opt                    :tflite            && docker exec tflite_wasm   tar xvf /tflite_src/bazel-bin/tflite            -C /tflite_build",
     "build_wasm_simd":        "docker exec -w /tflite_src tflite_wasm      bazel build --config=wasm -c opt --copt='-msimd128' :tflite-simd       && docker exec tflite_wasm   tar xvf /tflite_src/bazel-bin/tflite-simd       -C /tflite_build",
-    "build_wasm_for_safari":  "docker exec -w /tflite_src tflite_wasm      bazel build --config=wasm -c opt                    :tflite_for_safari && docker exec tflite_wasm   tar xvf /tflite_src/bazel-bin/tflite_for_safari -C /tflite_build",
-    "build_wasm_all": "npm run build_wasm && npm run build_wasm_for_safari && npm run build_wasm_simd",
+    "build_wasm_all":    "npm run build_wasm && npm run build_wasm_simd",
     "test":              "react-scripts test",
     "eject":             "react-scripts eject"
   },
