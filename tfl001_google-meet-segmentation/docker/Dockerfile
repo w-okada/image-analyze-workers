@@ -3,11 +3,13 @@ FROM tensorflow/tensorflow:devel
 
 RUN apt-get update -y && apt-get install -y cmake emacs mlocate
 
+### EMSCRIPTEN
 WORKDIR /
 RUN git clone https://github.com/emscripten-core/emsdk.git -b 2.0.14 --depth 1 emsdk
 WORKDIR /emsdk
 RUN ./emsdk install latest
 RUN ./emsdk activate latest
+
 ### openCV
 WORKDIR /
 RUN git clone https://github.com/opencv/opencv.git -b 4.5.3 --depth 1 opencv
