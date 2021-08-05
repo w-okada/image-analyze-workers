@@ -3,7 +3,6 @@ import { BrowserType, getBrowserType } from '../BrowserUtil'
 
 declare function createTFLiteModule(): Promise<TFLite>
 declare function createTFLiteSIMDModule(): Promise<TFLite>
-declare function createTFLiteModule_for_safari(): Promise<TFLite>
 
 export interface TFLite extends EmscriptenModule {
     _getModelBufferMemoryOffset(): number
@@ -64,7 +63,7 @@ function useTFLite() {
             console.log("[useTFLite] simd error",e)
             setTFLiteSIMD(undefined)
         }
-        
+
     }, [modelPath])
 
 

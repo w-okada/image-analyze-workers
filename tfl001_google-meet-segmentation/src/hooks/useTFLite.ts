@@ -4,9 +4,6 @@ import { BrowserType, getBrowserType } from '../BrowserUtil'
 declare function createTFLiteModule(): Promise<TFLite>
 declare function createTFLiteSIMDModule(): Promise<TFLite>
 
-declare function createTFLiteModule_for_safari(): Promise<TFLite>
-
-
 export interface TFLite extends EmscriptenModule {
     /// TFLite Model Properties
     _getModelBufferMemoryOffset(): number

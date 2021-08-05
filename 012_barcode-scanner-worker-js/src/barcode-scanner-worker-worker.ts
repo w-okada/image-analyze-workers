@@ -232,12 +232,7 @@ onmessage = async (event) => {
 
         let mod;
         const browserType = config.browserType
-        if(!mod && browserType == BrowserType.SAFARI){
-            mod = require('../resources/tflite_for_safari.js');
-        }else if(!mod &&  browserType != BrowserType.SAFARI){
-            mod = require('../resources/tflite.js');
-        }
-
+        mod = require('../resources/tflite.js');
 
         tflite = await mod()
         // console.log("[WORKER]: mod", mod)
@@ -257,7 +252,7 @@ onmessage = async (event) => {
             let modSIMD ;
 
             if(browserType == BrowserType.SAFARI){
-                modSIMD = require('../resources/tflite_for_safari.js');
+                modSIMD = require('../resources/tflite.js');
             }else{
                 modSIMD = require('../resources/tflite-simd.js');
             }

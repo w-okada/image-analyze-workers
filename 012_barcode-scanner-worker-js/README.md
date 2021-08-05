@@ -49,7 +49,6 @@ $ cp node_modules/\@dannadori/barcode-scanner-worker-js/dist/barcode-scanner-wor
 $ mkdir -p public/static/js
 $ cp node_modules/\@dannadori/barcode-scanner-worker-js/resources/tflite.wasm public/static/js
 $ cp node_modules/\@dannadori/barcode-scanner-worker-js/resources/tflite-simd.wasm public/static/js
-$ cp node_modules/\@dannadori/barcode-scanner-worker-js/resources/tflite_for_safari.wasm public/static/js
 ```
 
 ### Download Model
