@@ -41,11 +41,7 @@ export class LocalWorker{
     init = async (config: GoogleMeetSegmentationTFLiteConfig) => {
         this.ready = false
         const browserType = getBrowserType()
-        if(!this.mod && browserType == BrowserType.SAFARI){
-            this.mod = require('../resources/tflite_for_safari.js');
-        }else if(!this.mod &&  browserType != BrowserType.SAFARI){
-            this.mod = require('../resources/tflite.js');
-        }
+        this.mod = require('../resources/tflite.js');
 
         this.tflite = await this.mod()
         // console.log("[WORKER_MANAGER]:", this.mod)
@@ -60,7 +56,7 @@ export class LocalWorker{
         if(config.enableSIMD){
             console.log("[WORKER_MANAGER]: LOAD SIMD_MOD")
             if(browserType == BrowserType.SAFARI){
-                this.modSIMD = require('../resources/tflite_for_safari.js');
+                this.modSIMD = require('../resources/tflite.js');
             }else{
                 this.modSIMD = require('../resources/tflite-simd.js');
             }
