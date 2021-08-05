@@ -76,14 +76,8 @@ emsdk_emscripten_deps()
 
 # opencv
 new_local_repository(
-    name = "opencv_for_emsdk2",
-    path = "/opencv_for_emsdk2.0.14",
-    build_file = "opencv.BUILD",
-)
-
-new_local_repository(
-    name = "opencv_for_emsdk1",
-    path = "/opencv_for_emsdk1.40.1",
+    name = "opencv",
+    path = "/opencv",
     build_file = "opencv.BUILD",
 )
 

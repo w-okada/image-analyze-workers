@@ -4,8 +4,6 @@ import { BrowserType, getBrowserType } from '../BrowserUtil'
 declare function createTFLiteModule(): Promise<TFLite>
 declare function createTFLiteSIMDModule(): Promise<TFLite>
 
-declare function createTFLiteModule_for_safari(): Promise<TFLite>
-
 export interface TFLite extends EmscriptenModule {
     /// TFLite Model Properties
     _getModelBufferMemoryOffset(): number
@@ -57,46 +55,29 @@ function useTFLite() {
         }
 
         const browserType = getBrowserType()
-        if(browserType == BrowserType.SAFARI){
-            createTFLiteModule_for_safari().then(tflite => {
-                loadModel(tflite, modelPath).then(()=>{
-                    setTFLite(tflite)
-                })
+        createTFLiteModule().then(tflite => {
+            loadModel(tflite, modelPath).then(()=>{
+                setTFLite(tflite)
             })
-            // Safari doesn't support simd !? -> use tflite as dummy
-            createTFLiteModule_for_safari().then(tflite_simd => {
-                loadModel(tflite_simd, modelPath).then(()=>{
-                    setTFLiteSIMD(tflite_simd)
+        })
+        try{
+            if(browserType == BrowserType.SAFARI){ // Safari doesn't support simd
+                createTFLiteModule().then(tflite_simd=>{
+                    loadModel(tflite_simd, modelPath).then(()=>{
+                        setTFLiteSIMD(tflite_simd)
+                    })
                 })
-            })
-            // try{
-            //     createTFLiteSIMDModule_for_safari().then(tflite_simd=>{
-            //         loadModel(tflite_simd, modelPath).then(()=>{
-            //             setTFLiteSIMD(tflite_simd)
-            //         })
-            //     })
-            // }catch(e){
-            //     console.log("[useTFLite] simd error",e)
-            //     setTFLiteSIMD(undefined)
-            // }
-        }else{
-            createTFLiteModule().then(tflite => {
-                loadModel(tflite, modelPath).then(()=>{
-                    setTFLite(tflite)
-                })
-            })
-            try{
+            }else{
                 createTFLiteSIMDModule().then(tflite_simd=>{
                     loadModel(tflite_simd, modelPath).then(()=>{
                         setTFLiteSIMD(tflite_simd)
                     })
                 })
-            }catch(e){
-                console.log("[useTFLite] simd error",e)
-                setTFLiteSIMD(undefined)
             }
+        }catch(e){
+            console.log("[useTFLite] simd error",e)
+            setTFLiteSIMD(undefined)
         }
-
     }, [modelPath])
 
 
