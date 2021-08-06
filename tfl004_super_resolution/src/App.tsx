@@ -172,9 +172,9 @@ const App = () => {
                     const imageData = tmpCtx.getImageData(0, 0, tmp.width, tmp.height)
                     const inputImageBufferOffset = currentTFLite._getInputImageBufferOffset()
                     for (let i = 0; i < tmp.width * tmp.height; i++) {
-                        currentTFLite.HEAPU8[inputImageBufferOffset + i * 3 + 0] = imageData.data[i * 4 + 0]
+                        currentTFLite.HEAPU8[inputImageBufferOffset + i * 3 + 0] = imageData.data[i * 4 + 2]
                         currentTFLite.HEAPU8[inputImageBufferOffset + i * 3 + 1] = imageData.data[i * 4 + 1]
-                        currentTFLite.HEAPU8[inputImageBufferOffset + i * 3 + 2] = imageData.data[i * 4 + 2]
+                        currentTFLite.HEAPU8[inputImageBufferOffset + i * 3 + 2] = imageData.data[i * 4 + 0]
                     }
                     // console.log(imageData.data)
     
@@ -191,9 +191,9 @@ const App = () => {
                     const resizedImage = new ImageData(tmp.width * scaleFactor, tmp.height * scaleFactor)
                     for (let i = 0; i < resizedImage.width * resizedImage.height; i++) {
     
-                        resizedImage.data[i * 4 + 0] =  (currentTFLite.HEAPU8[outputImageBufferOffset + i * 3 + 0] + 0) 
+                        resizedImage.data[i * 4 + 0] =  (currentTFLite.HEAPU8[outputImageBufferOffset + i * 3 + 2] + 0) 
                         resizedImage.data[i * 4 + 1] =  (currentTFLite.HEAPU8[outputImageBufferOffset + i * 3 + 1] + 0) 
-                        resizedImage.data[i * 4 + 2] =  (currentTFLite.HEAPU8[outputImageBufferOffset + i * 3 + 2] + 0) 
+                        resizedImage.data[i * 4 + 2] =  (currentTFLite.HEAPU8[outputImageBufferOffset + i * 3 + 0] + 0) 
                         resizedImage.data[i * 4 + 3] =  255
                     }
                     // console.log(segmentationMask.data)
