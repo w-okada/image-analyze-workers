@@ -62,16 +62,18 @@ Note. some module is not provided as webworker for safari because of it's restri
   - [White-Box-Cartoon(TFLite wasm)](#white-box-cartoontflite-wasm)
     - [demo](#demo-14)
     - [License](#license-1)
+  - [ESPCN (TFLite wasm)](#espcn-tflite-wasm)
+    - [demo](#demo-15)
 - [Libs](#libs)
   - [FaceSwap](#faceswap)
-    - [demo](#demo-15)
+    - [demo](#demo-16)
 - [Experiments](#experiments)
   - [Exp.1 Multi-version based tfjs model](#exp1-multi-version-based-tfjs-model)
-    - [demo](#demo-16)
+    - [demo](#demo-17)
     - [src](#src)
     - [Citation](#citation-1)
   - [Exp.2 Performance improvement](#exp2-performance-improvement)
-    - [demo](#demo-17)
+    - [demo](#demo-18)
     - [src](#src-1)
     - [Citation](#citation-2)
 - [Reference](#reference-1)
@@ -284,6 +286,14 @@ Copyright (C) Xinrui Wang All rights reserved. Licensed under the CC BY-NC-SA 4.
 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 Commercial application is prohibited, please remain this license if you clone this repo
 ```
+
+## ESPCN (TFLite wasm)
+[see here](https://github.com/w-okada/image-analyze-workers/tree/master/tfl004_super_resolution)
+
+### demo
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/tfl004_super_resolution/index.html
+
+
 # Libs
 ## FaceSwap
 Faceswap by using facemesh worker
