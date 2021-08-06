@@ -197,7 +197,7 @@ const App = () => {
         return ()=>{
             cancelAnimationFrame(renderRequestId)
         }
-    }, [tflite, inputMedia, useSIMD]) // eslint-disable-line
+    }, [tflite, tfliteSIMD, inputMedia, useSIMD]) // eslint-disable-line
 
 
 

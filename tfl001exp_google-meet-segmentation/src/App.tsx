@@ -259,7 +259,7 @@ const App = () => {
         return ()=>{
             cancelAnimationFrame(renderRequestId)
         }
-    }, [tflite, processSizeKey, inputMedia, useSIMD, lightWrapping, strict]) // eslint-disable-line
+    }, [tflite, tfliteSIMD, processSizeKey, inputMedia, useSIMD, lightWrapping, strict]) // eslint-disable-line
 
 
     ///////////////
