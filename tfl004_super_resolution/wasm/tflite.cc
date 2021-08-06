@@ -21,8 +21,8 @@ namespace{
     char modelBuffer[1024*1024*256]; 
     
     ///// Buffer for image processing
-    unsigned char inputImageBuffer[3 * MAX_WIDTH * MAX_HEIGHT]; 
-    unsigned char outputImageBuffer[3 * MAX_WIDTH * MAX_HEIGHT];  
+    unsigned char inputImageBuffer[4 * MAX_WIDTH * MAX_HEIGHT]; 
+    unsigned char outputImageBuffer[4 * MAX_WIDTH * MAX_HEIGHT];  
 
 
     const int INTER_NEAREST  = 0;
@@ -97,8 +97,8 @@ extern "C"
 
 
         // (1) Generate InputImage and OutputImage Mat
-        cv::Mat inputImage(height, width, CV_8UC3, inputImageBuffer);
-        cv::Mat outputImage(outHeight, outWidth, CV_8UC3, outputImageBuffer);
+        cv::Mat inputImage(height, width, CV_8UC4, inputImageBuffer);
+        cv::Mat outputImage(outHeight, outWidth, CV_8UC4, outputImageBuffer);
         
         // (1.5) normal interpolatiopn.
         if( interpolationType != INTER_ESPCN){
@@ -110,9 +110,10 @@ extern "C"
 
         // (2) Extract Y of YUV
         std::vector<cv::Mat> planes;
-        cv::cvtColor(inputImage, inputImage, cv::COLOR_BGR2YUV, 0);
+        cv::Mat inputBGR, inputYUV;
+        cv::cvtColor(inputImage, inputYUV, cv::COLOR_RGB2YUV);
         cv::Mat inputImage32F3(height, width, CV_32FC3);
-        inputImage.convertTo(inputImage32F3, CV_32FC3);
+        inputYUV.convertTo(inputImage32F3, CV_32FC3);
         cv::split(inputImage32F3, planes);
         planes[0] /= 255.0;
 
@@ -135,7 +136,7 @@ extern "C"
 
         // (7) resize original for output
         cv::Mat resizedInputImage(outHeight, outWidth, CV_8UC3);
-        cv::resize(inputImage, resizedInputImage, resizedInputImage.size(), 0, 0, cv::INTER_CUBIC);
+        cv::resize(inputYUV, resizedInputImage, resizedInputImage.size(), 0, 0, cv::INTER_CUBIC);
         // resizedInputImage.copyTo(outputImage);
         // cv::cvtColor(outputImage, outputImage, cv::COLOR_YUV2BGR, 0);
 
@@ -143,8 +144,10 @@ extern "C"
         cv::split(resizedInputImage, planes);
         intepreterOutputMatUC8.copyTo(planes[0]);
         cv::Mat channels[] = {planes[0], planes[1], planes[2]};
-        cv::merge(channels, 3, outputImage);
-        cv::cvtColor(outputImage, outputImage, cv::COLOR_YUV2BGR, 0);
+        cv::Mat tmpMat;
+        cv::merge(channels, 3, tmpMat);
+        cv::cvtColor(tmpMat, outputImage, cv::COLOR_YUV2RGB, 4);
+        // cv::cvtColor(tmpMat, outputImage, cv::COLOR_BGR2RGBA);
 
 
         return 0;
