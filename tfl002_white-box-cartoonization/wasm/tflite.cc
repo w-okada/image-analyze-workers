@@ -89,12 +89,12 @@ extern "C"
     EMSCRIPTEN_KEEPALIVE
     int loadModel(int bufferSize){
         printf("[WASM] --------------------------------------------------------\n");
-        printf("[WASM] - TFLite Model Loader for meet segmentation            -\n");
+        printf("[WASM] - TFLite Model Loader for white-box-cartoonization     -\n");
         printf("[WASM] - Bug report:                                          -\n");
         printf("[WASM] -   https://github.com/w-okada/image-analyze-workers   -\n");
         printf("[WASM] --------------------------------------------------------\n");
         printf("[WASM] \n");
-        printf("[WASM] Loading model of sizeaa: %d\n", bufferSize);
+        printf("[WASM] Loading model of size: %d\n", bufferSize);
 
         // Load model
         std::unique_ptr<tflite::FlatBufferModel> model = tflite::FlatBufferModel::BuildFromBuffer(modelBuffer, bufferSize);
