@@ -1,0 +1,52 @@
+{
+  "name": "tfl002_white-box-cartoonization",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "./",
+  "dependencies": {
+    "@material-ui/core": "^4.12.2",
+    "@testing-library/jest-dom": "^5.14.1",
+    "@testing-library/react": "^12.0.0",
+    "@testing-library/user-event": "^13.2.1",
+    "@types/emscripten": "^1.39.5",
+    "@types/jest": "^26.0.24",
+    "@types/node": "^16.4.2",
+    "@types/react": "^17.0.15",
+    "@types/react-dom": "^17.0.9",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-scripts": "4.0.3",
+    "typescript": "^4.3.5",
+    "web-vitals": "^2.1.0"
+  },
+  "scripts": {
+    "start":             "react-scripts start",
+    "build":             "cp ../common/*.ts ./src && react-scripts build",
+    "build_docker":      "docker build -t tflite_wasm docker",
+    "start_docker":      "docker run -dit -v $PWD/wasm:/tflite_src -v $PWD/public/tflite:/tflite_build --name tflite_wasm      tflite_wasm bash",
+    "stop_docker":       "docker rm -f tflite_wasm",
+    "build_wasm":             "docker exec -w /tflite_src tflite_wasm      bazel build --config=wasm -c opt                    :tflite            && docker exec tflite_wasm   tar xvf /tflite_src/bazel-bin/tflite            -C /tflite_build",
+    "build_wasm_simd":        "docker exec -w /tflite_src tflite_wasm      bazel build --config=wasm -c opt --copt='-msimd128' :tflite-simd       && docker exec tflite_wasm   tar xvf /tflite_src/bazel-bin/tflite-simd       -C /tflite_build",
+    "build_wasm_all":    "npm run build_wasm && npm run build_wasm_simd",
+    "test":              "react-scripts test",
+    "eject":             "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
