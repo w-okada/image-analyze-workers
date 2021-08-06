@@ -113,9 +113,8 @@ extern "C"
         cv::Mat inputBGR, inputYUV;
         cv::cvtColor(inputImage, inputYUV, cv::COLOR_RGB2YUV);
         cv::Mat inputImage32F3(height, width, CV_32FC3);
-        inputYUV.convertTo(inputImage32F3, CV_32FC3);
+        inputYUV.convertTo(inputImage32F3, CV_32FC3, 1.0f / 255.0f);
         cv::split(inputImage32F3, planes);
-        planes[0] /= 255.0;
 
         // (3) input
         float *input = interpreter->typed_input_tensor<float>(0);
@@ -130,9 +129,8 @@ extern "C"
         cv::Mat intepreterOutputMat(outHeight, outWidth, CV_32FC1, output);
 
         // (6) convert output to uint8
-        intepreterOutputMat = intepreterOutputMat * 255.0;
         cv::Mat intepreterOutputMatUC8(outHeight, outWidth, CV_8UC1);
-        intepreterOutputMat.convertTo(intepreterOutputMatUC8, CV_8UC1);
+        intepreterOutputMat.convertTo(intepreterOutputMatUC8, CV_8UC1, 255.0f);
 
         // (7) resize original for output
         cv::Mat resizedInputImage(outHeight, outWidth, CV_8UC3);
