@@ -21,8 +21,8 @@ namespace{
     char modelBuffer[1024*1024*256]; 
     
     ///// Buffer for image processing
-    unsigned char inputImageBuffer[3 * MAX_WIDTH * MAX_HEIGHT]; 
-    unsigned char outputImageBuffer[3 * MAX_WIDTH * MAX_HEIGHT];  
+    unsigned char inputImageBuffer[4 * MAX_WIDTH * MAX_HEIGHT]; 
+    unsigned char outputImageBuffer[4 * MAX_WIDTH * MAX_HEIGHT];  
 
 
     const int INTER_NEAREST  = 0;
@@ -83,6 +83,14 @@ extern "C"
     }
 
     EMSCRIPTEN_KEEPALIVE
+    void showExceptionMsg(intptr_t ptr) {
+        std::cout << ptr << std::endl;
+        auto e = reinterpret_cast<std::exception*>(ptr);
+        std::cout << e->what() << std::endl;
+    }
+
+
+    EMSCRIPTEN_KEEPALIVE
     int exec(int width, int height, int interpolationType){
         //interpolationType => 0: espcn, 1:cubic
 
@@ -97,8 +105,11 @@ extern "C"
 
 
         // (1) Generate InputImage and OutputImage Mat
-        cv::Mat inputImage(height, width, CV_8UC3, inputImageBuffer);
-        cv::Mat outputImage(outHeight, outWidth, CV_8UC3, outputImageBuffer);
+        cv::Mat inputImage(height, width, CV_8UC4, inputImageBuffer);
+        cv::Mat outputImage(outHeight, outWidth, CV_8UC4, outputImageBuffer);
+        cv::Mat inputImageCrCb(height, width, CV_8UC2);
+        float *input = interpreter->typed_input_tensor<float>(0);
+        float *output = interpreter->typed_output_tensor<float>(0);
         
         // (1.5) normal interpolatiopn.
         if( interpolationType != INTER_ESPCN){
@@ -108,44 +119,40 @@ extern "C"
             return 0;
         }
 
-        // (2) Extract Y of YUV
-        std::vector<cv::Mat> planes;
-        cv::cvtColor(inputImage, inputImage, cv::COLOR_BGR2YUV, 0);
-        cv::Mat inputImage32F3(height, width, CV_32FC3);
-        inputImage.convertTo(inputImage32F3, CV_32FC3);
-        cv::split(inputImage32F3, planes);
-        planes[0] /= 255.0;
-
-        // (3) input
-        float *input = interpreter->typed_input_tensor<float>(0);
-        cv::Mat intepreterInputMat(height, width, CV_32FC1, input);
-        planes[0].copyTo(intepreterInputMat);
-
-        // (4) infer       
+        // (2) Convert RGBA2YCrCb, Extract Y of YCrCb
+        unsigned char *inputImageCrCbBuffer = inputImageCrCb.data;
+        for (int i = 0; i < width * height; ++i) {
+            int r = inputImageBuffer[i * 4 + 0];
+            int g = inputImageBuffer[i * 4 + 1];
+            int b = inputImageBuffer[i * 4 + 2];
+            float y = 0.299f * r + 0.587f * g + 0.114f * b;
+            float cr = (r - y) * 0.713f + 128.0f;
+            float cb = (b - y) * 0.564f + 128.0f;
+            inputImageCrCbBuffer[i * 2 + 0] = cv::saturate_cast<unsigned char>(cr);
+            inputImageCrCbBuffer[i * 2 + 1] = cv::saturate_cast<unsigned char>(cb);
+            input[i] = y / 255.0f; 
+        }
+        // (3) infer       
         CHECK_TFLITE_ERROR(interpreter->Invoke() == kTfLiteOk);
 
-        // (5) output
-        float *output = interpreter->typed_output_tensor<float>(0);
-        cv::Mat intepreterOutputMat(outHeight, outWidth, CV_32FC1, output);
+        // (4) resize original for output
+        cv::Mat resizedInputImage(outHeight, outWidth, CV_8UC2);
+        cv::resize(inputImageCrCb, resizedInputImage, resizedInputImage.size(), 0, 0, cv::INTER_CUBIC);
 
-        // (6) convert output to uint8
-        intepreterOutputMat = intepreterOutputMat * 255.0;
-        cv::Mat intepreterOutputMatUC8(outHeight, outWidth, CV_8UC1);
-        intepreterOutputMat.convertTo(intepreterOutputMatUC8, CV_8UC1);
-
-        // (7) resize original for output
-        cv::Mat resizedInputImage(outHeight, outWidth, CV_8UC3);
-        cv::resize(inputImage, resizedInputImage, resizedInputImage.size(), 0, 0, cv::INTER_CUBIC);
-        // resizedInputImage.copyTo(outputImage);
-        // cv::cvtColor(outputImage, outputImage, cv::COLOR_YUV2BGR, 0);
-
-        // // (8) marge result and input to output
-        cv::split(resizedInputImage, planes);
-        intepreterOutputMatUC8.copyTo(planes[0]);
-        cv::Mat channels[] = {planes[0], planes[1], planes[2]};
-        cv::merge(channels, 3, outputImage);
-        cv::cvtColor(outputImage, outputImage, cv::COLOR_YUV2BGR, 0);
-
+        // (5) merge result and input to output
+        unsigned char *resizedInputImageBuffer = resizedInputImage.data;
+        for (int i = 0; i < outWidth * outHeight; ++i) {
+            float y = output[i] * 255.0f;
+            float cr = resizedInputImageBuffer[i * 2 + 0];
+            float cb = resizedInputImageBuffer[i * 2 + 1];
+            unsigned int r = cv::saturate_cast<unsigned char>(y + 1.403f * (cr - 128));
+            unsigned int g = cv::saturate_cast<unsigned char>(y - 0.714f * (cr - 128) - 0.344f * (cb - 128));
+            unsigned int b = cv::saturate_cast<unsigned char>(y + 1.773 * (cb - 128));
+            outputImageBuffer[i * 4 + 0] = r;
+            outputImageBuffer[i * 4 + 1] = g;
+            outputImageBuffer[i * 4 + 2] = b;
+            outputImageBuffer[i * 4 + 3] = 255;
+        }
 
         return 0;
     }
