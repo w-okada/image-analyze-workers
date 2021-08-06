@@ -305,7 +305,7 @@ extern "C"
         printf("[WASM] -   https://github.com/w-okada/image-analyze-workers   -\n");
         printf("[WASM] --------------------------------------------------------\n");
         printf("[WASM] \n");
-        printf("[WASM] Loading model of sizeaa: %d\n", bufferSize);
+        printf("[WASM] Loading model of size: %d\n", bufferSize);
 
         // Load model
         std::unique_ptr<tflite::FlatBufferModel> model = tflite::FlatBufferModel::BuildFromBuffer(modelBuffer, bufferSize);
