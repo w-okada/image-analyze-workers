@@ -262,6 +262,7 @@ This project (code, pre-trained models, demos, etc.) is released under the Creat
 
 
 ## Super Resolution
+![image](https://user-images.githubusercontent.com/48346627/128611056-978ee70c-b893-4ee6-96dd-650dec002eba.png)
 
 ### installation and usage 
 [See here](/013_super-resolution-worker-js)
