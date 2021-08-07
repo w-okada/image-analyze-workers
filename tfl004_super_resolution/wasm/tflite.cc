@@ -110,16 +110,14 @@ extern "C"
 
         // (2) Extract Y of YUV
         std::vector<cv::Mat> planes;
-        cv::Mat inputBGR, inputYUV;
+        cv::Mat inputYUV;
         cv::cvtColor(inputImage, inputYUV, cv::COLOR_RGB2YUV);
-        cv::Mat inputImage32F3(height, width, CV_32FC3);
-        inputYUV.convertTo(inputImage32F3, CV_32FC3, 1.0f / 255.0f);
-        cv::split(inputImage32F3, planes);
+        cv::split(inputYUV, planes);
 
         // (3) input
         float *input = interpreter->typed_input_tensor<float>(0);
         cv::Mat intepreterInputMat(height, width, CV_32FC1, input);
-        planes[0].copyTo(intepreterInputMat);
+        planes[0].convertTo(intepreterInputMat, CV_32F, 1.0f / 255.0f);
 
         // (4) infer       
         CHECK_TFLITE_ERROR(interpreter->Invoke() == kTfLiteOk);
@@ -138,13 +136,12 @@ extern "C"
         // resizedInputImage.copyTo(outputImage);
         // cv::cvtColor(outputImage, outputImage, cv::COLOR_YUV2BGR, 0);
 
-        // // (8) marge result and input to output
+        // (8) marge result and input to output
         cv::split(resizedInputImage, planes);
-        intepreterOutputMatUC8.copyTo(planes[0]);
-        cv::Mat channels[] = {planes[0], planes[1], planes[2]};
-        cv::Mat tmpMat;
-        cv::merge(channels, 3, tmpMat);
-        cv::cvtColor(tmpMat, outputImage, cv::COLOR_YUV2RGB, 4);
+        cv::Mat channels[] = {intepreterOutputMatUC8, planes[1], planes[2]};
+        cv::Mat outputYUV;
+        cv::merge(channels, 3, outputYUV);
+        cv::cvtColor(outputYUV, outputImage, cv::COLOR_YUV2RGB, 4);
         // cv::cvtColor(tmpMat, outputImage, cv::COLOR_BGR2RGBA);
 
 
