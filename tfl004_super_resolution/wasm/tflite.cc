@@ -128,21 +128,19 @@ extern "C"
 
         // (6) convert output to uint8
         cv::Mat intepreterOutputMatUC8(outHeight, outWidth, CV_8UC1);
-        intepreterOutputMat.convertTo(intepreterOutputMatUC8, CV_8UC1, 255.0f);
+        intepreterOutputMat.convertTo(intepreterOutputMatUC8, CV_8U, 255.0f);
 
         // (7) resize original for output
-        cv::Mat resizedInputImageU(outHeight, outWidth, CV_8UC1), resizedInputImageV(outHeight, outWidth, CV_8UC1);
+        cv::Mat resizedInputImageU(outHeight, outWidth, CV_8UC1);
+        cv::Mat resizedInputImageV(outHeight, outWidth, CV_8UC1);
         cv::resize(inputPlanes[1], resizedInputImageU, resizedInputImageU.size(), 0, 0, cv::INTER_CUBIC);
         cv::resize(inputPlanes[2], resizedInputImageV, resizedInputImageV.size(), 0, 0, cv::INTER_CUBIC);
-        // resizedInputImage.copyTo(outputImage);
-        // cv::cvtColor(outputImage, outputImage, cv::COLOR_YUV2BGR, 0);
 
-        // (8) marge result and input to output
+        // (8) merge result and input to output
         cv::Mat channels[] = {intepreterOutputMatUC8, resizedInputImageU, resizedInputImageV};
         cv::Mat outputYUV;
         cv::merge(channels, 3, outputYUV);
-        cv::cvtColor(outputYUV, outputImage, cv::COLOR_YUV2RGB, 4);
-        // cv::cvtColor(tmpMat, outputImage, cv::COLOR_BGR2RGBA);
+        cv::cvtColor(outputYUV, outputImage, cv::COLOR_YUV2RGB, 4); // 4 is required!
 
 
         return 0;
