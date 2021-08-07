@@ -56,24 +56,27 @@ Note. some module is not provided as webworker for safari because of it's restri
     - [demo](#demo-12)
     - [demo(movie)](#demomovie)
     - [Licnece](#licnece-1)
+  - [Super Resolution](#super-resolution)
+    - [installation and usage](#installation-and-usage-13)
+    - [demo](#demo-13)
 - [TFLite Wasm](#tflite-wasm)
   - [Google meet person segmentation(TFLite wasm)](#google-meet-person-segmentationtflite-wasm)
-    - [demo](#demo-13)
-  - [White-Box-Cartoon(TFLite wasm)](#white-box-cartoontflite-wasm)
     - [demo](#demo-14)
+  - [White-Box-Cartoon(TFLite wasm)](#white-box-cartoontflite-wasm)
+    - [demo](#demo-15)
     - [License](#license-1)
   - [ESPCN (TFLite wasm)](#espcn-tflite-wasm)
-    - [demo](#demo-15)
+    - [demo](#demo-16)
 - [Libs](#libs)
   - [FaceSwap](#faceswap)
-    - [demo](#demo-16)
+    - [demo](#demo-17)
 - [Experiments](#experiments)
   - [Exp.1 Multi-version based tfjs model](#exp1-multi-version-based-tfjs-model)
-    - [demo](#demo-17)
+    - [demo](#demo-18)
     - [src](#src)
     - [Citation](#citation-1)
   - [Exp.2 Performance improvement](#exp2-performance-improvement)
-    - [demo](#demo-18)
+    - [demo](#demo-19)
     - [src](#src-1)
     - [Citation](#citation-2)
 - [Reference](#reference-1)
@@ -254,11 +257,21 @@ https://youtu.be/IrPLMUuWaJk
 - Pixel4
 https://youtu.be/Xxz1hFUAnKk
 
-
-
-
 ### Licnece
 This project (code, pre-trained models, demos, etc.) is released under the Creative Commons Attribution NonCommercial ShareAlike 4.0 license.
+
+
+## Super Resolution
+
+### installation and usage 
+[See here](/013_super-resolution-worker-js)
+
+### demo
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t13_super-resolution/index.html
+
+
+
+
 
 
 # TFLite Wasm
