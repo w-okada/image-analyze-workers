@@ -171,11 +171,7 @@ const App = () => {
                     /// Input data
                     const imageData = tmpCtx.getImageData(0, 0, tmp.width, tmp.height)
                     const inputImageBufferOffset = currentTFLite._getInputImageBufferOffset()
-                    for (let i = 0; i < tmp.width * tmp.height; i++) {
-                        currentTFLite.HEAPU8[inputImageBufferOffset + i * 3 + 0] = imageData.data[i * 4 + 0]
-                        currentTFLite.HEAPU8[inputImageBufferOffset + i * 3 + 1] = imageData.data[i * 4 + 1]
-                        currentTFLite.HEAPU8[inputImageBufferOffset + i * 3 + 2] = imageData.data[i * 4 + 2]
-                    }
+                    currentTFLite.HEAPU8.set(imageData.data, inputImageBufferOffset)
                     // console.log(imageData.data)
     
                     /// inferecence
@@ -188,14 +184,9 @@ const App = () => {
                     /// Output data
                     const outputImageBufferOffset = currentTFLite._getOutputImageBufferOffset() 
                     // const outputImageBufferOffset = tflite._getGrayedImageBufferOffset() 
-                    const resizedImage = new ImageData(tmp.width * scaleFactor, tmp.height * scaleFactor)
-                    for (let i = 0; i < resizedImage.width * resizedImage.height; i++) {
-    
-                        resizedImage.data[i * 4 + 0] =  (currentTFLite.HEAPU8[outputImageBufferOffset + i * 3 + 0] + 0) 
-                        resizedImage.data[i * 4 + 1] =  (currentTFLite.HEAPU8[outputImageBufferOffset + i * 3 + 1] + 0) 
-                        resizedImage.data[i * 4 + 2] =  (currentTFLite.HEAPU8[outputImageBufferOffset + i * 3 + 2] + 0) 
-                        resizedImage.data[i * 4 + 3] =  255
-                    }
+                    const resizedWidth = tmp.width * scaleFactor
+                    const resizedHeight = tmp.height * scaleFactor
+                    const resizedImage = new ImageData(new Uint8ClampedArray(currentTFLite.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + resizedWidth * resizedHeight * 4)), resizedWidth, resizedHeight)
                     // console.log(segmentationMask.data)
                     tmp.width = resizedImage.width
                     tmp.height = resizedImage.height
