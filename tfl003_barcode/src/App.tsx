@@ -222,6 +222,9 @@ export const App = () => {
                     <DropDown          title="model"       current={modelKey}       onchange={setModelKey}     options={models} />
                     {/* <DropDown          title="ProcessSize" current={processSizeKey} onchange={setProcessSizeKey} options={processSize} /> */}
                     <Toggle            title="SIMD"        current={useSIMD}        onchange={setUseSIMD} />
+                    <div >
+                        <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
+                    </div>
                 </div>
             </div>
             <div style={{display:"flex"}}>

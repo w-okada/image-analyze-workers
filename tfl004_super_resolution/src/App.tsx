@@ -223,6 +223,9 @@ const App = () => {
                     
                     <SingleValueSlider title="inputSize(w)"    current={inputSize}     onchange={setInputSize} min={64} max={256} step={16} />
                     <Toggle            title="SIMD"        current={useSIMD}        onchange={setUseSIMD} />
+                    <div >
+                        <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
+                    </div>
                 </div>
                 <div style={{display:"flex", alignItems: "flex-start"}}>
                     {inputMedia.mediaType === "IMAGE" ? 

@@ -290,6 +290,9 @@ const App = () => {
                     <DropDown          title="ScanMode" current={scanModeKey} onchange={setScanModeKey} options={scanMode} />
                     <Toggle            title="onLocal"       current={onLocal}        onchange={setOnLocal} />
                     <Toggle title="SIMD" current={useSIMD} onchange={setUseSIMD} />
+                    <div >
+                        <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
+                    </div>
                 </div>
                 <div style={{ position:"relative" }}>
                     {inputMedia.mediaType === "IMAGE" ?

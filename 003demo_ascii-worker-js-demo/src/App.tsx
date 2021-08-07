@@ -250,6 +250,10 @@ const App = () => {
                     <SingleValueSlider title="processHeight"         current={processHeight}     onchange={setProcessHeight} min={100} max={1024} step={10} /> */}
 
                     {/* <Toggle            title="Strict"        current={strict}         onchange={setStrict} /> */}
+                    <div >
+                        <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
+                    </div>
+
                 </div>
             </div>
             <div className={classes.inputView} id="output-div"></div>
@@ -264,9 +268,6 @@ const App = () => {
             <div >
                 <div id="info"> </div>
                 <div id="info2"> </div>
-            </div>
-            <div >
-                v20210721_1
             </div>
         </div>
         );

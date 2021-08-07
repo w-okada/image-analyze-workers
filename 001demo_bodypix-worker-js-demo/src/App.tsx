@@ -578,6 +578,10 @@ const App = () => {
                     
                     {/* <Toggle            title="Strict"        current={strict}         onchange={setStrict} /> */}
                     <FileChooser       title="background"  onchange={backgroundChange} />
+                    <div >
+                        <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
+                    </div>
+
                 </div>
             </div>
 
@@ -591,9 +595,6 @@ const App = () => {
             <div >
                 <div id="info"> </div>
                 <div id="info2"> </div>
-            </div>
-            <div >
-                v20210721
             </div>
         </div>
         );

@@ -295,6 +295,9 @@ const App = () => {
                     {/* <Toggle            title="SIMD"          current={useSIMD}        onchange={setUseSIMD} /> */}
                     <Toggle title="Strict" current={strict} onchange={setStrict} />
                     <FileChooser title="background" onchange={backgroundChange} />
+                    <div >
+                        <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
+                    </div>
                 </div>
             </div>
 

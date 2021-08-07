@@ -302,6 +302,9 @@ const App = () => {
                     <FileChooser       title="background"  onchange={backgroundChange} />
                     <SingleValueSlider title="lightWrapping"   current={lightWrapping}      onchange={setLightWrapping} min={0} max={10} step={1} />
                     <Toggle            title="Strict"      current={strict}        onchange={setStrict} />
+                    <div >
+                        <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
+                    </div>
                 </div>
             </div>
             <div style={{display:"flex"}}>

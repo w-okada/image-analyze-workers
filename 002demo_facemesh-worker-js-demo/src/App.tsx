@@ -459,7 +459,9 @@ const App = () => {
                     <SingleValueSlider title="processHeight"         current={processHeight}     onchange={setProcessHeight} min={100} max={1024} step={10} />
                     <Toggle            title="iris"                  current={iris}        onchange={setIris} />
 
-                    {/* <Toggle            title="Strict"        current={strict}         onchange={setStrict} /> */}
+                    <div >
+                        <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
+                    </div>
                 </div>
             </div>
 

@@ -308,6 +308,9 @@ const App = () => {
                     <Toggle            title="SIMD"          current={useSIMD}        onchange={setUseSIMD} />
                     <Toggle            title="Strict"        current={strict}         onchange={setStrict} />
                     <SingleValueSlider title="interpolation"   current={interpolation}      onchange={setInterpolation} min={0} max={4} step={1} />
+                    <div >
+                        <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
+                    </div>
 
                 </div>
             </div>

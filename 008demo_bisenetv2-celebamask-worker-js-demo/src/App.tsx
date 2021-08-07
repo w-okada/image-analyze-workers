@@ -255,7 +255,9 @@ const App = () => {
                     <Toggle            title="onLocal"               current={onLocal}        onchange={setOnLocal} />
 
 
-                    {/* <Toggle            title="Strict"        current={strict}         onchange={setStrict} /> */}
+                    <div >
+                        <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
+                    </div>
                 </div>
             </div>
             <div className={classes.inputView} id="output-div"></div>

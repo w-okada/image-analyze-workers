@@ -195,6 +195,9 @@ const App = () => {
                     <Toggle title="onLocal" current={onLocal} onchange={setOnLocal} />
                     <Toggle title="Strict" current={strict} onchange={setStrict} />
                     <Toggle title="drawPerson" current={drawPerson} onchange={setDrawPerson} />
+                    <div >
+                        <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
+                    </div>
 
                 </div>
             </div>
