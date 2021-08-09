@@ -12,6 +12,13 @@ const models: { [name: string]: string } = {
     "x3": `${process.env.PUBLIC_URL}/models/model_x3_nopadding.tflite`,
     "x4": `${process.env.PUBLIC_URL}/models/model_x4_nopadding.tflite`,
 }
+
+const tfjsModels: { [name: string]: string } = {
+    "x2"    : `${process.env.PUBLIC_URL}/tensorflowjs/model_x2_nopadding_tfjs/model.json`,
+    "x3"    : `${process.env.PUBLIC_URL}/tensorflowjs/model_x3_nopadding_tfjs/model.json`,
+    "x4"    : `${process.env.PUBLIC_URL}/tensorflowjs/model_x4_nopadding_tfjs/model.json`,
+}
+  
 const scaleFactors: { [name: string]: number } = {
     "x2": 2,
     "x3": 3,
@@ -55,6 +62,7 @@ const App = () => {
     const [modelKey, setModelKey] = useState(Object.keys(models)[0])
     const [interpolationTypeKey, setInterpolationTypeKey] = useState(Object.keys(interpolationTypes)[0])
     const [useSIMD, setUseSIMD] = useState(false)
+    const [useTensorflowJS, setUseTensorflowJS] = useState(false)
     const [inputSize, setInputSize] = useState(64)
     const [onLocal, setOnLocal] = useState(true)
 
@@ -76,6 +84,7 @@ const App = () => {
             const c = generateSuperResolutionDefaultConfig()
             c.processOnLocal = onLocal
             c.modelPath = models[modelKey]
+            c.tfjsModelPath = tfjsModels[modelKey]
             c.enableSIMD = true
 
             await m.init(c)
@@ -86,6 +95,7 @@ const App = () => {
             p.interpolation = interpolationTypes[interpolationTypeKey]
             p.scaleFactor = scaleFactors[modelKey]
             p.useSIMD = useSIMD
+            p.useTensorflowjs = useTensorflowJS
             const newProps = { manager: m, config: c, params: p, count: count }
             console.log("CALLED new MANAGER", onLocal)
             setWorkerProps(newProps)
@@ -104,8 +114,9 @@ const App = () => {
         p.interpolation = interpolationTypes[interpolationTypeKey]
         p.scaleFactor = scaleFactors[modelKey]
         p.useSIMD = useSIMD
+        p.useTensorflowjs = useTensorflowJS
         setWorkerProps({ ...workerProps, params: p })
-    }, [inputSize, interpolationTypeKey, useSIMD])  // eslint-disable-line
+    }, [inputSize, interpolationTypeKey, useSIMD, useTensorflowJS, onLocal])  // eslint-disable-line
 
 
     /// input設定
@@ -249,6 +260,7 @@ const App = () => {
                     <Toggle title="onLocal" current={onLocal} onchange={setOnLocal} />
                     <SingleValueSlider title="inputSize(w)" current={inputSize} onchange={setInputSize} min={64} max={256} step={16} />
                     <Toggle title="SIMD" current={useSIMD} onchange={setUseSIMD} />
+                    <Toggle title="TensorflowJS" current={useTensorflowJS} onchange={setUseTensorflowJS} />
 
                     <div >
                         <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
