@@ -24,6 +24,8 @@ namespace{
     unsigned char inputImageBuffer[4 * MAX_WIDTH * MAX_HEIGHT]; 
     unsigned char outputImageBuffer[4 * MAX_WIDTH * MAX_HEIGHT];  
 
+    unsigned char Y[1 * MAX_WIDTH * MAX_HEIGHT]; 
+    unsigned char scaledY[1 * MAX_WIDTH * MAX_HEIGHT];  
 
     const int INTER_NEAREST  = 0;
     const int INTER_LINEAR   = 1;
@@ -56,6 +58,58 @@ extern "C"
         return outputImageBuffer;
     }
 
+    EMSCRIPTEN_KEEPALIVE
+    unsigned char *getYBufferOffset(){
+        return Y;
+    }
+    EMSCRIPTEN_KEEPALIVE
+    unsigned char *getScaledYBufferOffset(){
+        return scaledY;
+    }
+
+
+    EMSCRIPTEN_KEEPALIVE
+    int extractY(int width, int height){
+        // (1) Generate InputImage and OutputImage Mat
+        cv::Mat inputImage(height, width, CV_8UC4, inputImageBuffer);
+        cv::Mat y(height, width, CV_8UC1, Y);
+        cv::Mat u,v;
+        // (2) Extract Y
+        std::vector<cv::Mat> inputPlanes= {y, u, v};
+        cv::Mat inputYUV;
+        cv::cvtColor(inputImage, inputYUV, cv::COLOR_RGB2YUV);
+        cv::split(inputYUV, inputPlanes);
+        return 0;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    int mergeY(int width, int height, int scaled_width, int scaled_height){
+        // (1) Generate InputImage and OutputImage Mat
+        cv::Mat inputImage(height, width, CV_8UC4, inputImageBuffer);
+        cv::Mat y(scaled_height, scaled_width, CV_8UC1, scaledY);
+        cv::Mat outputImage(scaled_height, scaled_width, CV_8UC4, outputImageBuffer);
+
+        // (2) convert to YUV
+        std::vector<cv::Mat> inputPlanes;
+        cv::Mat inputYUV;
+        cv::cvtColor(inputImage, inputYUV, cv::COLOR_RGB2YUV);
+        cv::split(inputYUV, inputPlanes);
+
+        // (3) resize original for output
+        cv::Mat resizedInputImageU(scaled_height, scaled_width, CV_8UC1);
+        cv::Mat resizedInputImageV(scaled_height, scaled_width, CV_8UC1);
+        cv::resize(inputPlanes[1], resizedInputImageU, resizedInputImageU.size(), 0, 0, cv::INTER_CUBIC);
+        cv::resize(inputPlanes[2], resizedInputImageV, resizedInputImageV.size(), 0, 0, cv::INTER_CUBIC);
+
+        // (4) merge result and input to output
+        cv::Mat channels[] = {y, resizedInputImageU, resizedInputImageV};
+        // cv::Mat channels[] = {resizedInputImageU, resizedInputImageU, resizedInputImageV};
+        // cv::Mat channels[] = {y, y, y};
+        cv::Mat outputYUV;
+        cv::merge(channels, 3, outputYUV);
+        cv::cvtColor(outputYUV, outputImage, cv::COLOR_YUV2RGB, 4); // 4 is required!
+        return 0;
+    }
 
 
     int getOpenCVInterpolationCode(int mode){

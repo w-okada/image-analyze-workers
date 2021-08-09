@@ -6,12 +6,20 @@ import { useVideoInputList } from './hooks/useVideoInputList';
 import { VideoInputType } from './const';
 import { VideoInputSelect, DropDown, Toggle, SingleValueSlider } from './components/components';
 
+import * as tf from '@tensorflow/tfjs';
 
 const models: { [name: string]: string } = {
   "x2"    : `${process.env.PUBLIC_URL}/models/model_x2_nopadding.tflite`,
   "x3"    : `${process.env.PUBLIC_URL}/models/model_x3_nopadding.tflite`,
   "x4"    : `${process.env.PUBLIC_URL}/models/model_x4_nopadding.tflite`,
 }
+
+const tfjsModels: { [name: string]: string } = {
+    "x2"    : `${process.env.PUBLIC_URL}/tensorflowjs/model_x2_nopadding_tfjs/model.json`,
+    "x3"    : `${process.env.PUBLIC_URL}/tensorflowjs/model_x3_nopadding_tfjs/model.json`,
+    "x4"    : `${process.env.PUBLIC_URL}/tensorflowjs/model_x4_nopadding_tfjs/model.json`,
+}
+  
 const scaleFactors: { [name: string]: number} = {
     "x2"    : 2,
     "x3"    : 3,
@@ -27,6 +35,7 @@ const interpolationTypes: { [name: string]: number } = {
     "LINEAR"   : 1,
     "NEAREST"  : 0,
     "canvas"   : 200,
+    "useJS"   : 300,
 }
 
 
@@ -50,6 +59,7 @@ const App = () => {
     const [ interpolationTypeKey, setInterpolationTypeKey] = useState(Object.keys(interpolationTypes)[0])
     const [ useSIMD, setUseSIMD]               = useState(false)
     const [ inputSize, setInputSize ]          = useState(64)
+    const [ tfjsModel, setTfjsModel]           = useState<tf.LayersModel>()
 
 
     interface InputMedia{
@@ -61,6 +71,23 @@ const App = () => {
         console.log("[inputchange]", mediaType, input)
         setInputMedia({mediaType:mediaType, media:input})
     }
+
+
+    useEffect(()=>{
+        console.log("use webgl backend")
+        require('@tensorflow/tfjs-backend-webgl')
+        tf.setBackend("webgl").then(()=>{
+            tf.ready().then(async()=>{
+                tf.env().set('WEBGL_CPU_FORWARD', false)
+                tf.loadLayersModel(tfjsModels[modelKey]).then((model)=>{
+                    setTfjsModel(model)
+                })
+            })
+        })
+    },[modelKey])
+
+
+
 
     ////////////////////
     //// Effects
@@ -166,7 +193,67 @@ const App = () => {
                     const duration = end - start
                     const info = document.getElementById("info") as HTMLCanvasElement
                     info.innerText = `processing time: ${duration}` 
+                }else if(interpolationType === 300){
+                    /// Input data to extract Y
+                    const start = performance.now();                
 
+                    const imageData = tmpCtx.getImageData(0, 0, tmp.width, tmp.height)
+                    const inputImageBufferOffset = currentTFLite._getInputImageBufferOffset()
+                    currentTFLite.HEAPU8.set(imageData.data, inputImageBufferOffset)
+                    currentTFLite._extractY(tmp.width, tmp.height)
+                    const YBufferOffset = currentTFLite._getYBufferOffset()
+                    const Y = currentTFLite.HEAPU8.slice(YBufferOffset, YBufferOffset + tmp.width * tmp.height)
+
+                    const resizedWidth = tmp.width * scaleFactor
+                    const resizedHeight = tmp.height * scaleFactor                    
+                    let bm = [0]
+                    tf.tidy(()=>{
+                        let tensor = tf.tensor1d(Y)
+                        tensor = tensor.reshape([1, tmp.height, tmp.width, 1])
+                        tensor = tf.cast(tensor, 'float32')
+                        tensor = tensor.div(255.0)
+                        // console.log(tensor)
+                        let prediction = tfjsModel!.predict(tensor) as tf.Tensor
+                        // console.log(prediction)
+                        prediction = prediction.reshape([1, tmp.height, tmp.width, scaleFactor, scaleFactor, 1])
+                        // console.log(prediction)
+                        const prediction2 = prediction.split(tmp.height, 1)
+                        // console.log(prediction2)
+                        for(let i = 0;i < tmp.height;i++){
+                            prediction2[i] = prediction2[i].squeeze([1])
+                        }
+                        const prediction3 = tf.concat(prediction2, 2)
+                        const prediction4 = prediction3.split(tmp.width, 1)
+                        for(let i = 0;i < tmp.width;i++){
+                            prediction4[i] = prediction4[i].squeeze([1])
+                        }
+                        const prediction5 = tf.concat(prediction4, 2)
+                        // console.log(prediction5)
+                        bm = prediction5.reshape([resizedWidth*resizedHeight]).mul(255).cast('int32').arraySync() as number[]
+
+                        // console.log(bm)
+                    })
+                    const scaledY = new Uint8ClampedArray(bm)
+            
+                    const scaledYBufferOffset = currentTFLite._getScaledYBufferOffset()
+                    currentTFLite.HEAPU8.set(scaledY, scaledYBufferOffset)
+                    currentTFLite._mergeY(tmp.width, tmp.height, resizedWidth, resizedHeight)
+
+
+
+                    /// Output data
+                    const outputImageBufferOffset = currentTFLite._getOutputImageBufferOffset() 
+                    const resizedImage = new ImageData(new Uint8ClampedArray(currentTFLite.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + resizedWidth * resizedHeight * 4)), resizedWidth, resizedHeight)
+                    tmp.width = resizedImage.width
+                    tmp.height = resizedImage.height
+                    tmpCtx.putImageData(resizedImage, 0, 0)
+                    outCtx.clearRect(0, 0, dst.width, dst.height)
+                    outCtx.drawImage(tmp, 0, 0, dst.width, dst.height)
+
+                    const end   = performance.now();
+                    const duration = end - start
+                    const info = document.getElementById("info") as HTMLCanvasElement
+                    info.innerText = `processing time: ${duration}` 
                 }else{
                     /// Input data
                     const imageData = tmpCtx.getImageData(0, 0, tmp.width, tmp.height)
@@ -206,7 +293,7 @@ const App = () => {
         return ()=>{
             cancelAnimationFrame(renderRequestId)
         }
-    }, [tflite, tfliteSIMD, inputMedia, useSIMD, interpolationTypeKey, inputSize]) // eslint-disable-line
+    }, [tflite, tfliteSIMD, inputMedia, useSIMD, interpolationTypeKey, inputSize, tfjsModel]) // eslint-disable-line
 
 
 

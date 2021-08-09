@@ -10,6 +10,12 @@ export interface TFLite extends EmscriptenModule {
     _getOutputImageBufferOffset(): number
     _loadModel(bufferSize: number): number
     _exec(widht: number, height: number, interpolationType: number): number
+
+    _extractY(width:number, height:number):number
+    _mergeY(width:number, height:number, scaled_width:number, scaled_height:number):number
+    _getYBufferOffset():number
+    _getScaledYBufferOffset():number
+    
 }
 
 function useTFLite() {
@@ -63,7 +69,6 @@ function useTFLite() {
             console.log("[useTFLite] simd error",e)
             setTFLiteSIMD(undefined)
         }
-
     }, [modelPath])
 
 
