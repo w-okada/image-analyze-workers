@@ -1,5 +1,5 @@
 import { BrowserType } from "./BrowserUtil";
-import { SuperResolutionConfig, SuperResolutionOperationParams, TFLite, WorkerCommand, WorkerResponse } from "./const";
+import { InterpolationType, SuperResolutionConfig, SuperResolutionOperationParams, TFLite, WorkerCommand, WorkerResponse } from "./const";
 import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
 import * as tf from '@tensorflow/tfjs';
 const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
@@ -32,7 +32,7 @@ const predict = async (src:OffscreenCanvas, config: SuperResolutionConfig, param
         return null
     }
 
-    if(params.useTensorflowjs){
+    if(params.useTensorflowjs && params.interpolation === InterpolationType.INTER_ESPCN){
         const imageData = src.getContext("2d")!.getImageData(0, 0, params.inputWidth, params.inputHeight)
         tflite!.HEAPU8.set(imageData.data, tflite!._getInputImageBufferOffset())
         tflite!._extractY(params.inputWidth, params.inputHeight)

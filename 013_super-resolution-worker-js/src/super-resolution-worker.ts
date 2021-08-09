@@ -119,7 +119,7 @@ export class LocalWorker{
         }
         
         if(this.ready){
-            if(params.useTensorflowjs){
+            if(params.useTensorflowjs && params.interpolation === InterpolationType.INTER_ESPCN){
 
                 const imageData = src.getContext("2d")!.getImageData(0, 0, params.inputWidth, params.inputHeight)
                 tflite!.HEAPU8.set(imageData.data, tflite!._getInputImageBufferOffset())
