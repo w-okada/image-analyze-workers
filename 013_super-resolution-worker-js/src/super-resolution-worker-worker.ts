@@ -1,11 +1,25 @@
 import { BrowserType } from "./BrowserUtil";
 import { SuperResolutionConfig, SuperResolutionOperationParams, TFLite, WorkerCommand, WorkerResponse } from "./const";
-
+import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
+import * as tf from '@tensorflow/tfjs';
 const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
 let tflite:TFLite | null = null
 let tfliteSIMD:TFLite | null = null
 let ready:boolean = false
+let tfjsModel:tf.LayersModel
 
+const load_module = async (config: SuperResolutionConfig) => {
+    if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
+      console.log("use cpu backend, wasm doesnot support enough function")
+      require('@tensorflow/tfjs-backend-wasm')
+      setWasmPath(config.wasmPath)
+      await tf.setBackend("cpu")
+    }else{
+      console.log("use webgl backend")
+      require('@tensorflow/tfjs-backend-webgl')
+      await tf.setBackend("webgl")
+    }
+  }
 
 const predict = async (src:OffscreenCanvas, config: SuperResolutionConfig, params: SuperResolutionOperationParams) => {
     let currentTFLite 
@@ -18,13 +32,63 @@ const predict = async (src:OffscreenCanvas, config: SuperResolutionConfig, param
         return null
     }
 
-    const imageData = src.getContext("2d")!.getImageData(0, 0, params.inputWidth, params.inputHeight)
-    tflite!.HEAPU8.set(imageData.data, tflite!._getInputImageBufferOffset())
-    tflite!._exec(params.inputWidth, params.inputHeight, params.interpolation)
-    const outputImageBufferOffset = tflite!._getOutputImageBufferOffset() 
-    const resizedWidth = params.inputWidth * params.scaleFactor
-    const resizedHeight = params.inputHeight * params.scaleFactor
-    return tflite!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + resizedWidth * resizedHeight * 4)
+    if(params.useTensorflowjs){
+        const imageData = src.getContext("2d")!.getImageData(0, 0, params.inputWidth, params.inputHeight)
+        tflite!.HEAPU8.set(imageData.data, tflite!._getInputImageBufferOffset())
+        tflite!._extractY(params.inputWidth, params.inputHeight)
+        const YBufferOffset = tflite!._getYBufferOffset()
+        const Y = tflite!.HEAPU8.slice(YBufferOffset, YBufferOffset + params.inputWidth * params.inputHeight)
+
+        const resizedWidth = params.inputWidth * params.scaleFactor
+        const resizedHeight = params.inputHeight * params.scaleFactor      
+        let bm = [0]
+        try{
+            tf.tidy(()=>{
+                let tensor = tf.tensor1d(Y)
+                tensor = tensor.reshape([1, params.inputHeight, params.inputWidth, 1])
+                tensor = tf.cast(tensor, 'float32')
+                tensor = tensor.div(255.0)
+                // console.log(tensor)
+                let prediction = tfjsModel!.predict(tensor) as tf.Tensor
+                //console.log(prediction)
+                prediction = prediction.reshape([1, params.inputHeight, params.inputWidth, params.scaleFactor, params.scaleFactor, 1])
+                // console.log(prediction)
+                const prediction2 = prediction.split(params.inputHeight, 1)
+                // console.log(prediction2)
+                for(let i = 0;i < params.inputHeight; i++){
+                    prediction2[i] = prediction2[i].squeeze([1])
+                }
+                const prediction3 = tf.concat(prediction2, 2)
+                const prediction4 = prediction3.split(params.inputWidth, 1)
+                for(let i = 0;i < params.inputWidth; i++){
+                    prediction4[i] = prediction4[i].squeeze([1])
+                }
+                const prediction5 = tf.concat(prediction4, 2)
+                // console.log(prediction5)
+                bm = prediction5.reshape([resizedWidth*resizedHeight]).mul(255).cast('int32').arraySync() as number[]
+
+                // console.log(bm)
+            })
+        }catch(exception){
+            console.log(exception)
+            return null
+        }
+        const scaledY = new Uint8ClampedArray(bm)
+
+        const scaledYBufferOffset = tflite!._getScaledYBufferOffset()
+        tflite!.HEAPU8.set(scaledY, scaledYBufferOffset)
+        tflite!._mergeY(params.inputWidth, params.inputHeight, resizedWidth, resizedHeight)
+        const outputImageBufferOffset = tflite!._getOutputImageBufferOffset() 
+        return tflite!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + resizedWidth * resizedHeight * 4)
+    }else{
+        const imageData = src.getContext("2d")!.getImageData(0, 0, params.inputWidth, params.inputHeight)
+        tflite!.HEAPU8.set(imageData.data, tflite!._getInputImageBufferOffset())
+        tflite!._exec(params.inputWidth, params.inputHeight, params.interpolation)
+        const outputImageBufferOffset = tflite!._getOutputImageBufferOffset() 
+        const resizedWidth = params.inputWidth * params.scaleFactor
+        const resizedHeight = params.inputHeight * params.scaleFactor
+        return tflite!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + resizedWidth * resizedHeight * 4)
+    }
 }
 
 onmessage = async (event) => {
@@ -34,6 +98,14 @@ onmessage = async (event) => {
 
         console.log("[WORKER] module initializing...")
 
+        /// (x) TensorflowJS
+        await load_module(config)
+        await tf.ready()
+        tf.env().set('WEBGL_CPU_FORWARD', false)
+        tfjsModel = await tf.loadLayersModel(config.tfjsModelPath)
+
+
+        /// (x) TensorflowLite
         let mod;
         const browserType = config.browserType
         mod = require('../resources/tflite.js');

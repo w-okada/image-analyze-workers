@@ -1,7 +1,8 @@
 import { BrowserType, getBrowserType } from './BrowserUtil'
 import { InterpolationType, SuperResolutionConfig, SuperResolutionOperationParams, TFLite, WorkerCommand, WorkerResponse } from './const'
-
+import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
 export { SuperResolutionConfig, InterpolationType, SuperResolutionOperationParams  }
+import * as tf from '@tensorflow/tfjs';
 
 export const generateSuperResolutionDefaultConfig = ():SuperResolutionConfig => {
     const defaultConf:SuperResolutionConfig = {
@@ -10,6 +11,9 @@ export const generateSuperResolutionDefaultConfig = ():SuperResolutionConfig => 
         modelPath           : "",
         workerPath          : "./super-resolution-worker-worker.js",
         enableSIMD          : true,
+        useTFWasmBackend    : false,
+        wasmPath            : "/tfjs-backend-wasm.wasm",
+        tfjsModelPath       : "",
     }
     return defaultConf
 }
@@ -21,7 +25,8 @@ export const generateDefaultSuperResolutionParams = ():SuperResolutionOperationP
         inputHeight         : 128,
         scaleFactor         : 2,
         interpolation       : InterpolationType.INTER_ESPCN,
-        useSIMD             : true
+        useSIMD             : true,
+        useTensorflowjs     : false,
     }
     return defaultParams
 }
@@ -36,6 +41,21 @@ const calcProcessSize = (width: number, height: number) => {
     }
 }
 
+
+const load_module = async (config: SuperResolutionConfig) => {
+    if(config.useTFWasmBackend){
+        console.log("use wasm backend")
+      require('@tensorflow/tfjs-backend-wasm')
+      setWasmPath(config.wasmPath)
+      await tf.setBackend("cpu")
+    }else{
+      console.log("use webgl backend")
+      require('@tensorflow/tfjs-backend-webgl')
+      await tf.setBackend("webgl")
+    }
+}
+
+
 export class LocalWorker{
     mod:any
     modSIMD:any
@@ -43,12 +63,20 @@ export class LocalWorker{
     tfliteSIMD?:TFLite
     tfliteLoaded = false
     inputCanvas = document.createElement("canvas")
-    
+    tfjsModel?:tf.LayersModel
     resultArray:number[] = Array<number>(300*300)
 
     ready = false
     init = async (config: SuperResolutionConfig) => {
         this.ready = false
+
+        /// (x) Tensorflow JS 
+        await load_module(config)
+        await tf.ready()
+        tf.env().set('WEBGL_CPU_FORWARD', false)
+        this.tfjsModel = await tf.loadLayersModel(config.tfjsModelPath)
+
+        /// (x) TensorflowLite
         const browserType = getBrowserType()
         this.mod = require('../resources/tflite.js');
         this.tflite = await this.mod()
@@ -75,28 +103,81 @@ export class LocalWorker{
             const res = this.tfliteSIMD!._loadModel(model.byteLength)
             console.log("[WORKER_MANAGER]: LOAD SIMD_MOD DONE")
         }
-        this.ready = true
         console.log('[WORKER_MANAGER]: Load Result:', res)
+        this.ready = true
     }
 
     predict = async (src:HTMLCanvasElement, config: SuperResolutionConfig, params: SuperResolutionOperationParams) => {
+        let tflite
+        if(params.useSIMD){
+            tflite=this.tfliteSIMD
+        }else{
+            tflite=this.tflite
+        }
+        if(!tflite){
+            return null
+        }
+        
         if(this.ready){
-            let tflite
-            if(params.useSIMD){
-                tflite=this.tfliteSIMD
+            if(params.useTensorflowjs){
+
+                const imageData = src.getContext("2d")!.getImageData(0, 0, params.inputWidth, params.inputHeight)
+                tflite!.HEAPU8.set(imageData.data, tflite!._getInputImageBufferOffset())
+                tflite!._extractY(params.inputWidth, params.inputHeight)
+                const YBufferOffset = tflite!._getYBufferOffset()
+                const Y = tflite!.HEAPU8.slice(YBufferOffset, YBufferOffset + params.inputWidth * params.inputHeight)
+
+                const resizedWidth = params.inputWidth * params.scaleFactor
+                const resizedHeight = params.inputHeight * params.scaleFactor      
+                let bm = [0]
+                try{
+                    tf.tidy(()=>{
+                        let tensor = tf.tensor1d(Y)
+                        tensor = tensor.reshape([1, params.inputHeight, params.inputWidth, 1])
+                        tensor = tf.cast(tensor, 'float32')
+                        tensor = tensor.div(255.0)
+                        // console.log(tensor)
+                        let prediction = this.tfjsModel!.predict(tensor) as tf.Tensor
+                        //console.log(prediction)
+                        prediction = prediction.reshape([1, params.inputHeight, params.inputWidth, params.scaleFactor, params.scaleFactor, 1])
+                        // console.log(prediction)
+                        const prediction2 = prediction.split(params.inputHeight, 1)
+                        // console.log(prediction2)
+                        for(let i = 0;i < params.inputHeight; i++){
+                            prediction2[i] = prediction2[i].squeeze([1])
+                        }
+                        const prediction3 = tf.concat(prediction2, 2)
+                        const prediction4 = prediction3.split(params.inputWidth, 1)
+                        for(let i = 0;i < params.inputWidth; i++){
+                            prediction4[i] = prediction4[i].squeeze([1])
+                        }
+                        const prediction5 = tf.concat(prediction4, 2)
+                        // console.log(prediction5)
+                        bm = prediction5.reshape([resizedWidth*resizedHeight]).mul(255).cast('int32').arraySync() as number[]
+    
+                        // console.log(bm)
+                    })
+                }catch(exception){
+                    console.log(exception)
+                    return null
+                }
+                const scaledY = new Uint8ClampedArray(bm)
+        
+                const scaledYBufferOffset = tflite!._getScaledYBufferOffset()
+                tflite!.HEAPU8.set(scaledY, scaledYBufferOffset)
+                tflite!._mergeY(params.inputWidth, params.inputHeight, resizedWidth, resizedHeight)
+                const outputImageBufferOffset = tflite!._getOutputImageBufferOffset() 
+                return tflite!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + resizedWidth * resizedHeight * 4)
             }else{
-                tflite=this.tflite
+
+                const imageData = src.getContext("2d")!.getImageData(0, 0, params.inputWidth, params.inputHeight)
+                tflite!.HEAPU8.set(imageData.data, tflite!._getInputImageBufferOffset())
+                tflite!._exec(params.inputWidth, params.inputHeight, params.interpolation)
+                const outputImageBufferOffset = tflite!._getOutputImageBufferOffset() 
+                const resizedWidth = params.inputWidth * params.scaleFactor
+                const resizedHeight = params.inputHeight * params.scaleFactor
+                return tflite!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + resizedWidth * resizedHeight * 4)
             }
-            if(!tflite){
-                return null
-            }
-            const imageData = src.getContext("2d")!.getImageData(0, 0, params.inputWidth, params.inputHeight)
-            tflite!.HEAPU8.set(imageData.data, tflite!._getInputImageBufferOffset())
-            tflite!._exec(params.inputWidth, params.inputHeight, params.interpolation)
-            const outputImageBufferOffset = tflite!._getOutputImageBufferOffset() 
-            const resizedWidth = params.inputWidth * params.scaleFactor
-            const resizedHeight = params.inputHeight * params.scaleFactor
-            return tflite!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + resizedWidth * resizedHeight * 4)
         }
         return null
     }

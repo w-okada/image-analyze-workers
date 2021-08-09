@@ -17,6 +17,9 @@ export interface SuperResolutionConfig{
     modelPath           : string
     workerPath          : string
     enableSIMD          : boolean
+    useTFWasmBackend    : boolean
+    wasmPath            : string
+    tfjsModelPath       : string
 
 }
 
@@ -27,6 +30,7 @@ export interface SuperResolutionOperationParams{
     scaleFactor         : number
     interpolation       : number
     useSIMD             : boolean
+    useTensorflowjs     : boolean
 }
 
 
@@ -47,6 +51,12 @@ export interface TFLite{
 
     _loadModel(bufferSize: number): number
     _exec(widht: number, height: number, interpolationType: number): number
+
+    _extractY(width:number, height:number):number
+    _mergeY(width:number, height:number, scaled_width:number, scaled_height:number):number
+    _getYBufferOffset():number
+    _getScaledYBufferOffset():number
+
 
     ////HEAP
     HEAP8: Int8Array;
