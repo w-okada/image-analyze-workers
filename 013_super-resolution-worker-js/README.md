@@ -2,7 +2,14 @@
 
 ![image](https://user-images.githubusercontent.com/48346627/128611056-978ee70c-b893-4ee6-96dd-650dec002eba.png)
 
+
+
+## Reference
 ESPCN
+
+This repository's model is generated with the code [here](https://github.com/w-okada/espcn-tensorflow2). And this repository is inspired by [the repository](https://github.com/HighVoltageRocknRoll/sr). And some code is originally in [the repository](https://github.com/HighVoltageRocknRoll/sr).
+
+
 [paper](https://arxiv.org/abs/1609.05158)
 
 ## API
@@ -63,8 +70,11 @@ $ cp node_modules/\@dannadori/super-resolution-worker-js/resources/tflite-simd.w
 
 ### Download Model
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t13_super-resolution/models/model_x2_nopadding.tflite
+
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t13_super-resolution/models/model_x3_nopadding.tflite
+
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t13_super-resolution/models/model_x4_nopadding.tflite
+
 
 ### Add source image to public. 
 In this time, the name is "srcImage.jpg"

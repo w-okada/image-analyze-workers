@@ -25,7 +25,7 @@ $ npm start
 
 ## Reference
 
-This repository's model is generated with the code [here](). And this repository is inspired by [the repository](https://github.com/HighVoltageRocknRoll/sr). And some code is originally in [the repository](https://github.com/HighVoltageRocknRoll/sr).
+This repository's model is generated with the code [here](https://github.com/w-okada/espcn-tensorflow2). And this repository is inspired by [the repository](https://github.com/HighVoltageRocknRoll/sr). And some code is originally in [the repository](https://github.com/HighVoltageRocknRoll/sr).
 
 
 [paper](https://arxiv.org/abs/1609.05158)
