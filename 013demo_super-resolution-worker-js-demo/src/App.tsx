@@ -38,7 +38,7 @@ const interpolationTypes: { [name: string]: number } = {
 
 const useStyles = makeStyles((theme) => ({
     inputView: {
-        maxWidth: 512
+        // maxWidth: 512
     }
 }));
 
