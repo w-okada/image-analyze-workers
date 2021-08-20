@@ -81,6 +81,7 @@ const App = () => {
     // const [ processWidth, setProcessWidth]                    = useState(300)
     // const [ processHeight, setProcessHeight]                  = useState(300)
     const [ strict, setStrict]                                = useState(false) // eslint-disable-line
+    const [ guiUpdateCount, setGuiUpdateCount]                = useState(0) // eslint-disable-line
 
     const [inputMedia, setInputMedia] = useState<InputMedia>({mediaType:"IMAGE", media:"yuka_kawamura.jpg"})
     const inputChange = (mediaType: VideoInputType, input:MediaStream|string) =>{
@@ -146,6 +147,11 @@ const App = () => {
                 resizeDst(img)
             }
             img.src = inputMedia.media as string
+            if(guiUpdateCount === 0){
+                setTimeout(() => {
+                    setGuiUpdateCount(guiUpdateCount+1)
+                }, 1000 * 2);
+            }
         }else if(inputMedia.mediaType === "MOVIE"){
             const vid = document.getElementById("input_video") as HTMLVideoElement
             vid.pause()
