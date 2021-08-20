@@ -230,14 +230,22 @@ const App = () => {
 
     /// input設定
     useEffect(()=>{
-        const video = document.getElementById("input_video") as HTMLVideoElement
         if(inputMedia.mediaType === "IMAGE"){
             const img = document.getElementById("input_img") as HTMLImageElement
             img.onloadeddata = () =>{
                 resizeDst(img)
-                setGuiUpdateCount(guiUpdateCount+1)
+            }
+            img.onloadedmetadata = () =>{
+                resizeDst(img)
             }
             img.src = inputMedia.media as string
+            resizeDst(img)
+            if(guiUpdateCount === 0){
+                setTimeout(() => {
+                    setGuiUpdateCount(guiUpdateCount+1)
+                }, 1000 * 2);
+            }
+
         }else if(inputMedia.mediaType === "MOVIE"){
             const vid = document.getElementById("input_video") as HTMLVideoElement
             vid.pause()
@@ -245,7 +253,7 @@ const App = () => {
             vid.src = inputMedia.media as string
             vid.loop = true
             vid.onloadeddata = () =>{
-                video.play()
+                vid.play()
                 resizeDst(vid)
             }
         }else{
@@ -253,7 +261,7 @@ const App = () => {
             vid.pause()
             vid.srcObject = inputMedia.media as MediaStream
             vid.onloadeddata = () =>{
-                video.play()
+                vid.play()
                 resizeDst(vid)
             }
         }
@@ -496,7 +504,7 @@ const App = () => {
 
 
         const render = async () => {
-            console.log("RENDER::::", LOOP_ID, renderRequestId,  workerProps?.params)
+            // console.log("RENDER::::", LOOP_ID, renderRequestId,  workerProps?.params)
             const start = performance.now()
 
             const dst = document.getElementById("output") as HTMLCanvasElement
