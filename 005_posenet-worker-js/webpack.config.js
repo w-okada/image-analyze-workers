@@ -2,7 +2,7 @@ const path = require('path');
 const WorkerPlugin = require('worker-plugin');	 // <--- (1)
 
 const manager = {
-    mode: 'development',
+    mode: 'production',
     entry: './src/posenet-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
@@ -24,7 +24,7 @@ const manager = {
 };
 
 const worker = {
-    mode: 'development',
+    mode: 'production',
     entry: './src/posenet-worker-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
