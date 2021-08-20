@@ -1,7 +1,7 @@
 const path = require('path');
 const WorkerPlugin = require('worker-plugin');
 const manager = {
-    mode: 'development',
+    mode: 'production',
     entry: './src/facemesh-worker.ts',
     resolve: {
         extensions: [".ts", ".js"],
@@ -25,7 +25,7 @@ const manager = {
 };
 
 const worker = {
-    mode: 'development',
+    mode: 'production',
     entry: './src/facemesh-worker-worker.ts',
     resolve: {
         extensions: [".ts", ".js"],
