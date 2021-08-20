@@ -1,7 +1,7 @@
 const path = require('path');
 const WorkerPlugin = require('worker-plugin');
 const manager = {
-    mode: 'development',
+    mode: 'production',    
     entry: './src/handpose-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
@@ -24,7 +24,7 @@ const manager = {
 };
 
 const worker = {
-    mode: 'development',
+    mode: 'production',    
     entry: './src/handpose-worker-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
