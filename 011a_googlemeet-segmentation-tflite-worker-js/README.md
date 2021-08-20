@@ -50,8 +50,6 @@ $ cp node_modules/\@dannadori/googlemeet-segmentation-tflite-worker-js/dist/goog
 $ mkdir -p public/static/js/
 $ cp node_modules/\@dannadori/googlemeet-segmentation-tflite-worker-js/resources/tflite.wasm public/static/js
 $ cp node_modules/\@dannadori/googlemeet-segmentation-tflite-worker-js/resources/tflite-simd.wasm public/static/js
-$ cp node_modules/\@dannadori/googlemeet-segmentation-tflite-worker-js/resources/tflite_for_safari.wasm public/static/js
-
 ```
 
 ### Download Model
