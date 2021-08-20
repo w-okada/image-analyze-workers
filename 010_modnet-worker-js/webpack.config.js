@@ -3,7 +3,7 @@ const WorkerPlugin = require('worker-plugin');
 
 
 const worker = {
-    mode: 'development',
+    mode: 'production',
     entry: './src/modnet-worker-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
@@ -26,7 +26,7 @@ const worker = {
 
 
 const manager = {
-    mode: 'development',
+    mode: 'production',
     entry: './src/modnet-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
