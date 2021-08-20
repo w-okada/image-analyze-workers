@@ -2,7 +2,7 @@ const path = require('path');
 const WorkerPlugin = require('worker-plugin');
 
 const manager = {
-    mode: 'development',
+    mode: 'production',
     entry: './src/u2net-portrait-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
@@ -27,7 +27,7 @@ const manager = {
 
 
 const worker = {
-    mode: 'development',
+    mode: 'production',
     entry: './src/u2net-portrait-worker-worker.ts', // <-- (1)
     resolve: {
         extensions: [".ts", ".js"],
