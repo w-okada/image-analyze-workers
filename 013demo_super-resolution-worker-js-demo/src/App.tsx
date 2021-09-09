@@ -62,8 +62,8 @@ const App = () => {
     const [modelKey, setModelKey] = useState(Object.keys(models)[0])
     const [interpolationTypeKey, setInterpolationTypeKey] = useState(Object.keys(interpolationTypes)[0])
     const [useSIMD, setUseSIMD] = useState(false)
-    const [useTensorflowJS, setUseTensorflowJS] = useState(false)
-    const [inputSize, setInputSize] = useState(64)
+    const [useTensorflowJS, setUseTensorflowJS] = useState(true)
+    const [inputSize, setInputSize] = useState(240)
     const [onLocal, setOnLocal] = useState(true)
 
     const [inputMedia, setInputMedia] = useState<InputMedia>({ mediaType: "IMAGE", media: "img/yuka_kawamura.jpg" })
@@ -154,6 +154,7 @@ const App = () => {
     //////////////
     const setLayout = () => {
         const outputElem = document.getElementById("output") as HTMLCanvasElement
+        const outputCanvasElem = document.getElementById("output-canvas") as HTMLCanvasElement
         const scaleFactor = scaleFactors[modelKey]
         if (inputMedia.mediaType === "IMAGE") {
             const inputElem = document.getElementById("input_img") as HTMLImageElement
@@ -162,6 +163,8 @@ const App = () => {
             inputElem.height = inputElem.naturalHeight * ratio
             outputElem.width = inputElem.width * scaleFactor
             outputElem.height = inputElem.height * scaleFactor
+            outputCanvasElem .width = inputElem.width * scaleFactor
+            outputCanvasElem .height = inputElem.height * scaleFactor
 
         } else {
             const inputElem = document.getElementById("input_video") as HTMLVideoElement
@@ -170,6 +173,8 @@ const App = () => {
             inputElem.height = inputElem.videoHeight * ratio
             outputElem.width = inputElem.width * scaleFactor
             outputElem.height = inputElem.height * scaleFactor
+            outputCanvasElem .width = inputElem.width * scaleFactor
+            outputCanvasElem .height = inputElem.height * scaleFactor
         }
     }
     //////////////////
@@ -183,8 +188,10 @@ const App = () => {
 
         const src = document.getElementById("input_img") as HTMLImageElement || document.getElementById("input_video") as HTMLVideoElement
         const dst = document.getElementById("output") as HTMLCanvasElement
+        const dstCanvas = document.getElementById("output-canvas") as HTMLCanvasElement
         const tmp = document.getElementById("tmp") as HTMLCanvasElement
         const dstCtx = dst.getContext("2d")!
+        const dstCanvasCtx = dstCanvas.getContext("2d")!
         const tmpCtx = tmp.getContext("2d")!
 
         setLayout()
@@ -212,8 +219,10 @@ const App = () => {
                     workerProps.params.inputHeight = src.height
                     const prediction = await workerProps.manager.predict(tmp!, workerProps.params)
                     const inference_end = performance.now()
+
                     const info = document.getElementById("info") as HTMLCanvasElement
                     info.innerText = `processing time: ${inference_end - inference_start}`
+
                     if (!prediction) {
                         if (GlobalLoopID === LOOP_ID) {
                             renderRequestId = requestAnimationFrame(render)
@@ -226,6 +235,7 @@ const App = () => {
                     }catch(exception){
                         console.log(exception)
                     }
+                    dstCanvasCtx.drawImage(tmp, 0, 0, dst.width, dst.height)
                 }
 
                 if (GlobalLoopID === LOOP_ID) {
@@ -258,7 +268,7 @@ const App = () => {
                     <DropDown title="type" current={interpolationTypeKey} onchange={setInterpolationTypeKey} options={interpolationTypes} />
 
                     <Toggle title="onLocal" current={onLocal} onchange={setOnLocal} />
-                    <SingleValueSlider title="inputSize(w)" current={inputSize} onchange={setInputSize} min={64} max={256} step={16} />
+                    <SingleValueSlider title="inputSize(w)" current={inputSize} onchange={setInputSize} min={96} max={264} step={24} />
                     <Toggle title="SIMD" current={useSIMD} onchange={setUseSIMD} />
                     <Toggle title="TensorflowJS" current={useTensorflowJS} onchange={setUseTensorflowJS} />
 
@@ -267,12 +277,42 @@ const App = () => {
                     </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "flex-start" }}>
-                    {inputMedia.mediaType === "IMAGE" ?
-                        <img className={classes.inputView} id="input_img" alt=""></img>
-                        :
-                        <video className={classes.inputView} id="input_video"></video>
-                    }
-                    <canvas className={classes.inputView} id="output"></canvas>
+                    <div style={{display:"flex", flexDirection:"column"}}>
+                        <div>
+                            (1) Input image
+                        </div>
+                        <div>
+                            {inputMedia.mediaType === "IMAGE" ?
+                                <img className={classes.inputView} id="input_img" alt=""></img>
+                                :
+                                <video className={classes.inputView} id="input_video"></video>
+                            }
+                        </div>
+                    </div>
+
+                    <div style={{width:"10px"}} />
+
+                    <div style={{display:"flex", flexDirection:"column"}}>
+                        <div>
+                            (2) Output image
+                        </div>
+                        <div>
+                            <canvas className={classes.inputView} id="output"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div style={{width:"10px"}} />
+
+                    <div style={{display:"flex", flexDirection:"column"}}>
+                        <div>
+                            (x) drawImage function
+                        </div>
+                        <div>
+                            <canvas className={classes.inputView} id="output-canvas"></canvas>
+                        </div>
+                    </div>
+
+
                 </div>
             </div>
 
