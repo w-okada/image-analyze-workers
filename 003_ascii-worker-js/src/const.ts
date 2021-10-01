@@ -13,7 +13,6 @@ export const WorkerResponse = {
 export interface AsciiConfig{
     browserType         : BrowserType
     processOnLocal      : boolean
-    workerPath          : string
 }
 
 

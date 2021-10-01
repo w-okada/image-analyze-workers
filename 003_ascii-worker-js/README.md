@@ -6,7 +6,6 @@ This is webworker module for AsciiArt.
 ## Install
 ```
 $ npm install \@dannadori/asciiart-worker-js
-$ cp node_modules/\@dannadori/asciiart-worker-js/dist/asciiart-worker-worker.js public/
 ```
 ## API
 
@@ -26,7 +25,6 @@ predict(targetCanvas: HTMLCanvasElement, params: AsciiOperatipnParams): Promise<
 export interface AsciiConfig{
     browserType         : BrowserType
     processOnLocal      : boolean
-    workerPath          : string    
 }
 
 
@@ -51,7 +49,6 @@ $ npx create-react-app demo --template typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/asciiart-worker-js
-$ cp node_modules/\@dannadori/asciiart-worker-js/dist/asciiart-worker-worker.js public/
 ```
 
 ### Add source image to public. 

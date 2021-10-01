@@ -10,7 +10,6 @@ export const generateAsciiArtDefaultConfig = ():AsciiConfig => {
     const defaultConf:AsciiConfig = {
         browserType         : getBrowserType(),
         processOnLocal      : false,
-        workerPath          : './asciiart-worker-worker.js'
     }
     return defaultConf
 }
@@ -26,6 +25,8 @@ export const generateDefaultAsciiArtParams = () =>{
     return defaultParams
 }
 
+// @ts-ignore
+import workerJs from "worker-loader?inline=no-fallback!./asciiart-worker-worker.ts";
 
 
 class LocalAA{
@@ -169,7 +170,7 @@ export class AsciiArtWorkerManager{
         }
 
         // AsciiArt 用ワーカー
-        const workerAA = new Worker(config!.workerPath, { type: 'module' })
+        const workerAA:Worker = new workerJs()
 
         workerAA!.postMessage({message: WorkerCommand.INITIALIZE})
         const p = new Promise<void>((onResolve, onFail)=>{

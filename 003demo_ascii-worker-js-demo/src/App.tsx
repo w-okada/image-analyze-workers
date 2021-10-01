@@ -155,7 +155,7 @@ const App = () => {
         GlobalLoopID = LOOP_ID
 
         const render = async () => {
-            console.log("RENDER::::", LOOP_ID, renderRequestId,  workerProps?.params)
+            // console.log("RENDER::::", LOOP_ID, renderRequestId,  workerProps?.params)
             const start = performance.now()
 
             const dst = document.getElementById("output") as HTMLCanvasElement
