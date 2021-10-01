@@ -11,6 +11,8 @@ export { BodyPixInternalResolution } from '@tensorflow-models/body-pix/dist/type
 
 import * as tf from '@tensorflow/tfjs';
 
+// @ts-ignore
+import workerJs from "worker-loader?inline=no-fallback!./bodypix-worker-worker.ts";
 
 const load_module = async (config: BodyPixConfig) => {
     if (config.useTFWasmBackend) {
@@ -154,13 +156,11 @@ export class BodypixWorkerManager {
             })
         }
 
-        console.log("load bodypix1")
-        const workerBP = new Worker(this.config.workerPath, { type: 'module' })
-        console.log("load bodypix2")
-
+        const workerBP = new workerJs()
+        
         workerBP!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
         const p = new Promise<void>((onResolve, onFail) => {
-            workerBP!.onmessage = (event) => {
+            workerBP!.onmessage = (event: any) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
                     this.workerBP = workerBP
@@ -180,8 +180,8 @@ export class BodypixWorkerManager {
             const prediction = await this.localBP.predict(targetCanvas, this.config, params)
             return prediction
         } else {
-            if(!this.workerBP){
-                return Array.from(new Array(params.processWidth), () => new Array(params.processHeight).fill(1));                
+            if (!this.workerBP) {
+                return Array.from(new Array(params.processWidth), () => new Array(params.processHeight).fill(1));
             }
             const offscreen = new OffscreenCanvas(targetCanvas.width, targetCanvas.height)
             const offctx = offscreen.getContext("2d")!
