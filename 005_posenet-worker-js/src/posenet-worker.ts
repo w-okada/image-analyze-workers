@@ -41,6 +41,8 @@ export const generateDefaultPoseNetParams = () => {
     return defaultParams
 }
 
+// @ts-ignore
+import workerJs from "worker-loader?inline=no-fallback!./posenet-worker-worker.ts";
 
 
 class LocalPN {
@@ -107,7 +109,8 @@ export class PoseNetWorkerManager {
             return
         }
 
-        const workerPN = new Worker(this.config.workerPath, { type: 'module' })
+        const workerPN:Worker = new workerJs()
+
         workerPN!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
         const p = new Promise<void>((onResolve, onFail) => {
             workerPN!.onmessage = (event) => {

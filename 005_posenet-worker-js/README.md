@@ -7,7 +7,6 @@ This is webworker module for [Posenet](https://github.com/tensorflow/tfjs-models
 ## Install
 ```
 $ npm install \@dannadori/posenet-worker-js
-$ cp node_modules/\@dannadori/posenet-worker-js/dist/posenet-worker-worker.js public/
 ```
 ## API
 
@@ -31,7 +30,6 @@ export interface PoseNetConfig{
     processOnLocal      : boolean
     // processWidth        : number
     // processHeight       : number
-    workerPath            : string    
 }
 
 export enum PoseNetFunctionType{
@@ -54,7 +52,6 @@ $ npx create-react-app demo  --template typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/posenet-worker-js
-$ cp node_modules/\@dannadori/posenet-worker-js/dist/posenet-worker-worker.js public/
 ```
 
 ### Add source image to public. 
