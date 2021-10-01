@@ -6,6 +6,9 @@ import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
 
 export {HandPoseConfig, HandPoseOperatipnParams}
 
+// @ts-ignore
+import workerJs from "worker-loader?inline=no-fallback!./handpose-worker-worker.ts";
+
 export const generateHandPoseDefaultConfig = (): HandPoseConfig => {
     const defaultConf: HandPoseConfig = {
         browserType: getBrowserType(),
@@ -19,7 +22,7 @@ export const generateHandPoseDefaultConfig = (): HandPoseConfig => {
         processOnLocal: false,
         modelReloadInterval: 1024 * 60,
         wasmPath: "/tfjs-backend-wasm.wasm",
-        workerPath: "./handpose-worker-worker.js"
+        pageUrl: window.location.href,
 
     }
     // WASMバージョンがあまり早くないので、Safariはローカルで実施をデフォルトにする。
@@ -85,7 +88,7 @@ export class HandPoseWorkerManager {
     private localHP = new LocalHP()
 
     private initializeModel_internal = () => {
-        const workerHP = new Worker(this.config.workerPath, { type: 'module' })
+        const workerHP:Worker = new workerJs()
         workerHP!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
         const p = new Promise<void>((onResolve, onFail) => {
             workerHP!.onmessage = (event) => {
@@ -115,9 +118,11 @@ export class HandPoseWorkerManager {
         //// wasm on safari is not enough fast, but run on main thread is not mandatory
         if (this.config.processOnLocal === true) {
             if (this.config.useTFWasmBackend) {
-                console.log("use wasm backend", this.config.wasmPath)
                 require('@tensorflow/tfjs-backend-wasm')
-                setWasmPath(this.config.wasmPath)
+                const dirname = this.config.pageUrl.substr(0, this.config.pageUrl.lastIndexOf("/"))
+                const wasmPath = `${dirname}${this.config.wasmPath}`
+                console.log(`use wasm backend ${wasmPath}`)
+                setWasmPath(wasmPath)
                 await tf.setBackend("wasm")
             } else {
                 console.log("use webgl backend")

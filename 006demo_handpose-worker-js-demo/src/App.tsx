@@ -273,8 +273,6 @@ const App = () => {
                 <canvas className={classes.inputView} id="tmp" hidden></canvas>
                 <canvas className={classes.inputView} id="front" hidden></canvas>
                 <canvas className={classes.inputView} id="src-cache" hidden></canvas>
-                <img className={classes.inputView} alt="background" id="background" src="img/north-star-2869817_640.jpg" hidden></img>
-
             </div>
             <div >
                 <div id="info"> </div>

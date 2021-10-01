@@ -23,7 +23,8 @@ export interface HandPoseConfig{
     wasmPath              : string
     processOnLocal        : boolean
     modelReloadInterval   : number // if not reload, set zero   
-    workerPath            : string 
+    pageUrl               : string
+
 }
 
 export interface ModelConfig{

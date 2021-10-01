@@ -6,7 +6,6 @@ This is webworker module for [HandPose](https://github.com/tensorflow/tfjs-model
 ## Install
 ```
 $ npm install \@dannadori/handpose-worker-js
-$ cp node_modules/\@dannadori/handpose-worker-js/dist/handpose-worker-worker.js public/
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 
 ```
@@ -33,7 +32,6 @@ export interface HandPoseConfig {
     wasmPath              : string;
     processOnLocal        : boolean;
     modelReloadInterval   : number;
-    workerPath            : string 
 }
 
 export enum HandPoseFunctionType{
@@ -60,7 +58,6 @@ $ npx create-react-app demo  --template typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/handpose-worker-js
-$ cp node_modules/\@dannadori/handpose-worker-js/dist/handpose-worker-worker.js public/
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 
 ```
