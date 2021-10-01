@@ -1,16 +1,17 @@
 const path = require('path');
-const WorkerPlugin = require('worker-plugin');
-const manager = {
+
+const manager  = {
     mode: 'production',
     entry: './src/facemesh-worker.ts',
     resolve: {
         extensions: [".ts", ".js"],
-        fallback: { "os": false }
-
+        fallback: { 
+            "os": false 
+        }
     },
     module: {
         rules: [
-            { test: /\.ts$/, loader: 'ts-loader' },
+            { test: /\.ts$/, loader: 'ts-loader'},
         ],
     },
     output: {
@@ -19,34 +20,8 @@ const manager = {
         libraryTarget: 'umd',
         globalObject: 'typeof self !== \'undefined\' ? self : this'
     },
-    plugins: [
-        new WorkerPlugin()
-    ]    
-};
-
-const worker = {
-    mode: 'production',
-    entry: './src/facemesh-worker-worker.ts',
-    resolve: {
-        extensions: [".ts", ".js"],
-        fallback: { "os": false }
-    },
-    module: {
-        rules: [
-            { test: /\.ts$/, loader: 'ts-loader' },
-        ],
-    },
-    output: {
-        filename: 'facemesh-worker-worker.js',
-        path: path.resolve(__dirname, 'dist'),
-        libraryTarget: 'umd',
-        globalObject: 'typeof self !== \'undefined\' ? self : this'
-    },
-    plugins: [
-        new WorkerPlugin()
-    ]    
 };
 
 module.exports = [
-    manager, worker
-]
+    manager
+];

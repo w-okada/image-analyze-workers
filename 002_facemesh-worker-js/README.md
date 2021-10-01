@@ -6,7 +6,7 @@ This is webworker module for [Face landmarks detection](https://github.com/tenso
 ## Install
 ```
 $ npm install \@dannadori/facemesh-worker-js
-$ cp node_modules/\@dannadori/facemesh-worker-js/dist/facemesh-worker-worker.js public/
+$ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 ```
 ## API
 
@@ -39,7 +39,6 @@ export interface FacemeshConfig {
     modelReloadInterval : number
     model               : ModelConfig 
     processOnLocal      : boolean
-    workerPath          : string    
 }
 
 export interface FacemeshOperatipnParams {
@@ -62,9 +61,7 @@ $ npx create-react-app demo  --template typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/facemesh-worker-js
-$ cp node_modules/\@dannadori/facemesh-worker-js/dist/facemesh-worker-worker.js public/
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
-
 ```
 
 ### Add source image to public. 

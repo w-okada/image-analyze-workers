@@ -2,7 +2,7 @@ import { WorkerResponse, WorkerCommand, FacemeshConfig, FacemeshFunctionType, Fa
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection'
 import { getBrowserType, BrowserType } from "./BrowserUtil";
 import * as tf from '@tensorflow/tfjs';
-import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
+import {setWasmPath, setWasmPaths} from '@tensorflow/tfjs-backend-wasm';
 import { AnnotatedPrediction } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh";
 import { Coords3D } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh/util";
 
@@ -11,6 +11,9 @@ export { BrowserType, getBrowserType } from './BrowserUtil';
 export { IMAGE_PATH } from "./DemoUtil"
 export { AnnotatedPrediction } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh";
 export { Coords3D } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh/util";
+
+// @ts-ignore
+import workerJs from "worker-loader?inline=no-fallback!./facemesh-worker-worker.ts";
 
 export const generateFacemeshDefaultConfig = (): FacemeshConfig => {
     const defaultConf: FacemeshConfig = {
@@ -27,7 +30,7 @@ export const generateFacemeshDefaultConfig = (): FacemeshConfig => {
         },
         processOnLocal: false,
         wasmPath: "/tfjs-backend-wasm.wasm",
-        workerPath: "./facemesh-worker-worker.js"
+        pageUrl: window.location.href
 
     }
     return defaultConf
@@ -58,7 +61,7 @@ export class LocalFM {
 
 
     predict = async (targetCanvas: HTMLCanvasElement, config: FacemeshConfig, params: FacemeshOperatipnParams): Promise<AnnotatedPrediction[]> => {
-        console.log("current backend[main thread]:",tf.getBackend())
+        // console.log("current backend[main thread]:",tf.getBackend())
 
         // ImageData作成  
         const processWidth = (params.processWidth <= 0 || params.processHeight <= 0) ? targetCanvas.width : params.processWidth
@@ -69,6 +72,7 @@ export class LocalFM {
         const ctx = this.canvas.getContext("2d")!
         ctx.drawImage(targetCanvas, 0, 0, processWidth, processHeight)
         const newImg = ctx.getImageData(0, 0, processWidth, processHeight)
+        await tf.ready()
         let tensor = tf.browser.fromPixels(newImg)
         const prediction = await this.model!.estimateFaces({
             input: tensor,
@@ -86,9 +90,11 @@ export class FacemeshWorkerManager {
 
     private config = generateFacemeshDefaultConfig()
     private localFM = new LocalFM()
+    private wasmLoaded = false
 
     private initializeModel_internal = () => {
-        const workerFM = new Worker(this.config.workerPath, { type: 'module' })
+        const workerFM:Worker = new workerJs()
+
         workerFM!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
         const p = new Promise<void>((onResolve, onFail) => {
             workerFM!.onmessage = (event) => {
@@ -121,9 +127,11 @@ export class FacemeshWorkerManager {
         //// wasm on safari is enough fast, so run on main thread is not mandatory
         if (this.config.processOnLocal === true) {
             if (this.config.useTFWasmBackend) {
-                console.log("use wasm backend", this.config.wasmPath)
                 require('@tensorflow/tfjs-backend-wasm')
-                setWasmPath(this.config.wasmPath)
+                const dirname = this.config.pageUrl.substr(0, this.config.pageUrl.lastIndexOf("/"))
+                const wasmPath = `${dirname}${this.config.wasmPath}`
+                console.log(`use wasm backend ${wasmPath}`)
+                setWasmPath(wasmPath)
                 await tf.setBackend("wasm")
             } else {
                 console.log("use webgl backend")

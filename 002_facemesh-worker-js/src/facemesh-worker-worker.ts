@@ -13,9 +13,11 @@ let model: faceLandmarksDetection.FaceLandmarksDetector | null
 
 const load_module = async (config: FacemeshConfig) => {
     if (config.useTFWasmBackend || config.browserType === BrowserType.SAFARI) {
-        console.log("use wasm backend", config.wasmPath)
         require('@tensorflow/tfjs-backend-wasm')
-        setWasmPath(config.wasmPath)
+        const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"))
+        const wasmPath = `${dirname}${config.wasmPath}`
+        console.log("use wasm backend", wasmPath)
+        setWasmPath(wasmPath)
         await tf.setBackend("wasm")
     } else if (config.useTFCPUBackend) {
         await tf.setBackend("cpu")
@@ -82,7 +84,7 @@ onmessage = async (event) => {
         const data = event.data.data
         const config = event.data.config as FacemeshConfig
         const params = event.data.params as FacemeshOperatipnParams
-        console.log("current backend[worker thread]:", tf.getBackend())
+        // console.log("current backend[worker thread]:", tf.getBackend())
 
         if (config.browserType == BrowserType.SAFARI) {
             const prediction = await predictForSafari(data, config, params)
