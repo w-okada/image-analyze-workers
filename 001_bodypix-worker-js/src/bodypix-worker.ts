@@ -31,7 +31,6 @@ export const generateBodyPixDefaultConfig = (): BodyPixConfig => {
         browserType: getBrowserType(),
         model: ModelConfigMobileNetV1_05,
         processOnLocal: false,
-        workerPath: "./bodypix-worker-worker.js",
         useTFWasmBackend: false,
 
     }
@@ -156,11 +155,11 @@ export class BodypixWorkerManager {
             })
         }
 
-        const workerBP = new workerJs()
+        const workerBP:Worker = new workerJs()
         
         workerBP!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
         const p = new Promise<void>((onResolve, onFail) => {
-            workerBP!.onmessage = (event: any) => {
+            workerBP!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
                     this.workerBP = workerBP
