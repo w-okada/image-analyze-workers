@@ -4,7 +4,6 @@ import { getBrowserType, BrowserType } from "./BrowserUtil";
 
 export { AsciiConfig, AsciiOperatipnParams, AsciiFunctionType } from './const'
 export { BrowserType, getBrowserType} from './BrowserUtil';
-export { IMAGE_PATH } from "./DemoUtil"
 
 export const generateAsciiArtDefaultConfig = ():AsciiConfig => {
     const defaultConf:AsciiConfig = {

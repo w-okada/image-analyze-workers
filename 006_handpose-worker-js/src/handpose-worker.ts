@@ -117,12 +117,12 @@ export class HandPoseWorkerManager {
         // run on main thread
         //// wasm on safari is not enough fast, but run on main thread is not mandatory
         if (this.config.processOnLocal === true) {
+            const dirname = this.config.pageUrl.substr(0, this.config.pageUrl.lastIndexOf("/"))
+            const wasmPath = `${dirname}${this.config.wasmPath}`
+            console.log(`use wasm backend ${wasmPath}`)
+            setWasmPath(wasmPath)
             if (this.config.useTFWasmBackend) {
                 require('@tensorflow/tfjs-backend-wasm')
-                const dirname = this.config.pageUrl.substr(0, this.config.pageUrl.lastIndexOf("/"))
-                const wasmPath = `${dirname}${this.config.wasmPath}`
-                console.log(`use wasm backend ${wasmPath}`)
-                setWasmPath(wasmPath)
                 await tf.setBackend("wasm")
             } else {
                 console.log("use webgl backend")

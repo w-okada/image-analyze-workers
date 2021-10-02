@@ -5,7 +5,6 @@ import { SemanticPersonSegmentation } from "@tensorflow-models/body-pix";
 
 export { ModelConfigResNet, ModelConfigMobileNetV1, ModelConfigMobileNetV1_05, BodypixFunctionType } from './const'
 export { BrowserType, getBrowserType } from './BrowserUtil';
-export { IMAGE_PATH } from "./DemoUtil"
 export { SemanticPersonSegmentation, SemanticPartSegmentation, PersonSegmentation, PartSegmentation } from '@tensorflow-models/body-pix'
 export { BodyPixInternalResolution } from '@tensorflow-models/body-pix/dist/types';
 

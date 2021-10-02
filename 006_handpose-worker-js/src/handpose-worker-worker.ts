@@ -9,12 +9,12 @@ const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
 let model: handpose.HandPose | null
 
 const load_module = async (config: HandPoseConfig) => {
+    const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"))
+    const wasmPath = `${dirname}${config.wasmPath}`
+    console.log("use wasm backend", wasmPath)
+    setWasmPath(wasmPath)
     if (config.useTFWasmBackend || config.browserType === BrowserType.SAFARI) {
         require('@tensorflow/tfjs-backend-wasm')
-        const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"))
-        const wasmPath = `${dirname}${config.wasmPath}`
-        console.log("use wasm backend", wasmPath)
-        setWasmPath(wasmPath)
         await tf.setBackend("wasm")
     } else {
         console.log("use webgl backend")

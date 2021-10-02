@@ -4,7 +4,7 @@
     "private": true,
     "homepage": "./",
     "dependencies": {
-        "@dannadori/posenet-worker-js": "^1.0.22",
+        "@dannadori/posenet-worker-js": "^1.0.23",
         "@material-ui/core": "^4.12.3",
         "react": "^17.0.2"
     },

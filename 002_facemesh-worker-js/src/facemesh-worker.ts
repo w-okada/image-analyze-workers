@@ -8,7 +8,6 @@ import { Coords3D } from "@tensorflow-models/face-landmarks-detection/dist/media
 
 export { FacemeshConfig, FacemeshFunctionType, FacemeshOperatipnParams } from './const'
 export { BrowserType, getBrowserType } from './BrowserUtil';
-export { IMAGE_PATH } from "./DemoUtil"
 export { AnnotatedPrediction } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh";
 export { Coords3D } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh/util";
 
@@ -125,13 +124,13 @@ export class FacemeshWorkerManager {
 
         // run on main thread
         //// wasm on safari is enough fast, so run on main thread is not mandatory
-        if (this.config.processOnLocal === true) {
+        const dirname = this.config.pageUrl.substr(0, this.config.pageUrl.lastIndexOf("/"))
+        const wasmPath = `${dirname}${this.config.wasmPath}`
+        console.log(`use wasm backend ${wasmPath}`)
+        setWasmPath(wasmPath)
+if (this.config.processOnLocal === true) {
             if (this.config.useTFWasmBackend) {
                 require('@tensorflow/tfjs-backend-wasm')
-                const dirname = this.config.pageUrl.substr(0, this.config.pageUrl.lastIndexOf("/"))
-                const wasmPath = `${dirname}${this.config.wasmPath}`
-                console.log(`use wasm backend ${wasmPath}`)
-                setWasmPath(wasmPath)
                 await tf.setBackend("wasm")
             } else {
                 console.log("use webgl backend")

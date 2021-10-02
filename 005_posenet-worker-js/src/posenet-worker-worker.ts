@@ -88,7 +88,7 @@ onmessage = async (event) => {
         const uid: number = event.data.uid
         const functionType = event.data.functionType
         //    console.log("functionType:", functionType)
-        console.log("current backend[worker thread]:", tf.getBackend())
+        // console.log("current backend[worker thread]:", tf.getBackend())
         if (params.type === PoseNetFunctionType.SinglePerson) {
             let prediction
             if (data) {

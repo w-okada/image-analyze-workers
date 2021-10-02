@@ -4,7 +4,7 @@
   "private": true,
   "homepage": "./",
   "dependencies": {
-    "@dannadori/bodypix-worker-js": "^1.0.37",
+    "@dannadori/bodypix-worker-js": "^1.0.41",
     "@material-ui/core": "^4.12.3",
     "react": "^17.0.2"
   },
