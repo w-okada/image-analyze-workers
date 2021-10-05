@@ -7,7 +7,7 @@ export const useVideoInputList = () =>{
     useEffect(()=>{
         const videoInputDevices:{[id:string]:string} = {}
         navigator.mediaDevices.enumerateDevices().then(list=>{
-            list.filter((x: InputDeviceInfo | MediaDeviceInfo) => {
+            list.filter((x: MediaDeviceInfo) => {
                 return x.kind === "videoinput"
             }).forEach(x =>{
                 videoInputDevices[x.label]=x.deviceId

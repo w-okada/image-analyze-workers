@@ -2,15 +2,20 @@ import { WorkerCommand, WorkerResponse, BisenetV2CelebAMaskConfig, BisenetV2Cele
 import * as tf from '@tensorflow/tfjs';
 import { BrowserType } from './BrowserUtil';
 import {setWasmPath} from '@tensorflow/tfjs-backend-wasm';
+import { Buffer } from 'buffer'
+
 const ctx: Worker = self as any  // eslint-disable-line no-restricted-globals
 
 let model:tf.GraphModel|null
 
 const load_module = async (config: BisenetV2CelebAMaskConfig) => {
+    const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"))
+    const wasmPath = `${dirname}${config.wasmPath}`
+    console.log(`use wasm backend ${wasmPath}`)
+    setWasmPath(wasmPath)
+
     if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
-      console.log("use wasm backend")
       require('@tensorflow/tfjs-backend-wasm')
-      setWasmPath(config.wasmPath)
       await tf.setBackend("wasm")
     }else{
       console.log("use webgl backend")
@@ -58,7 +63,17 @@ onmessage = async (event) => {
         await load_module(config)
         tf.ready().then(async()=>{
             tf.env().set('WEBGL_CPU_FORWARD', false)
-            model = await tf.loadGraphModel(config.modelPath)
+
+
+            const modelJson2 = new File([config.modelJson], "model.json", {type: "application/json"})
+            const b1 = Buffer.from(config.modelWeight1.split(',')[1], 'base64')
+            const modelWeights1 = new File([b1], "group1-shard1of3.bin")
+            const b2 = Buffer.from(config.modelWeight2.split(',')[1], 'base64')
+            const modelWeights2 = new File([b2], "group1-shard2of3.bin")
+            const b3 = Buffer.from(config.modelWeight3.split(',')[1], 'base64')
+            const modelWeights3 = new File([b3], "group1-shard3of3.bin")            
+            model = await tf.loadGraphModel(tf.io.browserFiles([modelJson2, modelWeights1, modelWeights2, modelWeights3]))
+
             console.log(model.inputs)
             console.log(model.inputNodes)
             console.log(model.outputs)
@@ -73,7 +88,7 @@ onmessage = async (event) => {
         const params: BisenetV2CelebAMaskOperatipnParams = event.data.params
         const uid: number = event.data.uid
 
-        console.log("current backend[worker thread]:",tf.getBackend())
+        // console.log("current backend[worker thread]:",tf.getBackend())
         if(data){ // Case.2
             console.log("Browser SAFARI")
             const prediction  = await predictWithData(data, config, params)

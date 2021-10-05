@@ -1,76 +1,94 @@
 import { WorkerResponse, WorkerCommand, CartoonConfig, CartoonOperatipnParams, CartoonFunctionType } from "./const"
 import { getBrowserType, BrowserType } from "./BrowserUtil";
 import * as tf from '@tensorflow/tfjs';
+import { setWasmPath } from "@tensorflow/tfjs-backend-wasm";
 
-export { CartoonConfig, CartoonOperatipnParams  } from './const'
-export { BrowserType, getBrowserType} from './BrowserUtil';
+export { CartoonConfig, CartoonOperatipnParams } from './const'
+export { BrowserType, getBrowserType } from './BrowserUtil';
 
-export const generateCartoonDefaultConfig = ():CartoonConfig => {
-    const defaultConf:CartoonConfig = {
-        browserType         : getBrowserType(),
-        processOnLocal      : false,
-        useTFWasmBackend    : false,
-        modelPath           : "/white-box-cartoonization/model.json",
-        wasmPath            : "/tfjs-backend-wasm.wasm",
-        workerPath          : "./white-box-cartoonization-worker-worker.js"
+// @ts-ignore
+import workerJs from "worker-loader?inline=no-fallback!./white-box-cartoonization-worker-worker.ts";
+
+// @ts-ignore
+import modelJson from "../resources/white-box-cartoonization/model.json"
+// @ts-ignore
+import modelWeight from "../resources/white-box-cartoonization/group1-shard1of1.bin"
+
+
+export const generateCartoonDefaultConfig = (): CartoonConfig => {
+    const defaultConf: CartoonConfig = {
+        browserType: getBrowserType(),
+        processOnLocal: false,
+        useTFWasmBackend: false,
+        wasmPath: "/tfjs-backend-wasm.wasm",
+        pageUrl: window.location.href,
+        modelJson: modelJson,
+        modelWeight: modelWeight 
     }
     return defaultConf
 }
 
-
-export const generateDefaultCartoonParams = ():CartoonOperatipnParams => {
-    const defaultParams:CartoonOperatipnParams = {
-        type                : CartoonFunctionType.Cartoon,
-        processWidth        : 320,
-        processHeight       : 320,
+export const generateDefaultCartoonParams = (): CartoonOperatipnParams => {
+    const defaultParams: CartoonOperatipnParams = {
+        type: CartoonFunctionType.Cartoon,
+        processWidth: 320,
+        processHeight: 320,
     }
     return defaultParams
 }
 
 const load_module = async (config: CartoonConfig) => {
-//    if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
-    if(config.useTFWasmBackend){
-        console.log("use wasm backend")
-      require('@tensorflow/tfjs-backend-wasm')
-      await tf.setBackend("wasm")
-    }else{
-      console.log("use webgl backend")
-      require('@tensorflow/tfjs-backend-webgl')
-      await tf.setBackend("webgl")
-    }
-  }
+    //    if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
+    const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"))
+    const wasmPath = `${dirname}${config.wasmPath}`
+    console.log(`use wasm backend ${wasmPath}`)
+    setWasmPath(wasmPath)
 
-export class LocalCT{
-    model:tf.GraphModel|null = null
+    if (config.useTFWasmBackend) {
+        require('@tensorflow/tfjs-backend-wasm')
+        await tf.setBackend("wasm")
+    } else {
+        console.log("use webgl backend")
+        require('@tensorflow/tfjs-backend-webgl')
+        await tf.setBackend("webgl")
+    }
+}
+
+export class LocalCT {
+    model: tf.GraphModel | null = null
     canvas = document.createElement("canvas")
 
     init = async (config: CartoonConfig) => {
         await load_module(config)
         await tf.ready()
         tf.env().set('WEBGL_CPU_FORWARD', false)
-        this.model = await tf.loadGraphModel(config.modelPath)
+
+        const modelJson2 = new File([config.modelJson], "model.json", {type: "application/json"})
+        const b = Buffer.from(config.modelWeight.split(',')[1], 'base64')
+        const modelWeights = new File([b], "group1-shard1of1.bin")
+        this.model = await tf.loadGraphModel(tf.io.browserFiles([modelJson2, modelWeights]))
     }
 
-    predict = async (targetCanvas:HTMLCanvasElement, config: CartoonConfig, params: CartoonOperatipnParams) => {
-        console.log("current backend[main thread]:",tf.getBackend())
+    predict = async (targetCanvas: HTMLCanvasElement, config: CartoonConfig, params: CartoonOperatipnParams) => {
+        // console.log("current backend[main thread]:", tf.getBackend())
         // ImageData作成
-        this.canvas.width  = params.processWidth
+        this.canvas.width = params.processWidth
         this.canvas.height = params.processHeight
         const ctx = this.canvas.getContext("2d")!
         ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height)
-        
-        tf.tidy(()=>{
+
+        tf.tidy(() => {
             let tensor = tf.browser.fromPixels(this.canvas)
             tensor = tf.sub(tensor.expandDims(0).div(127.5), 1)
             let prediction = this.model!.predict(tensor) as tf.Tensor
-        
+
             const alpha = tf.ones([1, params.processWidth, params.processHeight, 1])
             prediction = tf.concat([prediction, alpha], 3)
             prediction = tf.add(prediction, 1)
             prediction = tf.mul(prediction, 127.5)
             prediction = prediction.flatten()
             prediction = tf.cast(prediction, "int32")
-            prediction = tf.squeeze(prediction as tf.Tensor)    
+            prediction = tf.squeeze(prediction as tf.Tensor)
             let imgArray = prediction.arraySync() as number[]
             let imgArray2 = new Uint8ClampedArray(imgArray.length)
             imgArray2.set(imgArray)
@@ -79,40 +97,41 @@ export class LocalCT{
         })
 
         return this.canvas
-    
+
     }
 }
 
-export class CartoonWorkerManager{
-    private workerCT:Worker|null = null
+export class CartoonWorkerManager {
+    private workerCT: Worker | null = null
     private canvasOut = document.createElement("canvas")
     private canvas = document.createElement("canvas")
     private config = generateCartoonDefaultConfig()
     private localCT = new LocalCT()
-    init = async(config: CartoonConfig|null) =>{
-        if(config != null){
+    init = async (config: CartoonConfig | null) => {
+        if (config != null) {
             this.config = config
         }
-        if(this.workerCT){
+        if (this.workerCT) {
             this.workerCT.terminate()
         }
         this.workerCT = null
 
-        if(this.config.processOnLocal == true){
+        if (this.config.processOnLocal == true) {
             await this.localCT.init(this.config!)
-            return 
+            return
         }
 
         // Bodypix 用ワーカー
-        const workerCT = new Worker(this.config.workerPath, { type: 'module' })
-        workerCT!.postMessage({message: WorkerCommand.INITIALIZE, config:this.config})
-        const p = new Promise<void>((onResolve, onFail)=>{
+        const workerCT:Worker = new workerJs()
+
+        workerCT!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config })
+        const p = new Promise<void>((onResolve, onFail) => {
             workerCT!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
                     console.log("WORKERSS INITIALIZED")
                     this.workerCT = workerCT
                     onResolve()
-                }else{
+                } else {
                     console.log("cartoon Initialization something wrong..")
                     onFail(event)
                 }
@@ -121,8 +140,8 @@ export class CartoonWorkerManager{
         return p
     }
 
-    predict = async (targetCanvas:HTMLCanvasElement, params = generateDefaultCartoonParams())=>{
-        if(this.config.processOnLocal == true){
+    predict = async (targetCanvas: HTMLCanvasElement, params = generateDefaultCartoonParams()) => {
+        if (this.config.processOnLocal == true) {
             const convertedCanvas = await this.localCT.predict(targetCanvas, this.config, params)
             this.canvasOut.width = targetCanvas.width
             this.canvasOut.height = targetCanvas.height
@@ -131,11 +150,11 @@ export class CartoonWorkerManager{
             return this.canvasOut
         }
 
-        if(!this.workerCT){
+        if (!this.workerCT) {
             return null
         }
-        
-        if(this.config.browserType === BrowserType.SAFARI){
+
+        if (this.config.browserType === BrowserType.SAFARI) {
             // Case.2 Process on worker thread, Safari (Send dataArray) 
             this.canvas.width = params.processWidth
             this.canvas.height = params.processHeight
@@ -143,18 +162,18 @@ export class CartoonWorkerManager{
             ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height)
             const imageData = ctx.getImageData(0, 0, this.canvas.width, this.canvas.height)
             const dataArray = imageData.data
-            const width     = imageData.width
-            const height    = imageData.height
+            const width = imageData.width
+            const height = imageData.height
             const uid = performance.now()
 
-            this.workerCT!.postMessage({ 
-                message: WorkerCommand.PREDICT, uid:uid,
+            this.workerCT!.postMessage({
+                message: WorkerCommand.PREDICT, uid: uid,
                 config: this.config, params: params,
                 data: dataArray
             }, [dataArray.buffer])
-            const p = new Promise((onResolve:(v:HTMLCanvasElement)=>void, onFail)=>{
+            const p = new Promise((onResolve: (v: HTMLCanvasElement) => void, onFail) => {
                 this.workerCT!.onmessage = (event) => {
-                    if(event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid){
+                    if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
                         const outDataArray = event.data.converted
                         const outImageData = new ImageData(outDataArray, imageData.width, imageData.height)
                         this.canvas.width = imageData.width
@@ -165,40 +184,40 @@ export class CartoonWorkerManager{
                         const ctx = this.canvasOut.getContext("2d")!
                         ctx.drawImage(this.canvas, 0, 0, this.canvasOut.width, this.canvasOut.height)
                         onResolve(this.canvasOut)
-                    }else{
+                    } else {
                         console.log("cartoon Prediction something wrong..")
-                        onFail(event)
+                        // onFail(event)
                     }
                 }
             })
             return p
-        }else{
+        } else {
             // Case.3 Process on worker thread, Chrome (Send ImageBitmap)
             const off = new OffscreenCanvas(targetCanvas.width, targetCanvas.height)
             off.getContext("2d")!.drawImage(targetCanvas, 0, 0, targetCanvas.width, targetCanvas.height)
             const imageBitmap = off.transferToImageBitmap()
             const uid = performance.now()
-            this.workerCT!.postMessage({ 
-                message: WorkerCommand.PREDICT, uid:uid,
+            this.workerCT!.postMessage({
+                message: WorkerCommand.PREDICT, uid: uid,
                 config: this.config, params: params,
                 // data: data, width: inImageData.width, height:inImageData.height
                 image: imageBitmap
             }, [imageBitmap])
-            const p = new Promise((onResolve:(v:HTMLCanvasElement)=>void, onFail)=>{
+            const p = new Promise((onResolve: (v: HTMLCanvasElement) => void, onFail) => {
                 this.workerCT!.onmessage = (event) => {
-                    if(event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid){
+                    if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
                         const imagedata = event.data.converted
                         this.canvasOut.width = targetCanvas.width
                         this.canvasOut.height = targetCanvas.height
                         const ctx = this.canvasOut.getContext("2d")!
                         ctx.drawImage(imagedata, 0, 0, targetCanvas.width, targetCanvas.height)
                         onResolve(this.canvasOut)
-//                        console.log("worker!!!!", imageBitmap.width, imageBitmap.height)
-                    }else{
+                        //                        console.log("worker!!!!", imageBitmap.width, imageBitmap.height)
+                    } else {
                         console.log("cartoon Prediction something wrong..")
-                        onFail(event)
+                        // onFail(event)
                     }
-                }        
+                }
             })
             return p
         }

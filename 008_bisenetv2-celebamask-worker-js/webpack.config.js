@@ -1,54 +1,34 @@
 const path = require('path');
-const WorkerPlugin = require('worker-plugin');
 
-const manager = {
+const manager  = {
     mode: 'production',
-    entry: './src/bisenetv2-celebamask-worker.ts', // <-- (1)
+    entry: './src/bisenetv2-celebamask-worker.ts',
     resolve: {
         extensions: [".ts", ".js"],
-        fallback: { "os": false }
-
+        fallback: { 
+            "os": false,
+            "buffer":  require.resolve("buffer/")
+        }
     },
     module: {
         rules: [
-            { test: /\.ts$/, loader: 'ts-loader' },
+            { test: /\.ts$/, loader: 'ts-loader'},
+            { test:/resources\/.*\.bin/, type:"asset/inline"},
+            { test:/resources\/.*\.json/, type:"asset/source"}
         ],
+
     },
     output: {
-        filename: 'bisenetv2-celebamask-worker.js', // <-- (2)
+        filename: 'bisenetv2-celebamask-worker.js',
         path: path.resolve(__dirname, 'dist'),
         libraryTarget: 'umd',
         globalObject: 'typeof self !== \'undefined\' ? self : this'
     },
-    plugins: [　　　　　　　　　　　　　　　　 // <--- (2)
-        new WorkerPlugin()
-    ]
-};
-
-const worker = {
-    mode: 'production',
-    entry: './src/bisenetv2-celebamask-worker-worker.ts', // <-- (1)
-    resolve: {
-        extensions: [".ts", ".js"],
-        fallback: { "os": false }
-    },
-    module: {
-        rules: [
-            { test: /\.ts$/, loader: 'ts-loader' },
-        ],
-    },
-    output: {
-        filename: 'bisenetv2-celebamask-worker-worker.js', // <-- (2)
-        path: path.resolve(__dirname, 'dist'),
-        libraryTarget: 'umd',
-        globalObject: 'typeof self !== \'undefined\' ? self : this'
-    },
-    plugins: [　　　　　　　　　　　　　　　　 // <--- (2)
-        new WorkerPlugin()
-    ]
+    stats: {
+        children: true,
+    }
 };
 
 module.exports = [
-    manager, worker
-]
-
+    manager,
+];

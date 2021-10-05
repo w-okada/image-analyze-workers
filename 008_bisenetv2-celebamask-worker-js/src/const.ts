@@ -15,8 +15,11 @@ export interface BisenetV2CelebAMaskConfig{
     processOnLocal      : boolean
     useTFWasmBackend    : boolean
     wasmPath            : string
-    modelPath           : string
-    workerPath          : string
+    pageUrl             : string
+    modelJson           : string
+    modelWeight1         : string    
+    modelWeight2         : string    
+    modelWeight3         : string    
 }
 
 

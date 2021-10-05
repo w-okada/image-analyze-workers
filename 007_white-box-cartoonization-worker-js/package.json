@@ -1,6 +1,6 @@
 {
     "name": "@dannadori/white-box-cartoonization-worker-js",
-    "version": "1.0.15",
+    "version": "1.0.18",
     "description": "",
     "main": "dist/white-box-cartoonization-worker.js",
     "scripts": {
@@ -19,7 +19,7 @@
         "tensorflowjs"
     ],
     "author": "wataru.okada@flect.co.jp",
-    "license": "MIT",
+    "license": "CC BY-NC-SA 4.0",
     "bugs": {
         "url": "https://github.com/w-okada/image-analyze-workers"
     },
@@ -32,10 +32,11 @@
         "typescript": "^4.3.5",
         "webpack": "~5.51.1",
         "webpack-cli": "~4.8.0",
-        "worker-plugin": "^5.0.1"
+        "worker-loader": "^3.0.8"
     },
     "dependencies": {
         "@tensorflow/tfjs": "^3.8.0",
-        "@tensorflow/tfjs-backend-wasm": "^3.8.0"
+        "@tensorflow/tfjs-backend-wasm": "^3.8.0",
+        "buffer": "^6.0.3"
     }
 }

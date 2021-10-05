@@ -72,7 +72,6 @@ const App = () => {
             const c = generateCartoonDefaultConfig()
             c.processOnLocal = onLocal
             c.useTFWasmBackend = useWasm
-            c.modelPath = models[modelKey]
             await m.init(c)
     
             const p = generateDefaultCartoonParams()
@@ -160,7 +159,7 @@ const App = () => {
         GlobalLoopID = LOOP_ID
 
         const render = async () => {
-            console.log("RENDER::::", LOOP_ID, renderRequestId,  workerProps?.params)
+            // console.log("RENDER::::", LOOP_ID, renderRequestId,  workerProps?.params)
             const start = performance.now()
 
             const dst = document.getElementById("output") as HTMLCanvasElement
@@ -182,7 +181,6 @@ const App = () => {
                     info1.innerText = `processing time: ${inference_end - inference_start}`
 
                     if(prediction){
-                        console.log(prediction)
                         dstCtx.drawImage(prediction, 0, 0, dst.width, dst.height)
                     }
                 }

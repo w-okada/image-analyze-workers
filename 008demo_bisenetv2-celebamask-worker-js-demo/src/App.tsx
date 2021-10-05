@@ -81,7 +81,6 @@ const App = () => {
             const c = generateBisenetV2CelebAMaskDefaultConfig()
             c.processOnLocal = onLocal
             c.useTFWasmBackend = useWasm
-            c.modelPath = models[modelKey]
             await m.init(c)
     
             const p = generateDefaultBisenetV2CelebAMaskParams()
@@ -169,7 +168,7 @@ const App = () => {
         GlobalLoopID = LOOP_ID
 
         const render = async () => {
-            console.log("RENDER::::", LOOP_ID, renderRequestId,  workerProps?.params)
+            // console.log("RENDER::::", LOOP_ID, renderRequestId,  workerProps?.params)
             const start = performance.now()
 
             const dst = document.getElementById("output") as HTMLCanvasElement
@@ -266,7 +265,6 @@ const App = () => {
                 <canvas className={classes.inputView} id="tmp" hidden></canvas>
                 <canvas className={classes.inputView} id="front" hidden></canvas>
                 <canvas className={classes.inputView} id="src-cache" hidden></canvas>
-                <img className={classes.inputView} alt="background" id="background" src="img/north-star-2869817_640.jpg" hidden></img>
 
             </div>
             <div >

@@ -8,15 +8,9 @@ This is webworker module for [White-Box-Cartoon](https://github.com/SystemErrorW
 ```
 # install package
 $ npm install @dannadori/white-box-cartoonization-worker-js
-$ cp node_modules/\@dannadori/white-box-cartoonization-worker-js/dist/white-box-cartoonization-worker-worker.js public/
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
-
-# download model
-$ mkdir public/white-box-cartoonization
-$ curl 'https://flect-lab-web.s3-us-west-2.amazonaws.com/white-box-cartoonization/model.json' > public/white-box-cartoonization/model.json
-$ curl 'https://flect-lab-web.s3-us-west-2.amazonaws.com/white-box-cartoonization/group1-shard1of1.bin' > public/white-box-cartoonization/group1-shard1of1.bin
-
 ```
+
 ## API
 
 ```
@@ -64,15 +58,7 @@ $ npx create-react-app demo  --template typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/white-box-cartoonization-worker-js
-$ cp node_modules/\@dannadori/white-box-cartoonization-worker-js/dist/white-box-cartoonization-worker-worker.js public/
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
-```
-
-### Download Model
-```
-$ mkdir public/white-box-cartoonization
-$ curl 'https://flect-lab-web.s3-us-west-2.amazonaws.com/white-box-cartoonization/model.json' > public/white-box-cartoonization/model.json
-$ curl 'https://flect-lab-web.s3-us-west-2.amazonaws.com/white-box-cartoonization/group1-shard1of1.bin' > public/white-box-cartoonization/group1-shard1of1.bin
 ```
 
 ### Add source image to public. 
@@ -131,8 +117,6 @@ $ npm run start
 
 
 ## LICENSE
-### This module (not include White-box CartoonGAN)
-"MIT"
 
 ### White-box CartoonGAN 
 ```
@@ -141,3 +125,10 @@ license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 Commercial application is prohibited, please remain this license if you clone this repo
 ```
 
+### This module (not include White-box CartoonGAN)
+Same above.
+```
+Copyright (C) w-okada All rights reserved. Licensed under the CC BY-NC-SA 4.0
+license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
+Commercial application is prohibited, please remain this license if you clone this repo
+```

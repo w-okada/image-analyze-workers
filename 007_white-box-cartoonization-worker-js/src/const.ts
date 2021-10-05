@@ -15,8 +15,9 @@ export interface CartoonConfig{
     processOnLocal      : boolean
     useTFWasmBackend    : boolean
     wasmPath            : string
-    modelPath           : string
-    workerPath          : string
+    pageUrl             : string
+    modelJson           : string
+    modelWeight         : string
 }
 
 
