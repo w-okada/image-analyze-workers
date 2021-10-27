@@ -1,13 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import './App.css';
-import { makeStyles } from '@material-ui/core';
-import { SingleValueSlider, Toggle, VideoInputSelect } from './components/components';
-import { VideoInputType } from './const';
-import { useVideoInputList } from './hooks/useVideoInputList';
-import { Coords3D, FacemeshConfig, FacemeshOperatipnParams, FacemeshWorkerManager, generateDefaultFacemeshParams, generateFacemeshDefaultConfig } from '@dannadori/facemesh-worker-js';
+import React, { useEffect, useState } from "react";
+import { makeStyles } from "@material-ui/core";
+import {
+    SingleValueSlider,
+    Toggle,
+    VideoInputSelect,
+} from "./components/components";
+import { VideoInputType } from "./const";
+import { useVideoInputList } from "./hooks/useVideoInputList";
+import {
+    Coords3D,
+    FacemeshConfig,
+    FacemeshOperatipnParams,
+    FacemeshWorkerManager,
+    generateDefaultFacemeshParams,
+    generateFacemeshDefaultConfig,
+} from "@dannadori/facemesh-worker-js";
 
-let GlobalLoopID:number = 0
-
+let GlobalLoopID = 0;
 
 export const TRIANGULATION = [
     127, 34, 139, 11, 0, 37, 232, 231, 120, 72, 37, 39, 128, 121, 47, 232, 121,
@@ -177,233 +186,296 @@ export const TRIANGULATION = [
     259, 443, 259, 260, 444, 260, 467, 445, 309, 459, 250, 305, 289, 290, 305,
     290, 460, 401, 376, 435, 309, 250, 392, 376, 411, 433, 453, 341, 464, 357,
     453, 465, 343, 357, 412, 437, 343, 399, 344, 360, 440, 420, 437, 456, 360,
-    420, 363, 361, 401, 288, 265, 372, 353, 390, 339, 249, 339, 448, 255];
+    420, 363, 361, 401, 288, 265, 372, 353, 390, 339, 249, 339, 448, 255,
+];
 
-const useStyles = makeStyles((theme) => ({
-    inputView:{
-        maxWidth:512,
-        maxHeight:512,
-    }
+const useStyles = makeStyles(() => ({
+    inputView: {
+        maxWidth: 512,
+        maxHeight: 512,
+    },
 }));
 
 interface WorkerProps {
-    manager: FacemeshWorkerManager
-    config : FacemeshConfig
-    params : FacemeshOperatipnParams
-    count  : number
+    manager: FacemeshWorkerManager;
+    config: FacemeshConfig;
+    params: FacemeshOperatipnParams;
+    count: number;
 }
 
-interface InputMedia{
-    mediaType : VideoInputType
-    media     : MediaStream|string
+interface InputMedia {
+    mediaType: VideoInputType;
+    media: MediaStream | string;
 }
-
 
 const App = () => {
     const NUM_KEYPOINTS = 468;
 
     const classes = useStyles();
-    const { videoInputList } = useVideoInputList()
-    const [ workerProps, setWorkerProps] = useState<WorkerProps>()
+    const { videoInputList } = useVideoInputList();
+    const [workerProps, setWorkerProps] = useState<WorkerProps>();
 
-    const [ maxContinuousCheck, setMaxContinuousCheck] = useState(1)
-    const [ confidence, setConfidence] = useState(0.7)
-    const [ maxFaces, setMaxFaces] = useState(8)
-    const [ iouThreshold, setIouThreshold] = useState(0.7)
-    const [ scoreThreshold, setScoreThreshold] = useState(0.7)
+    const [maxContinuousCheck, setMaxContinuousCheck] = useState(1);
+    const [confidence, setConfidence] = useState(0.7);
+    const [maxFaces, setMaxFaces] = useState(8);
+    const [iouThreshold, setIouThreshold] = useState(0.7);
+    const [scoreThreshold, setScoreThreshold] = useState(0.7);
 
-    const [ onLocal, setOnLocal]                              = useState(true)
-    const [ useWasm, setUseWasm]                              = useState(false)
-    const [ processWidth, setProcessWidth]                    = useState(300)
-    const [ processHeight, setProcessHeight]                  = useState(300)
-    const [ iris, setIris]                                    = useState(false)
-    const [ strict, setStrict]                                = useState(false) // eslint-disable-line
+    const [onLocal, setOnLocal] = useState(true);
+    const [useWasm, setUseWasm] = useState(false);
+    const [processWidth, setProcessWidth] = useState(300);
+    const [processHeight, setProcessHeight] = useState(300);
+    const [iris, setIris] = useState(false);
+    const [strict] = useState(false);
 
-    const [inputMedia, setInputMedia] = useState<InputMedia>({mediaType:"IMAGE", media:"yuka_kawamura.jpg"})
-    const inputChange = (mediaType: VideoInputType, input:MediaStream|string) =>{
-        setInputMedia({mediaType:mediaType, media:input})
-    }
+    const [inputMedia, setInputMedia] = useState<InputMedia>({
+        mediaType: "IMAGE",
+        media: "yuka_kawamura.jpg",
+    });
+    const inputChange = (
+        mediaType: VideoInputType,
+        input: MediaStream | string
+    ) => {
+        setInputMedia({ mediaType: mediaType, media: input });
+    };
 
     ///////////////////////////
     /// プロパティ設定      ///
     ///////////////////////////
     //// モデル切り替え
-    useEffect(()=>{
-        const init = async () =>{
-            const m = workerProps? workerProps.manager : new FacemeshWorkerManager()
-            const count = workerProps? workerProps.count + 1: 0
-            const c = generateFacemeshDefaultConfig()
-            c.processOnLocal = onLocal
-            c.useTFWasmBackend = useWasm
-            c.model.maxContinuousChecks = maxContinuousCheck
-            c.model.detectionConfidence = confidence
-            c.model.maxFaces = maxFaces
-            c.model.iouThreshold = iouThreshold
-            c.model.scoreThreshold = scoreThreshold
-            await m.init(c)
-    
-            const p = generateDefaultFacemeshParams()
-            p.processWidth  = processWidth
-            p.processHeight = processHeight
-            p.predictIrises = iris
+    useEffect(() => {
+        const init = async () => {
+            const m = workerProps
+                ? workerProps.manager
+                : new FacemeshWorkerManager();
+            const count = workerProps ? workerProps.count + 1 : 0;
+            const c = generateFacemeshDefaultConfig();
+            c.processOnLocal = onLocal;
+            c.useTFWasmBackend = useWasm;
+            c.model.maxContinuousChecks = maxContinuousCheck;
+            c.model.detectionConfidence = confidence;
+            c.model.maxFaces = maxFaces;
+            c.model.iouThreshold = iouThreshold;
+            c.model.scoreThreshold = scoreThreshold;
+            await m.init(c);
 
-            const newProps = {manager:m, config:c, params:p, count:count}
-            setWorkerProps(newProps)
-        }
-        init()
-    }, [onLocal, useWasm, maxContinuousCheck, confidence, maxFaces, iouThreshold, scoreThreshold]) // eslint-disable-line
+            const p = generateDefaultFacemeshParams();
+            p.processWidth = processWidth;
+            p.processHeight = processHeight;
+            p.predictIrises = iris;
+
+            const newProps = { manager: m, config: c, params: p, count: count };
+            setWorkerProps(newProps);
+        };
+        init();
+    }, [
+        onLocal,
+        useWasm,
+        maxContinuousCheck,
+        confidence,
+        maxFaces,
+        iouThreshold,
+        scoreThreshold,
+    ]); // eslint-disable-line
 
     //// パラメータ変更
-    useEffect(()=>{
-        if(!workerProps){
-            return
+    useEffect(() => {
+        if (!workerProps) {
+            return;
         }
-        const p = generateDefaultFacemeshParams()
-        p.processWidth  = processWidth
-        p.processHeight = processHeight
-        p.predictIrises = iris
+        const p = generateDefaultFacemeshParams();
+        p.processWidth = processWidth;
+        p.processHeight = processHeight;
+        p.predictIrises = iris;
 
         // setWorkerProps({...workerProps, params:p})
-        workerProps.params = p
-    }, [processWidth, processHeight, iris]) // eslint-disable-line
-
+        workerProps.params = p;
+    }, [processWidth, processHeight, iris]); // eslint-disable-line
 
     /// input設定
-    useEffect(()=>{
-        const video = document.getElementById("input_video") as HTMLVideoElement
-        if(inputMedia.mediaType === "IMAGE"){
-            const img = document.getElementById("input_img") as HTMLImageElement
-            img.onloadeddata = () =>{
-                resizeDst(img)
-            }
-            img.src = inputMedia.media as string
-        }else if(inputMedia.mediaType === "MOVIE"){
-            const vid = document.getElementById("input_video") as HTMLVideoElement
-            vid.pause()
-            vid.srcObject=null
-            vid.src = inputMedia.media as string
-            vid.loop = true
-            vid.onloadeddata = () =>{
-                video.play()
-                resizeDst(vid)
-            }
-        }else{
-            const vid = document.getElementById("input_video") as HTMLVideoElement
-            vid.pause()
-            vid.srcObject = inputMedia.media as MediaStream
-            vid.onloadeddata = () =>{
-                video.play()
-                resizeDst(vid)
-            }
+    useEffect(() => {
+        const video = document.getElementById(
+            "input_video"
+        ) as HTMLVideoElement;
+        if (inputMedia.mediaType === "IMAGE") {
+            const img = document.getElementById(
+                "input_img"
+            ) as HTMLImageElement;
+            img.onloadeddata = () => {
+                resizeDst(img);
+            };
+            img.src = inputMedia.media as string;
+        } else if (inputMedia.mediaType === "MOVIE") {
+            const vid = document.getElementById(
+                "input_video"
+            ) as HTMLVideoElement;
+            vid.pause();
+            vid.srcObject = null;
+            vid.src = inputMedia.media as string;
+            vid.loop = true;
+            vid.onloadeddata = () => {
+                video.play();
+                resizeDst(vid);
+            };
+        } else {
+            const vid = document.getElementById(
+                "input_video"
+            ) as HTMLVideoElement;
+            vid.pause();
+            vid.srcObject = inputMedia.media as MediaStream;
+            vid.onloadeddata = () => {
+                video.play();
+                resizeDst(vid);
+            };
         }
-    },[inputMedia])
+    }, [inputMedia]);
 
     /// resize
-    useEffect(()=>{
-        const input = document.getElementById("input_img") || document.getElementById("input_video")
-        resizeDst(input!)
-    })
+    useEffect(() => {
+        const input =
+            document.getElementById("input_img") ||
+            document.getElementById("input_video");
+        resizeDst(input!);
+    });
 
     //////////////
     ///// util  //
     //////////////
-    const resizeDst = (input:HTMLElement) =>{
-        const cs = getComputedStyle(input)
-        const width = parseInt(cs.getPropertyValue("width"))
-        const height = parseInt(cs.getPropertyValue("height"))
-        const dst = document.getElementById("output") as HTMLCanvasElement
-        const front = document.getElementById("front") as HTMLCanvasElement
-        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
-        
-        [dst, srcCache, front].forEach((c)=>{
-            c.width = width
-            c.height = height
-        })
-    }
+    const resizeDst = (input: HTMLElement) => {
+        const cs = getComputedStyle(input);
+        const width = parseInt(cs.getPropertyValue("width"));
+        const height = parseInt(cs.getPropertyValue("height"));
+        const dst = document.getElementById("output") as HTMLCanvasElement;
+        const front = document.getElementById("front") as HTMLCanvasElement;
+        const srcCache = document.getElementById(
+            "src-cache"
+        ) as HTMLCanvasElement;
+
+        [dst, srcCache, front].forEach((c) => {
+            c.width = width;
+            c.height = height;
+        });
+    };
 
     //////////////////
     //  pipeline    //
     //////////////////
 
-    useEffect(()=>{
-        console.log("[Pipeline] Start", workerProps)
-        let renderRequestId: number
-        const LOOP_ID = performance.now()
-        GlobalLoopID = LOOP_ID
+    useEffect(() => {
+        console.log("[Pipeline] Start", workerProps);
+        let renderRequestId: number;
+        const LOOP_ID = performance.now();
+        GlobalLoopID = LOOP_ID;
 
         const render = async () => {
             // console.log("RENDER::::", LOOP_ID, renderRequestId,  workerProps?.params)
-            const start = performance.now()
+            const start = performance.now();
 
-            const dst = document.getElementById("output") as HTMLCanvasElement
-            if(workerProps){
-                if(dst.width > 0 && dst.height>0){
+            const dst = document.getElementById("output") as HTMLCanvasElement;
+            if (workerProps) {
+                if (dst.width > 0 && dst.height > 0) {
+                    const src =
+                        (document.getElementById(
+                            "input_img"
+                        ) as HTMLImageElement) ||
+                        (document.getElementById(
+                            "input_video"
+                        ) as HTMLVideoElement);
+                    const dst = document.getElementById(
+                        "output"
+                    ) as HTMLCanvasElement;
+                    const srcCache = document.getElementById(
+                        "src-cache"
+                    ) as HTMLCanvasElement;
 
-                    const src = document.getElementById("input_img") as HTMLImageElement || document.getElementById("input_video") as HTMLVideoElement
-                    const dst = document.getElementById("output") as HTMLCanvasElement
-                    const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
-            
-                    const dstCtx = dst.getContext("2d")!
-            
-                    srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height)
-            
-                    const inference_start = performance.now()
-                    const prediction = await workerProps.manager.predict(srcCache!, workerProps.params)
-                    const inference_end = performance.now()
-                    const info1 = document.getElementById("info") as HTMLCanvasElement
-                    info1.innerText = `processing time: ${inference_end - inference_start}`
-            
+                    const dstCtx = dst.getContext("2d")!;
+
+                    srcCache
+                        .getContext("2d")!
+                        .drawImage(src, 0, 0, srcCache.width, srcCache.height);
+
+                    const inference_start = performance.now();
+                    const prediction = await workerProps.manager.predict(
+                        srcCache!,
+                        workerProps.params
+                    );
+                    const inference_end = performance.now();
+                    const info1 = document.getElementById(
+                        "info"
+                    ) as HTMLCanvasElement;
+                    info1.innerText = `processing time: ${
+                        inference_end - inference_start
+                    }`;
+
                     //console.log("PREDICTION", prediction)
-                    dstCtx.clearRect(0, 0, dst.width, dst.height)
+                    dstCtx.clearRect(0, 0, dst.width, dst.height);
 
-                    prediction?.forEach(x=>{
-                        const keypoints = x.scaledMesh as Coords3D
+                    prediction?.forEach((x) => {
+                        const keypoints = x.scaledMesh as Coords3D;
                         dstCtx.strokeStyle = "#000000";
                         for (let i = 0; i < TRIANGULATION.length / 3; i++) {
                             const points = [
                                 TRIANGULATION[i * 3 + 0],
                                 TRIANGULATION[i * 3 + 1],
-                                TRIANGULATION[i * 3 + 2]
-                            ].map(index =>[
-                                (keypoints[index][0] / workerProps.params.processWidth)  * dst.width,
-                                (keypoints[index][1] / workerProps.params.processHeight) * dst.height,
+                                TRIANGULATION[i * 3 + 2],
+                            ].map((index) => [
+                                (keypoints[index][0] /
+                                    workerProps.params.processWidth) *
+                                    dst.width,
+                                (keypoints[index][1] /
+                                    workerProps.params.processHeight) *
+                                    dst.height,
                             ]);
-                            
+
                             const region = new Path2D();
                             region.moveTo(points[0][0], points[0][1]);
                             for (let j = 1; j < points.length; j++) {
                                 const point = points[j];
-                                region.lineTo( point[0], point[1]);
+                                region.lineTo(point[0], point[1]);
                             }
                             region.closePath();
                             dstCtx.stroke(region);
                         }
 
-                        if(keypoints.length > NUM_KEYPOINTS) {
-                            const offset = NUM_KEYPOINTS
+                        if (keypoints.length > NUM_KEYPOINTS) {
+                            const offset = NUM_KEYPOINTS;
                             dstCtx.strokeStyle = "#FF2C35";
                             dstCtx.lineWidth = 1;
-                            
-                            const irisIndex = [
-                                offset, offset+1, offset+2, offset+3, offset+4,
-                                offset+5, offset+6, offset+7, offset+8, offset+9,
-                            ].map(index=>[
-                                (keypoints[index][0]/workerProps.params.processWidth) * dst.width,
-                                (keypoints[index][1]/workerProps.params.processHeight) * dst.height,
 
-                            ])
+                            const irisIndex = [
+                                offset,
+                                offset + 1,
+                                offset + 2,
+                                offset + 3,
+                                offset + 4,
+                                offset + 5,
+                                offset + 6,
+                                offset + 7,
+                                offset + 8,
+                                offset + 9,
+                            ].map((index) => [
+                                (keypoints[index][0] /
+                                    workerProps.params.processWidth) *
+                                    dst.width,
+                                (keypoints[index][1] /
+                                    workerProps.params.processHeight) *
+                                    dst.height,
+                            ]);
 
                             const irisTriangle = [
-                                0,1,2, 0,2,3, 0,3,4, 0,4,1,
-                                5,6,7, 5,7,8, 5,8,9, 5,9,6,
-                            ]
-  
-                            for(let i = 0; i< irisTriangle.length/3;i++){
+                                0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1, 5, 6, 7, 5,
+                                7, 8, 5, 8, 9, 5, 9, 6,
+                            ];
+
+                            for (let i = 0; i < irisTriangle.length / 3; i++) {
                                 const region = new Path2D();
-                                const irisOffset = i * 3
-                                const p0 = irisIndex[ irisTriangle[irisOffset + 0]]
-                                const p1 = irisIndex[ irisTriangle[irisOffset + 1]]
-                                const p2 = irisIndex[ irisTriangle[irisOffset + 2]]
+                                const irisOffset = i * 3;
+                                const p0 =
+                                    irisIndex[irisTriangle[irisOffset + 0]];
+                                const p1 =
+                                    irisIndex[irisTriangle[irisOffset + 1]];
+                                const p2 =
+                                    irisIndex[irisTriangle[irisOffset + 2]];
                                 region.moveTo(p0[0], p0[1]);
                                 region.lineTo(p1[0], p1[1]);
                                 region.lineTo(p2[0], p2[1]);
@@ -411,71 +483,147 @@ const App = () => {
                                 dstCtx.stroke(region);
                             }
                         }
-                    })
+                    });
                 }
-                if(GlobalLoopID === LOOP_ID){
-                    renderRequestId = requestAnimationFrame(render)
+                if (GlobalLoopID === LOOP_ID) {
+                    renderRequestId = requestAnimationFrame(render);
                 }
             }
-            
-            const end = performance.now()
-            const info2 = document.getElementById("info2") as HTMLCanvasElement
-            info2.innerText = `processing time: ${end-start}`
-        }
-        render()
-        return ()=>{
-            console.log("CANCEL", renderRequestId)
-            cancelAnimationFrame(renderRequestId)
-        }
-    }, [workerProps, strict])
 
-
-
+            const end = performance.now();
+            const info2 = document.getElementById("info2") as HTMLCanvasElement;
+            info2.innerText = `processing time: ${end - start}`;
+        };
+        render();
+        return () => {
+            console.log("CANCEL", renderRequestId);
+            cancelAnimationFrame(renderRequestId);
+        };
+    }, [workerProps, strict]);
 
     /////////////
     // render  //
     /////////////
     return (
         <div>
-            <div style={{display:"flex"}}>
-                <div style={{display:"flex"}}>
-                    {inputMedia.mediaType === "IMAGE" ? 
-                        <img  className={classes.inputView} alt="input_img" id="input_img"></img>
-                        :
-                        <video  className={classes.inputView} id="input_video"></video>
-                    }
+            <div style={{ display: "flex" }}>
+                <div style={{ display: "flex" }}>
+                    {inputMedia.mediaType === "IMAGE" ? (
+                        <img
+                            className={classes.inputView}
+                            alt="input_img"
+                            id="input_img"
+                        ></img>
+                    ) : (
+                        <video
+                            className={classes.inputView}
+                            id="input_video"
+                        ></video>
+                    )}
                     <canvas className={classes.inputView} id="output"></canvas>
                 </div>
                 <div>
-                    <VideoInputSelect  title="input"                 current={""}             onchange={inputChange}     options={videoInputList}/>
-                    <SingleValueSlider title="maxContinuousCheck"    current={maxContinuousCheck}     onchange={setMaxContinuousCheck} min={1} max={10} step={1} />                
-                    <SingleValueSlider title="confidence"            current={confidence}     onchange={setConfidence} min={0} max={1} step={0.01} />                
-                    <SingleValueSlider title="maxFaces"              current={maxFaces}     onchange={setMaxFaces} min={1} max={20} step={1} />  
-                    <SingleValueSlider title="iouThreshold"          current={iouThreshold}     onchange={setIouThreshold} min={0} max={1} step={0.01} /> 
-                    <SingleValueSlider title="scoreThreshold"        current={scoreThreshold}     onchange={setScoreThreshold} min={0} max={1} step={0.01} /> 
-                    <Toggle            title="onLocal"               current={onLocal}        onchange={setOnLocal} />
-                    <Toggle            title="useWasm"               current={useWasm}        onchange={setUseWasm} />
-                    <SingleValueSlider title="processWidth"          current={processWidth}     onchange={setProcessWidth} min={100} max={1024} step={10} />
-                    <SingleValueSlider title="processHeight"         current={processHeight}     onchange={setProcessHeight} min={100} max={1024} step={10} />
-                    <Toggle            title="iris"                  current={iris}        onchange={setIris} />
+                    <VideoInputSelect
+                        title="input"
+                        current={""}
+                        onchange={inputChange}
+                        options={videoInputList}
+                    />
+                    <SingleValueSlider
+                        title="maxContinuousCheck"
+                        current={maxContinuousCheck}
+                        onchange={setMaxContinuousCheck}
+                        min={1}
+                        max={10}
+                        step={1}
+                    />
+                    <SingleValueSlider
+                        title="confidence"
+                        current={confidence}
+                        onchange={setConfidence}
+                        min={0}
+                        max={1}
+                        step={0.01}
+                    />
+                    <SingleValueSlider
+                        title="maxFaces"
+                        current={maxFaces}
+                        onchange={setMaxFaces}
+                        min={1}
+                        max={20}
+                        step={1}
+                    />
+                    <SingleValueSlider
+                        title="iouThreshold"
+                        current={iouThreshold}
+                        onchange={setIouThreshold}
+                        min={0}
+                        max={1}
+                        step={0.01}
+                    />
+                    <SingleValueSlider
+                        title="scoreThreshold"
+                        current={scoreThreshold}
+                        onchange={setScoreThreshold}
+                        min={0}
+                        max={1}
+                        step={0.01}
+                    />
+                    <Toggle
+                        title="onLocal"
+                        current={onLocal}
+                        onchange={setOnLocal}
+                    />
+                    <Toggle
+                        title="useWasm"
+                        current={useWasm}
+                        onchange={setUseWasm}
+                    />
+                    <SingleValueSlider
+                        title="processWidth"
+                        current={processWidth}
+                        onchange={setProcessWidth}
+                        min={100}
+                        max={1024}
+                        step={10}
+                    />
+                    <SingleValueSlider
+                        title="processHeight"
+                        current={processHeight}
+                        onchange={setProcessHeight}
+                        min={100}
+                        max={1024}
+                        step={10}
+                    />
+                    <Toggle title="iris" current={iris} onchange={setIris} />
 
-                    <div >
-                        <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
+                    <div>
+                        <a href="https://github.com/w-okada/image-analyze-workers">
+                            github repository
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <div style={{display:"flex"}}>
+            <div style={{ display: "flex" }}>
                 <canvas className={classes.inputView} id="tmp" hidden></canvas>
-                <canvas className={classes.inputView} id="front" hidden></canvas>
-                <canvas className={classes.inputView} id="src-cache" hidden></canvas>
+                <canvas
+                    className={classes.inputView}
+                    id="front"
+                    hidden
+                ></canvas>
+                <canvas
+                    className={classes.inputView}
+                    id="src-cache"
+                    hidden
+                ></canvas>
             </div>
-            <div >
+            <div>
                 <div id="info"> </div>
                 <div id="info2"> </div>
             </div>
         </div>
-        );
-}
+    );
+};
 
 export default App;
