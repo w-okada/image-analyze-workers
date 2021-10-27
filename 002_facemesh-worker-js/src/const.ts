@@ -1,16 +1,16 @@
-import { BrowserType } from './BrowserUtil';
+import { BrowserType } from "./BrowserUtil";
 export const WorkerCommand = {
-    INITIALIZE   : 'initialize',
-    PREDICT : 'predict',
-}
+    INITIALIZE: "initialize",
+    PREDICT: "predict",
+};
 
 export const WorkerResponse = {
-    INITIALIZED      : 'initialized',
-    PREDICTED   : 'predicted',
-}
+    INITIALIZED: "initialized",
+    PREDICTED: "predicted",
+};
 
 // ModelConfig is not provided from officail. So create originally.
-export interface ModelConfig{
+export interface ModelConfig {
     maxContinuousChecks: number;
     detectionConfidence: number;
     maxFaces: number;
@@ -18,25 +18,24 @@ export interface ModelConfig{
     scoreThreshold: number;
 }
 
-export interface FacemeshConfig{
-    browserType           : BrowserType
-    useTFWasmBackend      : boolean 
-    useTFCPUBackend       : boolean 
-    wasmPath              : string
-    modelReloadInterval   : number // if not reload, set zero
-    model                 : ModelConfig
-    processOnLocal        : boolean
-    pageUrl               : string
+export interface FacemeshConfig {
+    browserType: BrowserType;
+    useTFWasmBackend: boolean;
+    useTFCPUBackend: boolean;
+    wasmPath: string;
+    modelReloadInterval: number; // if not reload, set zero
+    model: ModelConfig;
+    processOnLocal: boolean;
+    pageUrl: string;
 }
 
-
-export interface FacemeshOperatipnParams{
-    type                : FacemeshFunctionType
-    processWidth        : number
-    processHeight       : number
-    predictIrises       : boolean
+export interface FacemeshOperatipnParams {
+    type: FacemeshFunctionType;
+    processWidth: number;
+    processHeight: number;
+    predictIrises: boolean;
 }
 
-export enum FacemeshFunctionType{
+export enum FacemeshFunctionType {
     DetectMesh,
 }
