@@ -1,55 +1,37 @@
-const path = require('path');
-const WorkerPlugin = require('worker-plugin');
+const path = require("path");
+const webpack = require("webpack");
 
 const manager = {
-    mode: 'production',
-    entry: './src/u2net-portrait-worker.ts', // <-- (1)
+    mode: "production",
+    entry: "./src/u2net-portrait-worker.ts",
     resolve: {
         extensions: [".ts", ".js"],
-        fallback: { "os": false }
+        fallback: {
+            os: false,
+            buffer: require.resolve("buffer/"),
+        },
     },
     module: {
         rules: [
-            { test: /\.ts$/, loader: 'ts-loader' },
+            { test: /\.ts$/, loader: "ts-loader" },
+            { test: /resources\/.*\.bin/, type: "asset/inline" },
+            { test: /resources\/.*\.json/, type: "asset/source" },
         ],
     },
     output: {
-        filename: 'u2net-portrait-worker.js', // <-- (2)
-        path: path.resolve(__dirname, 'dist'),
-        libraryTarget: 'umd',
-        globalObject: 'typeof self !== \'undefined\' ? self : this'
+        filename: "u2net-portrait-worker.js",
+        path: path.resolve(__dirname, "dist"),
+        libraryTarget: "umd",
+        globalObject: "typeof self !== 'undefined' ? self : this",
     },
-    plugins: [　　　　　　　　　　　　　　　　 // <--- (2)
-        new WorkerPlugin()
-    ]
+    stats: {
+        children: true,
+    },
+    plugins: [
+        new webpack.ProvidePlugin({
+            Buffer: ["buffer", "Buffer"],
+        }),
+    ],
 };
 
-
-
-const worker = {
-    mode: 'production',
-    entry: './src/u2net-portrait-worker-worker.ts', // <-- (1)
-    resolve: {
-        extensions: [".ts", ".js"],
-        fallback: { "os": false }
-    },
-    module: {
-        rules: [
-            { test: /\.ts$/, loader: 'ts-loader' },
-        ],
-    },
-    output: {
-        filename: 'u2net-portrait-worker-worker.js', // <-- (2)
-        path: path.resolve(__dirname, 'dist'),
-        libraryTarget: 'umd',
-        globalObject: 'typeof self !== \'undefined\' ? self : this'
-    },
-    plugins: [　　　　　　　　　　　　　　　　 // <--- (2)
-        new WorkerPlugin()
-    ]
-};
-
-module.exports = [
-    manager, worker
-]
-
+module.exports = [manager];

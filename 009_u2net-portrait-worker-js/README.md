@@ -2,23 +2,15 @@
 
 ![image](https://user-images.githubusercontent.com/48346627/101999201-fba25d80-3d1d-11eb-8e63-445cb6abf204.png)
 
-
 ## Install
+
 ```
 ## install
 $ npm install @dannadori/u2net-portrait-worker-js
-$ cp node_modules/\@dannadori/u2net-portrait-worker-js/dist/u2net-portrait-worker-worker.js public/
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 
-## download model
-$ for res in 192 256 320 512 1024; do 
-    mkdir public/u2net-portrait_${res} 
-    curl https://flect-lab-web.s3-us-west-2.amazonaws.com/u2net-portrait_${res}/model.json > public/u2net-portrait_${res}/model.json     
-    for count in `seq 42`; do 
-	    curl https://flect-lab-web.s3-us-west-2.amazonaws.com/u2net-portrait_${res}/group1-shard${count}of42.bin  > public/u2net-portrait_${res}/group1-shard${count}of42.bin 
-      done 
-  done
 ```
+
 ## API
 
 ```
@@ -58,31 +50,23 @@ export declare enum U2NetPortraitFunctionType {
 ```
 
 ## Step by step
+
 ### Create environment and install package
+
 ```
 $ npx create-react-app demo --template typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/u2net-portrait-worker-js
-$ cp node_modules/\@dannadori/u2net-portrait-worker-js/dist/u2net-portrait-worker-worker.js public/
+$ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 ```
 
-### Download Model
-```
-$ for res in 192 256 320 512 1024; do 
-    mkdir public/u2net-portrait_${res} 
-    curl https://flect-lab-web.s3-us-west-2.amazonaws.com/u2net-portrait_${res}/model.json > public/u2net-portrait_${res}/model.json     
-    for count in `seq 42`; do 
-	    curl https://flect-lab-web.s3-us-west-2.amazonaws.com/u2net-portrait_${res}/group1-shard${count}of42.bin  > public/u2net-portrait_${res}/group1-shard${count}of42.bin 
-      done 
-  done
+### Add source image to public.
 
-```
-
-### Add source image to public. 
 In this time, the name is "srcImage.jpg"
 
 ### Edit src/App.tsx
+
 Sample code is here.
 
 ```
@@ -91,9 +75,9 @@ import './App.css';
 import { generateDefaultU2NetPortraitParams, generateU2NetPortraitDefaultConfig, U2NetPortraitWorkerManager, createForegroundImage } from '@dannadori/u2net-portrait-worker-js'
 
 class App extends React.Component{
-  
+
   manager = new U2NetPortraitWorkerManager()
-                
+
   config = (()=>{
     const c = generateU2NetPortraitDefaultConfig()
     c.useTFWasmBackend = false
@@ -145,8 +129,3 @@ export default App;
 ```
 $ npm run start
 ```
-
-
-
-
-
