@@ -1,7 +1,6 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const webpack = require("webpack");
 
 module.exports = {
     // mode: "development",
@@ -23,11 +22,7 @@ module.exports = {
                     {
                         loader: "babel-loader",
                         options: {
-                            presets: [
-                                "@babel/preset-env",
-                                "@babel/preset-react",
-                                "@babel/preset-typescript",
-                            ],
+                            presets: ["@babel/preset-env", "@babel/preset-react", "@babel/preset-typescript"],
                             plugins: ["@babel/plugin-transform-runtime"],
                         },
                     },
