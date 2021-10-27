@@ -1,14 +1,14 @@
-import { BrowserType } from './BrowserUtil';
+import { BrowserType } from "./BrowserUtil";
 
 export const WorkerCommand = {
-    INITIALIZE   : 'initialize',
-    PREDICT : 'predict',
-}
+    INITIALIZE: "initialize",
+    PREDICT: "predict",
+};
 
 export const WorkerResponse = {
-    INITIALIZED      : 'initialized',
-    PREDICTED   : 'predicted',
-}
+    INITIALIZED: "initialized",
+    PREDICTED: "predicted",
+};
 
 // interface AnnotatedPrediction extends Prediction {
 //     annotations: {
@@ -16,36 +16,34 @@ export const WorkerResponse = {
 //     };
 // }
 
-export interface HandPoseConfig{
-    browserType           : BrowserType
-    model                 : ModelConfig
-    useTFWasmBackend      : boolean
-    wasmPath              : string
-    processOnLocal        : boolean
-    modelReloadInterval   : number // if not reload, set zero   
-    pageUrl               : string
-
+export interface HandPoseConfig {
+    browserType: BrowserType;
+    model: ModelConfig;
+    useTFWasmBackend: boolean;
+    wasmPath: string;
+    processOnLocal: boolean;
+    modelReloadInterval: number; // if not reload, set zero
+    pageUrl: string;
 }
 
-export interface ModelConfig{
+export interface ModelConfig {
     maxContinuousChecks?: number;
     detectionConfidence?: number;
     iouThreshold?: number;
     scoreThreshold?: number;
 }
 
-export enum HandPoseFunctionType{
+export enum HandPoseFunctionType {
     EstimateHands,
 }
 
-
-export interface HandPoseOperatipnParams{
-    type                : HandPoseFunctionType
-    estimateHands       : EstimateHandsParams
-    processWidth        : number
-    processHeight       : number
+export interface HandPoseOperatipnParams {
+    type: HandPoseFunctionType;
+    estimateHands: EstimateHandsParams;
+    processWidth: number;
+    processHeight: number;
 }
 
-export interface EstimateHandsParams{
-    flipHorizontal: boolean
+export interface EstimateHandsParams {
+    flipHorizontal: boolean;
 }
