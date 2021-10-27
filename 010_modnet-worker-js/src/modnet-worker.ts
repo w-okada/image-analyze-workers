@@ -1,9 +1,9 @@
 import { getBrowserType, BrowserType } from "./BrowserUtil";
 import * as tf from "@tensorflow/tfjs";
-import { MODNetConfig, MODNetFunctionType, MODNetOperationParams, WorkerCommand, WorkerResponse } from "./const";
+import { MODNetConfig, MODNetFunctionType, MODNetOperationParams, WorkerCommand, WorkerResponse, MODEL_INPUT_SIZES } from "./const";
 import { setWasmPath } from "@tensorflow/tfjs-backend-wasm";
 
-export { MODNetConfig, MODNetOperationParams };
+export { MODNetConfig, MODNetOperationParams, MODEL_INPUT_SIZES };
 
 // type MODEL_TYPES = "webcam" | "photo";
 // type MODEL_QUANTIZES = "32" | "16" | "8";
@@ -57,6 +57,7 @@ export const generateMODNetDefaultConfig = (): MODNetConfig => {
         modelWeight_256: modelWeight_256,
         modelJson_512: modelJson_512,
         modelWeight_512: modelWeight_512,
+        modelInputSize: 192,
     };
     return defaultConf;
 };
@@ -94,11 +95,25 @@ export class LocalWorker {
             load_module(config).then(() => {
                 tf.ready().then(async () => {
                     tf.env().set("WEBGL_CPU_FORWARD", false);
+                    if (config.modelInputSize === 192) {
+                        const modelJson = new File([config.modelJson_192], "model.json", { type: "application/json" });
+                        const weight = Buffer.from(config.modelWeight_192.split(",")[1], "base64");
+                        const modelWeights = new File([weight], "group1-shard1of1.bin");
+                        this.model = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
+                    } else if (config.modelInputSize === 256) {
+                        const modelJson = new File([config.modelJson_256], "model.json", { type: "application/json" });
+                        const weight = Buffer.from(config.modelWeight_256.split(",")[1], "base64");
+                        const modelWeights = new File([weight], "group1-shard1of1.bin");
+                        this.model = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
+                    } else if (config.modelInputSize === 512) {
+                        const modelJson = new File([config.modelJson_512], "model.json", { type: "application/json" });
+                        const weight = Buffer.from(config.modelWeight_512.split(",")[1], "base64");
+                        const modelWeights = new File([weight], "group1-shard1of1.bin");
+                        this.model = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
+                    } else {
+                        console.log("unknwon process size!", config.modelInputSize);
+                    }
 
-                    const modelJson_192 = new File([config.modelJson_192], "model.json", { type: "application/json" });
-                    const weight_192 = Buffer.from(config.modelWeight_192.split(",")[1], "base64");
-                    const modelWeights_192 = new File([weight_192], "group1-shard1of1.bin");
-                    this.model = await tf.loadGraphModel(tf.io.browserFiles([modelJson_192, modelWeights_192]));
                     onResolve();
                 });
             });

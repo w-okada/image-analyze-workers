@@ -67,15 +67,29 @@ onmessage = async (event) => {
         tf.ready().then(async () => {
             tf.env().set("WEBGL_CPU_FORWARD", false);
 
-            const modelJson = new File([config.modelJson_192], "model.json", { type: "application/json" });
-            const weight = Buffer.from(config.modelWeight_192.split(",")[1], "base64");
-            const modelWeights = new File([weight], "group1-shard1of1.bin");
-            model = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
+            if (config.modelInputSize === 192) {
+                const modelJson = new File([config.modelJson_192], "model.json", { type: "application/json" });
+                const weight = Buffer.from(config.modelWeight_192.split(",")[1], "base64");
+                const modelWeights = new File([weight], "group1-shard1of1.bin");
+                model = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
+            } else if (config.modelInputSize === 256) {
+                const modelJson = new File([config.modelJson_256], "model.json", { type: "application/json" });
+                const weight = Buffer.from(config.modelWeight_256.split(",")[1], "base64");
+                const modelWeights = new File([weight], "group1-shard1of1.bin");
+                model = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
+            } else if (config.modelInputSize === 512) {
+                const modelJson = new File([config.modelJson_512], "model.json", { type: "application/json" });
+                const weight = Buffer.from(config.modelWeight_512.split(",")[1], "base64");
+                const modelWeights = new File([weight], "group1-shard1of1.bin");
+                model = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
+            } else {
+                console.log("unknwon process size!", config.modelInputSize);
+            }
 
-            console.log(model.inputs);
-            console.log(model.inputNodes);
-            console.log(model.outputs);
-            console.log(model.outputNodes);
+            console.log(model!.inputs);
+            console.log(model!.inputNodes);
+            console.log(model!.outputs);
+            console.log(model!.outputNodes);
             ctx.postMessage({ message: WorkerResponse.INITIALIZED });
         });
     } else if (event.data.message === WorkerCommand.PREDICT) {

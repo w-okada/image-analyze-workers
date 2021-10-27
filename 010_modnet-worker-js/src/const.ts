@@ -10,6 +10,8 @@ export const WorkerResponse = {
     PREDICTED: "predicted",
 };
 
+export type MODEL_INPUT_SIZES = 192 | 256 | 512;
+
 export interface MODNetConfig {
     browserType: BrowserType;
     processOnLocal: boolean;
@@ -22,6 +24,7 @@ export interface MODNetConfig {
     modelWeight_256: string;
     modelJson_512: string;
     modelWeight_512: string;
+    modelInputSize: MODEL_INPUT_SIZES;
 }
 
 export interface MODNetOperationParams {
