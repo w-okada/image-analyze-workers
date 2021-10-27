@@ -29,6 +29,7 @@ const manager = {
     },
     plugins: [
         new webpack.ProvidePlugin({
+            process: "process/browser.js",
             Buffer: ["buffer", "Buffer"],
         }),
     ],
