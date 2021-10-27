@@ -1,85 +1,121 @@
-import { WorkerResponse, WorkerCommand, AsciiConfig, AsciiFunctionType, AsciiOperatipnParams } from "./const"
+import {
+    WorkerResponse,
+    WorkerCommand,
+    AsciiConfig,
+    AsciiFunctionType,
+    AsciiOperatipnParams,
+} from "./const";
 import { getBrowserType, BrowserType } from "./BrowserUtil";
 
+export { AsciiConfig, AsciiOperatipnParams, AsciiFunctionType } from "./const";
+export { BrowserType, getBrowserType } from "./BrowserUtil";
 
-export { AsciiConfig, AsciiOperatipnParams, AsciiFunctionType } from './const'
-export { BrowserType, getBrowserType} from './BrowserUtil';
+export const generateAsciiArtDefaultConfig = (): AsciiConfig => {
+    const defaultConf: AsciiConfig = {
+        browserType: getBrowserType(),
+        processOnLocal: false,
+    };
+    return defaultConf;
+};
 
-export const generateAsciiArtDefaultConfig = ():AsciiConfig => {
-    const defaultConf:AsciiConfig = {
-        browserType         : getBrowserType(),
-        processOnLocal      : false,
-    }
-    return defaultConf
-}
-
-export const generateDefaultAsciiArtParams = () =>{
+export const generateDefaultAsciiArtParams = () => {
     const defaultParams: AsciiOperatipnParams = {
         type: AsciiFunctionType.AsciiArt,
-        processWidth        : 300,
-        processHeight       : 300,
-        asciiStr            : " .,:;i1tfLCG08@",
-        fontSize            : 6
-    }
-    return defaultParams
-}
+        processWidth: 300,
+        processHeight: 300,
+        asciiStr: " .,:;i1tfLCG08@",
+        fontSize: 6,
+    };
+    return defaultParams;
+};
 
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./asciiart-worker-worker.ts";
 
-
-class LocalAA{
+class LocalAA {
     // _asciiStr = " .,:;i1tfLCG08@"
     // _asciiCharacters = (this._asciiStr).split("");
     // _fontSize = 6
     contrastFactor = (259 * (128 + 255)) / (255 * (259 - 128));
 
-    brightnessCanvas = document.createElement("canvas")
-    drawingCanvas = document.createElement("canvas")
+    brightnessCanvas = document.createElement("canvas");
+    drawingCanvas = document.createElement("canvas");
 
-    predict = async (targetCanvas: HTMLCanvasElement, params:AsciiOperatipnParams) => {
-        const asciiStr = params.asciiStr
-        const fontSize = params.fontSize
-        const asciiCharacters = (asciiStr).split("");
+    predict = async (
+        targetCanvas: HTMLCanvasElement,
+        params: AsciiOperatipnParams
+    ) => {
+        const asciiStr = params.asciiStr;
+        const fontSize = params.fontSize;
+        const asciiCharacters = asciiStr.split("");
 
-
-        const ctx = targetCanvas.getContext("2d")!
-        ctx.font = fontSize + "px monospace"
-        ctx.textBaseline = "top"
-        const m = ctx.measureText(asciiStr)
-        const charWidth = Math.floor(m.width / asciiCharacters.length)
-        const tmpWidth  = Math.ceil(targetCanvas.width  / charWidth)
-        const tmpHeight = Math.ceil(targetCanvas.height / fontSize)
+        const ctx = targetCanvas.getContext("2d")!;
+        ctx.font = fontSize + "px monospace";
+        ctx.textBaseline = "top";
+        const m = ctx.measureText(asciiStr);
+        const charWidth = Math.floor(m.width / asciiCharacters.length);
+        const tmpWidth = Math.ceil(targetCanvas.width / charWidth);
+        const tmpHeight = Math.ceil(targetCanvas.height / fontSize);
 
         // Generate Image for Brightness
-        this.brightnessCanvas.width=tmpWidth
-        this.brightnessCanvas.height=tmpHeight
-        const brCtx = this.brightnessCanvas.getContext("2d")!
-        brCtx.drawImage(targetCanvas, 0, 0, tmpWidth, tmpHeight)
-        const brImageData = brCtx.getImageData(0, 0, tmpWidth, tmpHeight)
-
+        this.brightnessCanvas.width = tmpWidth;
+        this.brightnessCanvas.height = tmpHeight;
+        const brCtx = this.brightnessCanvas.getContext("2d")!;
+        brCtx.drawImage(targetCanvas, 0, 0, tmpWidth, tmpHeight);
+        const brImageData = brCtx.getImageData(0, 0, tmpWidth, tmpHeight);
 
         // generate chars agaist the each dot
-        const lines:string[] = []
-        for(let y = 0; y < tmpHeight; y++){
-            let line =""
-            for(let x = 0; x < tmpWidth; x++){
-                const offset = (y * tmpWidth + x) * 4
-                const r = Math.max(0, Math.min((Math.floor((brImageData.data[offset + 0] - 128 ) * this.contrastFactor) + 128), 255))
-                const g = Math.max(0, Math.min((Math.floor((brImageData.data[offset + 1] - 128 ) * this.contrastFactor) + 128), 255))
-                const b = Math.max(0, Math.min((Math.floor((brImageData.data[offset + 2] - 128 ) * this.contrastFactor) + 128), 255))
+        const lines: string[] = [];
+        for (let y = 0; y < tmpHeight; y++) {
+            let line = "";
+            for (let x = 0; x < tmpWidth; x++) {
+                const offset = (y * tmpWidth + x) * 4;
+                const r = Math.max(
+                    0,
+                    Math.min(
+                        Math.floor(
+                            (brImageData.data[offset + 0] - 128) *
+                                this.contrastFactor
+                        ) + 128,
+                        255
+                    )
+                );
+                const g = Math.max(
+                    0,
+                    Math.min(
+                        Math.floor(
+                            (brImageData.data[offset + 1] - 128) *
+                                this.contrastFactor
+                        ) + 128,
+                        255
+                    )
+                );
+                const b = Math.max(
+                    0,
+                    Math.min(
+                        Math.floor(
+                            (brImageData.data[offset + 2] - 128) *
+                                this.contrastFactor
+                        ) + 128,
+                        255
+                    )
+                );
 
                 var brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-                var character = asciiCharacters[
-                    (asciiCharacters.length - 1) - Math.round(brightness * (asciiCharacters.length - 1))
-                ]
-                line += character
+                var character =
+                    asciiCharacters[
+                        asciiCharacters.length -
+                            1 -
+                            Math.round(
+                                brightness * (asciiCharacters.length - 1)
+                            )
+                    ];
+                line += character;
             }
-            lines.push(line)
+            lines.push(line);
         }
-        return lines
-    }
-
+        return lines;
+    };
 
     // convert = async (inCanvas: HTMLCanvasElement, outCanvas:HTMLCanvasElement, params:AsciiOperatipnParams) => {
     //     // ImageData作成
@@ -133,7 +169,6 @@ class LocalAA{
     //         drCtx.fillText(lines[n], 0, n * fontSize)
     //     }
 
-
     //     // draw output
     //     outCanvas.width  = inCanvas.width
     //     outCanvas.height = inCanvas.height
@@ -142,84 +177,117 @@ class LocalAA{
 
     //     return outCanvas
     // }
-
 }
 
+export class AsciiArtWorkerManager {
+    private workerAA: Worker | null = null;
+    private outCanvas: HTMLCanvasElement = document.createElement("canvas");
 
-export class AsciiArtWorkerManager{
-    private workerAA:Worker|null = null
-    private outCanvas:HTMLCanvasElement = document.createElement("canvas")
+    private localAA = new LocalAA();
+    private config: AsciiConfig = generateAsciiArtDefaultConfig();
 
-    private localAA = new LocalAA()
-    private config:AsciiConfig = generateAsciiArtDefaultConfig()
-
-    init = async  (config: AsciiConfig|null) => {
-        if(config != null){
-            this.config = config
+    init = async (config: AsciiConfig | null) => {
+        if (config != null) {
+            this.config = config;
         }
 
-        if(this.workerAA){
-            this.workerAA.terminate()
+        if (this.workerAA) {
+            this.workerAA.terminate();
         }
-        this.workerAA = null
+        this.workerAA = null;
 
         // safariはwebworkerでCanvasが使えないのでworkerは使わない。
-        if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal === true) {
-            return 
+        if (
+            this.config.browserType === BrowserType.SAFARI ||
+            this.config.processOnLocal === true
+        ) {
+            return;
         }
 
         // AsciiArt 用ワーカー
-        const workerAA:Worker = new workerJs()
+        const workerAA: Worker = new workerJs();
 
-        workerAA!.postMessage({message: WorkerCommand.INITIALIZE})
-        const p = new Promise<void>((onResolve, onFail)=>{
+        workerAA!.postMessage({ message: WorkerCommand.INITIALIZE });
+        const p = new Promise<void>((onResolve, onFail) => {
             workerAA!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.INITIALIZED) {
-                    console.log("WORKERSS INITIALIZED")
-                    this.workerAA = workerAA
-                    onResolve()
-                }else{
-                    console.log("AsciiArt Initialization something wrong[1]..")
-                    onFail(event)
+                    console.log("WORKERSS INITIALIZED");
+                    this.workerAA = workerAA;
+                    onResolve();
+                } else {
+                    console.log("AsciiArt Initialization something wrong[1]..");
+                    onFail(event);
                 }
-            }
-        })
-        return p
-    }
+            };
+        });
+        return p;
+    };
 
-    predict = async (targetCanvas:HTMLCanvasElement, params:AsciiOperatipnParams) => {
-        if(this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal === true){
+    predict = async (
+        targetCanvas: HTMLCanvasElement,
+        params: AsciiOperatipnParams
+    ) => {
+        if (
+            this.config.browserType === BrowserType.SAFARI ||
+            this.config.processOnLocal === true
+        ) {
             // Safariはローカルで処理
             // return await this.localAA.convert(targetCanvas, this.outCanvas, params)
-            return await this.localAA.predict(targetCanvas, params)
-        }else{
-            if(!this.workerAA){
-                return null
+            return await this.localAA.predict(targetCanvas, params);
+        } else {
+            if (!this.workerAA) {
+                return null;
             }
-            const offscreen = new OffscreenCanvas(targetCanvas.width, targetCanvas.height)
-            const offctx    = offscreen.getContext("2d")!
-            offctx.drawImage(targetCanvas, 0, 0, targetCanvas.width, targetCanvas.height)
-            const imageBitmap = offscreen.transferToImageBitmap()
-    
-            const uid = performance.now()
-            this.workerAA!.postMessage({message: WorkerCommand.PREDICT, uid:uid, params:params, image: imageBitmap}, [imageBitmap])
-            const p = new Promise((onResolve:(lines:string[])=>void, onFail)=>{
-                this.workerAA!.onmessage = (event) => {
-                    if(event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid){
-                        // const image = event.data.image as ImageBitmap
-                        // this.outCanvas.width=image.width
-                        // this.outCanvas.height=image.height
-                        // this.outCanvas.getContext("2d")!.drawImage(image, 0, 0, image.width, image.height)
-                        // image.close()
-                        const lines = event.data.lines as string[]
-                        onResolve(lines)
-                    }else{
-                        console.log("AsciiArt something wrong[2]..", event.data.uid, uid)
-//                        onFail(event)
-                    }
+            const offscreen = new OffscreenCanvas(
+                targetCanvas.width,
+                targetCanvas.height
+            );
+            const offctx = offscreen.getContext("2d")!;
+            offctx.drawImage(
+                targetCanvas,
+                0,
+                0,
+                targetCanvas.width,
+                targetCanvas.height
+            );
+            const imageBitmap = offscreen.transferToImageBitmap();
+
+            const uid = performance.now();
+            this.workerAA!.postMessage(
+                {
+                    message: WorkerCommand.PREDICT,
+                    uid: uid,
+                    params: params,
+                    image: imageBitmap,
+                },
+                [imageBitmap]
+            );
+            const p = new Promise(
+                (onResolve: (lines: string[]) => void, onFail) => {
+                    this.workerAA!.onmessage = (event) => {
+                        if (
+                            event.data.message === WorkerResponse.PREDICTED &&
+                            event.data.uid === uid
+                        ) {
+                            // const image = event.data.image as ImageBitmap
+                            // this.outCanvas.width=image.width
+                            // this.outCanvas.height=image.height
+                            // this.outCanvas.getContext("2d")!.drawImage(image, 0, 0, image.width, image.height)
+                            // image.close()
+                            const lines = event.data.lines as string[];
+                            onResolve(lines);
+                        } else {
+                            console.log(
+                                "AsciiArt something wrong[2]..",
+                                event.data.uid,
+                                uid
+                            );
+                            //                        onFail(event)
+                        }
+                    };
                 }
-            })
-            return p
+            );
+            return p;
         }
-    }
+    };
 }

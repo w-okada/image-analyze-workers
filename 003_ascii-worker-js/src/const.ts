@@ -1,30 +1,28 @@
-import { BrowserType } from './BrowserUtil';
+import { BrowserType } from "./BrowserUtil";
 
 export const WorkerCommand = {
-    INITIALIZE   : 'initialize',
-    PREDICT : 'predict',
-}
+    INITIALIZE: "initialize",
+    PREDICT: "predict",
+};
 
 export const WorkerResponse = {
-    INITIALIZED      : 'initialized',
-    PREDICTED   : 'predicted',
+    INITIALIZED: "initialized",
+    PREDICTED: "predicted",
+};
+
+export interface AsciiConfig {
+    browserType: BrowserType;
+    processOnLocal: boolean;
 }
 
-export interface AsciiConfig{
-    browserType         : BrowserType
-    processOnLocal      : boolean
+export interface AsciiOperatipnParams {
+    type: AsciiFunctionType;
+    processWidth: number;
+    processHeight: number;
+    asciiStr: string;
+    fontSize: number;
 }
 
-
-export interface AsciiOperatipnParams{
-    type: AsciiFunctionType
-    processWidth        : number
-    processHeight       : number
-    asciiStr            : string
-    fontSize            : number
+export enum AsciiFunctionType {
+    AsciiArt,
 }
-
-export enum AsciiFunctionType{
-    AsciiArt
-}
-
