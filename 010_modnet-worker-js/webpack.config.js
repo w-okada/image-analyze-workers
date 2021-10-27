@@ -1,54 +1,37 @@
-const path = require('path');
-const WorkerPlugin = require('worker-plugin');
-
-
-const worker = {
-    mode: 'production',
-    entry: './src/modnet-worker-worker.ts', // <-- (1)
-    resolve: {
-        extensions: [".ts", ".js"],
-    },
-    module: {
-        rules: [
-            { test: /\.ts$/, loader: 'ts-loader' },
-        ],
-    },
-    output: {
-        filename: 'modnet-worker-worker.js', // <-- (2)
-        path: path.resolve(__dirname, 'dist'),
-        libraryTarget: 'umd',
-        globalObject: 'typeof self !== \'undefined\' ? self : this'
-    },
-    plugins: [　　　　　　　　　　　　　　　　 // <--- (3)
-        new WorkerPlugin()
-    ]
-};
-
+const path = require("path");
+const webpack = require("webpack");
 
 const manager = {
-    mode: 'production',
-    entry: './src/modnet-worker.ts', // <-- (1)
+    mode: "production",
+    entry: "./src/modnet-worker.ts",
     resolve: {
         extensions: [".ts", ".js"],
+        fallback: {
+            os: false,
+            buffer: require.resolve("buffer/"),
+        },
     },
     module: {
         rules: [
-            { test: /\.ts$/, loader: 'ts-loader' },
+            { test: /\.ts$/, loader: "ts-loader" },
+            { test: /resources\/.*\.bin/, type: "asset/inline" },
+            { test: /resources\/.*\.json/, type: "asset/source" },
         ],
     },
     output: {
-        filename: 'modnet-worker.js', // <-- (2)
-        path: path.resolve(__dirname, 'dist'),
-        libraryTarget: 'umd',
-        globalObject: 'typeof self !== \'undefined\' ? self : this'
+        filename: "modnet-worker.js",
+        path: path.resolve(__dirname, "dist"),
+        libraryTarget: "umd",
+        globalObject: "typeof self !== 'undefined' ? self : this",
     },
-    // plugins: [　　　　　　　　　　　　　　　　 // <--- (3)
-    //     new WorkerPlugin()
-    // ]
+    stats: {
+        children: true,
+    },
+    plugins: [
+        new webpack.ProvidePlugin({
+            Buffer: ["buffer", "Buffer"],
+        }),
+    ],
 };
 
-
-module.exports = [
-    manager, worker
-]
-
+module.exports = [manager];

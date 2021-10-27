@@ -1,0 +1,31 @@
+SIZE=192
+
+tensorflowjs_converter \
+    --input_format=tf_frozen_model \
+    --output_format=tfjs_graph_model \
+    --saved_model_tags=serve \
+    --quantize_uint8 \
+    --output_node_names "Identity" \
+    --weight_shard_size_bytes 67108864 \
+    saved_model_modnet_webcam_portrait_matting_${SIZE}x${SIZE}/model_float32.pb \
+    web_model_8
+
+tensorflowjs_converter \
+    --input_format=tf_frozen_model \
+    --output_format=tfjs_graph_model \
+    --saved_model_tags=serve \
+    --quantize_float16 \
+    --output_node_names "Identity" \
+    --weight_shard_size_bytes 67108864 \
+    saved_model_modnet_webcam_portrait_matting_${SIZE}x${SIZE}/model_float32.pb \
+    web_model_16
+
+tensorflowjs_converter \
+    --input_format=tf_frozen_model \
+    --output_format=tfjs_graph_model \
+    --saved_model_tags=serve \
+    --output_node_names "Identity" \
+    --weight_shard_size_bytes 67108864 \
+    saved_model_modnet_webcam_portrait_matting_${SIZE}x${SIZE}/model_float32.pb \
+    web_model_32
+

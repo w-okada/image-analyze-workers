@@ -3,6 +3,7 @@
 ![image](https://user-images.githubusercontent.com/48346627/113265897-9c3d7d00-930f-11eb-95ca-98529cccb7a6.png)
 
 ## MODNet License
+
 This project (code, pre-trained models, demos, etc.) is released under the Creative Commons Attribution NonCommercial ShareAlike 4.0 license.
 
 NOTE: The license will be changed to allow commercial use after this work is accepted by a conference or a journal.
@@ -10,29 +11,10 @@ NOTE: The license will be changed to allow commercial use after this work is acc
 see [original github](https://github.com/ZHKKKe/MODNet)
 
 ## Install
+
 ```
 ## install
 $ npm install @dannadori/modnet-worker-js
-$ cp node_modules/\@dannadori/modnet-worker-js/dist/modnet-worker-worker.js public/
-```
-
-
-## download model
-$ for res in webcam_128_16 webcam_128_32 webcam_192_16 webcam_192_32 webcam_256_16 webcam_256_32 webcam_512_16 webcam_512_32;do
-	mkdir public/${res}
-	curl https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t10_modnet/${res}/model.json > public/${res}/model.json
-	for count in `seq 4`; do
-	curl https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t10_modnet/${res}/group1-shard${count}of4.bin  > public/${res}/group1-shard${count}of4.bin 
-	done
-done
-
-$ for res in portrait_128_16 portrait_128_32 portrait_192_16 portrait_192_32 portrait_256_16 portrait_256_32 portrait_512_16 portrait_512_32;do
-	mkdir public/${res}
-	curl https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t10_modnet/${res}/model.json > public/${res}/model.json
-	for count in `seq 4`; do
-	curl https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t10_modnet/${res}/group1-shard${count}of4.bin  > public/${res}/group1-shard${count}of4.bin 
-	done
-done
 ```
 
 ## API
@@ -79,39 +61,22 @@ export declare enum MODNetFunctionType {
 ```
 
 ## Step by step
+
 ### Create environment and install package
+
 ```
 $ npx create-react-app demo --template typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/modnet-worker-js
-$ cp node_modules/\@dannadori/modnet-worker-js/dist/modnet-worker-worker.js public/
 ```
 
-### Download Model
-```
-$ for res in webcam_128_16 webcam_128_32 webcam_192_16 webcam_192_32 webcam_256_16 webcam_256_32 webcam_512_16 webcam_512_32;do
-	mkdir public/${res}
-	curl https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t10_modnet/${res}/model.json > public/${res}/model.json
-	for count in `seq 4`; do
-	curl https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t10_modnet/${res}/group1-shard${count}of4.bin  > public/${res}/group1-shard${count}of4.bin 
-	done
-done
+### Add source image to public.
 
-$ for res in portrait_128_16 portrait_128_32 portrait_192_16 portrait_192_32 portrait_256_16 portrait_256_32 portrait_512_16 portrait_512_32;do
-	mkdir public/${res}
-	curl https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t10_modnet/${res}/model.json > public/${res}/model.json
-	for count in `seq 4`; do
-	curl https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t10_modnet/${res}/group1-shard${count}of4.bin  > public/${res}/group1-shard${count}of4.bin 
-	done
-done
-
-```
-
-### Add source image to public. 
 In this time, the name is "srcImage.jpg"
 
 ### Edit src/App.tsx
+
 Sample code is here.
 
 ```
@@ -120,9 +85,9 @@ import './App.css';
 import { generateDefaultU2NetPortraitParams, generateU2NetPortraitDefaultConfig, U2NetPortraitWorkerManager, createForegroundImage } from '@dannadori/u2net-portrait-worker-js'
 
 class App extends React.Component{
-  
+
   manager = new U2NetPortraitWorkerManager()
-                
+
   config = (()=>{
     const c = generateU2NetPortraitDefaultConfig()
     c.useTFWasmBackend = false
@@ -174,8 +139,3 @@ export default App;
 ```
 $ npm run start
 ```
-
-
-
-
-
