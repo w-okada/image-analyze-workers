@@ -171,20 +171,14 @@ const App = () => {
                 const srcCache = document.getElementById("src-cache") as HTMLCanvasElement;
 
                 const inference_start = performance.now();
-                console.log("111111");
                 srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height);
-                console.log("111112");
                 const prediction = await workerProps.manager.predict(srcCache!, workerProps.params);
-                console.log("111113");
                 const inference_end = performance.now();
-                console.log("111114");
                 const info1 = document.getElementById("info") as HTMLCanvasElement;
-                console.log("111115");
                 info1.innerText = `processing time: ${inference_end - inference_start}`;
 
                 // 結果からマスク作成
                 const res = new ImageData(workerProps.params.processWidth, workerProps.params.processHeight);
-                console.log("111116", prediction);
                 try {
                     for (let i = 0; i < workerProps.params.processHeight; i++) {
                         for (let j = 0; j < workerProps.params.processWidth; j++) {
@@ -200,17 +194,13 @@ const App = () => {
                 }
                 tmp.width = workerProps.params.processWidth;
                 tmp.height = workerProps.params.processHeight;
-                console.log("111117");
 
                 tmp.getContext("2d")!.clearRect(0, 0, tmp.width, tmp.height);
                 tmp.getContext("2d")!.putImageData(res, 0, 0);
 
-                console.log("111118");
                 dst.getContext("2d")!.clearRect(0, 0, dst.width, dst.height);
-                console.log("111118-2");
                 dst.getContext("2d")!.drawImage(background, 0, 0, dst.width, dst.height);
 
-                console.log("111119");
                 front.getContext("2d")!.clearRect(0, 0, front.width, front.height);
                 front.getContext("2d")!.drawImage(tmp, 0, 0, front.width, front.height);
                 front.getContext("2d")!.globalCompositeOperation = "source-atop";
@@ -218,7 +208,6 @@ const App = () => {
                 front.getContext("2d")!.globalCompositeOperation = "source-over";
                 dst.getContext("2d")!.drawImage(front, 0, 0, dst.width, dst.height);
 
-                console.log("11111a");
                 if (GlobalLoopID === LOOP_ID) {
                     renderRequestId = requestAnimationFrame(render);
                 }
