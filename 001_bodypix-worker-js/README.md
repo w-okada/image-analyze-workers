@@ -1,13 +1,15 @@
 This is webworker module for [Bodypix](https://github.com/tensorflow/tfjs-models/tree/master/body-pix).
 
 # bodypix
+
 ![image](https://user-images.githubusercontent.com/48346627/95987700-be773780-0e62-11eb-9645-40b7c0adb826.png)
 
-
 ## Install
+
 ```
 $ npm install \@dannadori/bodypix-worker-js
 ```
+
 ## API
 
 ```
@@ -48,7 +50,9 @@ export declare enum BodypixFunctionType {
 ```
 
 ## Step by step
+
 ### Create environment and install package
+
 ```
 $ npx create-react-app demo  --template typescript
 $ cd demo/
@@ -56,10 +60,12 @@ $ npm install
 $ npm install @dannadori/bodypix-worker-js
 ```
 
-### Add source image to public. 
+### Add source image to public.
+
 In this time, the name is "srcImage.jpg"
 
 ### Edit src/App.tsx
+
 Sample code is here.
 
 ```
@@ -71,7 +77,7 @@ import {
 } from '@dannadori/bodypix-worker-js'
 
 class App extends React.Component{
-  
+
   manager = new BodypixWorkerManager()
   config = generateBodyPixDefaultConfig()
   params = generateDefaultBodyPixParams()
@@ -114,8 +120,3 @@ export default App;
 ```
 $ npm run start
 ```
-
-
-
-
-

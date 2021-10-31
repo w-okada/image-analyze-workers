@@ -1,10 +1,4 @@
-import {
-    WorkerCommand,
-    WorkerResponse,
-    BodypixFunctionType,
-    BodyPixConfig,
-    BodyPixOperatipnParams,
-} from "./const";
+import { WorkerCommand, WorkerResponse, BodypixFunctionType, BodyPixConfig, BodyPixOperatipnParams } from "./const";
 import * as bodyPix from "@tensorflow-models/body-pix";
 import * as tf from "@tensorflow/tfjs";
 import { BrowserType } from "./BrowserUtil";
@@ -25,14 +19,9 @@ const load_module = async (config: BodyPixConfig) => {
     }
 };
 
-const generateImage = (
-    image: ImageBitmap,
-    prediction: bodyPix.SemanticPersonSegmentation
-) => {
+const generateImage = (image: ImageBitmap, prediction: bodyPix.SemanticPersonSegmentation) => {
     // generate maskImage from prediction
-    const pixelData = new Uint8ClampedArray(
-        prediction.width * prediction.height * 4
-    );
+    const pixelData = new Uint8ClampedArray(prediction.width * prediction.height * 4);
     for (let rowIndex = 0; rowIndex < prediction.height; rowIndex++) {
         for (let colIndex = 0; colIndex < prediction.width; colIndex++) {
             const seg_offset = rowIndex * prediction.width + colIndex;
@@ -50,17 +39,10 @@ const generateImage = (
             }
         }
     }
-    const maskImage = new ImageData(
-        pixelData,
-        prediction.width,
-        prediction.height
-    );
+    const maskImage = new ImageData(pixelData, prediction.width, prediction.height);
 
     // generate maskImage Canvas
-    const maskOffscreen = new OffscreenCanvas(
-        prediction.width,
-        prediction.height
-    );
+    const maskOffscreen = new OffscreenCanvas(prediction.width, prediction.height);
     maskOffscreen.getContext("2d")!.putImageData(maskImage, 0, 0);
 
     // resize mask Image
@@ -72,21 +54,11 @@ const generateImage = (
     return resizedMaskOffscreen;
 };
 
-const predict = async (
-    image: ImageBitmap,
-    config: BodyPixConfig,
-    params: BodyPixOperatipnParams
-) => {
+const predict = async (image: ImageBitmap, config: BodyPixConfig, params: BodyPixOperatipnParams) => {
     console.log("PREDICT_CHECK");
     // ImageData作成
-    const processWidth =
-        params.processWidth <= 0 || params.processHeight <= 0
-            ? image.width
-            : params.processWidth;
-    const processHeight =
-        params.processWidth <= 0 || params.processHeight <= 0
-            ? image.height
-            : params.processHeight;
+    const processWidth = params.processWidth <= 0 || params.processHeight <= 0 ? image.width : params.processWidth;
+    const processHeight = params.processWidth <= 0 || params.processHeight <= 0 ? image.height : params.processHeight;
 
     //console.log("process image size:", processWidth, processHeight)
     const offscreen = new OffscreenCanvas(processWidth, processHeight);
@@ -96,31 +68,16 @@ const predict = async (
 
     let prediction;
     if (params.type === BodypixFunctionType.SegmentPerson) {
-        prediction = await model!.segmentPerson(
-            newImg,
-            params.segmentPersonParams
-        );
+        prediction = await model!.segmentPerson(newImg, params.segmentPersonParams);
     } else if (params.type === BodypixFunctionType.SegmentPersonParts) {
-        prediction = await model!.segmentPersonParts(
-            newImg,
-            params.segmentPersonPartsParams
-        );
+        prediction = await model!.segmentPersonParts(newImg, params.segmentPersonPartsParams);
     } else if (params.type === BodypixFunctionType.SegmentMultiPerson) {
-        prediction = await model!.segmentMultiPerson(
-            newImg,
-            params.segmentMultiPersonParams
-        );
+        prediction = await model!.segmentMultiPerson(newImg, params.segmentMultiPersonParams);
     } else if (params.type === BodypixFunctionType.SegmentMultiPersonParts) {
-        prediction = await model!.segmentMultiPersonParts(
-            newImg,
-            params.segmentMultiPersonPartsParams
-        );
+        prediction = await model!.segmentMultiPersonParts(newImg, params.segmentMultiPersonPartsParams);
     } else {
         // segmentPersonに倒す
-        prediction = await model!.segmentPerson(
-            newImg,
-            params.segmentPersonParams
-        );
+        prediction = await model!.segmentPerson(newImg, params.segmentPersonParams);
     }
     return prediction;
 };

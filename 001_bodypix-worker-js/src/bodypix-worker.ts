@@ -1,30 +1,11 @@
-import {
-    WorkerResponse,
-    WorkerCommand,
-    BodypixFunctionType,
-    BodyPixConfig,
-    ModelConfigMobileNetV1_05,
-    BodyPixOperatipnParams,
-} from "./const";
+import { WorkerResponse, WorkerCommand, BodypixFunctionType, BodyPixConfig, ModelConfigMobileNetV1_05, BodyPixOperatipnParams } from "./const";
 import * as bodyPix from "@tensorflow-models/body-pix";
 import { BrowserType, getBrowserType } from "./BrowserUtil";
 import { SemanticPersonSegmentation } from "@tensorflow-models/body-pix";
 
-export {
-    ModelConfigResNet,
-    ModelConfigMobileNetV1,
-    ModelConfigMobileNetV1_05,
-    BodypixFunctionType,
-    BodyPixConfig,
-    BodyPixOperatipnParams,
-} from "./const";
+export { ModelConfigResNet, ModelConfigMobileNetV1, ModelConfigMobileNetV1_05, BodypixFunctionType, BodyPixConfig, BodyPixOperatipnParams } from "./const";
 export { BrowserType, getBrowserType } from "./BrowserUtil";
-export {
-    SemanticPersonSegmentation,
-    SemanticPartSegmentation,
-    PersonSegmentation,
-    PartSegmentation,
-} from "@tensorflow-models/body-pix";
+export { SemanticPersonSegmentation, SemanticPartSegmentation, PersonSegmentation, PartSegmentation } from "@tensorflow-models/body-pix";
 export { BodyPixInternalResolution } from "@tensorflow-models/body-pix/dist/types";
 
 import * as tf from "@tensorflow/tfjs";
@@ -113,20 +94,10 @@ class LocalBP {
     };
 
     perf = Array.from(new Array(50), () => 0);
-    predict = async (
-        targetCanvas: HTMLCanvasElement,
-        config: BodyPixConfig,
-        params: BodyPixOperatipnParams
-    ) => {
+    predict = async (targetCanvas: HTMLCanvasElement, config: BodyPixConfig, params: BodyPixOperatipnParams) => {
         // ImageData作成
-        const processWidth =
-            params.processWidth <= 0 || params.processHeight <= 0
-                ? targetCanvas.width
-                : params.processWidth;
-        const processHeight =
-            params.processWidth <= 0 || params.processHeight <= 0
-                ? targetCanvas.height
-                : params.processHeight;
+        const processWidth = params.processWidth <= 0 || params.processHeight <= 0 ? targetCanvas.width : params.processWidth;
+        const processHeight = params.processWidth <= 0 || params.processHeight <= 0 ? targetCanvas.height : params.processHeight;
 
         //console.log("process image size:", processWidth, processHeight)
         this.canvas.width = processWidth;
@@ -138,10 +109,7 @@ class LocalBP {
         let prediction;
         if (params.type === BodypixFunctionType.SegmentPerson) {
             const start = performance.now();
-            prediction = await this.model!.segmentPerson(
-                newImg,
-                params.segmentPersonParams
-            );
+            prediction = await this.model!.segmentPerson(newImg, params.segmentPersonParams);
             const end = performance.now();
             this.perf.shift();
             this.perf.push(end - start);
@@ -151,28 +119,14 @@ class LocalBP {
                 }) / this.perf.length;
             // console.log("inference average:", average, this.perf.length)
         } else if (params.type === BodypixFunctionType.SegmentPersonParts) {
-            prediction = await this.model!.segmentPersonParts(
-                newImg,
-                params.segmentPersonPartsParams
-            );
+            prediction = await this.model!.segmentPersonParts(newImg, params.segmentPersonPartsParams);
         } else if (params.type === BodypixFunctionType.SegmentMultiPerson) {
-            prediction = await this.model!.segmentMultiPerson(
-                newImg,
-                params.segmentMultiPersonParams
-            );
-        } else if (
-            params.type === BodypixFunctionType.SegmentMultiPersonParts
-        ) {
-            prediction = await this.model!.segmentMultiPersonParts(
-                newImg,
-                params.segmentMultiPersonPartsParams
-            );
+            prediction = await this.model!.segmentMultiPerson(newImg, params.segmentMultiPersonParams);
+        } else if (params.type === BodypixFunctionType.SegmentMultiPersonParts) {
+            prediction = await this.model!.segmentMultiPersonParts(newImg, params.segmentMultiPersonPartsParams);
         } else {
             // segmentPersonに倒す
-            prediction = await this.model!.segmentPerson(
-                newImg,
-                params.segmentPersonParams
-            );
+            prediction = await this.model!.segmentPerson(newImg, params.segmentPersonParams);
         }
         return prediction;
     };
@@ -193,10 +147,7 @@ export class BodypixWorkerManager {
         }
         this.workerBP = null;
 
-        if (
-            this.config.browserType === BrowserType.SAFARI ||
-            this.config.processOnLocal == true
-        ) {
+        if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal == true) {
             // safariはwebworkerでWebGLが使えないのでworkerは使わない。
             return new Promise<void>((onResolve, onFail) => {
                 this.localBP.init(this.config!).then(() => {
@@ -227,38 +178,17 @@ export class BodypixWorkerManager {
         return;
     };
 
-    predict = async (
-        targetCanvas: HTMLCanvasElement,
-        params: BodyPixOperatipnParams
-    ) => {
-        if (
-            this.config.browserType === BrowserType.SAFARI ||
-            this.config.processOnLocal == true
-        ) {
-            const prediction = await this.localBP.predict(
-                targetCanvas,
-                this.config,
-                params
-            );
+    predict = async (targetCanvas: HTMLCanvasElement, params: BodyPixOperatipnParams) => {
+        if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal == true) {
+            const prediction = await this.localBP.predict(targetCanvas, this.config, params);
             return prediction;
         } else {
             if (!this.workerBP) {
-                return Array.from(new Array(params.processWidth), () =>
-                    new Array(params.processHeight).fill(1)
-                );
+                return Array.from(new Array(params.processWidth), () => new Array(params.processHeight).fill(1));
             }
-            const offscreen = new OffscreenCanvas(
-                targetCanvas.width,
-                targetCanvas.height
-            );
+            const offscreen = new OffscreenCanvas(targetCanvas.width, targetCanvas.height);
             const offctx = offscreen.getContext("2d")!;
-            offctx.drawImage(
-                targetCanvas,
-                0,
-                0,
-                targetCanvas.width,
-                targetCanvas.height
-            );
+            offctx.drawImage(targetCanvas, 0, 0, targetCanvas.width, targetCanvas.height);
             const imageBitmap = offscreen.transferToImageBitmap();
             const uid = performance.now();
             const p = new Promise((onResolve, onFail) => {
@@ -274,19 +204,10 @@ export class BodypixWorkerManager {
                 );
 
                 this.workerBP!.onmessage = (event) => {
-                    if (
-                        event.data.message === WorkerResponse.PREDICTED &&
-                        event.data.uid === uid
-                    ) {
+                    if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
                         onResolve(event.data.prediction);
                     } else {
-                        console.log(
-                            "Bodypix Prediction something wrong..",
-                            event.data.message,
-                            WorkerResponse.PREDICTED,
-                            event.data.uid,
-                            uid
-                        );
+                        console.log("Bodypix Prediction something wrong..", event.data.message, WorkerResponse.PREDICTED, event.data.uid, uid);
                         // onFail(event)
                     }
                 };
@@ -297,16 +218,11 @@ export class BodypixWorkerManager {
 }
 
 //// Utility for Demo
-export const createForegroundImage = (
-    srcCanvas: HTMLCanvasElement,
-    prediction: SemanticPersonSegmentation
-) => {
+export const createForegroundImage = (srcCanvas: HTMLCanvasElement, prediction: SemanticPersonSegmentation) => {
     const tmpCanvas = document.createElement("canvas");
     tmpCanvas.width = prediction.width;
     tmpCanvas.height = prediction.height;
-    const imageData = tmpCanvas
-        .getContext("2d")!
-        .getImageData(0, 0, tmpCanvas.width, tmpCanvas.height);
+    const imageData = tmpCanvas.getContext("2d")!.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height);
     const data = imageData.data;
     for (let rowIndex = 0; rowIndex < prediction.height; rowIndex++) {
         for (let colIndex = 0; colIndex < prediction.width; colIndex++) {
@@ -326,11 +242,7 @@ export const createForegroundImage = (
             }
         }
     }
-    const imageDataTransparent = new ImageData(
-        data,
-        prediction.width,
-        prediction.height
-    );
+    const imageDataTransparent = new ImageData(data, prediction.width, prediction.height);
     tmpCanvas.getContext("2d")!.putImageData(imageDataTransparent, 0, 0);
 
     const outputCanvas = document.createElement("canvas");
@@ -341,9 +253,7 @@ export const createForegroundImage = (
     ctx.drawImage(tmpCanvas, 0, 0, outputCanvas.width, outputCanvas.height);
     ctx.globalCompositeOperation = "source-in";
     ctx.drawImage(srcCanvas, 0, 0, outputCanvas.width, outputCanvas.height);
-    const outputImage = outputCanvas
-        .getContext("2d")!
-        .getImageData(0, 0, outputCanvas.width, outputCanvas.height);
+    const outputImage = outputCanvas.getContext("2d")!.getImageData(0, 0, outputCanvas.width, outputCanvas.height);
     tmpCanvas.remove();
     outputCanvas.remove();
     return outputImage;

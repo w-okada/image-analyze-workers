@@ -1,8 +1,4 @@
-import {
-    ModelConfig,
-    PersonInferenceConfig,
-    MultiPersonInstanceInferenceConfig,
-} from "@tensorflow-models/body-pix/dist/body_pix_model";
+import { ModelConfig, PersonInferenceConfig, MultiPersonInstanceInferenceConfig } from "@tensorflow-models/body-pix/dist/body_pix_model";
 import { BrowserType } from "./BrowserUtil";
 
 export const WorkerCommand = {
