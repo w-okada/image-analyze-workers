@@ -68,6 +68,7 @@ export class LocalCV {
         }
 
         const inputImageBufferOffset = this.wasm._getInputImageBufferOffset();
+
         this.wasm!.HEAPU8.set(data, inputImageBufferOffset);
 
         if (params.type === "Blur") {
@@ -79,7 +80,7 @@ export class LocalCV {
         }
 
         const outputImageBufferOffset = this.wasm!._getOutputImageBufferOffset();
-        const converted = new ImageData(new Uint8ClampedArray(this.wasm!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + params.processHeight * params.processHeight * 4)), params.processWidth, params.processHeight);
+        const converted = new ImageData(new Uint8ClampedArray(this.wasm!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + params.processWidth * params.processHeight * 4)), params.processWidth, params.processHeight);
 
         return converted.data;
     };

@@ -8,7 +8,8 @@ module.exports = {
     entry: path.resolve(__dirname, "src/index.tsx"),
     output: {
         path: path.resolve(__dirname, "dist"),
-        filename: "index.js",
+        // filename: "index.js",
+        filename: "[name].bundle.js",
     },
     resolve: {
         modules: [path.resolve(__dirname, "node_modules")],
@@ -39,6 +40,11 @@ module.exports = {
     devServer: {
         static: {
             directory: path.join(__dirname, "dist"),
+        },
+    },
+    optimization: {
+        splitChunks: {
+            chunks: "all",
         },
     },
 };

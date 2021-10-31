@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { makeStyles, Typography } from "@material-ui/core";
-import { DropDown, SingleValueSlider, Toggle, VideoInputSelect } from "./components/components";
+import { DropDown, SingleValueSlider, Toggle, VideoInputSelect } from "000_common";
+// import { DropDown, SingleValueSlider, Toggle, VideoInputSelect } from "./components/components";
 import { VideoInputType } from "./const";
 import { useVideoInputList } from "./hooks/useVideoInputList";
 import { OpenCVConfig, OpenCVWorkerManager, OpenCVProcessTypes, OpenCVOperatipnParams, generateOpenCVDefaultConfig, generateDefaultOpenCVParams } from "@dannadori/opencv-worker-js";
@@ -10,6 +11,7 @@ const useStyles = makeStyles(() => ({
     inputView: {
         maxWidth: 512,
         maxHeight: 512,
+        flexDirection: "column",
     },
 }));
 
@@ -200,9 +202,9 @@ const App = () => {
     return (
         <div>
             <div style={{ display: "flex" }}>
-                <div style={{ display: "flex" }}>
-                    {inputMedia.mediaType === "IMAGE" ? <img className={classes.inputView} alt="input_img" id="input_img"></img> : <video className={classes.inputView} id="input_video"></video>}
-                    <canvas className={classes.inputView} id="output"></canvas>
+                <div style={{ display: "flex", flexDirection: "row" }}>
+                    {inputMedia.mediaType === "IMAGE" ? <img alt="input_img" id="input_img"></img> : <video id="input_video"></video>}
+                    <canvas id="output"></canvas>
                 </div>
                 <div className={classes.inputView}>
                     <VideoInputSelect title="input" current={""} onchange={inputChange} options={videoInputList} />
@@ -232,7 +234,7 @@ const App = () => {
             <div className={classes.inputView} id="output-div"></div>
 
             <div style={{ display: "flex" }}>
-                <canvas className={classes.inputView} id="tmp" hidden></canvas>
+                <canvas className={classes.inputView} id="tmp" style={{ display: "none" }}></canvas>
                 <canvas className={classes.inputView} id="front" hidden></canvas>
                 <canvas className={classes.inputView} id="src-cache" hidden></canvas>
             </div>
