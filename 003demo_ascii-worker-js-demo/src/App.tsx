@@ -1,19 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { makeStyles } from "@material-ui/core";
-import {
-    SingleValueSlider,
-    Toggle,
-    VideoInputSelect,
-} from "./components/components";
+import { SingleValueSlider, Toggle, VideoInputSelect } from "./components/components";
 import { VideoInputType } from "./const";
 import { useVideoInputList } from "./hooks/useVideoInputList";
-import {
-    AsciiArtWorkerManager,
-    AsciiConfig,
-    AsciiOperatipnParams,
-    generateAsciiArtDefaultConfig,
-    generateDefaultAsciiArtParams,
-} from "@dannadori/asciiart-worker-js";
+import { AsciiArtWorkerManager, AsciiConfig, AsciiOperatipnParams, generateAsciiArtDefaultConfig, generateDefaultAsciiArtParams } from "@dannadori/asciiart-worker-js";
 
 let GlobalLoopID = 0;
 
@@ -56,10 +46,7 @@ const App = () => {
         mediaType: "IMAGE",
         media: "yuka_kawamura.jpg",
     });
-    const inputChange = (
-        mediaType: VideoInputType,
-        input: MediaStream | string
-    ) => {
+    const inputChange = (mediaType: VideoInputType, input: MediaStream | string) => {
         setInputMedia({ mediaType: mediaType, media: input });
     };
 
@@ -69,9 +56,7 @@ const App = () => {
     //// モデル切り替え
     useEffect(() => {
         const init = async () => {
-            const m = workerProps
-                ? workerProps.manager
-                : new AsciiArtWorkerManager();
+            const m = workerProps ? workerProps.manager : new AsciiArtWorkerManager();
             const count = workerProps ? workerProps.count + 1 : 0;
             const c = generateAsciiArtDefaultConfig();
             c.processOnLocal = onLocal;
@@ -104,22 +89,16 @@ const App = () => {
 
     /// input設定
     useEffect(() => {
-        const video = document.getElementById(
-            "input_video"
-        ) as HTMLVideoElement;
+        const video = document.getElementById("input_video") as HTMLVideoElement;
         if (inputMedia.mediaType === "IMAGE") {
-            const img = document.getElementById(
-                "input_img"
-            ) as HTMLImageElement;
+            const img = document.getElementById("input_img") as HTMLImageElement;
             img.onloadeddata = () => {
                 resizeDst(img);
                 setGuiUpdateCount(guiUpdateCount + 1);
             };
             img.src = inputMedia.media as string;
         } else if (inputMedia.mediaType === "MOVIE") {
-            const vid = document.getElementById(
-                "input_video"
-            ) as HTMLVideoElement;
+            const vid = document.getElementById("input_video") as HTMLVideoElement;
             vid.pause();
             vid.srcObject = null;
             vid.src = inputMedia.media as string;
@@ -129,9 +108,7 @@ const App = () => {
                 resizeDst(vid);
             };
         } else {
-            const vid = document.getElementById(
-                "input_video"
-            ) as HTMLVideoElement;
+            const vid = document.getElementById("input_video") as HTMLVideoElement;
             vid.pause();
             vid.srcObject = inputMedia.media as MediaStream;
             vid.onloadeddata = () => {
@@ -143,9 +120,7 @@ const App = () => {
 
     /// resize
     useEffect(() => {
-        const input =
-            document.getElementById("input_img") ||
-            document.getElementById("input_video");
+        const input = document.getElementById("input_img") || document.getElementById("input_video");
         resizeDst(input!);
     });
 
@@ -158,9 +133,7 @@ const App = () => {
         const height = parseInt(cs.getPropertyValue("height"));
         const dst = document.getElementById("output") as HTMLCanvasElement;
         const front = document.getElementById("front") as HTMLCanvasElement;
-        const srcCache = document.getElementById(
-            "src-cache"
-        ) as HTMLCanvasElement;
+        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement;
 
         [dst, srcCache, front].forEach((c) => {
             c.width = width;
@@ -185,70 +158,36 @@ const App = () => {
             const dst = document.getElementById("output") as HTMLCanvasElement;
             if (workerProps) {
                 if (dst.width === 0) {
-                    const src =
-                        (document.getElementById(
-                            "input_img"
-                        ) as HTMLImageElement) ||
-                        (document.getElementById(
-                            "input_video"
-                        ) as HTMLVideoElement);
+                    const src = (document.getElementById("input_img") as HTMLImageElement) || (document.getElementById("input_video") as HTMLVideoElement);
                     resizeDst(src);
                 }
                 if (dst.width > 0 && dst.height > 0) {
-                    const src =
-                        (document.getElementById(
-                            "input_img"
-                        ) as HTMLImageElement) ||
-                        (document.getElementById(
-                            "input_video"
-                        ) as HTMLVideoElement);
-                    const dst_div = document.getElementById(
-                        "output-div"
-                    ) as HTMLDivElement;
-                    const tmp = document.getElementById(
-                        "tmp"
-                    ) as HTMLCanvasElement;
-                    const srcCache = document.getElementById(
-                        "src-cache"
-                    ) as HTMLCanvasElement;
+                    const src = (document.getElementById("input_img") as HTMLImageElement) || (document.getElementById("input_video") as HTMLVideoElement);
+                    const dst_div = document.getElementById("output-div") as HTMLDivElement;
+                    const tmp = document.getElementById("tmp") as HTMLCanvasElement;
+                    const srcCache = document.getElementById("src-cache") as HTMLCanvasElement;
 
                     const tmpCtx = tmp.getContext("2d")!;
                     const dstCtx = dst.getContext("2d")!;
 
-                    srcCache
-                        .getContext("2d")!
-                        .drawImage(src, 0, 0, srcCache.width, srcCache.height);
+                    srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height);
 
                     const inference_start = performance.now();
-                    const prediction = await workerProps.manager.predict(
-                        srcCache!,
-                        workerProps.params
-                    );
+                    const prediction = await workerProps.manager.predict(srcCache!, workerProps.params);
                     const inference_end = performance.now();
-                    const info1 = document.getElementById(
-                        "info"
-                    ) as HTMLCanvasElement;
-                    info1.innerText = `processing time: ${
-                        inference_end - inference_start
-                    }`;
+                    const info1 = document.getElementById("info") as HTMLCanvasElement;
+                    info1.innerText = `processing time: ${inference_end - inference_start}`;
 
                     if (prediction) {
-                        tmpCtx.font =
-                            workerProps.params.fontSize + "px monospace";
+                        tmpCtx.font = workerProps.params.fontSize + "px monospace";
                         tmpCtx.textBaseline = "top";
                         tmp.width = tmpCtx.measureText(prediction[0]).width;
-                        tmp.height =
-                            prediction.length * workerProps.params.fontSize;
+                        tmp.height = prediction.length * workerProps.params.fontSize;
                         tmpCtx.clearRect(0, 0, dst.width, dst.height);
                         tmpCtx.fillStyle = "rgb(0, 0, 0)";
-                        tmpCtx.font =
-                            workerProps.params.fontSize + "px monospace";
+                        tmpCtx.font = workerProps.params.fontSize + "px monospace";
                         for (let n = 0; n < prediction.length; n++) {
-                            tmpCtx.fillText(
-                                prediction[n],
-                                0,
-                                n * workerProps.params.fontSize
-                            );
+                            tmpCtx.fillText(prediction[n], 0, n * workerProps.params.fontSize);
                         }
                         dstCtx.clearRect(0, 0, dst.width, dst.height);
                         dstCtx.drawImage(tmp, 0, 0, dst.width, dst.height);
@@ -287,50 +226,21 @@ const App = () => {
         <div>
             <div style={{ display: "flex" }}>
                 <div style={{ display: "flex" }}>
-                    {inputMedia.mediaType === "IMAGE" ? (
-                        <img
-                            className={classes.inputView}
-                            alt="input_img"
-                            id="input_img"
-                        ></img>
-                    ) : (
-                        <video
-                            className={classes.inputView}
-                            id="input_video"
-                        ></video>
-                    )}
+                    {inputMedia.mediaType === "IMAGE" ? <img className={classes.inputView} alt="input_img" id="input_img"></img> : <video className={classes.inputView} id="input_video"></video>}
                     <canvas className={classes.inputView} id="output"></canvas>
                 </div>
                 <div className={classes.inputView}>
-                    <VideoInputSelect
-                        title="input"
-                        current={""}
-                        onchange={inputChange}
-                        options={videoInputList}
-                    />
-                    <SingleValueSlider
-                        title="fontSize"
-                        current={fontSize}
-                        onchange={setFontSize}
-                        min={2}
-                        max={20}
-                        step={1}
-                    />
+                    <VideoInputSelect title="input" current={""} onchange={inputChange} options={videoInputList} />
+                    <SingleValueSlider title="fontSize" current={fontSize} onchange={setFontSize} min={2} max={20} step={1} />
 
-                    <Toggle
-                        title="onLocal"
-                        current={onLocal}
-                        onchange={setOnLocal}
-                    />
+                    <Toggle title="onLocal" current={onLocal} onchange={setOnLocal} />
                     <Toggle title="ascii" current={ascii} onchange={setAscii} />
                     {/* <SingleValueSlider title="processWidth"          current={processWidth}     onchange={setProcessWidth} min={100} max={1024} step={10} />
                     <SingleValueSlider title="processHeight"         current={processHeight}     onchange={setProcessHeight} min={100} max={1024} step={10} /> */}
 
                     {/* <Toggle            title="Strict"        current={strict}         onchange={setStrict} /> */}
                     <div>
-                        <a href="https://github.com/w-okada/image-analyze-workers">
-                            github repository
-                        </a>
+                        <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
                     </div>
                 </div>
             </div>
@@ -338,16 +248,8 @@ const App = () => {
 
             <div style={{ display: "flex" }}>
                 <canvas className={classes.inputView} id="tmp" hidden></canvas>
-                <canvas
-                    className={classes.inputView}
-                    id="front"
-                    hidden
-                ></canvas>
-                <canvas
-                    className={classes.inputView}
-                    id="src-cache"
-                    hidden
-                ></canvas>
+                <canvas className={classes.inputView} id="front" hidden></canvas>
+                <canvas className={classes.inputView} id="src-cache" hidden></canvas>
             </div>
             <div>
                 <div id="info"> </div>
