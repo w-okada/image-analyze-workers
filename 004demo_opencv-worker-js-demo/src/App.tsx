@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { makeStyles, Typography } from "@material-ui/core";
-import { DropDown, SingleValueSlider, Toggle, VideoInputSelect } from "000_common";
-// import { DropDown, SingleValueSlider, Toggle, VideoInputSelect } from "./components/components";
 import { VideoInputType } from "./const";
-import { useVideoInputList } from "./hooks/useVideoInputList";
 import { OpenCVConfig, OpenCVWorkerManager, OpenCVProcessTypes, OpenCVOperatipnParams, generateOpenCVDefaultConfig, generateDefaultOpenCVParams } from "@dannadori/opencv-worker-js";
+import { DropDown, SingleValueSlider, Toggle, VideoInputSelect } from "./components/components";
+import { useVideoInputList } from "./hooks/useVideoInputList";
 let GlobalLoopID = 0;
 
 const useStyles = makeStyles(() => ({
@@ -234,7 +233,7 @@ const App = () => {
             <div className={classes.inputView} id="output-div"></div>
 
             <div style={{ display: "flex" }}>
-                <canvas className={classes.inputView} id="tmp" style={{ display: "none" }}></canvas>
+                <canvas className={classes.inputView} id="tmp" style={{ display: "none" }} hidden></canvas>
                 <canvas className={classes.inputView} id="front" hidden></canvas>
                 <canvas className={classes.inputView} id="src-cache" hidden></canvas>
             </div>

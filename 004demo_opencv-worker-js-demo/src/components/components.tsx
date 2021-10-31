@@ -6,7 +6,7 @@ const useStyles = makeStyles((theme) => ({
     formControl: {
         margin: theme.spacing(1),
         minWidth: 120,
-        maxWidth: 510,
+        maxWidth: 240,
         display: "flex",
         justifyContent: "space-between",
     },
@@ -55,40 +55,6 @@ export const DropDown = <T,>(props: DropDownProps<T>): JSX.Element => {
     return <>{form}</>;
 };
 
-// interface DropDownProps {
-//     title: string;
-//     current: string;
-//     options: { [name: string]: any };
-//     onchange: (newKey: string) => void;
-// }
-
-// export const DropDown: FC<DropDownProps> = ({ title, current, options, onchange }) => {
-//     const classes = useStyles();
-//     const form = useMemo(() => {
-//         console.log("[DropDown] render!", title);
-//         return (
-//             <FormControl className={classes.formControl}>
-//                 <InputLabel>{title}</InputLabel>
-//                 <Select
-//                     value={current}
-//                     onChange={(e: any) => {
-//                         onchange(e.target.value);
-//                     }}
-//                 >
-//                     {Object.keys(options).map((k) => {
-//                         return (
-//                             <MenuItem key={k} value={k}>
-//                                 {k}
-//                             </MenuItem>
-//                         );
-//                     })}
-//                 </Select>
-//             </FormControl>
-//         );
-//     }, [current]); // eslint-disable-line
-//     return <>{form}</>;
-// };
-
 interface SwitchProps {
     title: string;
     current: boolean;
@@ -124,7 +90,7 @@ export const SingleValueSlider: FC<SingleValueSliderProps> = ({ title, current, 
         console.log("[ingleValueSlider] render!", title);
         return (
             <div className={classes.formControl}>
-                <Typography gutterBottom> {`${title}`} </Typography>
+                <Typography gutterBottom> {`${title}[${current.toFixed(1)}]`} </Typography>
                 <div className={classes.horizontalSpacer} />
                 <Slider
                     valueLabelDisplay="auto"
@@ -136,7 +102,6 @@ export const SingleValueSlider: FC<SingleValueSliderProps> = ({ title, current, 
                         onchange(newVal as number);
                     }}
                 />
-                <Typography gutterBottom> {`[${current.toFixed(1)}]`} </Typography>
             </div>
         );
     }, [current]); // eslint-disable-line
