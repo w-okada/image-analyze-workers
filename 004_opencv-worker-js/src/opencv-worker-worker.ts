@@ -1,4 +1,3 @@
-import { BrowserType, getBrowserType } from "./BrowserUtil";
 import { WorkerCommand, WorkerResponse, OpenCVConfig, OpenCVOperatipnParams, Wasm } from "./const";
 
 export let Module = {};
@@ -28,9 +27,7 @@ onmessage = async (event) => {
     // console.log("event", event);
     if (event.data.message === WorkerCommand.INITIALIZE) {
         const config = event.data.config as OpenCVConfig;
-        // const browserType = getBrowserType();
         if (config.useSimd) {
-            // if (config.useSimd && browserType !== BrowserType.SAFARI) {
             const modSimd = require("../resources/custom_opencv-simd.js");
             const b = Buffer.from(config.wasmSimdBase64!, "base64");
             wasm = await modSimd({ wasmBinary: b });

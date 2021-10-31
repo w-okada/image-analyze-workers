@@ -1,4 +1,4 @@
-import { BrowserType } from "./BrowserUtil";
+import { BrowserType } from "000_image_analyzer_utils";
 
 export const WorkerCommand = {
     INITIALIZE: "initialize",

@@ -1,8 +1,6 @@
-import { BrowserType, getBrowserType } from "./BrowserUtil";
+import { BrowserType, getBrowserType } from "000_image_analyzer_utils";
 import { OpenCVConfig, OpenCVOperatipnParams, OpenCVProcessTypes, Wasm, WorkerCommand, WorkerResponse } from "./const";
-
 export { OpenCVConfig, OpenCVOperatipnParams, OpenCVProcessTypes } from "./const";
-export { BrowserType, getBrowserType } from "./BrowserUtil";
 
 // @ts-ignore
 import opencvWasm from "../resources/custom_opencv.wasm";
