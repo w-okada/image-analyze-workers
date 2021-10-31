@@ -15,7 +15,7 @@ const manager = {
     },
     module: {
         rules: [
-            { test: /\.ts$/, loader: "ts-loader" },
+            { test: [/\.ts$/], loader: "ts-loader" },
             { test: /\.wasm$/, loader: "url-loader" },
         ],
     },

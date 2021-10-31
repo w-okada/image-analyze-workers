@@ -1,4 +1,3 @@
-import { BrowserType, getBrowserType } from "000_image_analyzer_utils";
 import { OpenCVConfig, OpenCVOperatipnParams, OpenCVProcessTypes, Wasm, WorkerCommand, WorkerResponse } from "./const";
 export { OpenCVConfig, OpenCVOperatipnParams, OpenCVProcessTypes } from "./const";
 
@@ -9,6 +8,7 @@ import opencvWasmSimd from "../resources/custom_opencv-simd.wasm";
 
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./opencv-worker-worker.ts";
+import { BrowserType, getBrowserType } from "./BrowserUtil";
 
 export const generateOpenCVDefaultConfig = (): OpenCVConfig => {
     const defaultConf: OpenCVConfig = {
