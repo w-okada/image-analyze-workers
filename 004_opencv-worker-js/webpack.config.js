@@ -1,58 +1,38 @@
-const path = require('path');
-const WorkerPlugin = require('worker-plugin');
+const path = require("path");
+const webpack = require("webpack");
 
 const manager = {
-    mode: 'development',
-    entry: './src/opencv-worker.ts', // <-- (1)
+    mode: "production",
+    entry: "./src/opencv-worker.ts",
     resolve: {
         extensions: [".ts", ".js"],
+        fallback: {
+            crypto: false,
+            path: false,
+            fs: false,
+            buffer: require.resolve("buffer/"),
+        },
     },
     module: {
         rules: [
-            { test: /\.ts$/, loader: 'ts-loader' },
+            { test: /\.ts$/, loader: "ts-loader" },
+            { test: /\.wasm$/, loader: "url-loader" },
         ],
     },
     output: {
-        filename: 'opencv-worker.js', // <-- (2)
-        path: path.resolve(__dirname, 'dist'),
-        libraryTarget: 'umd',
-        globalObject: 'typeof self !== \'undefined\' ? self : this'
+        filename: "opencv-worker.js",
+        path: path.resolve(__dirname, "dist"),
+        libraryTarget: "umd",
+        globalObject: "typeof self !== 'undefined' ? self : this",
     },
-    plugins: [　　　　　　　　　　　　　　　　 // <--- (2)
-        new WorkerPlugin()
+    stats: {
+        children: true,
+    },
+    plugins: [
+        new webpack.ProvidePlugin({
+            Buffer: ["buffer", "Buffer"],
+        }),
     ],
-    node: {
-        fs: 'empty'
-      },
 };
 
-const worker = {
-    mode: 'development',
-    entry: './src/opencv-worker-worker.ts', // <-- (1)
-    resolve: {
-        extensions: [".ts", ".js"],
-    },
-    module: {
-        rules: [
-            { test: /\.ts$/, loader: 'ts-loader' },
-        ],
-    },
-    output: {
-        filename: 'opencv-worker-worker.js', // <-- (2)
-        path: path.resolve(__dirname, 'dist'),
-        // libraryTarget: 'umd',
-        globalObject: 'typeof self !== \'undefined\' ? self : this'
-    },
-    plugins: [　　　　　　　　　　　　　　　　 // <--- (2)
-        new WorkerPlugin()
-    ],
-    node: {
-        fs: 'empty'
-      },
-};
-
-module.exports = [
-    manager, worker
-]
-
-
+module.exports = [manager];

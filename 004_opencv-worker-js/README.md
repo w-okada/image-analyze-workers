@@ -1,14 +1,15 @@
 This is webworker module for OpenCV.
 
-
 ## opencv
+
 ![image](https://user-images.githubusercontent.com/48346627/95988031-40676080-0e63-11eb-81a6-0262a24f685e.png)
 
 ## Install
+
 ```
 $ npm install \@dannadori/opencv-worker-js
-$ cp node_modules/\@dannadori/opencv-worker-js/dist/opencv-worker-worker.js public/
 ```
+
 ## API
 
 ```
@@ -51,19 +52,22 @@ export interface CannyParams {
 ```
 
 ## Step by step
+
 ### Create environment and install package
+
 ```
 $ create-react-app demo/  --typescript
 $ cd demo/
 $ npm install
 $ npm install @dannadori/opencv-worker-js
-$ cp node_modules/\@dannadori/opencv-worker-js/dist/opencv-worker-worker.js public/
 ```
 
-### Add source image to public. 
+### Add source image to public.
+
 In this time, the name is "srcImage.jpg"
 
 ### Edit src/App.tsx
+
 Sample code is here.
 
 ```
@@ -72,7 +76,7 @@ import './App.css';
 import { OpenCVWorkerManager, generateOpenCVDefaultConfig, generateDefaultOpenCVParams } from '@dannadori/opencv-worker-js'
 
 class App extends React.Component{
-  
+
   manager = new OpenCVWorkerManager()
   config = generateOpenCVDefaultConfig()
   params = generateDefaultOpenCVParams()
@@ -115,8 +119,3 @@ export default App;
 ```
 $ npm run start
 ```
-
-
-
-
-
