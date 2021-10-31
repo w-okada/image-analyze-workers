@@ -1,28 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { makeStyles } from "@material-ui/core";
-import {
-    DropDown,
-    FileChooser,
-    SingleValueSlider,
-    Toggle,
-    VideoInputSelect,
-} from "./components/components";
+import { DropDown, FileChooser, SingleValueSlider, Toggle, VideoInputSelect } from "./components/components";
 import { useVideoInputList } from "./hooks/useVideoInputList";
-import {
-    BodypixFunctionType,
-    BodyPixInternalResolution,
-    BodypixWorkerManager,
-    generateBodyPixDefaultConfig,
-    generateDefaultBodyPixParams,
-    PartSegmentation,
-    PersonSegmentation,
-    SemanticPartSegmentation,
-    SemanticPersonSegmentation,
-} from "@dannadori/bodypix-worker-js";
-import {
-    BodyPixConfig,
-    BodyPixOperatipnParams,
-} from "@dannadori/bodypix-worker-js/dist/const";
+import { BodypixFunctionType, BodyPixInternalResolution, BodypixWorkerManager, generateBodyPixDefaultConfig, generateDefaultBodyPixParams, PartSegmentation, PersonSegmentation, SemanticPartSegmentation, SemanticPersonSegmentation } from "@dannadori/bodypix-worker-js";
+import { BodyPixConfig, BodyPixOperatipnParams } from "@dannadori/bodypix-worker-js/dist/const";
 import { VideoInputType } from "./const";
 
 let GlobalLoopID = 0;
@@ -112,18 +93,10 @@ const App = () => {
 
     const [modelKey, setModelKey] = useState(Object.keys(models)[0]);
     const [functionKey, setFunctionKey] = useState(Object.keys(functions)[0]);
-    const [outputStrideKey, setOutputStrideKey] = useState(
-        Object.keys(outputStrides)[1]
-    );
-    const [multiplierKey, setMultiplierKey] = useState(
-        Object.keys(multipliers)[1]
-    );
-    const [quantByteKey, setQuantByteKey] = useState(
-        Object.keys(quantBytes)[1]
-    );
-    const [internalResolutionKey, setInternalResolutionKey] = useState(
-        Object.keys(internalResolutions)[1]
-    );
+    const [outputStrideKey, setOutputStrideKey] = useState(Object.keys(outputStrides)[1]);
+    const [multiplierKey, setMultiplierKey] = useState(Object.keys(multipliers)[1]);
+    const [quantByteKey, setQuantByteKey] = useState(Object.keys(quantBytes)[1]);
+    const [internalResolutionKey, setInternalResolutionKey] = useState(Object.keys(internalResolutions)[1]);
 
     const [onLocal, setOnLocal] = useState(true);
     const [useWasm] = useState(false);
@@ -143,19 +116,14 @@ const App = () => {
         mediaType: "IMAGE",
         media: "img/yuka_kawamura.jpg",
     });
-    const inputChange = (
-        mediaType: VideoInputType,
-        input: MediaStream | string
-    ) => {
+    const inputChange = (mediaType: VideoInputType, input: MediaStream | string) => {
         setInputMedia({ mediaType: mediaType, media: input });
     };
 
     const backgroundChange = (mediaType: VideoInputType, input: string) => {
         console.log("background:", mediaType, input);
         if (mediaType === "IMAGE") {
-            const img = document.getElementById(
-                "background"
-            ) as HTMLImageElement;
+            const img = document.getElementById("background") as HTMLImageElement;
             img.src = input;
         }
     };
@@ -165,27 +133,14 @@ const App = () => {
     //// モデル切り替え
     useEffect(() => {
         const init = async () => {
-            const m = workerProps
-                ? workerProps.manager
-                : new BodypixWorkerManager();
+            const m = workerProps ? workerProps.manager : new BodypixWorkerManager();
             const count = workerProps ? workerProps.count + 1 : 0;
             const c = generateBodyPixDefaultConfig();
             c.processOnLocal = onLocal;
-            c.model.architecture = models[modelKey] as
-                | "ResNet50"
-                | "MobileNetV1";
-            c.model.outputStride = parseInt(outputStrides[outputStrideKey]) as
-                | 8
-                | 16
-                | 32;
-            c.model.multiplier = parseFloat(multipliers[multiplierKey]) as
-                | 0.5
-                | 0.75
-                | 1.0;
-            c.model.quantBytes = parseInt(quantBytes[quantByteKey]) as
-                | 4
-                | 2
-                | 1;
+            c.model.architecture = models[modelKey] as "ResNet50" | "MobileNetV1";
+            c.model.outputStride = parseInt(outputStrides[outputStrideKey]) as 8 | 16 | 32;
+            c.model.multiplier = parseFloat(multipliers[multiplierKey]) as 0.5 | 0.75 | 1.0;
+            c.model.quantBytes = parseInt(quantBytes[quantByteKey]) as 4 | 2 | 1;
             c.processOnLocal = onLocal;
             c.useTFWasmBackend = useWasm;
             await m.init(c);
@@ -201,30 +156,15 @@ const App = () => {
             p.segmentMultiPersonParams!.flipHorizontal = flip;
             p.segmentMultiPersonPartsParams!.flipHorizontal = flip;
             // internalResolution
-            p.segmentPersonParams!.internalResolution = internalResolutions[
-                internalResolutionKey
-            ] as BodyPixInternalResolution;
-            p.segmentPersonPartsParams!.internalResolution =
-                internalResolutions[
-                    internalResolutionKey
-                ] as BodyPixInternalResolution;
-            p.segmentMultiPersonParams!.internalResolution =
-                internalResolutions[
-                    internalResolutionKey
-                ] as BodyPixInternalResolution;
-            p.segmentMultiPersonPartsParams!.internalResolution =
-                internalResolutions[
-                    internalResolutionKey
-                ] as BodyPixInternalResolution;
+            p.segmentPersonParams!.internalResolution = internalResolutions[internalResolutionKey] as BodyPixInternalResolution;
+            p.segmentPersonPartsParams!.internalResolution = internalResolutions[internalResolutionKey] as BodyPixInternalResolution;
+            p.segmentMultiPersonParams!.internalResolution = internalResolutions[internalResolutionKey] as BodyPixInternalResolution;
+            p.segmentMultiPersonPartsParams!.internalResolution = internalResolutions[internalResolutionKey] as BodyPixInternalResolution;
             // segmentationThreshold
-            p.segmentPersonParams!.segmentationThreshold =
-                segmentationThreshold;
-            p.segmentPersonPartsParams!.segmentationThreshold =
-                segmentationThreshold;
-            p.segmentMultiPersonParams!.segmentationThreshold =
-                segmentationThreshold;
-            p.segmentMultiPersonPartsParams!.segmentationThreshold =
-                segmentationThreshold;
+            p.segmentPersonParams!.segmentationThreshold = segmentationThreshold;
+            p.segmentPersonPartsParams!.segmentationThreshold = segmentationThreshold;
+            p.segmentMultiPersonParams!.segmentationThreshold = segmentationThreshold;
+            p.segmentMultiPersonPartsParams!.segmentationThreshold = segmentationThreshold;
             // maxDetection
             p.segmentPersonParams!.maxDetections = maxDetection;
             p.segmentPersonPartsParams!.maxDetections = maxDetection;
@@ -242,8 +182,7 @@ const App = () => {
             p.segmentMultiPersonPartsParams!.nmsRadius = nmsRadius;
             // minKeypointScore
             p.segmentMultiPersonParams!.minKeypointScore = minKeypointScore;
-            p.segmentMultiPersonPartsParams!.minKeypointScore =
-                minKeypointScore;
+            p.segmentMultiPersonPartsParams!.minKeypointScore = minKeypointScore;
             // refineSteps
             p.segmentMultiPersonParams!.refineSteps = refineSteps;
             p.segmentMultiPersonPartsParams!.refineSteps = refineSteps;
@@ -252,14 +191,7 @@ const App = () => {
             setWorkerProps(newProps);
         };
         init();
-    }, [
-        modelKey,
-        onLocal,
-        outputStrideKey,
-        multiplierKey,
-        quantByteKey,
-        useWasm,
-    ]); // eslint-disable-line
+    }, [modelKey, onLocal, outputStrideKey, multiplierKey, quantByteKey, useWasm]); // eslint-disable-line
 
     //// パラメータ変更
     useEffect(() => {
@@ -277,27 +209,15 @@ const App = () => {
         p.segmentMultiPersonParams!.flipHorizontal = flip;
         p.segmentMultiPersonPartsParams!.flipHorizontal = flip;
         // internalResolution
-        p.segmentPersonParams!.internalResolution = internalResolutions[
-            internalResolutionKey
-        ] as BodyPixInternalResolution;
-        p.segmentPersonPartsParams!.internalResolution = internalResolutions[
-            internalResolutionKey
-        ] as BodyPixInternalResolution;
-        p.segmentMultiPersonParams!.internalResolution = internalResolutions[
-            internalResolutionKey
-        ] as BodyPixInternalResolution;
-        p.segmentMultiPersonPartsParams!.internalResolution =
-            internalResolutions[
-                internalResolutionKey
-            ] as BodyPixInternalResolution;
+        p.segmentPersonParams!.internalResolution = internalResolutions[internalResolutionKey] as BodyPixInternalResolution;
+        p.segmentPersonPartsParams!.internalResolution = internalResolutions[internalResolutionKey] as BodyPixInternalResolution;
+        p.segmentMultiPersonParams!.internalResolution = internalResolutions[internalResolutionKey] as BodyPixInternalResolution;
+        p.segmentMultiPersonPartsParams!.internalResolution = internalResolutions[internalResolutionKey] as BodyPixInternalResolution;
         // segmentationThreshold
         p.segmentPersonParams!.segmentationThreshold = segmentationThreshold;
-        p.segmentPersonPartsParams!.segmentationThreshold =
-            segmentationThreshold;
-        p.segmentMultiPersonParams!.segmentationThreshold =
-            segmentationThreshold;
-        p.segmentMultiPersonPartsParams!.segmentationThreshold =
-            segmentationThreshold;
+        p.segmentPersonPartsParams!.segmentationThreshold = segmentationThreshold;
+        p.segmentMultiPersonParams!.segmentationThreshold = segmentationThreshold;
+        p.segmentMultiPersonPartsParams!.segmentationThreshold = segmentationThreshold;
         // maxDetection
         p.segmentPersonParams!.maxDetections = maxDetection;
         p.segmentPersonPartsParams!.maxDetections = maxDetection;
@@ -322,26 +242,12 @@ const App = () => {
 
         // setWorkerProps({...workerProps, params:p})
         workerProps.params = p;
-    }, [
-        processWidth,
-        processHeight,
-        functionKey,
-        flip,
-        internalResolutionKey,
-        segmentationThreshold,
-        maxDetection,
-        socreThreshold,
-        nmsRadius,
-        minKeypointScore,
-        refineSteps,
-    ]); // eslint-disable-line
+    }, [processWidth, processHeight, functionKey, flip, internalResolutionKey, segmentationThreshold, maxDetection, socreThreshold, nmsRadius, minKeypointScore, refineSteps]); // eslint-disable-line
 
     /// input設定
     useEffect(() => {
         if (inputMedia.mediaType === "IMAGE") {
-            const img = document.getElementById(
-                "input_img"
-            ) as HTMLImageElement;
+            const img = document.getElementById("input_img") as HTMLImageElement;
             img.onloadeddata = () => {
                 resizeDst(img);
             };
@@ -356,9 +262,7 @@ const App = () => {
                 }, 1000 * 2);
             }
         } else if (inputMedia.mediaType === "MOVIE") {
-            const vid = document.getElementById(
-                "input_video"
-            ) as HTMLVideoElement;
+            const vid = document.getElementById("input_video") as HTMLVideoElement;
             vid.pause();
             vid.srcObject = null;
             vid.src = inputMedia.media as string;
@@ -368,9 +272,7 @@ const App = () => {
                 resizeDst(vid);
             };
         } else {
-            const vid = document.getElementById(
-                "input_video"
-            ) as HTMLVideoElement;
+            const vid = document.getElementById("input_video") as HTMLVideoElement;
             vid.pause();
             vid.srcObject = inputMedia.media as MediaStream;
             vid.onloadeddata = () => {
@@ -382,9 +284,7 @@ const App = () => {
 
     /// resize
     useEffect(() => {
-        const input =
-            document.getElementById("input_img") ||
-            document.getElementById("input_video");
+        const input = document.getElementById("input_img") || document.getElementById("input_video");
         resizeDst(input!);
     });
 
@@ -397,9 +297,7 @@ const App = () => {
         const height = parseInt(cs.getPropertyValue("height"));
         const dst = document.getElementById("output") as HTMLCanvasElement;
         const front = document.getElementById("front") as HTMLCanvasElement;
-        const srcCache = document.getElementById(
-            "src-cache"
-        ) as HTMLCanvasElement;
+        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement;
 
         [dst, srcCache, front].forEach((c) => {
             c.width = width;
@@ -412,32 +310,21 @@ const App = () => {
     //////////////////
 
     const drawSegmentation = async (workerProps: WorkerProps) => {
-        const src =
-            (document.getElementById("input_img") as HTMLImageElement) ||
-            (document.getElementById("input_video") as HTMLVideoElement);
-        const background = document.getElementById(
-            "background"
-        ) as HTMLImageElement;
+        const src = (document.getElementById("input_img") as HTMLImageElement) || (document.getElementById("input_video") as HTMLVideoElement);
+        const background = document.getElementById("background") as HTMLImageElement;
         const dst = document.getElementById("output") as HTMLCanvasElement;
         const tmp = document.getElementById("tmp") as HTMLCanvasElement;
         const front = document.getElementById("front") as HTMLCanvasElement;
-        const srcCache = document.getElementById(
-            "src-cache"
-        ) as HTMLCanvasElement;
+        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement;
 
         const tmpCtx = tmp.getContext("2d")!;
         const frontCtx = front.getContext("2d")!;
         const dstCtx = dst.getContext("2d")!;
 
-        srcCache
-            .getContext("2d")!
-            .drawImage(src, 0, 0, srcCache.width, srcCache.height);
+        srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height);
 
         const inference_start = performance.now();
-        const prediction = (await workerProps.manager.predict(
-            srcCache!,
-            workerProps.params
-        )) as SemanticPersonSegmentation;
+        const prediction = (await workerProps.manager.predict(srcCache!, workerProps.params)) as SemanticPersonSegmentation;
         const inference_end = performance.now();
         const info1 = document.getElementById("info") as HTMLCanvasElement;
         info1.innerText = `processing time: ${inference_end - inference_start}`;
@@ -480,25 +367,16 @@ const App = () => {
     };
 
     const drawParts = async (workerProps: WorkerProps) => {
-        const src =
-            (document.getElementById("input_img") as HTMLImageElement) ||
-            (document.getElementById("input_video") as HTMLVideoElement);
+        const src = (document.getElementById("input_img") as HTMLImageElement) || (document.getElementById("input_video") as HTMLVideoElement);
         const dst = document.getElementById("output") as HTMLCanvasElement;
         const tmp = document.getElementById("tmp") as HTMLCanvasElement;
-        const srcCache = document.getElementById(
-            "src-cache"
-        ) as HTMLCanvasElement;
+        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement;
 
         const tmpCtx = tmp.getContext("2d")!;
         const dstCtx = dst.getContext("2d")!;
 
-        srcCache
-            .getContext("2d")!
-            .drawImage(src, 0, 0, srcCache.width, srcCache.height);
-        const prediction = (await workerProps.manager.predict(
-            srcCache!,
-            workerProps.params
-        )) as SemanticPartSegmentation;
+        srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height);
+        const prediction = (await workerProps.manager.predict(srcCache!, workerProps.params)) as SemanticPartSegmentation;
         if (!prediction.data) {
             return;
         }
@@ -531,30 +409,19 @@ const App = () => {
     };
 
     const drawMultiSegmentation = async (workerProps: WorkerProps) => {
-        const src =
-            (document.getElementById("input_img") as HTMLImageElement) ||
-            (document.getElementById("input_video") as HTMLVideoElement);
-        const background = document.getElementById(
-            "background"
-        ) as HTMLImageElement;
+        const src = (document.getElementById("input_img") as HTMLImageElement) || (document.getElementById("input_video") as HTMLVideoElement);
+        const background = document.getElementById("background") as HTMLImageElement;
         const dst = document.getElementById("output") as HTMLCanvasElement;
         const tmp = document.getElementById("tmp") as HTMLCanvasElement;
         const front = document.getElementById("front") as HTMLCanvasElement;
-        const srcCache = document.getElementById(
-            "src-cache"
-        ) as HTMLCanvasElement;
+        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement;
 
         const tmpCtx = tmp.getContext("2d")!;
         const frontCtx = front.getContext("2d")!;
         const dstCtx = dst.getContext("2d")!;
 
-        srcCache
-            .getContext("2d")!
-            .drawImage(src, 0, 0, srcCache.width, srcCache.height);
-        const prediction = (await workerProps.manager.predict(
-            srcCache!,
-            workerProps.params
-        )) as PersonSegmentation[];
+        srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height);
+        const prediction = (await workerProps.manager.predict(srcCache!, workerProps.params)) as PersonSegmentation[];
         // console.log("PREDICTION", prediction)
 
         tmpCtx.clearRect(0, 0, tmp.width, tmp.height);
@@ -564,10 +431,7 @@ const App = () => {
             if (!prediction[0].width) {
                 return;
             }
-            const image = new ImageData(
-                prediction[0].width,
-                prediction[0].height
-            );
+            const image = new ImageData(prediction[0].width, prediction[0].height);
             image.data.fill(0);
 
             //// THEN draw each person segment
@@ -601,35 +465,23 @@ const App = () => {
     };
 
     const drawMultiPersonParts = async (workerProps: WorkerProps) => {
-        const src =
-            (document.getElementById("input_img") as HTMLImageElement) ||
-            (document.getElementById("input_video") as HTMLVideoElement);
+        const src = (document.getElementById("input_img") as HTMLImageElement) || (document.getElementById("input_video") as HTMLVideoElement);
         const dst = document.getElementById("output") as HTMLCanvasElement;
         const tmp = document.getElementById("tmp") as HTMLCanvasElement;
-        const srcCache = document.getElementById(
-            "src-cache"
-        ) as HTMLCanvasElement;
+        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement;
 
         const tmpCtx = tmp.getContext("2d")!;
         const dstCtx = dst.getContext("2d")!;
 
-        srcCache
-            .getContext("2d")!
-            .drawImage(src, 0, 0, srcCache.width, srcCache.height);
-        const prediction = (await workerProps.manager.predict(
-            srcCache!,
-            workerProps.params
-        )) as PartSegmentation[];
+        srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height);
+        const prediction = (await workerProps.manager.predict(srcCache!, workerProps.params)) as PartSegmentation[];
 
         tmpCtx.clearRect(0, 0, tmp.width, tmp.height);
         if (prediction.length > 0) {
             if (!prediction[0].width) {
                 return;
             }
-            const image = new ImageData(
-                prediction[0].width,
-                prediction[0].height
-            );
+            const image = new ImageData(prediction[0].width, prediction[0].height);
             image.data.fill(0);
 
             //// THEN draw each person segment
@@ -709,170 +561,45 @@ const App = () => {
         <div>
             <div style={{ display: "flex" }}>
                 <div style={{ display: "flex" }}>
-                    {inputMedia.mediaType === "IMAGE" ? (
-                        <img
-                            className={classes.inputView}
-                            alt="input_img"
-                            id="input_img"
-                        ></img>
-                    ) : (
-                        <video
-                            className={classes.inputView}
-                            id="input_video"
-                        ></video>
-                    )}
+                    {inputMedia.mediaType === "IMAGE" ? <img className={classes.inputView} alt="input_img" id="input_img"></img> : <video className={classes.inputView} id="input_video"></video>}
                     <canvas className={classes.inputView} id="output"></canvas>
                 </div>
                 <div>
-                    <VideoInputSelect
-                        title="input"
-                        current={""}
-                        onchange={inputChange}
-                        options={videoInputList}
-                    />
-                    <DropDown
-                        title="model"
-                        current={modelKey}
-                        onchange={setModelKey}
-                        options={models}
-                    />
-                    <DropDown
-                        title="func"
-                        current={functionKey}
-                        onchange={setFunctionKey}
-                        options={functions}
-                    />
-                    <DropDown
-                        title="outputStride"
-                        current={outputStrideKey}
-                        onchange={setOutputStrideKey}
-                        options={outputStrides}
-                    />
-                    <DropDown
-                        title="multiplier"
-                        current={multiplierKey}
-                        onchange={setMultiplierKey}
-                        options={multipliers}
-                    />
-                    <DropDown
-                        title="quantByte"
-                        current={quantByteKey}
-                        onchange={setQuantByteKey}
-                        options={quantBytes}
-                    />
-                    <DropDown
-                        title="resolution"
-                        current={internalResolutionKey}
-                        onchange={setInternalResolutionKey}
-                        options={internalResolutions}
-                    />
+                    <VideoInputSelect title="input" current={""} onchange={inputChange} options={videoInputList} />
+                    <DropDown title="model" current={modelKey} onchange={setModelKey} options={models} />
+                    <DropDown title="func" current={functionKey} onchange={setFunctionKey} options={functions} />
+                    <DropDown title="outputStride" current={outputStrideKey} onchange={setOutputStrideKey} options={outputStrides} />
+                    <DropDown title="multiplier" current={multiplierKey} onchange={setMultiplierKey} options={multipliers} />
+                    <DropDown title="quantByte" current={quantByteKey} onchange={setQuantByteKey} options={quantBytes} />
+                    <DropDown title="resolution" current={internalResolutionKey} onchange={setInternalResolutionKey} options={internalResolutions} />
 
-                    <Toggle
-                        title="onLocal"
-                        current={onLocal}
-                        onchange={setOnLocal}
-                    />
+                    <Toggle title="onLocal" current={onLocal} onchange={setOnLocal} />
                     {/* <Toggle            title="useWasm"       current={useWasm}        onchange={setUseWasm} /> */}
                     {/* <Toggle            title="flip"       current={flip}        onchange={setFlip} /> */}
 
-                    <SingleValueSlider
-                        title="segThreshold"
-                        current={segmentationThreshold}
-                        onchange={setSegmentationThreshold}
-                        min={0}
-                        max={1}
-                        step={0.1}
-                    />
-                    <SingleValueSlider
-                        title="maxDetection"
-                        current={maxDetection}
-                        onchange={setMaxDetection}
-                        min={1}
-                        max={20}
-                        step={1}
-                    />
-                    <SingleValueSlider
-                        title="scoThreshold"
-                        current={socreThreshold}
-                        onchange={setScoreThreshold}
-                        min={0}
-                        max={1}
-                        step={0.1}
-                    />
-                    <SingleValueSlider
-                        title="nmsRadius"
-                        current={nmsRadius}
-                        onchange={setNmsRadius}
-                        min={1}
-                        max={50}
-                        step={1}
-                    />
-                    <SingleValueSlider
-                        title="minKeypointScore"
-                        current={minKeypointScore}
-                        onchange={setMinKeypointScore}
-                        min={0.1}
-                        max={0.9}
-                        step={0.1}
-                    />
-                    <SingleValueSlider
-                        title="refineSteps"
-                        current={refineSteps}
-                        onchange={setRefineSteps}
-                        min={1}
-                        max={20}
-                        step={1}
-                    />
+                    <SingleValueSlider title="segThreshold" current={segmentationThreshold} onchange={setSegmentationThreshold} min={0} max={1} step={0.1} />
+                    <SingleValueSlider title="maxDetection" current={maxDetection} onchange={setMaxDetection} min={1} max={20} step={1} />
+                    <SingleValueSlider title="scoThreshold" current={socreThreshold} onchange={setScoreThreshold} min={0} max={1} step={0.1} />
+                    <SingleValueSlider title="nmsRadius" current={nmsRadius} onchange={setNmsRadius} min={1} max={50} step={1} />
+                    <SingleValueSlider title="minKeypointScore" current={minKeypointScore} onchange={setMinKeypointScore} min={0.1} max={0.9} step={0.1} />
+                    <SingleValueSlider title="refineSteps" current={refineSteps} onchange={setRefineSteps} min={1} max={20} step={1} />
 
-                    <SingleValueSlider
-                        title="processWidth"
-                        current={processWidth}
-                        onchange={setProcessWidth}
-                        min={100}
-                        max={1024}
-                        step={10}
-                    />
-                    <SingleValueSlider
-                        title="processHeight"
-                        current={processHeight}
-                        onchange={setProcessHeight}
-                        min={100}
-                        max={1024}
-                        step={10}
-                    />
+                    <SingleValueSlider title="processWidth" current={processWidth} onchange={setProcessWidth} min={100} max={1024} step={10} />
+                    <SingleValueSlider title="processHeight" current={processHeight} onchange={setProcessHeight} min={100} max={1024} step={10} />
 
                     {/* <Toggle            title="Strict"        current={strict}         onchange={setStrict} /> */}
-                    <FileChooser
-                        title="background"
-                        onchange={backgroundChange}
-                    />
+                    <FileChooser title="background" onchange={backgroundChange} />
                     <div>
-                        <a href="https://github.com/w-okada/image-analyze-workers">
-                            github repository
-                        </a>
+                        <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
                     </div>
                 </div>
             </div>
 
             <div style={{ display: "flex" }}>
                 <canvas className={classes.inputView} id="tmp" hidden></canvas>
-                <canvas
-                    className={classes.inputView}
-                    id="front"
-                    hidden
-                ></canvas>
-                <canvas
-                    className={classes.inputView}
-                    id="src-cache"
-                    hidden
-                ></canvas>
-                <img
-                    className={classes.inputView}
-                    alt="background"
-                    id="background"
-                    src="img/north-star-2869817_640.jpg"
-                    hidden
-                ></img>
+                <canvas className={classes.inputView} id="front" hidden></canvas>
+                <canvas className={classes.inputView} id="src-cache" hidden></canvas>
+                <img className={classes.inputView} alt="background" id="background" src="img/north-star-2869817_640.jpg" hidden></img>
             </div>
             <div>
                 <div id="info"> </div>

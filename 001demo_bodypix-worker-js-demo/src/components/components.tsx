@@ -1,14 +1,4 @@
-import {
-    makeStyles,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Switch,
-    Slider,
-    Button,
-    Typography,
-} from "@material-ui/core";
+import { makeStyles, FormControl, InputLabel, Select, MenuItem, Switch, Slider, Button, Typography } from "@material-ui/core";
 import React, { FC, useMemo, useState } from "react";
 import { VideoInputType } from "../const";
 
@@ -39,12 +29,7 @@ interface DropDownProps {
     onchange: (newKey: string) => void;
 }
 
-export const DropDown: FC<DropDownProps> = ({
-    title,
-    current,
-    options,
-    onchange,
-}) => {
+export const DropDown: FC<DropDownProps> = ({ title, current, options, onchange }) => {
     const classes = useStyles();
     const form = useMemo(() => {
         console.log("[DropDown] render!", title);
@@ -84,12 +69,7 @@ export const Toggle: FC<SwitchProps> = ({ title, current, onchange }) => {
         return (
             <div className={classes.formControl}>
                 <Typography gutterBottom> {`${title}`} </Typography>
-                <Switch
-                    checked={current}
-                    onChange={(e: any) => onchange(e.target.checked)}
-                    name={title}
-                    color="primary"
-                />
+                <Switch checked={current} onChange={(e: any) => onchange(e.target.checked)} name={title} color="primary" />
             </div>
         );
     }, [current]); // eslint-disable-line
@@ -105,23 +85,13 @@ interface SingleValueSliderProps {
     onchange: (newVal: number) => void;
 }
 
-export const SingleValueSlider: FC<SingleValueSliderProps> = ({
-    title,
-    current,
-    min,
-    max,
-    step,
-    onchange,
-}) => {
+export const SingleValueSlider: FC<SingleValueSliderProps> = ({ title, current, min, max, step, onchange }) => {
     const classes = useStyles();
     const form = useMemo(() => {
         console.log("[ingleValueSlider] render!", title);
         return (
             <div className={classes.formControl}>
-                <Typography gutterBottom>
-                    {" "}
-                    {`${title}[${current.toFixed(1)}]`}{" "}
-                </Typography>
+                <Typography gutterBottom> {`${title}[${current.toFixed(1)}]`} </Typography>
                 <div className={classes.horizontalSpacer} />
                 <Slider
                     valueLabelDisplay="auto"
@@ -147,12 +117,7 @@ interface VideoInputSelectProps {
     onchange: (newKey: VideoInputType, input: MediaStream | string) => void;
 }
 
-export const VideoInputSelect: FC<VideoInputSelectProps> = ({
-    title,
-    current,
-    options,
-    onchange,
-}) => {
+export const VideoInputSelect: FC<VideoInputSelectProps> = ({ title, current, options, onchange }) => {
     type TargetType = "File" | "Window" | "Camera";
 
     const classes = useStyles();
@@ -217,13 +182,7 @@ export const VideoInputSelect: FC<VideoInputSelectProps> = ({
             <FormControl className={classes.formControl}>
                 <InputLabel>{title}</InputLabel>
                 <Select
-                    value={
-                        targetType === "Camera"
-                            ? targetCamera
-                            : targetType
-                            ? targetType.toString()
-                            : "Camera"
-                    }
+                    value={targetType === "Camera" ? targetCamera : targetType ? targetType.toString() : "Camera"}
                     onChange={(e: any) => {
                         onchangeInternal(e.target.value);
                     }}
@@ -238,24 +197,14 @@ export const VideoInputSelect: FC<VideoInputSelectProps> = ({
                 </Select>
                 <div className={classes.verticalSpacer} />
                 {targetType === "File" ? (
-                    <Button
-                        variant="outlined"
-                        color="primary"
-                        className={classes.inputButton}
-                        onClick={onFileClicked}
-                    >
+                    <Button variant="outlined" color="primary" className={classes.inputButton} onClick={onFileClicked}>
                         File
                     </Button>
                 ) : (
                     <></>
                 )}
                 {targetType === "Window" ? (
-                    <Button
-                        variant="outlined"
-                        color="primary"
-                        className={classes.inputButton}
-                        onClick={onWindowClicked}
-                    >
+                    <Button variant="outlined" color="primary" className={classes.inputButton} onClick={onWindowClicked}>
                         Window
                     </Button>
                 ) : (
@@ -301,12 +250,7 @@ export const FileChooser: FC<FileChooserProps> = ({ title, onchange }) => {
             <div className={classes.formControl}>
                 <Typography gutterBottom> {`${title}`} </Typography>
                 <div className={classes.horizontalSpacer} />
-                <Button
-                    variant="outlined"
-                    color="primary"
-                    className={classes.inputButton}
-                    onClick={onFileClicked}
-                >
+                <Button variant="outlined" color="primary" className={classes.inputButton} onClick={onFileClicked}>
                     File
                 </Button>
             </div>
