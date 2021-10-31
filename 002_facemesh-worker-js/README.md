@@ -1,13 +1,16 @@
 This is webworker module for [Face landmarks detection](https://github.com/tensorflow/tfjs-models/tree/master/face-landmarks-detection).
+
 ## facemesh
+
 ![image](https://user-images.githubusercontent.com/48346627/98291984-534afc00-1fef-11eb-9e89-33b5f267b28c.png)
 
-
 ## Install
+
 ```
 $ npm install \@dannadori/facemesh-worker-js
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 ```
+
 ## API
 
 ```
@@ -37,7 +40,7 @@ export interface FacemeshConfig {
     useTFWasmBackend    : boolean
     wasmPath            : string
     modelReloadInterval : number
-    model               : ModelConfig 
+    model               : ModelConfig
     processOnLocal      : boolean
 }
 
@@ -55,7 +58,9 @@ export enum FacemeshFunctionType{
 ```
 
 ## Step by step
+
 ### Create environment and install package
+
 ```
 $ npx create-react-app demo  --template typescript
 $ cd demo/
@@ -64,10 +69,12 @@ $ npm install @dannadori/facemesh-worker-js
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 ```
 
-### Add source image to public. 
+### Add source image to public.
+
 In this time, the name is "srcImage.jpg"
 
 ### Edit src/App.tsx
+
 Sample code is here.
 
 ```
@@ -76,7 +83,7 @@ import './App.css';
 import { FacemeshWorkerManager, generateDefaultFacemeshParams, generateFacemeshDefaultConfig, drawFacemeshImage } from '@dannadori/facemesh-worker-js'
 
 class App extends React.Component{
-  
+
   manager = new FacemeshWorkerManager()
   config = generateFacemeshDefaultConfig()
   params = generateDefaultFacemeshParams()
@@ -120,8 +127,3 @@ export default App;
 ```
 $ npm run start
 ```
-
-
-
-
-

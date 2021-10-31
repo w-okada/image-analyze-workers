@@ -1,12 +1,7 @@
 //import * as facemesh from '@tensorflow-models/facemesh'
 import * as faceLandmarksDetection from "@tensorflow-models/face-landmarks-detection";
 
-import {
-    WorkerCommand,
-    WorkerResponse,
-    FacemeshConfig,
-    FacemeshOperatipnParams,
-} from "./const";
+import { WorkerCommand, WorkerResponse, FacemeshConfig, FacemeshOperatipnParams } from "./const";
 import * as tf from "@tensorflow/tfjs";
 import { BrowserType } from "./BrowserUtil";
 import { setWasmPath } from "@tensorflow/tfjs-backend-wasm";
@@ -33,20 +28,10 @@ const load_module = async (config: FacemeshConfig) => {
     }
 };
 
-const predict = async (
-    image: ImageBitmap,
-    config: FacemeshConfig,
-    params: FacemeshOperatipnParams
-): Promise<AnnotatedPrediction[]> => {
+const predict = async (image: ImageBitmap, config: FacemeshConfig, params: FacemeshOperatipnParams): Promise<AnnotatedPrediction[]> => {
     // ImageData作成
-    const processWidth =
-        params.processWidth <= 0 || params.processHeight <= 0
-            ? image.width
-            : params.processWidth;
-    const processHeight =
-        params.processWidth <= 0 || params.processHeight <= 0
-            ? image.height
-            : params.processHeight;
+    const processWidth = params.processWidth <= 0 || params.processHeight <= 0 ? image.width : params.processWidth;
+    const processHeight = params.processWidth <= 0 || params.processHeight <= 0 ? image.height : params.processHeight;
 
     //console.log("process image size:", processWidth, processHeight)
     const offscreen = new OffscreenCanvas(processWidth, processHeight);
@@ -63,17 +48,9 @@ const predict = async (
     return prediction!;
 };
 
-const predictForSafari = async (
-    data: Uint8ClampedArray,
-    config: FacemeshConfig,
-    params: FacemeshOperatipnParams
-): Promise<AnnotatedPrediction[]> => {
+const predictForSafari = async (data: Uint8ClampedArray, config: FacemeshConfig, params: FacemeshOperatipnParams): Promise<AnnotatedPrediction[]> => {
     // ImageData作成
-    const imageData = new ImageData(
-        data,
-        params.processWidth,
-        params.processHeight
-    );
+    const imageData = new ImageData(data, params.processWidth, params.processHeight);
     let tensor = tf.browser.fromPixels(imageData);
     const prediction = await model!.estimateFaces({
         input: tensor,
