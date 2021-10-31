@@ -1,10 +1,4 @@
-import {
-    WorkerResponse,
-    WorkerCommand,
-    AsciiConfig,
-    AsciiFunctionType,
-    AsciiOperatipnParams,
-} from "./const";
+import { WorkerResponse, WorkerCommand, AsciiConfig, AsciiFunctionType, AsciiOperatipnParams } from "./const";
 import { getBrowserType, BrowserType } from "./BrowserUtil";
 
 export { AsciiConfig, AsciiOperatipnParams, AsciiFunctionType } from "./const";
@@ -41,10 +35,7 @@ class LocalAA {
     brightnessCanvas = document.createElement("canvas");
     drawingCanvas = document.createElement("canvas");
 
-    predict = async (
-        targetCanvas: HTMLCanvasElement,
-        params: AsciiOperatipnParams
-    ) => {
+    predict = async (targetCanvas: HTMLCanvasElement, params: AsciiOperatipnParams) => {
         const asciiStr = params.asciiStr;
         const fontSize = params.fontSize;
         const asciiCharacters = asciiStr.split("");
@@ -70,46 +61,12 @@ class LocalAA {
             let line = "";
             for (let x = 0; x < tmpWidth; x++) {
                 const offset = (y * tmpWidth + x) * 4;
-                const r = Math.max(
-                    0,
-                    Math.min(
-                        Math.floor(
-                            (brImageData.data[offset + 0] - 128) *
-                                this.contrastFactor
-                        ) + 128,
-                        255
-                    )
-                );
-                const g = Math.max(
-                    0,
-                    Math.min(
-                        Math.floor(
-                            (brImageData.data[offset + 1] - 128) *
-                                this.contrastFactor
-                        ) + 128,
-                        255
-                    )
-                );
-                const b = Math.max(
-                    0,
-                    Math.min(
-                        Math.floor(
-                            (brImageData.data[offset + 2] - 128) *
-                                this.contrastFactor
-                        ) + 128,
-                        255
-                    )
-                );
+                const r = Math.max(0, Math.min(Math.floor((brImageData.data[offset + 0] - 128) * this.contrastFactor) + 128, 255));
+                const g = Math.max(0, Math.min(Math.floor((brImageData.data[offset + 1] - 128) * this.contrastFactor) + 128, 255));
+                const b = Math.max(0, Math.min(Math.floor((brImageData.data[offset + 2] - 128) * this.contrastFactor) + 128, 255));
 
                 var brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-                var character =
-                    asciiCharacters[
-                        asciiCharacters.length -
-                            1 -
-                            Math.round(
-                                brightness * (asciiCharacters.length - 1)
-                            )
-                    ];
+                var character = asciiCharacters[asciiCharacters.length - 1 - Math.round(brightness * (asciiCharacters.length - 1))];
                 line += character;
             }
             lines.push(line);
@@ -197,10 +154,7 @@ export class AsciiArtWorkerManager {
         this.workerAA = null;
 
         // safariはwebworkerでCanvasが使えないのでworkerは使わない。
-        if (
-            this.config.browserType === BrowserType.SAFARI ||
-            this.config.processOnLocal === true
-        ) {
+        if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal === true) {
             return;
         }
 
@@ -223,14 +177,8 @@ export class AsciiArtWorkerManager {
         return p;
     };
 
-    predict = async (
-        targetCanvas: HTMLCanvasElement,
-        params: AsciiOperatipnParams
-    ) => {
-        if (
-            this.config.browserType === BrowserType.SAFARI ||
-            this.config.processOnLocal === true
-        ) {
+    predict = async (targetCanvas: HTMLCanvasElement, params: AsciiOperatipnParams) => {
+        if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal === true) {
             // Safariはローカルで処理
             // return await this.localAA.convert(targetCanvas, this.outCanvas, params)
             return await this.localAA.predict(targetCanvas, params);
@@ -238,18 +186,9 @@ export class AsciiArtWorkerManager {
             if (!this.workerAA) {
                 return null;
             }
-            const offscreen = new OffscreenCanvas(
-                targetCanvas.width,
-                targetCanvas.height
-            );
+            const offscreen = new OffscreenCanvas(targetCanvas.width, targetCanvas.height);
             const offctx = offscreen.getContext("2d")!;
-            offctx.drawImage(
-                targetCanvas,
-                0,
-                0,
-                targetCanvas.width,
-                targetCanvas.height
-            );
+            offctx.drawImage(targetCanvas, 0, 0, targetCanvas.width, targetCanvas.height);
             const imageBitmap = offscreen.transferToImageBitmap();
 
             const uid = performance.now();
@@ -262,31 +201,22 @@ export class AsciiArtWorkerManager {
                 },
                 [imageBitmap]
             );
-            const p = new Promise(
-                (onResolve: (lines: string[]) => void, onFail) => {
-                    this.workerAA!.onmessage = (event) => {
-                        if (
-                            event.data.message === WorkerResponse.PREDICTED &&
-                            event.data.uid === uid
-                        ) {
-                            // const image = event.data.image as ImageBitmap
-                            // this.outCanvas.width=image.width
-                            // this.outCanvas.height=image.height
-                            // this.outCanvas.getContext("2d")!.drawImage(image, 0, 0, image.width, image.height)
-                            // image.close()
-                            const lines = event.data.lines as string[];
-                            onResolve(lines);
-                        } else {
-                            console.log(
-                                "AsciiArt something wrong[2]..",
-                                event.data.uid,
-                                uid
-                            );
-                            //                        onFail(event)
-                        }
-                    };
-                }
-            );
+            const p = new Promise((onResolve: (lines: string[]) => void, onFail) => {
+                this.workerAA!.onmessage = (event) => {
+                    if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
+                        // const image = event.data.image as ImageBitmap
+                        // this.outCanvas.width=image.width
+                        // this.outCanvas.height=image.height
+                        // this.outCanvas.getContext("2d")!.drawImage(image, 0, 0, image.width, image.height)
+                        // image.close()
+                        const lines = event.data.lines as string[];
+                        onResolve(lines);
+                    } else {
+                        console.log("AsciiArt something wrong[2]..", event.data.uid, uid);
+                        //                        onFail(event)
+                    }
+                };
+            });
             return p;
         }
     };

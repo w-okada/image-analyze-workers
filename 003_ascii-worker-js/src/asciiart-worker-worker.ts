@@ -34,41 +34,12 @@ const predict = async (image: ImageBitmap, params: AsciiOperatipnParams) => {
         let line = "";
         for (let x = 0; x < tmpWidth; x++) {
             const offset = (y * tmpWidth + x) * 4;
-            const r = Math.max(
-                0,
-                Math.min(
-                    Math.floor(
-                        (brImageData.data[offset + 0] - 128) * contrastFactor
-                    ) + 128,
-                    255
-                )
-            );
-            const g = Math.max(
-                0,
-                Math.min(
-                    Math.floor(
-                        (brImageData.data[offset + 1] - 128) * contrastFactor
-                    ) + 128,
-                    255
-                )
-            );
-            const b = Math.max(
-                0,
-                Math.min(
-                    Math.floor(
-                        (brImageData.data[offset + 2] - 128) * contrastFactor
-                    ) + 128,
-                    255
-                )
-            );
+            const r = Math.max(0, Math.min(Math.floor((brImageData.data[offset + 0] - 128) * contrastFactor) + 128, 255));
+            const g = Math.max(0, Math.min(Math.floor((brImageData.data[offset + 1] - 128) * contrastFactor) + 128, 255));
+            const b = Math.max(0, Math.min(Math.floor((brImageData.data[offset + 2] - 128) * contrastFactor) + 128, 255));
 
             var brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-            var character =
-                asciiCharacters[
-                    asciiCharacters.length -
-                        1 -
-                        Math.round(brightness * (asciiCharacters.length - 1))
-                ];
+            var character = asciiCharacters[asciiCharacters.length - 1 - Math.round(brightness * (asciiCharacters.length - 1))];
             line += character;
         }
         lines.push(line);

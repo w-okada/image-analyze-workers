@@ -1,12 +1,15 @@
 This is webworker module for AsciiArt.
 
 ## asciiart
+
 ![image](https://user-images.githubusercontent.com/48346627/95987874-fc745b80-0e62-11eb-95ac-43b3d998d50f.png)
 
 ## Install
+
 ```
 $ npm install \@dannadori/asciiart-worker-js
 ```
+
 ## API
 
 ```
@@ -43,7 +46,9 @@ export enum AsciiFunctionType{
 ```
 
 ## Step by step
+
 ### Create environment and install package
+
 ```
 $ npx create-react-app demo --template typescript
 $ cd demo/
@@ -51,10 +56,12 @@ $ npm install
 $ npm install @dannadori/asciiart-worker-js
 ```
 
-### Add source image to public. 
+### Add source image to public.
+
 In this time, the name is "srcImage.jpg"
 
 ### Edit src/App.tsx
+
 Sample code is here.
 
 ```
@@ -63,7 +70,7 @@ import './App.css';
 import { AsciiArtWorkerManager, generateAsciiArtDefaultConfig, generateDefaultAsciiArtParams } from '@dannadori/asciiart-worker-js'
 
 class App extends React.Component{
-  
+
   manager = new AsciiArtWorkerManager()
   config = generateAsciiArtDefaultConfig()
   params = generateDefaultAsciiArtParams()
@@ -106,8 +113,3 @@ export default App;
 ```
 $ npm run start
 ```
-
-
-
-
-
