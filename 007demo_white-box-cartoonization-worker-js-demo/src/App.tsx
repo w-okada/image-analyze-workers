@@ -137,8 +137,10 @@ const App = () => {
         const srcCache = document.getElementById("src-cache") as HTMLCanvasElement;
 
         [dst, srcCache, front].forEach((c) => {
-            c.width = width;
-            c.height = height;
+            if (c.width !== width || c.height !== height) {
+                c.width = width;
+                c.height = height;
+            }
         });
     };
 
