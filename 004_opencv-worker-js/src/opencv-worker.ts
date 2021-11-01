@@ -154,12 +154,6 @@ export class OpenCVWorkerManager {
                 this.workerCV!.onmessage = (event) => {
                     if (event.data.message === WorkerResponse.PREDICTED) {
                         const data = event.data.converted as Uint8ClampedArray;
-                        // for (let i = 0; i < data.length; i++) {
-                        //     if (data[i] !== 255) {
-                        //         console.log(data[i]);
-                        //     }
-                        // }
-                        // console.log(data.length, params.processWidth, params.processHeight);
                         onResolve(data);
                     } else {
                         console.log("OpenCV something wrong[2]..", event.data.uid, uid);
