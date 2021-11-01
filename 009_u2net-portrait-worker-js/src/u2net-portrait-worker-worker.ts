@@ -75,8 +75,8 @@ onmessage = async (event) => {
         tf.ready().then(async () => {
             tf.env().set("WEBGL_CPU_FORWARD", false);
 
-            const modelJson_p3_1 = new File([config.modelJson_p3_1], "model.json", { type: "application/json" });
-            const weight_p3_1 = Buffer.from(config.modelWeight_p3_1.split(",")[1], "base64");
+            const modelJson_p3_1 = new File([config.modelJson[config.modelKey]], "model.json", { type: "application/json" });
+            const weight_p3_1 = Buffer.from(config.modelWeight[config.modelKey].split(",")[1], "base64");
             const modelWeights_p3_1 = new File([weight_p3_1], "group1-shard1of1.bin");
             model = await tf.loadGraphModel(tf.io.browserFiles([modelJson_p3_1, modelWeights_p3_1]));
 

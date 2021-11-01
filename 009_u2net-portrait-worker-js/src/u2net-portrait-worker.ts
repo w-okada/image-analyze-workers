@@ -6,41 +6,41 @@ export { U2NetPortraitConfig, U2NetPortraitOperationParams };
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./u2net-portrait-worker-worker.ts";
 
-// @ts-ignore
-import modelJson_p3_1 from "../resources/u2net-portrait_320_p3_1/model.json";
-// @ts-ignore
-import modelWeight_p3_1 from "../resources/u2net-portrait_320_p3_1/group1-shard1of1.bin";
-
-// @ts-ignore
-import modelJson_p4_1 from "../resources/u2net-portrait_320_p4_1/model.json";
-// @ts-ignore
-import modelWeight_p4_1 from "../resources/u2net-portrait_320_p4_1/group1-shard1of1.bin";
-
-// @ts-ignore
-import modelJson_p4_2 from "../resources/u2net-portrait_320_p4_2/model.json";
-// @ts-ignore
-import modelWeight_p4_2 from "../resources/u2net-portrait_320_p4_2/group1-shard1of1.bin";
-
-// @ts-ignore
-import modelJson_p4_3 from "../resources/u2net-portrait_320_p4_3/model.json";
-// @ts-ignore
-import modelWeight_p4_3 from "../resources/u2net-portrait_320_p4_3/group1-shard1of1.bin";
-
-// @ts-ignore
-import modelJson_p4_4 from "../resources/u2net-portrait_320_p4_4/model.json";
-// @ts-ignore
-import modelWeight_p4_4 from "../resources/u2net-portrait_320_p4_4/group1-shard1of1.bin";
-
-// @ts-ignore
-import modelJson_p4_5 from "../resources/u2net-portrait_320_p4_5/model.json";
-// @ts-ignore
-import modelWeight_p4_5 from "../resources/u2net-portrait_320_p4_5/group1-shard1of1.bin";
-
-// /////// OpenCV /////////////////////
 // // @ts-ignore
-// import opencvWasm from "../resources/opencv_blur/custom_opencv.wasm";
+// import modelJson_p3_1 from "../resources/u2net-portrait_320_p3_1/model.json";
 // // @ts-ignore
-// import opencvWasmSimd from "../resources/opencv_blur/custom_opencv-simd.wasm";
+// import modelWeight_p3_1 from "../resources/u2net-portrait_320_p3_1/group1-shard1of1.bin";
+
+// // @ts-ignore
+// import modelJson_p4_1 from "../resources/u2net-portrait_320_p4_5/model.json";
+// // @ts-ignore
+// import modelWeight_p4_1 from "../resources/u2net-portrait_320_p4_5/group1-shard1of1.bin";
+
+// @ts-ignore
+import modelJson_p4_256_uint8 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/256/web_model_uint8/model.json";
+// @ts-ignore
+import modelWeight_p4_256_uint8 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/256/web_model_uint8/group1-shard1of1.bin";
+// @ts-ignore
+import modelJson_p4_256_float16 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/256/web_model_float16/model.json";
+// @ts-ignore
+import modelWeight_p4_256_float16 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/256/web_model_float16/group1-shard1of1.bin";
+// @ts-ignore
+import modelJson_p4_256_float32 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/256/web_model_float32/model.json";
+// @ts-ignore
+import modelWeight_p4_256_float32 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/256/web_model_float32/group1-shard1of1.bin";
+
+// @ts-ignore
+import modelJson_p4_320_uint8 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_uint8/model.json";
+// @ts-ignore
+import modelWeight_p4_320_uint8 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_uint8/group1-shard1of1.bin";
+// @ts-ignore
+import modelJson_p4_320_float16 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_float16/model.json";
+// @ts-ignore
+import modelWeight_p4_320_float16 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_float16/group1-shard1of1.bin";
+// @ts-ignore
+import modelJson_p4_320_float32 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_float32/model.json";
+// @ts-ignore
+import modelWeight_p4_320_float32 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_float32/group1-shard1of1.bin";
 
 export const generateU2NetPortraitDefaultConfig = (): U2NetPortraitConfig => {
     const defaultConf: U2NetPortraitConfig = {
@@ -49,21 +49,31 @@ export const generateU2NetPortraitDefaultConfig = (): U2NetPortraitConfig => {
         useTFWasmBackend: false,
         wasmPath: "/tfjs-backend-wasm.wasm",
         pageUrl: window.location.href,
-        modelJson_p3_1: modelJson_p3_1,
-        modelWeight_p3_1: modelWeight_p3_1,
-        modelJson_p4_1: modelJson_p4_1,
-        modelWeight_p4_1: modelWeight_p4_1,
-        modelJson_p4_2: modelJson_p4_2,
-        modelWeight_p4_2: modelWeight_p4_2,
-        modelJson_p4_3: modelJson_p4_3,
-        modelWeight_p4_3: modelWeight_p4_3,
-        modelJson_p4_4: modelJson_p4_4,
-        modelWeight_p4_4: modelWeight_p4_4,
-        modelJson_p4_5: modelJson_p4_5,
-        modelWeight_p4_5: modelWeight_p4_5,
-        // wasmBase64: opencvWasm.split(",")[1],
-        // wasmSimdBase64: opencvWasmSimd.split(",")[1],
-        // useSimd: false,
+        modelJson: {
+            "256_uint8": modelJson_p4_256_uint8,
+            "256_float16": modelJson_p4_256_float16,
+            "256_float32": modelJson_p4_256_float32,
+            "320_uint8": modelJson_p4_320_uint8,
+            "320_float16": modelJson_p4_320_float16,
+            "320_float32": modelJson_p4_320_float32,
+        },
+        modelWeight: {
+            "256_uint8": modelWeight_p4_256_uint8,
+            "256_float16": modelWeight_p4_256_float16,
+            "256_float32": modelWeight_p4_256_float32,
+            "320_uint8": modelWeight_p4_320_uint8,
+            "320_float16": modelWeight_p4_320_float16,
+            "320_float32": modelWeight_p4_320_float32,
+        },
+        modelInputs: {
+            "256_uint8": [256, 256],
+            "256_float16": [256, 256],
+            "256_float32": [256, 256],
+            "320_uint8": [320, 320],
+            "320_float16": [320, 320],
+            "320_float32": [320, 320],
+        },
+        modelKey: "320_float16",
     };
     return defaultConf;
 };
@@ -73,10 +83,6 @@ export const generateDefaultU2NetPortraitParams = (): U2NetPortraitOperationPara
         type: U2NetPortraitFunctionType.Portrait,
         processWidth: 320,
         processHeight: 320,
-        // blurParams: {
-        //     kernelSize: 10,
-        // },
-        // withBlurImage: true,
     };
     return defaultParams;
 };
@@ -101,26 +107,15 @@ export class LocalWorker {
     canvas = document.createElement("canvas");
     // wasm: Wasm | null = null;
     init = async (config: U2NetPortraitConfig) => {
-        // const browserType = getBrowserType();
-        // if (config.useSimd && browserType !== BrowserType.SAFARI) {
-        //     const modSimd = require("../resources/opencv_blur/custom_opencv-simd.js");
-        //     const b = Buffer.from(config.wasmSimdBase64!, "base64");
-        //     this.wasm = await modSimd({ wasmBinary: b });
-        // } else {
-        //     const mod = require("../resources/opencv_blur/custom_opencv.js");
-        //     const b = Buffer.from(config.wasmBase64!, "base64");
-        //     this.wasm = await mod({ wasmBinary: b });
-        // }
-
         const p = new Promise<void>((onResolve, onFail) => {
             load_module(config).then(() => {
                 tf.ready().then(async () => {
                     tf.env().set("WEBGL_CPU_FORWARD", false);
 
-                    const modelJson_p3_1 = new File([config.modelJson_p3_1], "model.json", { type: "application/json" });
-                    const weight_p3_1 = Buffer.from(config.modelWeight_p3_1.split(",")[1], "base64");
-                    const modelWeights_p3_1 = new File([weight_p3_1], "group1-shard1of1.bin");
-                    this.model = await tf.loadGraphModel(tf.io.browserFiles([modelJson_p3_1, modelWeights_p3_1]));
+                    const modelJson = new File([config.modelJson[config.modelKey]], "model.json", { type: "application/json" });
+                    const weight = Buffer.from(config.modelWeight[config.modelKey].split(",")[1], "base64");
+                    const modelWeights = new File([weight], "group1-shard1of1.bin");
+                    this.model = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
                     onResolve();
                 });
             });
@@ -151,20 +146,6 @@ export class LocalWorker {
         });
         return bm!;
     };
-
-    // blur = async (imageData: ImageData, config: U2NetPortraitConfig, params: U2NetPortraitOperationParams) => {
-    //     if (!this.wasm) {
-    //         return null;
-    //     }
-
-    //     const inputImageBufferOffset = this.wasm._getInputImageBufferOffset();
-    //     this.wasm!.HEAPU8.set(imageData.data, inputImageBufferOffset);
-    //     this.wasm._blur(params.processWidth, params.processHeight, params.blurParams!.kernelSize);
-    //     const outputImageBufferOffset = this.wasm!._getOutputImageBufferOffset();
-    //     const converted = new ImageData(new Uint8ClampedArray(this.wasm!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + params.processWidth * params.processHeight * 4)), params.processWidth, params.processHeight);
-
-    //     return converted.data;
-    // };
 }
 
 export class U2NetPortraitWorkerManager {
@@ -219,8 +200,6 @@ export class U2NetPortraitWorkerManager {
         if (this.config.processOnLocal == true) {
             // Case.1 Process on local thread.
             const prediction = await this.localWorker.predict(imageData, this.config, params);
-            // const p1 = this.localWorker.predict(imageData, this.config, params);
-            // const p2 = this.localWorker.blur(imageData, this.config, params);
             return prediction;
         }
         if (!this.workerU2) {
