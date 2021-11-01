@@ -118,7 +118,7 @@ interface VideoInputSelectProps {
 }
 
 export const VideoInputSelect: FC<VideoInputSelectProps> = ({ title, current, options, onchange }) => {
-    type TargetType = "File" | "Window" | "Camera";
+    type TargetType = "File" | "Window" | "Camera" | "SAMPLE_IMAGE" | "SAMPLE_VIDEO";
 
     const classes = useStyles();
     const [targetType, setTargetType] = useState<TargetType>("File");
@@ -129,9 +129,18 @@ export const VideoInputSelect: FC<VideoInputSelectProps> = ({ title, current, op
         const videoInputList = Object.keys(options);
         videoInputList.push("File");
         videoInputList.push("Window");
+        videoInputList.push("Camera");
+        videoInputList.push("SAMPLE_IMAGE");
+        videoInputList.push("SAMPLE_VIDEO");
         const onchangeInternal = (val: string) => {
             if (val === "File") {
                 setTargetType("File");
+            } else if (val === "SAMPLE_IMAGE") {
+                onchange("IMAGE", "./yuka_kawamura.jpg");
+                setTargetType("SAMPLE_IMAGE");
+            } else if (val === "SAMPLE_VIDEO") {
+                onchange("MOVIE_URL", "./neko2.mp4");
+                setTargetType("SAMPLE_VIDEO");
             } else if (val === "Window") {
                 setTargetType("Window");
             } else {

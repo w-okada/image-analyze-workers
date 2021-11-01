@@ -1,53 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { makeStyles } from "@material-ui/core";
-import { DropDown, Toggle, VideoInputSelect } from "./components/components";
+import { DropDown, SingleValueSlider, Toggle, VideoInputSelect } from "./components/components";
 import { VideoInputType } from "./const";
 import { useVideoInputList } from "./hooks/useVideoInputList";
 import { generateDefaultU2NetPortraitParams, generateU2NetPortraitDefaultConfig, U2NetPortraitWorkerManager, U2NetPortraitConfig, U2NetPortraitOperationParams } from "@dannadori/u2net-portrait-worker-js";
+import { OpenCVWorkerManager, OpenCVConfig, OpenCVOperatipnParams, generateOpenCVDefaultConfig, generateDefaultOpenCVParams } from "@dannadori/opencv-worker-js";
 
 let GlobalLoopID = 0;
-
-const models: { [name: string]: string } = {
-    u2net192: `/u2net-portrait_192/model.json`,
-    // u2net256: `${process.env.PUBLIC_URL}/u2net-portrait_256/model.json`,
-    // u2net256_mini: `${process.env.PUBLIC_URL}/u2net-portrait_256_mini/model.json`,
-    // u2net256_846k: `${process.env.PUBLIC_URL}/u2net-portrait_256_846k/model.json`,
-    // u2net256_680k: `${process.env.PUBLIC_URL}/u2net-portrait_256_680k/model.json`,
-    // u2net256_120k: `${process.env.PUBLIC_URL}/u2net-portrait_256_120k/model.json`,
-    // u2net256_1k: `${process.env.PUBLIC_URL}/u2net-portrait_256_1k/model.json`,
-    // u2net300: `${process.env.PUBLIC_URL}/u2net-portrait_300/model.json`,
-    // u2net320: `${process.env.PUBLIC_URL}/u2net-portrait_320/model.json`,
-    // u2net320_p3: `${process.env.PUBLIC_URL}/u2net-portrait_320_p3/model.json`,
-    // u2net320_p4: `${process.env.PUBLIC_URL}/u2net-portrait_320_p4/model.json`,
-    // u2net320_p4_2: `${process.env.PUBLIC_URL}/u2net-portrait_320_p4_2/model.json`,
-    // u2net320_p4_3: `${process.env.PUBLIC_URL}/u2net-portrait_320_p4_3/model.json`,
-    // u2net320_p4_4: `${process.env.PUBLIC_URL}/u2net-portrait_320_p4_4/model.json`,
-    // u2net320_p4_5: `${process.env.PUBLIC_URL}/u2net-portrait_320_p4_5/model.json`,
-    // u2net320_mini: `${process.env.PUBLIC_URL}/u2net-portrait_320_mini/model.json`,
-    // u2net512: `${process.env.PUBLIC_URL}/u2net-portrait_512/model.json`,
-    // u2net1024: `${process.env.PUBLIC_URL}/u2net-portrait_1024/model.json`,
-};
-
-const processSizes: { [name: string]: number[] } = {
-    u2net192: [320, 320],
-    u2net256: [256, 256],
-    u2net256_mini: [256, 256],
-    u2net256_846k: [256, 256],
-    u2net256_680k: [256, 256],
-    u2net256_120k: [256, 256],
-    u2net256_1k: [256, 256],
-    u2net300: [300, 300],
-    u2net320: [320, 320],
-    u2net320_p3: [320, 320],
-    u2net320_p4: [320, 320],
-    u2net320_p4_2: [320, 320],
-    u2net320_p4_3: [320, 320],
-    u2net320_p4_4: [320, 320],
-    u2net320_p4_5: [320, 320],
-    u2net320_mini: [320, 320],
-    u2net512: [512, 512],
-    u2net1024: [1024, 1024],
-};
 
 const useStyles = makeStyles(() => ({
     inputView: {
@@ -60,7 +19,10 @@ interface WorkerProps {
     manager: U2NetPortraitWorkerManager;
     config: U2NetPortraitConfig;
     params: U2NetPortraitOperationParams;
-    count: number;
+
+    openCVmanager: OpenCVWorkerManager;
+    openCVconfig: OpenCVConfig;
+    openCVparams: OpenCVOperatipnParams;
 }
 
 interface InputMedia {
@@ -70,15 +32,47 @@ interface InputMedia {
 
 const App = () => {
     const classes = useStyles();
+    const u2netManager = useMemo(() => {
+        return new U2NetPortraitWorkerManager();
+    }, []);
+    const u2netConfig = useMemo(() => {
+        return generateU2NetPortraitDefaultConfig();
+    }, []);
+    const u2netParams = useMemo(() => {
+        return generateDefaultU2NetPortraitParams();
+    }, []);
+
+    const opencvManager = useMemo(() => {
+        return new OpenCVWorkerManager();
+    }, []);
+    const opencvConfig = useMemo(() => {
+        return generateOpenCVDefaultConfig();
+    }, []);
+    const opencvParams = useMemo(() => {
+        return generateDefaultOpenCVParams();
+    }, []);
+
+    const modelKeys = useMemo(() => {
+        const keys: { [key: string]: string } = {};
+        Object.keys(u2netConfig.modelInputs).forEach((x) => {
+            keys[x] = x;
+        });
+        return keys;
+    }, []);
+
     const { videoInputList } = useVideoInputList();
     const [workerProps, setWorkerProps] = useState<WorkerProps>();
 
-    const [modelKey, setModelKey] = useState(Object.keys(models)[0]);
-    // const [ processSizeKey, setProcessSizeKey] = useState(Object.keys(processSizes)[0])
+    const [modelKey, setModelKey] = useState(Object.keys(modelKeys)[0]);
 
     const [onLocal, setOnLocal] = useState(true);
+    const [useSIMD, setUseSIMD] = useState(false);
     const [useWasm] = useState(false);
     const [strict] = useState(false);
+
+    const [useBlur, setUseBlur] = useState(true);
+    const [blurAlpha, setBlurAplha] = useState(128);
+    const [kernelSize, setKernelSize] = useState(5);
 
     const [inputMedia, setInputMedia] = useState<InputMedia>({
         mediaType: "IMAGE",
@@ -94,34 +88,27 @@ const App = () => {
     //// モデル切り替え
     useEffect(() => {
         const init = async () => {
-            const m = workerProps ? workerProps.manager : new U2NetPortraitWorkerManager();
-            const count = workerProps ? workerProps.count + 1 : 0;
-            const c = generateU2NetPortraitDefaultConfig();
-            c.processOnLocal = onLocal;
-            c.useTFWasmBackend = useWasm;
-            // c.modelPath = models[modelKey];
-            await m.init(c);
+            u2netConfig.processOnLocal = onLocal;
+            u2netConfig.useTFWasmBackend = useWasm;
+            u2netConfig.modelKey = modelKey;
+            await u2netManager.init(u2netConfig);
 
-            const p = generateDefaultU2NetPortraitParams();
-            p.processWidth = processSizes[modelKey][0];
-            p.processHeight = processSizes[modelKey][1];
-            const newProps = { manager: m, config: c, params: p, count: count };
+            u2netParams.processWidth = u2netConfig.modelInputs[modelKey][0];
+            u2netParams.processHeight = u2netConfig.modelInputs[modelKey][1];
+
+            opencvConfig.processOnLocal = onLocal;
+            opencvConfig.useSimd = useSIMD;
+            opencvManager.init(opencvConfig);
+            opencvParams.processWidth = u2netConfig.modelInputs[modelKey][0];
+            opencvParams.processHeight = u2netConfig.modelInputs[modelKey][1];
+            opencvParams.type = "Blur";
+            opencvParams.blurParams!.kernelSize = kernelSize;
+
+            const newProps = { manager: u2netManager, config: u2netConfig, params: u2netParams, openCVmanager: opencvManager, openCVconfig: opencvConfig, openCVparams: opencvParams };
             setWorkerProps(newProps);
         };
         init();
-    }, [modelKey, onLocal, useWasm]); // eslint-disable-line
-
-    //// パラメータ変更
-    useEffect(() => {
-        if (!workerProps) {
-            return;
-        }
-        const p = generateDefaultU2NetPortraitParams();
-        p.processWidth = processSizes[modelKey][0];
-        p.processHeight = processSizes[modelKey][1];
-        // setWorkerProps({...workerProps, params:p})
-        workerProps.params = p;
-    }, []); // eslint-disable-line
+    }, [modelKey, onLocal, useWasm, useSIMD]); // eslint-disable-line
 
     /// input設定
     useEffect(() => {
@@ -142,6 +129,17 @@ const App = () => {
                 video.play();
                 resizeDst(vid);
             };
+        } else if (inputMedia.mediaType === "MOVIE_URL") {
+            const vid = document.getElementById("input_video") as HTMLVideoElement;
+            vid.pause();
+            vid.srcObject = null;
+            vid.src = inputMedia.media as string;
+            vid.loop = true;
+            vid.onloadeddata = () => {
+                video.play();
+                resizeDst(vid);
+            };
+            // setSrc(vid)
         } else {
             const vid = document.getElementById("input_video") as HTMLVideoElement;
             vid.pause();
@@ -153,11 +151,11 @@ const App = () => {
         }
     }, [inputMedia]);
 
-    /// resize
-    useEffect(() => {
-        const input = document.getElementById("input_img") || document.getElementById("input_video");
-        resizeDst(input!);
-    });
+    // /// resize
+    // useEffect(() => {
+    //     const input = document.getElementById("input_img") || document.getElementById("input_video");
+    //     resizeDst(input!);
+    // });
 
     //////////////
     ///// util  //
@@ -167,13 +165,12 @@ const App = () => {
         const width = parseInt(cs.getPropertyValue("width"));
         const height = parseInt(cs.getPropertyValue("height"));
         const dst = document.getElementById("output") as HTMLCanvasElement;
-        const front = document.getElementById("front") as HTMLCanvasElement;
-        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement;
-        const srcCache2 = document.getElementById("src-cache2") as HTMLCanvasElement;
 
-        [dst, srcCache, srcCache2, front].forEach((c) => {
-            c.width = width;
-            c.height = height;
+        [dst].forEach((c) => {
+            if (c.width !== width || c.height !== height) {
+                c.width = width;
+                c.height = height;
+            }
         });
     };
 
@@ -191,68 +188,61 @@ const App = () => {
             // console.log("RENDER::::", LOOP_ID, renderRequestId, workerProps?.params);
             const start = performance.now();
 
-            const dst = document.getElementById("output") as HTMLCanvasElement;
             if (workerProps) {
                 const src = (document.getElementById("input_img") as HTMLImageElement) || (document.getElementById("input_video") as HTMLVideoElement);
                 resizeDst(src);
-                if (dst.width > 0 && dst.height > 0) {
-                    const src = (document.getElementById("input_img") as HTMLImageElement) || (document.getElementById("input_video") as HTMLVideoElement);
-                    const dst = document.getElementById("output") as HTMLCanvasElement;
-                    const tmp = document.getElementById("tmp") as HTMLCanvasElement;
-                    const srcCache = document.getElementById("src-cache") as HTMLCanvasElement;
-                    const srcCache2 = document.getElementById("src-cache2") as HTMLCanvasElement;
-                    srcCache2.width = srcCache.width / 3;
-                    srcCache2.height = srcCache.height / 3;
+                const dst = document.getElementById("output") as HTMLCanvasElement;
+                const tmp = document.getElementById("tmp") as HTMLCanvasElement;
+                tmp.width = workerProps.openCVparams.processWidth;
+                tmp.height = workerProps.openCVparams.processHeight;
+                const srcCache = document.getElementById("src-cache") as HTMLCanvasElement;
+                srcCache.width = workerProps.openCVparams.processWidth;
+                srcCache.height = workerProps.openCVparams.processHeight;
 
-                    const tmpCtx = tmp.getContext("2d")!;
+                if (dst.width > 0 && dst.height > 0) {
                     const dstCtx = dst.getContext("2d")!;
+                    const tmpCtx = tmp.getContext("2d")!;
 
                     srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height);
-                    srcCache2.getContext("2d")!.drawImage(srcCache, 0, 0, srcCache2.width, srcCache2.height);
+
+                    workerProps.openCVparams.blurParams!.kernelSize = kernelSize;
 
                     const inference_start = performance.now();
-                    const prediction: any = await workerProps.manager.predict(srcCache!, workerProps.params);
+                    const p1 = workerProps.manager.predict(srcCache!, workerProps.params);
+                    const p2 = useBlur ? workerProps.openCVmanager.predict(srcCache!, workerProps.openCVparams) : null;
+                    const [prediction, blur] = await Promise.all([p1, p2]);
                     const inference_end = performance.now();
+
                     const info1 = document.getElementById("info") as HTMLCanvasElement;
                     info1.innerText = `processing time: ${inference_end - inference_start}`;
 
                     if (prediction) {
                         // console.log("PREDICTION", prediction)
-                        tmp.width = prediction[0].length;
-                        tmp.height = prediction.length;
-                        const data = new ImageData(tmp.width, tmp.height);
+                        const data = new ImageData(workerProps.params.processWidth, workerProps.params.processHeight);
                         for (let rowIndex = 0; rowIndex < data.height; rowIndex++) {
                             for (let colIndex = 0; colIndex < data.width; colIndex++) {
                                 const pix_offset = (rowIndex * data.width + colIndex) * 4;
                                 if (prediction[rowIndex][colIndex] > 0.0001) {
-                                    // data.data[pix_offset + 0] = prediction[rowIndex][colIndex] * 255
-                                    // data.data[pix_offset + 1] = prediction[rowIndex][colIndex] * 255
-                                    // data.data[pix_offset + 2] = prediction[rowIndex][colIndex] * 255
-                                    // data.data[pix_offset + 3] = 255
-
-                                    // data.data[pix_offset + 0] = 0;
-                                    // data.data[pix_offset + 1] = 0;
-                                    // data.data[pix_offset + 2] = 0;
-                                    // data.data[pix_offset + 3] =
-                                    //   prediction[rowIndex][colIndex] * 255;
-                                    // // data.data[pix_offset + 3] = 255
-
                                     data.data[pix_offset + 0] = 255 - prediction[rowIndex][colIndex] * 255;
                                     data.data[pix_offset + 1] = 255 - prediction[rowIndex][colIndex] * 255;
                                     data.data[pix_offset + 2] = 255 - prediction[rowIndex][colIndex] * 255;
-                                    data.data[pix_offset + 3] = 255;
+                                    data.data[pix_offset + 3] = blurAlpha;
                                 } else {
-                                    data.data[pix_offset + 0] = 0;
-                                    data.data[pix_offset + 1] = 0;
-                                    data.data[pix_offset + 2] = 0;
-                                    data.data[pix_offset + 3] = 0;
+                                    data.data[pix_offset + 0] = 255;
+                                    data.data[pix_offset + 1] = 255;
+                                    data.data[pix_offset + 2] = 255;
+                                    data.data[pix_offset + 3] = blurAlpha;
                                 }
                             }
                         }
-                        tmpCtx.putImageData(data, 0, 0);
                         dstCtx.clearRect(0, 0, dst.width, dst.height);
 
-                        // dstCtx.drawImage(srcCache2, 0, 0, dst.width, dst.height)
+                        if (blur) {
+                            const bluredImage = new ImageData(blur, workerProps.openCVparams.processWidth, workerProps.openCVparams.processHeight);
+                            tmpCtx.putImageData(bluredImage, 0, 0);
+                            dstCtx.drawImage(tmp, 0, 0, dst.width, dst.height);
+                        }
+                        tmpCtx.putImageData(data, 0, 0);
                         dstCtx.drawImage(tmp, 0, 0, dst.width, dst.height);
                     }
                 }
@@ -270,7 +260,7 @@ const App = () => {
             console.log("CANCEL", renderRequestId);
             cancelAnimationFrame(renderRequestId);
         };
-    }, [workerProps, strict]);
+    }, [workerProps, strict, blurAlpha, kernelSize]);
 
     /////////////
     // render  //
@@ -284,8 +274,13 @@ const App = () => {
                 </div>
                 <div className={classes.inputView}>
                     <VideoInputSelect title="input" current={""} onchange={inputChange} options={videoInputList} />
-                    <DropDown title="model" current={modelKey} onchange={setModelKey} options={models} />
+                    <DropDown title="model" current={modelKey} onchange={setModelKey} options={modelKeys} />
                     <Toggle title="onLocal" current={onLocal} onchange={setOnLocal} />
+                    <Toggle title="useSIMD" current={useSIMD} onchange={setUseSIMD} />
+                    <Toggle title="BlurBlend" current={useBlur} onchange={setUseBlur} />
+                    <SingleValueSlider title="Alpha" current={blurAlpha} onchange={setBlurAplha} min={1} max={255} step={1} />
+                    <SingleValueSlider title="kSize" current={kernelSize} onchange={setKernelSize} min={1} max={60} step={1} />
+
                     <div>
                         <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
                     </div>
