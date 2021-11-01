@@ -64,7 +64,6 @@ export class LocalCV {
         if (!this.wasm) {
             return null;
         }
-
         const inputImageBufferOffset = this.wasm._getInputImageBufferOffset();
 
         this.wasm!.HEAPU8.set(data, inputImageBufferOffset);
