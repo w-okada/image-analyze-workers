@@ -7,7 +7,9 @@ const manager = {
     resolve: {
         extensions: [".ts", ".js"],
         fallback: {
-            os: false,
+            crypto: false,
+            path: false,
+            fs: false,
             buffer: require.resolve("buffer/"),
         },
     },
@@ -16,6 +18,7 @@ const manager = {
             { test: /\.ts$/, loader: "ts-loader" },
             { test: /resources\/.*\.bin/, type: "asset/inline" },
             { test: /resources\/.*\.json/, type: "asset/source" },
+            { test: /\.wasm$/, loader: "url-loader" },
         ],
     },
     output: {

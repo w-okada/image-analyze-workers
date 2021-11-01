@@ -36,6 +36,12 @@ import modelJson_p4_5 from "../resources/u2net-portrait_320_p4_5/model.json";
 // @ts-ignore
 import modelWeight_p4_5 from "../resources/u2net-portrait_320_p4_5/group1-shard1of1.bin";
 
+// /////// OpenCV /////////////////////
+// // @ts-ignore
+// import opencvWasm from "../resources/opencv_blur/custom_opencv.wasm";
+// // @ts-ignore
+// import opencvWasmSimd from "../resources/opencv_blur/custom_opencv-simd.wasm";
+
 export const generateU2NetPortraitDefaultConfig = (): U2NetPortraitConfig => {
     const defaultConf: U2NetPortraitConfig = {
         browserType: getBrowserType(),
@@ -55,6 +61,9 @@ export const generateU2NetPortraitDefaultConfig = (): U2NetPortraitConfig => {
         modelWeight_p4_4: modelWeight_p4_4,
         modelJson_p4_5: modelJson_p4_5,
         modelWeight_p4_5: modelWeight_p4_5,
+        // wasmBase64: opencvWasm.split(",")[1],
+        // wasmSimdBase64: opencvWasmSimd.split(",")[1],
+        // useSimd: false,
     };
     return defaultConf;
 };
@@ -64,6 +73,10 @@ export const generateDefaultU2NetPortraitParams = (): U2NetPortraitOperationPara
         type: U2NetPortraitFunctionType.Portrait,
         processWidth: 320,
         processHeight: 320,
+        // blurParams: {
+        //     kernelSize: 10,
+        // },
+        // withBlurImage: true,
     };
     return defaultParams;
 };
@@ -86,8 +99,19 @@ const load_module = async (config: U2NetPortraitConfig) => {
 export class LocalWorker {
     model: tf.GraphModel | null = null;
     canvas = document.createElement("canvas");
+    // wasm: Wasm | null = null;
+    init = async (config: U2NetPortraitConfig) => {
+        // const browserType = getBrowserType();
+        // if (config.useSimd && browserType !== BrowserType.SAFARI) {
+        //     const modSimd = require("../resources/opencv_blur/custom_opencv-simd.js");
+        //     const b = Buffer.from(config.wasmSimdBase64!, "base64");
+        //     this.wasm = await modSimd({ wasmBinary: b });
+        // } else {
+        //     const mod = require("../resources/opencv_blur/custom_opencv.js");
+        //     const b = Buffer.from(config.wasmBase64!, "base64");
+        //     this.wasm = await mod({ wasmBinary: b });
+        // }
 
-    init = (config: U2NetPortraitConfig) => {
         const p = new Promise<void>((onResolve, onFail) => {
             load_module(config).then(() => {
                 tf.ready().then(async () => {
@@ -104,16 +128,11 @@ export class LocalWorker {
         return p;
     };
 
-    predict = async (targetCanvas: HTMLCanvasElement, config: U2NetPortraitConfig, params: U2NetPortraitOperationParams): Promise<number[][]> => {
+    predict = async (imageData: ImageData, config: U2NetPortraitConfig, params: U2NetPortraitOperationParams): Promise<number[][]> => {
         console.log("current backend[main thread]:", tf.getBackend());
-        // ImageData作成
-        this.canvas.width = params.processWidth;
-        this.canvas.height = params.processHeight;
-        const ctx = this.canvas.getContext("2d")!;
-        ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height);
         let bm: number[][];
         tf.tidy(() => {
-            let tensor = tf.browser.fromPixels(this.canvas);
+            let tensor = tf.browser.fromPixels(imageData);
             tensor = tf.cast(tensor, "float32");
 
             tensor = tensor.div(255.0);
@@ -132,11 +151,24 @@ export class LocalWorker {
         });
         return bm!;
     };
+
+    // blur = async (imageData: ImageData, config: U2NetPortraitConfig, params: U2NetPortraitOperationParams) => {
+    //     if (!this.wasm) {
+    //         return null;
+    //     }
+
+    //     const inputImageBufferOffset = this.wasm._getInputImageBufferOffset();
+    //     this.wasm!.HEAPU8.set(imageData.data, inputImageBufferOffset);
+    //     this.wasm._blur(params.processWidth, params.processHeight, params.blurParams!.kernelSize);
+    //     const outputImageBufferOffset = this.wasm!._getOutputImageBufferOffset();
+    //     const converted = new ImageData(new Uint8ClampedArray(this.wasm!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + params.processWidth * params.processHeight * 4)), params.processWidth, params.processHeight);
+
+    //     return converted.data;
+    // };
 }
 
 export class U2NetPortraitWorkerManager {
     private workerU2: Worker | null = null;
-    private canvasOut = document.createElement("canvas");
     private canvas = document.createElement("canvas");
     private config = generateU2NetPortraitDefaultConfig();
     private localWorker = new LocalWorker();
@@ -156,6 +188,8 @@ export class U2NetPortraitWorkerManager {
 
         // Bodypix 用ワーカー
         const workerU2: Worker = new workerJs();
+        console.log("WORKER!!!!", workerU2);
+
         workerU2!.postMessage({
             message: WorkerCommand.INITIALIZE,
             config: this.config,
@@ -176,9 +210,17 @@ export class U2NetPortraitWorkerManager {
     };
 
     predict = async (targetCanvas: HTMLCanvasElement, params = generateDefaultU2NetPortraitParams()) => {
+        this.canvas.width = params.processWidth;
+        this.canvas.height = params.processHeight;
+        const ctx = this.canvas.getContext("2d")!;
+        ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height);
+        const imageData = ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+
         if (this.config.processOnLocal == true) {
             // Case.1 Process on local thread.
-            const prediction = await this.localWorker.predict(targetCanvas, this.config, params);
+            const prediction = await this.localWorker.predict(imageData, this.config, params);
+            // const p1 = this.localWorker.predict(imageData, this.config, params);
+            // const p2 = this.localWorker.blur(imageData, this.config, params);
             return prediction;
         }
         if (!this.workerU2) {
@@ -187,11 +229,6 @@ export class U2NetPortraitWorkerManager {
 
         if (this.config.browserType === BrowserType.SAFARI) {
             // Case.2 Process on worker thread, Safari (Send dataArray)
-            this.canvas.width = params.processWidth;
-            this.canvas.height = params.processHeight;
-            const ctx = this.canvas.getContext("2d")!;
-            ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height);
-            const imageData = ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
             const dataArray = imageData.data;
             const uid = performance.now();
 
@@ -219,9 +256,7 @@ export class U2NetPortraitWorkerManager {
             return p;
         } else {
             // Case.3 Process on worker thread, Chrome (Send ImageBitmap)
-            const off = new OffscreenCanvas(targetCanvas.width, targetCanvas.height);
-            off.getContext("2d")!.drawImage(targetCanvas, 0, 0, targetCanvas.width, targetCanvas.height);
-            const imageBitmap = off.transferToImageBitmap();
+            const dataArray = imageData.data;
             const uid = performance.now();
             this.workerU2!.postMessage(
                 {
@@ -229,10 +264,9 @@ export class U2NetPortraitWorkerManager {
                     uid: uid,
                     config: this.config,
                     params: params,
-                    // data: data, width: inImageData.width, height:inImageData.height
-                    image: imageBitmap,
+                    image: dataArray,
                 },
-                [imageBitmap]
+                [dataArray.buffer]
             );
             const p = new Promise((onResolve: (v: number[][]) => void, onFail) => {
                 this.workerU2!.onmessage = (event) => {
