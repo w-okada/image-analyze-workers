@@ -65,7 +65,7 @@ const App = () => {
 
     const [modelKey, setModelKey] = useState(Object.keys(modelKeys)[0]);
 
-    const [onLocal, setOnLocal] = useState(true);
+    const [onLocal, setOnLocal] = useState(false);
     const [useSIMD, setUseSIMD] = useState(false);
     const [useWasm] = useState(false);
     const [strict] = useState(false);
