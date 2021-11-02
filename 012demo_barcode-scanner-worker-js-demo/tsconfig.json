@@ -1,26 +1,29 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
+    "target": "esnext",
+    "jsx": "react",
+
+    /* ファイル名の大文字小文字を区別 */
     "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "module": "esnext",
+
+    /* 型チェック関係のオプション */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+
+    /* Module解決方法 */
     "moduleResolution": "node",
-    "resolveJsonModule": true,
+    "esModuleInterop": true,
     "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx"
+    "allowSyntheticDefaultImports": true,
+
+    /* 型チェックだけさせたいので出力なし */
+    "noEmit": true
   },
-  "include": [
-    "src"
-  ]
+  /* tscコマンドで読み込むファイルを指定 */
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules"]
 }
