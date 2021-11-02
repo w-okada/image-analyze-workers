@@ -149,14 +149,13 @@ const App = () => {
         const dstCanvasCtx = dstCanvas.getContext("2d")!;
         const tmpCtx = tmp.getContext("2d")!;
 
-        setLayout();
-
         const render = async () => {
             // console.log("RENDER::::", LOOP_ID, renderRequestId, workerProps?.params);
             const scaleFactor = config.scaleFactor[modelKey];
             const start = performance.now();
 
-            if (workerProps) {
+            if (workerProps && src.width > 0 && src.height > 0) {
+                setLayout();
                 tmp.width = src.width;
                 tmp.height = src.height;
                 tmpCtx.drawImage(src, 0, 0, tmp.width, tmp.height);
