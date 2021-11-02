@@ -3,6 +3,7 @@ import * as tf from "@tensorflow/tfjs";
 import { U2NetPortraitConfig, U2NetPortraitOperationParams, U2NetPortraitFunctionType, WorkerCommand, WorkerResponse } from "./const";
 import { setWasmPath } from "@tensorflow/tfjs-backend-wasm";
 export { U2NetPortraitConfig, U2NetPortraitOperationParams };
+
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./u2net-portrait-worker-worker.ts";
 
@@ -243,9 +244,9 @@ export class U2NetPortraitWorkerManager {
                     uid: uid,
                     config: this.config,
                     params: params,
-                    image: dataArray,
+                    image: imageData,
                 },
-                [dataArray.buffer]
+                [imageData.data.buffer]
             );
             const p = new Promise((onResolve: (v: number[][]) => void, onFail) => {
                 this.workerU2!.onmessage = (event) => {

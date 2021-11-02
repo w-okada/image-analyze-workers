@@ -22,13 +22,7 @@ const load_module = async (config: U2NetPortraitConfig) => {
     }
 };
 
-// Case.1 Use ImageBitmap (for Chrome default)
-const predict = async (image: ImageBitmap, config: U2NetPortraitConfig, params: U2NetPortraitOperationParams) => {
-    const off = new OffscreenCanvas(params.processWidth, params.processHeight);
-    const ctx = off.getContext("2d")!;
-    ctx.drawImage(image, 0, 0, off.width, off.height);
-    const imageData = ctx.getImageData(0, 0, off.width, off.height);
-
+const predict = async (imageData: ImageData, config: U2NetPortraitConfig, params: U2NetPortraitOperationParams) => {
     let bm: number[][] | null = null;
     tf.tidy(() => {
         let tensor = tf.browser.fromPixels(imageData);
@@ -38,26 +32,6 @@ const predict = async (image: ImageBitmap, config: U2NetPortraitConfig, params: 
         tensor = tensor.div(tf.max(tensor));
         tensor = tensor.sub(0.485).div(0.229);
 
-        let prediction = model!.predict(tensor) as tf.Tensor;
-        prediction = prediction.onesLike().sub(prediction);
-        prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()));
-        prediction = prediction.squeeze();
-        bm = prediction.arraySync() as number[][];
-    });
-    return bm!;
-};
-
-// Case.2 Use ImageBitmap (for Safari or special intent)
-const predictWithData = async (data: Uint8ClampedArray, config: U2NetPortraitConfig, params: U2NetPortraitOperationParams) => {
-    const imageData = new ImageData(data, params.processWidth, params.processHeight);
-
-    let bm: number[][] | null = null;
-    tf.tidy(() => {
-        let tensor = tf.browser.fromPixels(imageData);
-        tensor = tensor.expandDims(0);
-        tensor = tf.cast(tensor, "float32");
-        tensor = tensor.div(tf.max(tensor));
-        tensor = tensor.sub(0.485).div(0.229);
         let prediction = model!.predict(tensor) as tf.Tensor;
         prediction = prediction.onesLike().sub(prediction);
         prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()));
@@ -88,22 +62,13 @@ onmessage = async (event) => {
         });
     } else if (event.data.message === WorkerCommand.PREDICT) {
         //    console.log("requested predict bodypix.")
-        const image: ImageBitmap = event.data.image;
-        const data = event.data.data;
+        const image: ImageData = event.data.image;
         const config: U2NetPortraitConfig = event.data.config;
         const params: U2NetPortraitOperationParams = event.data.params;
         const uid: number = event.data.uid;
 
         console.log("current backend[worker thread]:", tf.getBackend());
-        if (data) {
-            // Case.2
-            console.log("Browser SAFARI");
-            const prediction = await predictWithData(data, config, params);
-            ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction });
-        } else {
-            // Case.1
-            const prediction = await predict(image, config, params);
-            ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction });
-        }
+        const prediction = await predict(image, config, params);
+        ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction });
     }
 };
