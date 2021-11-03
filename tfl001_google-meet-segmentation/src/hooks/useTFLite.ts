@@ -9,20 +9,9 @@ export interface TFLite extends EmscriptenModule {
     _getModelBufferMemoryOffset(): number;
     _loadModel(bufferSize: number): number;
 
-    // /// Custom Parameter and exec
-    // _setKernelSize(int: number): number;
-    // _setSmoothingR(int: number): number;
-    // _setUseSoftmax(int: number): number;
-    // _setUsePadding(int: number): number;
-    // _setThresholdWithoutSoftmax(float: number): number;
-    // _setInterpolation(int: number): number;
-
     _getInputImageBufferOffset(): number;
     _getOutputImageBufferOffset(): number;
-    // _exec(widht: number, height: number): number;
-    _exec_with_jbf(widht: number, height: number, d: number, sigmaColor: number, sigmaSpace: number, postProcessType: number): number;
-
-    // _getGrayedImageBufferOffset(): number;
+    _exec_with_jbf(widht: number, height: number, d: number, sigmaColor: number, sigmaSpace: number, postProcessType: number, interpolation: number, threshold: number): number;
 }
 
 function useTFLite() {

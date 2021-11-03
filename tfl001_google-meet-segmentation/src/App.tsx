@@ -55,9 +55,6 @@ const App = () => {
     ////////////
     const [modelKey, setModelKey] = useState(Object.keys(models)[0]);
     const [processSizeKey, setProcessSizeKey] = useState(Object.keys(processSize)[0]);
-    const [kernelSize, setKernelSize] = useState(0);
-    const [useSoftmax, setUseSoftmax] = useState(true);
-    const [usePadding, setUsePadding] = useState(true);
     const [threshold, setThreshold] = useState(0.1);
     const [useSIMD, setUseSIMD] = useState(false);
     const [interpolation, setInterpolation] = useState(4);
@@ -65,9 +62,9 @@ const App = () => {
     const [strict, setStrict] = useState(false);
 
     const [jbfD, setJbfD] = useState(0);
-    const [jbfSigmaC, setJbfSigmaC] = useState(1);
-    const [jbfSigmaS, setJbfSigmaS] = useState(1);
-    const [jbfPostProcess, setJbfPostProcess] = useState(0);
+    const [jbfSigmaC, setJbfSigmaC] = useState(2);
+    const [jbfSigmaS, setJbfSigmaS] = useState(2);
+    const [jbfPostProcess, setJbfPostProcess] = useState(3);
 
     interface InputMedia {
         mediaType: VideoInputType;
@@ -95,25 +92,6 @@ const App = () => {
         const modelPath = models[modelKey];
         setModelPath(modelPath);
     }, [modelKey]); // eslint-disable-line
-
-    /// TFLite設定
-    useEffect(() => {
-        if (!tflite) {
-            return;
-        }
-        // setTFLite(tflite)
-        // setProcessSize(processSize[processSizeKey][0], processSize[processSizeKey][1])
-        // tflite?._setKernelSize(kernelSize);
-        // tfliteSIMD?._setKernelSize(kernelSize);
-        // tflite?._setUseSoftmax(useSoftmax ? 1 : 0);
-        // tfliteSIMD?._setUseSoftmax(useSoftmax ? 1 : 0);
-        // tflite?._setUsePadding(usePadding ? 1 : 0);
-        // tfliteSIMD?._setUsePadding(usePadding ? 1 : 0);
-        // tflite?._setThresholdWithoutSoftmax(threshold);
-        // tfliteSIMD?._setThresholdWithoutSoftmax(threshold);
-        // tflite?._setInterpolation(interpolation);
-        // tfliteSIMD?._setInterpolation(interpolation);
-    }, [tflite, tfliteSIMD, processSizeKey, kernelSize, useSoftmax, usePadding, threshold, interpolation]);
 
     /// input設定
     useEffect(() => {
@@ -224,7 +202,7 @@ const App = () => {
                 /// inferecence
                 const start = performance.now();
                 // currentTFLite._exec(data.width, data.height);
-                currentTFLite._exec_with_jbf(data.width, data.height, jbfD, jbfSigmaC, jbfSigmaS, jbfPostProcess);
+                currentTFLite._exec_with_jbf(data.width, data.height, jbfD, jbfSigmaC, jbfSigmaS, jbfPostProcess, interpolation, threshold);
 
                 const end = performance.now();
                 const duration = end - start;
@@ -269,7 +247,7 @@ const App = () => {
         return () => {
             cancelAnimationFrame(renderRequestId);
         };
-    }, [tflite, tfliteSIMD, processSizeKey, inputMedia, useSIMD, lightWrapping, strict, jbfD, jbfSigmaC, jbfSigmaS, jbfPostProcess]); // eslint-disable-line
+    }, [tflite, tfliteSIMD, processSizeKey, inputMedia, useSIMD, lightWrapping, strict, jbfD, jbfSigmaC, jbfSigmaS, jbfPostProcess, interpolation, threshold]); // eslint-disable-line
 
     ///////////////
     // Render    //
@@ -285,19 +263,15 @@ const App = () => {
                     <VideoInputSelect title="input" current={""} onchange={inputChange} options={videoInputList} />
                     <DropDown title="model" current={modelKey} onchange={setModelKey} options={models} />
                     <DropDown title="ProcessSize" current={processSizeKey} onchange={setProcessSizeKey} options={processSize} />
-                    <SingleValueSlider title="KernelSize" current={kernelSize} onchange={setKernelSize} min={0} max={9} step={1} />
-                    <Toggle title="Softmax" current={useSoftmax} onchange={setUseSoftmax} />
-                    <Toggle title="Padding" current={usePadding} onchange={setUsePadding} />
-                    <SingleValueSlider title="Threshold" current={threshold} onchange={setThreshold} min={0.0} max={1.0} step={0.1} />
                     <Toggle title="SIMD" current={useSIMD} onchange={setUseSIMD} />
+                    <SingleValueSlider title="jbfPostProcess" current={jbfPostProcess} onchange={setJbfPostProcess} min={0} max={3} step={1} />
+                    <SingleValueSlider title="jbfD" current={jbfD} onchange={setJbfD} min={0} max={20} step={1} />
+                    <SingleValueSlider title="jbfSigmaC" current={jbfSigmaC} onchange={setJbfSigmaC} min={0} max={20} step={1} />
+                    <SingleValueSlider title="jbfSigmaS" current={jbfSigmaS} onchange={setJbfSigmaS} min={0} max={20} step={1} />
+                    <SingleValueSlider title="Threshold" current={threshold} onchange={setThreshold} min={0.0} max={1.0} step={0.1} />
                     <SingleValueSlider title="interpolation" current={interpolation} onchange={setInterpolation} min={0} max={4} step={1} />
                     <FileChooser title="background" onchange={backgroundChange} />
                     <SingleValueSlider title="lightWrapping" current={lightWrapping} onchange={setLightWrapping} min={0} max={10} step={1} />
-
-                    <SingleValueSlider title="jbfD" current={jbfD} onchange={setJbfD} min={0} max={10} step={1} />
-                    <SingleValueSlider title="jbfSigmaC" current={jbfSigmaC} onchange={setJbfSigmaC} min={0} max={10} step={1} />
-                    <SingleValueSlider title="jbfSigmaS" current={jbfSigmaS} onchange={setJbfSigmaS} min={0} max={10} step={1} />
-                    <SingleValueSlider title="jbfPostProcess" current={jbfPostProcess} onchange={setJbfPostProcess} min={0} max={3} step={1} />
 
                     <Toggle title="Strict" current={strict} onchange={setStrict} />
                     <div>
