@@ -13,7 +13,10 @@ RUN ./emsdk activate latest
 ### openCV
 WORKDIR /
 RUN git clone https://github.com/opencv/opencv.git -b 4.5.3 --depth 1 opencv
+RUN git clone https://github.com/opencv/opencv_contrib.git -b 4.5.3 --depth 1 opencv_contrib
 WORKDIR /opencv
+RUN sed -i '/^\W*"cmake",\W*$/a "-DOPENCV_EXTRA_MODULES_PATH=/opencv_contrib/modules",' platforms/js/build_js.py
+RUN sed -i 's/"-DBUILD_opencv_imgcodecs=OFF"/"-DBUILD_opencv_imgcodecs=ON"/' platforms/js/build_js.py
 RUN python3  platforms/js/build_js.py build_wasm             --emscripten_dir=/emsdk/upstream/emscripten --config_only
 RUN python3  platforms/js/build_js.py build_wasm_simd --simd --emscripten_dir=/emsdk/upstream/emscripten --config_only
 ENV OPENCV_JS_WHITELIST /opencv/platforms/js/opencv_js.config.py
