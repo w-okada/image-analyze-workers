@@ -37,7 +37,8 @@ cc_binary(
     "@org_tensorflow//tensorflow/lite:tflite_with_xnnpack",
     "@org_tensorflow//tensorflow/lite/kernels:builtin_ops",
     "@org_mediapipe//mediapipe/util/tflite/operations:transpose_conv_bias",
-    "@opencv//:opencv_simd",
+    #"@opencv//:opencv_simd", # don't work with chrome 91. With chrome90 is fine.
+    "@opencv//:opencv",
   ],
 )
 
