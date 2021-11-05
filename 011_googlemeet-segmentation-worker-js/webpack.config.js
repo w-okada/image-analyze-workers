@@ -1,67 +1,40 @@
-const path = require('path');
-const WorkerPlugin = require('worker-plugin');
+const path = require("path");
+const webpack = require("webpack");
 
 const manager = {
-    mode: 'production',
-    entry: './src/googlemeet-segmentation-worker.ts', // <-- (1)
+    mode: "production",
+    entry: "./src/googlemeet-segmentation-worker.ts",
     resolve: {
         extensions: [".ts", ".js"],
         fallback: {
             crypto: false,
             path: false,
             fs: false,
-            // os:false,
-            "os": require.resolve("os-browserify/browser"),
-        }
+            buffer: require.resolve("buffer/"),
+        },
     },
     module: {
         rules: [
-            { test: /\.ts$/, loader: 'ts-loader' },
+            { test: /\.ts$/, loader: "ts-loader" },
+            { test: /resources\/.*\.bin/, type: "asset/inline" },
+            { test: /resources\/.*\.json/, type: "asset/source" },
+            { test: /\.wasm$/, loader: "url-loader" },
         ],
     },
     output: {
-        filename: 'googlemeet-segmentation-worker.js', // <-- (2)
-        path: path.resolve(__dirname, 'dist'),
-        libraryTarget: 'umd',
-        globalObject: 'typeof self !== \'undefined\' ? self : this'
+        filename: "googlemeet-segmentation-worker.js",
+        path: path.resolve(__dirname, "dist"),
+        libraryTarget: "umd",
+        globalObject: "typeof self !== 'undefined' ? self : this",
     },
-    plugins: [　　　　　　　　　　　　　　　　 // <--- (3)
-        new WorkerPlugin()
-    ]
+    stats: {
+        children: true,
+    },
+    plugins: [
+        new webpack.ProvidePlugin({
+            Buffer: ["buffer", "Buffer"],
+        }),
+    ],
 };
 
-
-
-const worker = {
-    mode: 'production',
-    entry: './src/googlemeet-segmentation-worker-worker.ts', // <-- (1)
-    resolve: {
-        extensions: [".ts", ".js"],
-        fallback: {
-            crypto: false,
-            path: false,
-            fs: false,
-            // os:false,
-            "os": require.resolve("os-browserify/browser") ,
-
-        }
-    },
-    module: {
-        rules: [
-            { test: /\.ts$/, loader: 'ts-loader' },
-        ],
-    },
-    output: {
-        filename: 'googlemeet-segmentation-worker-worker.js', // <-- (2)
-        path: path.resolve(__dirname, 'dist'),
-        libraryTarget: 'umd',
-        globalObject: 'typeof self !== \'undefined\' ? self : this'
-    },
-    plugins: [　　　　　　　　　　　　　　　　 // <--- (3)
-        new WorkerPlugin()
-    ]
-};
-
-module.exports = [
-    manager, worker
-]
+module.exports = [manager];

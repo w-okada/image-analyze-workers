@@ -1,56 +1,71 @@
-import { BrowserType } from './BrowserUtil';
+import { BrowserType } from "./BrowserUtil";
 
 export const WorkerCommand = {
-    INITIALIZE   : 'initialize',
-    PREDICT : 'predict',
-}
+    INITIALIZE: "initialize",
+    PREDICT: "predict",
+};
 
 export const WorkerResponse = {
-    INITIALIZED      : 'initialized',
-    PREDICTED   : 'predicted',
+    INITIALIZED: "initialized",
+    PREDICTED: "predicted",
+    NOT_READY: "not_ready",
+};
+
+export interface GoogleMeetSegmentationConfig {
+    browserType: BrowserType;
+    processOnLocal: boolean;
+    useTFWasmBackend: boolean;
+    wasmPath: string;
+    pageUrl: string;
+
+    modelJsons: { [key: string]: string };
+    modelWeights: { [key: string]: string };
+    modelTFLites: { [key: string]: string };
+    modelKey: string;
+
+    processSizes: { [key: string]: number[] };
+
+    wasmBase64?: string;
+    wasmSimdBase64?: string;
+    useSimd: boolean;
+    useTFJS: boolean;
 }
 
-export interface GoogleMeetSegmentationConfig{
-    browserType         : BrowserType
-    processOnLocal      : boolean
-    useTFWasmBackend    : boolean
-    wasmPath            : string
-    modelPath           : string
-    workerPath          : string
+export interface GoogleMeetSegmentationOperationParams {
+    type: GoogleMeetSegmentationFunctionType;
+    processSizeKey: string;
+
+    jbfD: number;
+    jbfSigmaC: number;
+    jbfSigmaS: number;
+    jbfPostProcess: number;
+
+    threshold: number;
+    interpolation: number;
 }
 
-
-export interface GoogleMeetSegmentationOperationParams{
-    type                : GoogleMeetSegmentationFunctionType
-    processWidth        : number  // InputSize to Model (128x128, 144x256, 96x160)
-    processHeight       : number  // InputSize to Model  (128x128, 144x256, 96x160)
-    smoothingS          : number  // kernelSize(Depricated)
-    // kernelSize          : number  // 
-    smoothingR          : number  // 
-    jbfWidth            : number  // JBFを適用するときのサイズ(大きいほど精度が上がる模様)
-    jbfHeight           : number  // JBFを適用するときのサイズ(大きいほど精度が上がる模様)
-
-    staticMemory        : boolean
-    lightWrapping       : boolean
-    smoothingType       : GoogleMeetSegmentationSmoothingType
-
-    originalWidth       : number
-    originalHeight      : number
-    
-    directToCanvs       : boolean
-    toCanvas            : HTMLCanvasElement|null
-}
-
-export enum GoogleMeetSegmentationFunctionType{
+export enum GoogleMeetSegmentationFunctionType {
     Segmentation,
     xxx, // Not implemented
 }
 
-
-export enum GoogleMeetSegmentationSmoothingType{
+export enum GoogleMeetSegmentationSmoothingType {
     GPU,
     JS,
     WASM,
     JS_CANVAS,
 }
 
+export interface TFLite extends EmscriptenModule {
+    _getModelBufferMemoryOffset(): number;
+    _loadModel(bufferSize: number): number;
+
+    _getInputImageBufferOffset(): number;
+    _getJbfGuideImageBufferOffset(): number;
+    _getJbfInputImageBufferOffset(): number;
+    _getOutputImageBufferOffset(): number;
+
+    _exec_with_jbf(widht: number, height: number, d: number, sigmaColor: number, sigmaSpace: number, postProcessType: number, interpolation: number, threshold: number): number;
+    _jbf(widht: number, height: number, d: number, sigmaColor: number, sigmaSpace: number, postProcessType: number, interpolation: number, threshold: number): number;
+    _jbf(inputwidht: number, inputheight: number, outputwidht: number, outputheight: number, d: number, sigmaColor: number, sigmaSpace: number, postProcessType: number, interpolation: number, threshold: number): number;
+}

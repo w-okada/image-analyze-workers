@@ -1,274 +1,253 @@
-import React, { useEffect, useState } from 'react';
-import './App.css';
-import { generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmentationDefaultConfig, GoogleMeetSegmentationWorkerManager } from "@dannadori/googlemeet-segmentation-worker-js"
-import { makeStyles } from '@material-ui/core';
-import { DropDown, FileChooser, SingleValueSlider, Toggle, VideoInputSelect } from './components/components';
-import { VideoInputType } from './const';
-import { useVideoInputList } from './hooks/useVideoInputList';
-import { GoogleMeetSegmentationConfig, GoogleMeetSegmentationOperationParams } from '@dannadori/googlemeet-segmentation-worker-js/dist/const';
+import React, { useEffect, useMemo, useState } from "react";
+import "./App.css";
+import { generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmentationDefaultConfig, GoogleMeetSegmentationWorkerManager } from "@dannadori/googlemeet-segmentation-worker-js";
+import { makeStyles } from "@material-ui/core";
+import { DropDown, FileChooser, SingleValueSlider, Toggle, VideoInputSelect } from "./components/components";
+import { VideoInputType } from "./const";
+import { useVideoInputList } from "./hooks/useVideoInputList";
+import { GoogleMeetSegmentationConfig, GoogleMeetSegmentationOperationParams } from "@dannadori/googlemeet-segmentation-worker-js/dist/const";
 
-let GlobalLoopID: number = 0
-
-const models: { [name: string]: string } = {
-    "seg128x128_32": `${process.env.PUBLIC_URL}/googlemeet-segmentation_128_32/model.json`,
-    "seg128x128_16": `${process.env.PUBLIC_URL}/googlemeet-segmentation_128_16/model.json`,
-    "seg144x256_32": `${process.env.PUBLIC_URL}/googlemeet-segmentation_144_32/model.json`,
-    "seg144x256_16": `${process.env.PUBLIC_URL}/googlemeet-segmentation_144_16/model.json`,
-    "seg96x160_32": `${process.env.PUBLIC_URL}/googlemeet-segmentation_96_32/model.json`,
-    "seg96x160_16": `${process.env.PUBLIC_URL}/googlemeet-segmentation_96_16/model.json`,
-}
-
-const processSize: { [name: string]: number[] } = {
-    "seg128x128_32": [128, 128],
-    "seg128x128_16": [128, 128],
-    "seg96x160_32": [160, 96],
-    "seg96x160_16": [160, 96],
-    "seg144x256_32": [256, 144],
-    "seg144x256_16": [256, 144],
-}
-
-const JBFSize: { [name: string]: number[] } = {
-    "128x128": [128, 128],
-    "96x168": [96, 168],
-    "144x256": [144, 256],
-    "256x256": [256, 256],
-    "300x300": [300, 300],
-    "512x512": [512, 512],
-}
+let GlobalLoopID = 0;
 
 const useStyles = makeStyles((theme) => ({
     inputView: {
-        maxWidth: 512
-    }
+        maxWidth: 512,
+    },
 }));
 
 interface WorkerProps {
-    manager: GoogleMeetSegmentationWorkerManager
-    config: GoogleMeetSegmentationConfig
-    params: GoogleMeetSegmentationOperationParams
-    count: number
+    manager: GoogleMeetSegmentationWorkerManager;
+    config: GoogleMeetSegmentationConfig;
+    params: GoogleMeetSegmentationOperationParams;
 }
 interface InputMedia {
-    mediaType: VideoInputType
-    media: MediaStream | string
+    mediaType: VideoInputType;
+    media: MediaStream | string;
 }
 
 const App = () => {
     const classes = useStyles();
-    const { videoInputList } = useVideoInputList()
-    const [workerProps, setWorkerProps] = useState<WorkerProps>()
+    const { videoInputList } = useVideoInputList();
 
-    const [modelKey, setModelKey] = useState(Object.keys(models)[0])
-    const [JBFSizeKey, setJBFSizeKey] = useState(Object.keys(JBFSize)[0])
-    const [kernelSize, setKernelSize] = useState(1)
-    const [kernelR, setKernelR] = useState(1) // eslint-disable-line
-    const [useSIMD, setUseSIMD] = useState(true) // eslint-disable-line
-    const [onLocal, setOnLocal] = useState(true)
-    const [lwBlur, setlwBlur] = useState(2)
-    const [strict, setStrict] = useState(false)
+    const manager = useMemo(() => {
+        return new GoogleMeetSegmentationWorkerManager();
+    }, []);
+    const config = useMemo(() => {
+        return generateGoogleMeetSegmentationDefaultConfig();
+    }, []);
+    const params = useMemo(() => {
+        return generateDefaultGoogleMeetSegmentationParams();
+    }, []);
 
-    const [inputMedia, setInputMedia] = useState<InputMedia>({ mediaType: "IMAGE", media: "yuka_kawamura.jpg" })
+    const modelKeys = useMemo(() => {
+        const keys: { [key: string]: string } = {};
+        Object.keys(config.modelTFLites).forEach((x) => {
+            keys[x] = x;
+        });
+        return keys;
+    }, []);
+
+    const processSizeKeys = useMemo(() => {
+        const keys: { [key: string]: string } = {};
+        Object.keys(config.processSizes).forEach((x) => {
+            keys[x] = x;
+        });
+        return keys;
+    }, []);
+
+    const [workerProps, setWorkerProps] = useState<WorkerProps>();
+
+    const [modelKey, setModelKey] = useState(Object.keys(modelKeys)[2]);
+    const [processSizeKey, setProcessSizeKey] = useState(Object.keys(processSizeKeys)[2]);
+
+    const [onLocal, setOnLocal] = useState(true);
+    const [useTFJS, setUseTFJS] = useState(false);
+    const [useSIMD, setUseSIMD] = useState(false);
+
+    const [jbfD, setJbfD] = useState(0);
+    const [jbfSigmaC, setJbfSigmaC] = useState(2);
+    const [jbfSigmaS, setJbfSigmaS] = useState(2);
+    const [jbfPostProcess, setJbfPostProcess] = useState(3);
+
+    const [threshold, setThreshold] = useState(0.1);
+    const [interpolation, setInterpolation] = useState(4);
+    const [lightWrapping, setLightWrapping] = useState(1);
+    const [strict, setStrict] = useState(false);
+
+    const [inputMedia, setInputMedia] = useState<InputMedia>({
+        mediaType: "IMAGE",
+        media: "yuka_kawamura.jpg",
+    });
     const inputChange = (mediaType: VideoInputType, input: MediaStream | string) => {
-        setInputMedia({ mediaType: mediaType, media: input })
-    }
+        setInputMedia({ mediaType: mediaType, media: input });
+    };
 
     const backgroundChange = (mediaType: VideoInputType, input: string) => {
-        console.log("background:", mediaType, input)
+        console.log("background:", mediaType, input);
         if (mediaType === "IMAGE") {
-            const img = document.getElementById("background") as HTMLImageElement
-            img.src = input
+            const img = document.getElementById("background") as HTMLImageElement;
+            img.src = input;
         }
-    }
+    };
     ///////////////////////////
     /// プロパティ設定      ///
     ///////////////////////////
     //// モデル切り替え
     useEffect(() => {
         const init = async () => {
-            const m = workerProps ? workerProps.manager : new GoogleMeetSegmentationWorkerManager()
-            const count = workerProps ? workerProps.count + 1 : 0
-            const c = generateGoogleMeetSegmentationDefaultConfig()
-            c.processOnLocal = onLocal
-            c.modelPath = models[modelKey]
-            console.log("NEW MODE LOAD1")
-            await m.init(c)
-            console.log("NEW MODE LOAD2")
-
-            const p = generateDefaultGoogleMeetSegmentationParams()
-            p.processWidth = processSize[modelKey][0]
-            p.processHeight = processSize[modelKey][1]
-            p.smoothingS = kernelSize
-            p.smoothingR = kernelR
-            p.jbfWidth = JBFSize[JBFSizeKey][0]
-            p.jbfHeight = JBFSize[JBFSizeKey][1]
-            const newProps = { manager: m, config: c, params: p, count: count }
-            setWorkerProps(newProps)
-        }
-        init()
-    }, [modelKey, onLocal]) // eslint-disable-line
-
-    //// パラメータ変更
-    useEffect(() => {
-        if (!workerProps) {
-            return
-        }
-        const p = generateDefaultGoogleMeetSegmentationParams()
-        p.processWidth = processSize[modelKey][0]
-        p.processHeight = processSize[modelKey][1]
-        p.smoothingS = kernelSize
-        p.smoothingR = kernelR
-        p.jbfWidth = JBFSize[JBFSizeKey][0]
-        p.jbfHeight = JBFSize[JBFSizeKey][1]
-        setWorkerProps({ ...workerProps, params: p })
-    }, [kernelSize, kernelR, JBFSizeKey]) // eslint-disable-line
-
+            config.processOnLocal = onLocal;
+            config.modelKey = modelKey;
+            config.useTFJS = useTFJS;
+            config.useSimd = useSIMD;
+            await manager.init(config);
+            const newProps = { manager: manager, config: config, params: params };
+            setWorkerProps(newProps);
+        };
+        init();
+    }, [modelKey, onLocal, useTFJS, useSIMD]); // eslint-disable-line
 
     /// input設定
     useEffect(() => {
-        const video = document.getElementById("input_video") as HTMLVideoElement
+        const video = document.getElementById("input_video") as HTMLVideoElement;
         if (inputMedia.mediaType === "IMAGE") {
-            const img = document.getElementById("input_img") as HTMLImageElement
+            const img = document.getElementById("input_img") as HTMLImageElement;
             img.onloadeddata = () => {
-                resizeDst(img)
-            }
-            img.src = inputMedia.media as string
+                resizeDst(img);
+            };
+            img.src = inputMedia.media as string;
         } else if (inputMedia.mediaType === "MOVIE") {
-            const vid = document.getElementById("input_video") as HTMLVideoElement
-            vid.pause()
-            vid.srcObject = null
-            vid.src = inputMedia.media as string
-            vid.loop = true
+            const vid = document.getElementById("input_video") as HTMLVideoElement;
+            vid.pause();
+            vid.srcObject = null;
+            vid.src = inputMedia.media as string;
+            vid.loop = true;
             vid.onloadeddata = () => {
-                video.play()
-                resizeDst(vid)
-            }
+                video.play();
+                resizeDst(vid);
+            };
         } else {
-            const vid = document.getElementById("input_video") as HTMLVideoElement
-            vid.pause()
-            vid.srcObject = inputMedia.media as MediaStream
+            const vid = document.getElementById("input_video") as HTMLVideoElement;
+            vid.pause();
+            vid.srcObject = inputMedia.media as MediaStream;
             vid.onloadeddata = () => {
-                video.play()
-                resizeDst(vid)
-            }
+                video.play();
+                resizeDst(vid);
+            };
         }
-    }, [inputMedia])
+    }, [inputMedia]);
 
     /// resize
     useEffect(() => {
-        const input = document.getElementById("input_img") || document.getElementById("input_video")
-        resizeDst(input!)
-    })
+        const input = document.getElementById("input_img") || document.getElementById("input_video");
+        resizeDst(input!);
+    });
 
     //////////////
     ///// util  //
     //////////////
     const resizeDst = (input: HTMLElement) => {
-        const cs = getComputedStyle(input)
-        const width = parseInt(cs.getPropertyValue("width"))
-        const height = parseInt(cs.getPropertyValue("height"))
-        const dst = document.getElementById("output") as HTMLCanvasElement
-        const tmp = document.getElementById("tmp") as HTMLCanvasElement
-        const front = document.getElementById("front") as HTMLCanvasElement
-        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
+        const cs = getComputedStyle(input);
+        const width = parseInt(cs.getPropertyValue("width"));
+        const height = parseInt(cs.getPropertyValue("height"));
+        const dst = document.getElementById("output") as HTMLCanvasElement;
+        const tmp = document.getElementById("tmp") as HTMLCanvasElement;
+        const front = document.getElementById("front") as HTMLCanvasElement;
+        const srcCache = document.getElementById("src-cache") as HTMLCanvasElement;
 
         [dst, tmp, front, srcCache].forEach((c) => {
-            c.width = width
-            c.height = height
-        })
-    }
+            if (c.width !== width || c.height !== height) {
+                c.width = width;
+                c.height = height;
+            }
+        });
+    };
 
     //////////////////
     //  pipeline    //
     //////////////////
     useEffect(() => {
-        console.log("[Pipeline] Start", workerProps)
-        let renderRequestId: number
-        const LOOP_ID = performance.now()
-        GlobalLoopID = LOOP_ID
+        console.log("[Pipeline] Start", workerProps);
+        let renderRequestId: number;
+        const LOOP_ID = performance.now();
+        GlobalLoopID = LOOP_ID;
 
         const render = async () => {
             // console.log("RENDER::::", LOOP_ID,  workerProps?.params)
-            const start = performance.now()
+            const start = performance.now();
+            const src = (document.getElementById("input_img") as HTMLImageElement) || (document.getElementById("input_video") as HTMLVideoElement);
+            const background = document.getElementById("background") as HTMLImageElement;
+            const dst = document.getElementById("output") as HTMLCanvasElement;
+            const tmp = document.getElementById("tmp") as HTMLCanvasElement;
+            const front = document.getElementById("front") as HTMLCanvasElement;
+            const srcCache = document.getElementById("src-cache") as HTMLCanvasElement;
+            if (workerProps && src.width > 0 && src.height > 0) {
+                resizeDst(src);
 
-            if (workerProps) {
-                const src = document.getElementById("input_img") as HTMLImageElement || document.getElementById("input_video") as HTMLVideoElement
-                const background = document.getElementById("background") as HTMLImageElement
-                const dst = document.getElementById("output") as HTMLCanvasElement
-                const tmp = document.getElementById("tmp") as HTMLCanvasElement
-                const front = document.getElementById("front") as HTMLCanvasElement
-                const srcCache = document.getElementById("src-cache") as HTMLCanvasElement
+                workerProps.params.processSizeKey = processSizeKey;
+                workerProps.params.jbfPostProcess = jbfPostProcess;
+                workerProps.params.jbfD = jbfD;
+                workerProps.params.jbfSigmaC = jbfSigmaC;
+                workerProps.params.jbfSigmaS = jbfSigmaS;
 
-                let prediction
-                const inference_start = performance.now()
-                srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height)
-                prediction = await workerProps.manager.predict(srcCache!, workerProps.params)
-                const inference_end = performance.now()
-                const info1 = document.getElementById("info") as HTMLCanvasElement
-                info1.innerText = `processing time: ${inference_end - inference_start}`
+                workerProps.params.threshold = threshold;
+                workerProps.params.interpolation = interpolation;
+
+                const inference_start = performance.now();
+                srcCache.getContext("2d")!.drawImage(src, 0, 0, srcCache.width, srcCache.height);
+                const prediction = await workerProps.manager.predict(srcCache!, workerProps.params);
+                const inference_end = performance.now();
+                const info1 = document.getElementById("info") as HTMLCanvasElement;
+                info1.innerText = `processing time: ${inference_end - inference_start}`;
 
                 // 結果からマスク作成
-                const res = new ImageData(workerProps.params.jbfWidth, workerProps.params.jbfHeight)
-                try {
-                    for (let i = 0; i < workerProps.params.jbfHeight; i++) {
-                        for (let j = 0; j < workerProps.params.jbfWidth; j++) {
-                            const offset = i * workerProps.params.jbfWidth + j
-                            res.data[offset * 4 + 0] = 255
-                            res.data[offset * 4 + 1] = 255
-                            res.data[offset * 4 + 2] = 255
-                            res.data[offset * 4 + 3] = 255 - prediction![i][j] * 255
-                        }
+                const res = new ImageData(workerProps.config.processSizes[params.processSizeKey][0], workerProps.config.processSizes[params.processSizeKey][1]);
+
+                tmp.width = workerProps.config.processSizes[params.processSizeKey][0];
+                tmp.height = workerProps.config.processSizes[params.processSizeKey][1];
+                // console.log("prediction:::", prediction);
+
+                if (prediction) {
+                    tmp.getContext("2d")!.putImageData(prediction!, 0, 0);
+
+                    // 前景の透過処理
+                    const frontCtx = front.getContext("2d")!;
+                    frontCtx.clearRect(0, 0, front.width, front.height);
+                    frontCtx.drawImage(tmp, 0, 0, front.width, front.height);
+                    frontCtx.globalCompositeOperation = "source-atop";
+                    if (strict) {
+                        frontCtx.drawImage(srcCache, 0, 0, front.width, front.height);
+                    } else {
+                        frontCtx.drawImage(src, 0, 0, front.width, front.height);
                     }
-                } catch {
+                    frontCtx.globalCompositeOperation = "source-over";
 
+                    // 最終書き込み
+                    const dstCtx = dst.getContext("2d")!;
+                    //// クリア or 背景描画
+                    dstCtx.clearRect(0, 0, dst.width, dst.height);
+                    dstCtx.drawImage(background, 0, 0, dst.width, dst.height);
+
+                    //// light Wrapping
+                    dstCtx.filter = `blur(${lightWrapping}px)`;
+                    dstCtx.drawImage(tmp, 0, 0, dst.width, dst.height);
+                    dstCtx.filter = "none";
+
+                    // 前景書き込み
+                    dstCtx.drawImage(front, 0, 0, dst.width, dst.height);
                 }
-                // console.log("res;data;", res.data)
-
-                tmp.width = workerProps.params.jbfWidth
-                tmp.height = workerProps.params.jbfHeight
-                tmp.getContext("2d")!.putImageData(res, 0, 0)
-
-                // 前景の透過処理
-                const frontCtx = front.getContext("2d")!
-                frontCtx.clearRect(0, 0, front.width, front.height)
-                frontCtx.drawImage(tmp, 0, 0, front.width, front.height)
-                frontCtx.globalCompositeOperation = "source-atop";
-                if (strict) {
-                    frontCtx.drawImage(srcCache, 0, 0, front.width, front.height)
-                } else {
-                    frontCtx.drawImage(src, 0, 0, front.width, front.height)
-                }
-                frontCtx.globalCompositeOperation = "source-over";
-
-                // 最終書き込み
-                const dstCtx = dst.getContext("2d")!
-                //// クリア or 背景描画
-                dstCtx.fillRect(0, 0, dst.width, dst.height)
-                dstCtx.drawImage(background, 0, 0, dst.width, dst.height)
-
-                //// light Wrapping
-                dstCtx.filter = `blur(${lwBlur}px)`;
-                dstCtx.drawImage(tmp, 0, 0, dst.width, dst.height)
-                dstCtx.filter = 'none';
-
-                // 前景書き込み                
-                dstCtx.drawImage(front, 0, 0, dst.width, dst.height)
-
                 if (GlobalLoopID === LOOP_ID) {
-                    renderRequestId = requestAnimationFrame(render)
+                    renderRequestId = requestAnimationFrame(render);
                 }
             }
-            const end = performance.now()
-            const info2 = document.getElementById("info2") as HTMLCanvasElement
-            info2.innerText = `processing time: ${end - start}`
-        }
-        render()
+            const end = performance.now();
+            const info2 = document.getElementById("info2") as HTMLCanvasElement;
+            info2.innerText = `processing time: ${end - start}`;
+        };
+        render();
         return () => {
-            cancelAnimationFrame(renderRequestId)
-        }
-    }, [workerProps, strict, lwBlur])
-
-
-
+            cancelAnimationFrame(renderRequestId);
+        };
+    }, [workerProps, strict, jbfD, jbfSigmaC, jbfSigmaS, jbfPostProcess, threshold, interpolation]);
 
     /////////////
     // render  //
@@ -277,25 +256,30 @@ const App = () => {
         <div>
             <div style={{ display: "flex" }}>
                 <div style={{ display: "flex" }}>
-                    {inputMedia.mediaType === "IMAGE" ?
-                        <img className={classes.inputView} alt="input_img" id="input_img"></img>
-                        :
-                        <video className={classes.inputView} id="input_video"></video>
-                    }
+                    {inputMedia.mediaType === "IMAGE" ? <img className={classes.inputView} alt="input_img" id="input_img"></img> : <video className={classes.inputView} id="input_video"></video>}
                     <canvas className={classes.inputView} id="output"></canvas>
                 </div>
                 <div>
                     <VideoInputSelect title="input" current={""} onchange={inputChange} options={videoInputList} />
-                    <DropDown title="model" current={modelKey} onchange={setModelKey} options={models} />
-                    <DropDown title="JBFSize" current={JBFSizeKey} onchange={setJBFSizeKey} options={JBFSize} />
-                    <SingleValueSlider title="KernelSize" current={kernelSize} onchange={setKernelSize} min={0} max={9} step={1} />
-                    {/* <SingleValueSlider title="KernelR"       current={kernelR}        onchange={setKernelR} min={0} max={9} step={1} />                 */}
+                    <DropDown title="model" current={modelKey} onchange={setModelKey} options={modelKeys} />
+                    <DropDown title="ProcessSize" current={processSizeKey} onchange={setProcessSizeKey} options={processSizeKeys} />
+
                     <Toggle title="onLocal" current={onLocal} onchange={setOnLocal} />
-                    <SingleValueSlider title="LWB" current={lwBlur} onchange={setlwBlur} min={0} max={20} step={1} />
-                    {/* <Toggle            title="SIMD"          current={useSIMD}        onchange={setUseSIMD} /> */}
-                    <Toggle title="Strict" current={strict} onchange={setStrict} />
+                    <Toggle title="useTFJS" current={useTFJS} onchange={setUseTFJS} />
+                    <Toggle title="SIMD" current={useSIMD} onchange={setUseSIMD} />
+
+                    <SingleValueSlider title="jbfD" current={jbfD} onchange={setJbfD} min={0} max={20} step={1} />
+                    <SingleValueSlider title="jbfSigmaC" current={jbfSigmaC} onchange={setJbfSigmaC} min={0} max={20} step={1} />
+                    <SingleValueSlider title="jbfSigmaS" current={jbfSigmaS} onchange={setJbfSigmaS} min={0} max={20} step={1} />
+                    <SingleValueSlider title="jbfPostProcess" current={jbfPostProcess} onchange={setJbfPostProcess} min={0} max={3} step={1} />
+
+                    <SingleValueSlider title="Threshold" current={threshold} onchange={setThreshold} min={0.0} max={1.0} step={0.1} />
+                    <SingleValueSlider title="interpolation" current={interpolation} onchange={setInterpolation} min={0} max={4} step={1} />
+
                     <FileChooser title="background" onchange={backgroundChange} />
-                    <div >
+                    <SingleValueSlider title="lightWrapping" current={lightWrapping} onchange={setLightWrapping} min={0} max={10} step={1} />
+
+                    <div>
                         <a href="https://github.com/w-okada/image-analyze-workers">github repository</a>
                     </div>
                 </div>
@@ -306,14 +290,13 @@ const App = () => {
                 <canvas className={classes.inputView} id="front" hidden></canvas>
                 <canvas className={classes.inputView} id="src-cache" hidden></canvas>
                 <img className={classes.inputView} alt="background" id="background" src="img/north-star-2869817_640.jpg" hidden></img>
-
             </div>
-            <div >
+            <div>
                 <div id="info"> </div>
                 <div id="info2"> </div>
             </div>
         </div>
     );
-}
+};
 
 export default App;
