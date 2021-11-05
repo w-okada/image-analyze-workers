@@ -4,9 +4,8 @@ import { setWasmPath } from "@tensorflow/tfjs-backend-wasm";
 import * as tf from "@tensorflow/tfjs";
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 let tflite: TFLite | null = null;
-let tfliteSIMD: TFLite | null = null;
-let ready: boolean = false;
 let tfjsModel: tf.LayersModel | null = null;
+let ready: boolean = false;
 
 const load_module = async (config: SuperResolutionConfig) => {
     const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
