@@ -18,7 +18,7 @@ const manager = {
             { test: /\.ts$/, loader: "ts-loader" },
             { test: /resources\/.*\.bin/, type: "asset/inline" },
             { test: /resources\/.*\.json/, type: "asset/source" },
-            { test: /\.wasm$/, loader: "url-loader" },
+            // { test: /\.wasm$/, loader: "url-loader" },
         ],
     },
     output: {

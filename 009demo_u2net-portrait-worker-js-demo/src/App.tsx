@@ -269,7 +269,7 @@ const App = () => {
         <div>
             <div style={{ display: "flex" }}>
                 <div style={{ display: "flex" }}>
-                    {inputMedia.mediaType === "IMAGE" ? <img className={classes.inputView} alt="input_img" id="input_img"></img> : <video className={classes.inputView} id="input_video"></video>}
+                    {inputMedia.mediaType === "IMAGE" ? <img className={classes.inputView} alt="input_img" id="input_img"></img> : <video controls className={classes.inputView} id="input_video"></video>}
                     <canvas className={classes.inputView} id="output"></canvas>
                 </div>
                 <div className={classes.inputView}>
