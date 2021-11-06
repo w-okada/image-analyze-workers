@@ -98,7 +98,7 @@ export const SingleValueSlider: FC<SingleValueSliderProps> = ({ title, current, 
                     min={min}
                     max={max}
                     value={current}
-                    onChange={(e: any, newVal: number | number[]) => {
+                    onChange={(_e: any, newVal: number | number[]) => {
                         onchange(newVal as number);
                     }}
                 />

@@ -10,7 +10,6 @@ const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 let tfjsModel: tf.GraphModel | null;
 let tfliteModel: TFLite | null = null;
 let ready: boolean = false;
-let onProcessing: boolean = false; // TOBE: more strict lock
 
 const load_module = async (config: GoogleMeetSegmentationConfig) => {
     const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
@@ -121,19 +120,10 @@ onmessage = async (event) => {
             console.log("NOTREADY!!", WorkerResponse.NOT_READY);
             ctx.postMessage({ message: WorkerResponse.NOT_READY, uid: uid });
         } else {
-            if (onProcessing === false) {
-                console.log("Processing in", uid);
-                onProcessing = true;
-                const resImageData = await predict(imageData, config, params);
-                if (resImageData) {
-                    ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, imageData: resImageData }, [resImageData.data.buffer]);
-                } else {
-                    ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, imageData: null });
-                }
-                onProcessing = false;
-                console.log("Processing out", uid);
+            const resImageData = await predict(imageData, config, params);
+            if (resImageData) {
+                ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, imageData: resImageData }, [resImageData.data.buffer]);
             } else {
-                console.log("Processing skip", uid);
                 ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, imageData: null });
             }
         }

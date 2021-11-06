@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import "./App.css";
 import { generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmentationDefaultConfig, GoogleMeetSegmentationWorkerManager } from "@dannadori/googlemeet-segmentation-worker-js";
 import { makeStyles } from "@material-ui/core";
 import { DropDown, FileChooser, SingleValueSlider, Toggle, VideoInputSelect } from "./components/components";
@@ -9,7 +8,7 @@ import { GoogleMeetSegmentationConfig, GoogleMeetSegmentationOperationParams } f
 
 let GlobalLoopID = 0;
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(() => ({
     inputView: {
         maxWidth: 512,
     },
@@ -72,11 +71,11 @@ const App = () => {
     const [threshold, setThreshold] = useState(0.1);
     const [interpolation, setInterpolation] = useState(4);
     const [lightWrapping, setLightWrapping] = useState(1);
-    const [strict, setStrict] = useState(false);
+    const [strict] = useState(false);
 
     const [inputMedia, setInputMedia] = useState<InputMedia>({
         mediaType: "IMAGE",
-        media: "yuka_kawamura.jpg",
+        media: "img/yuka_kawamura.jpg",
     });
     const inputChange = (mediaType: VideoInputType, input: MediaStream | string) => {
         setInputMedia({ mediaType: mediaType, media: input });
@@ -199,9 +198,6 @@ const App = () => {
                 const info1 = document.getElementById("info") as HTMLCanvasElement;
                 info1.innerText = `processing time: ${inference_end - inference_start}`;
 
-                // 結果からマスク作成
-                const res = new ImageData(workerProps.config.processSizes[params.processSizeKey][0], workerProps.config.processSizes[params.processSizeKey][1]);
-
                 tmp.width = workerProps.config.processSizes[params.processSizeKey][0];
                 tmp.height = workerProps.config.processSizes[params.processSizeKey][1];
                 // console.log("prediction:::", prediction);
@@ -235,13 +231,13 @@ const App = () => {
                     // 前景書き込み
                     dstCtx.drawImage(front, 0, 0, dst.width, dst.height);
                 }
-                if (GlobalLoopID === LOOP_ID) {
-                    renderRequestId = requestAnimationFrame(render);
-                }
             }
             const end = performance.now();
             const info2 = document.getElementById("info2") as HTMLCanvasElement;
             info2.innerText = `processing time: ${end - start}`;
+            if (GlobalLoopID === LOOP_ID) {
+                renderRequestId = requestAnimationFrame(render);
+            }
         };
         render();
         return () => {

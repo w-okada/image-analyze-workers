@@ -247,18 +247,6 @@ NOTE: The license will be changed to allow commercial use after this work is acc
 
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/index.html
 
-## Google meet person segmentation(TFLite)
-
-![image](https://user-images.githubusercontent.com/48346627/110603124-03ad5480-81ca-11eb-993f-f7bf1f857b42.png)
-
-### installation and usage
-
-[See here](/011a_googlemeet-segmentation-tflite-worker-js)
-
-### demo
-
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11a_googlemeet-segmentation-tflite/index.html
-
 ## Multi Barcode Scanner
 
 ![image](https://user-images.githubusercontent.com/48346627/118266526-b1ecb780-b4f5-11eb-9c25-d32a42e852ce.gif)
