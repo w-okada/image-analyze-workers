@@ -1,54 +1,60 @@
 import { ModelConfig, PersonInferenceConfig, MultiPersonInstanceInferenceConfig } from "@tensorflow-models/body-pix/dist/body_pix_model";
-import { BrowserType } from "./BrowserUtil";
+import { BrowserTypes } from "worker-base";
 
 export const WorkerCommand = {
     INITIALIZE: "initialize",
     PREDICT: "predict",
-};
+} as const;
+export type WorkerCommand = typeof WorkerCommand[keyof typeof WorkerCommand];
 
 export const WorkerResponse = {
     INITIALIZED: "initialized",
     PREDICTED: "predicted",
-};
+} as const;
+export type WorkerResponse = typeof WorkerResponse[keyof typeof WorkerResponse];
 
-export interface BodyPixConfig {
-    browserType: BrowserType;
+export const BodypixFunctionTypes = {
+    SegmentPerson: "SegmentPerson",
+    SegmentMultiPerson: "SegmentMultiPerson",
+    SegmentPersonParts: "SegmentPersonParts",
+    SegmentMultiPersonParts: "SegmentMultiPersonParts",
+} as const;
+export type BodypixFunctionTypes = typeof BodypixFunctionTypes[keyof typeof BodypixFunctionTypes];
+
+export const ModelConfigs = {
+    ModelConfigResNet: {
+        architecture: "ResNet50",
+        outputStride: 32,
+        quantBytes: 2,
+    },
+    ModelConfigMobileNetV1: {
+        architecture: "MobileNetV1",
+        outputStride: 16,
+        multiplier: 0.75,
+        quantBytes: 2,
+    },
+    ModelConfigMobileNetV1_05: {
+        architecture: "MobileNetV1",
+        outputStride: 16,
+        multiplier: 0.5,
+        quantBytes: 2,
+    },
+} as const;
+export type models = typeof ModelConfigs[keyof typeof ModelConfigs];
+
+export type BodyPixConfig = {
+    browserType: BrowserTypes;
     model: ModelConfig;
     processOnLocal: boolean;
     useTFWasmBackend: boolean;
-}
-
-export const ModelConfigResNet: ModelConfig = {
-    architecture: "ResNet50",
-    outputStride: 32,
-    quantBytes: 2,
-};
-export const ModelConfigMobileNetV1: ModelConfig = {
-    architecture: "MobileNetV1",
-    outputStride: 16,
-    multiplier: 0.75,
-    quantBytes: 2,
-};
-export const ModelConfigMobileNetV1_05: ModelConfig = {
-    architecture: "MobileNetV1",
-    outputStride: 16,
-    multiplier: 0.5,
-    quantBytes: 2,
 };
 
 export interface BodyPixOperatipnParams {
-    type: BodypixFunctionType;
+    type: BodypixFunctionTypes;
     segmentPersonParams: PersonInferenceConfig;
     segmentPersonPartsParams: PersonInferenceConfig;
     segmentMultiPersonParams: MultiPersonInstanceInferenceConfig;
     segmentMultiPersonPartsParams: MultiPersonInstanceInferenceConfig;
     processWidth: number;
     processHeight: number;
-}
-
-export enum BodypixFunctionType {
-    SegmentPerson,
-    SegmentMultiPerson,
-    SegmentPersonParts,
-    SegmentMultiPersonParts,
 }

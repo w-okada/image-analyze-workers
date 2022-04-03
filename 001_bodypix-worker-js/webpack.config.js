@@ -2,6 +2,7 @@ const path = require("path");
 
 const manager = {
     mode: "production",
+    // mode: "development",
     entry: "./src/bodypix-worker.ts",
     resolve: {
         extensions: [".ts", ".js"],
