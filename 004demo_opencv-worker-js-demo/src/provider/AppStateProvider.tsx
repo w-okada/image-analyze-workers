@@ -35,6 +35,8 @@ const initialInputSourcePath = "mov/Model.mp4";
 
 const initialConfig = generateOpenCVDefaultConfig();
 const initialParams = generateDefaultOpenCVParams();
+initialParams.processWidth = 1000;
+initialParams.processHeight = 1000;
 
 export const AppStateProvider = ({ children }: Props) => {
     const { windowSize } = useWindowStateChangeListener();
