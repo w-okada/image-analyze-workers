@@ -5,7 +5,6 @@ export const loadURLAsDataURL = async (path: string) => {
     const reader = new FileReader();
     const p = new Promise<string>((resolve, _reject) => {
         reader.onload = () => {
-            console.log("initial data loaded", reader.result);
             resolve(reader.result as string);
         };
         reader.readAsDataURL(b);

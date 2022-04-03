@@ -322,6 +322,7 @@ const App = () => {
             const sourceType = getDataTypeOfDataURL(inputSource);
             if (sourceType === DataTypesOfDataURL.video) {
                 elem = document.createElement("video");
+                elem.controls = true;
                 elem.autoplay = true;
                 elem.loop = true;
                 elem.src = inputSource;

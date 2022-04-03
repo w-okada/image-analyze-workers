@@ -36,9 +36,10 @@ export const useAppState = (): AppStateValue => {
 };
 
 // const initialInputSourcePath = "img/yuka_kawamura.jpg";
-//const initialInputSourcePath = "mov/Model.mp4";
-const initialInputSourcePath = "mov/Couple.mp4";
-const initialBackgroundSourcePath = "img/yuka_kawamura.jpg";
+const initialInputSourcePath = "mov/Model.mp4";
+//const initialInputSourcePath = "mov/Couple.mp4";
+// const initialBackgroundSourcePath = "img/yuka_kawamura.jpg";
+const initialBackgroundSourcePath = "img/north-star-2869817_640.jpg";
 
 const initialConfig = generateBodyPixDefaultConfig();
 const initialParams = generateDefaultBodyPixParams();

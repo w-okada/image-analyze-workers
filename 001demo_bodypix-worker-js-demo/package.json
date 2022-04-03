@@ -55,7 +55,7 @@
         "webpack-dev-server": "^4.7.4"
     },
     "dependencies": {
-        "@dannadori/bodypix-worker-js": "^1.0.44",
+        "@dannadori/bodypix-worker-js": "^1.0.45",
         "daisyui": "^2.13.6",
         "react": "^18.0.0",
         "react-dom": "^18.0.0",

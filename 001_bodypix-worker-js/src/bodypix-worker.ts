@@ -27,7 +27,7 @@ const load_module = async (config: BodyPixConfig) => {
 export const generateBodyPixDefaultConfig = (): BodyPixConfig => {
     const defaultConf: BodyPixConfig = {
         browserType: getBrowserType(),
-        model: ModelConfigs.ModelConfigMobileNetV1_05,
+        model: ModelConfigs.ModelConfigMobileNetV1,
         processOnLocal: false,
         useTFWasmBackend: false,
     };
