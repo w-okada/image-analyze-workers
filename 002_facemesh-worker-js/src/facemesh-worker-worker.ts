@@ -29,7 +29,7 @@ const load_module = async (config: FacemeshConfig) => {
 };
 
 const predict = async (config: FacemeshConfig, params: FacemeshOperatipnParams, image: ImageBitmap): Promise<AnnotatedPrediction[]> => {
-    console.log("Worker BACKEND:", tf.getBackend());
+    // console.log("Worker BACKEND:", tf.getBackend());
 
     // ImageData作成
     const processWidth = params.processWidth <= 0 || params.processHeight <= 0 ? image.width : params.processWidth;

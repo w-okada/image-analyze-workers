@@ -1,4 +1,4 @@
-import { FacemeshConfig, FacemeshOperatipnParams, generateDefaultFacemeshParams, generateFacemeshDefaultConfig } from "@dannadori/facemesh-worker-js";
+import { AnnotatedPrediction, FacemeshConfig, FacemeshOperatipnParams, generateDefaultFacemeshParams, generateFacemeshDefaultConfig } from "@dannadori/facemesh-worker-js";
 import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
 import { loadURLAsDataURL } from "../utils/urlReader";
@@ -6,16 +6,24 @@ import { loadURLAsDataURL } from "../utils/urlReader";
 type Props = {
     children: ReactNode;
 };
+export const ApplicationModes = {
+    facemesh: "facemesh",
+    faceswap: "faceswap",
+} as const;
+export type ApplicationModes = typeof ApplicationModes[keyof typeof ApplicationModes];
 
 type AppStateValue = {
+    applicationMode: ApplicationModes;
+    setApplicationMode: (mode: ApplicationModes) => void;
     inputSourceType: string | null;
     setInputSourceType: (source: string | null) => void;
     inputSource: string | MediaStream | null;
     setInputSource: (source: MediaStream | string | null) => void;
-    backgroundSourceType: string | null;
-    setBackgroundSourceType: (source: string | null) => void;
-    backgroundSource: string | MediaStream | null;
-    setBackgroundSource: (source: MediaStream | string | null) => void;
+
+    maskCanvas: HTMLCanvasElement | null;
+    setMaskCanvas: (source: HTMLCanvasElement | null) => void;
+    maskPrediction: AnnotatedPrediction[] | null;
+    setMaskPrediction: (prediction: AnnotatedPrediction[]) => void;
 
     config: FacemeshConfig;
     setConfig: (config: FacemeshConfig) => void;
@@ -37,12 +45,14 @@ export const useAppState = (): AppStateValue => {
 const initialInputSourcePath = "mov/Model.mp4";
 //const initialInputSourcePath = "mov/Couple.mp4";
 // const initialBackgroundSourcePath = "img/yuka_kawamura.jpg";
-const initialBackgroundSourcePath = "img/north-star-2869817_640.jpg";
+const initialMaskSourcePath = "img/ai_face.jpg";
 
 const initialConfig = generateFacemeshDefaultConfig();
 const initialParams = generateDefaultFacemeshParams();
 
 export const AppStateProvider = ({ children }: Props) => {
+    const [applicationMode, setApplicationMode] = useState<ApplicationModes>(ApplicationModes.facemesh);
+
     const [inputSourceType, setInputSourceType] = useState<string | null>(null);
     const [inputSource, _setInputSource] = useState<MediaStream | string | null>(null);
     const setInputSource = (source: MediaStream | string | null) => {
@@ -53,16 +63,9 @@ export const AppStateProvider = ({ children }: Props) => {
         }
         _setInputSource(source);
     };
-    const [backgroundSourceType, setBackgroundSourceType] = useState<string | null>(null);
-    const [backgroundSource, _setBackgroundSource] = useState<MediaStream | string | null>(null);
-    const setBackgroundSource = (source: MediaStream | string | null) => {
-        if (backgroundSource instanceof MediaStream) {
-            backgroundSource.getTracks().forEach((x) => {
-                x.stop();
-            });
-        }
-        _setBackgroundSource(source);
-    };
+
+    const [maskCanvas, setMaskCanvas] = useState<HTMLCanvasElement | null>(null);
+    const [maskPrediction, setMaskPrediction] = useState<AnnotatedPrediction[] | null>(null);
 
     const [config, setConfig] = useState(initialConfig);
     const [params, setParams] = useState(initialParams);
@@ -76,20 +79,31 @@ export const AppStateProvider = ({ children }: Props) => {
 
         const loadInitialBackgroundSource = async (path: string) => {
             const data = await loadURLAsDataURL(path);
-            setBackgroundSource(data);
+
+            const maskImage = document.createElement("img");
+            maskImage.onloadeddata = () => {
+                const maskCanvas = document.createElement("canvas");
+                maskCanvas.width = maskImage.naturalWidth;
+                maskCanvas.height = maskImage.naturalHeight;
+                maskCanvas.getContext("2d")!.drawImage(maskImage, 0, 0, maskCanvas.width, maskCanvas.height);
+                setMaskCanvas(maskCanvas);
+            };
+            maskImage.src = data;
         };
-        loadInitialBackgroundSource(initialBackgroundSourcePath);
+        loadInitialBackgroundSource(initialMaskSourcePath);
     }, []);
 
     const providerValue = {
+        applicationMode,
+        setApplicationMode,
         inputSourceType,
         setInputSourceType,
         inputSource,
         setInputSource,
-        backgroundSourceType,
-        setBackgroundSourceType,
-        backgroundSource,
-        setBackgroundSource,
+        maskCanvas,
+        setMaskCanvas,
+        maskPrediction,
+        setMaskPrediction,
 
         config,
         setConfig,

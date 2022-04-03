@@ -2,6 +2,7 @@ import { AnnotatedPrediction, Coords3D, FacemeshOperatipnParams, NUM_KEYPOINTS, 
 
 export class FacemeshDrawer {
     private outputCanvas: HTMLCanvasElement | null = null;
+
     setOutputCanvas = (outputCanvas: HTMLCanvasElement) => {
         this.outputCanvas = outputCanvas;
         console.log(this.outputCanvas);
@@ -14,7 +15,6 @@ export class FacemeshDrawer {
         }
         const outputCtx = this.outputCanvas.getContext("2d")!;
         outputCtx.drawImage(snap, 0, 0, this.outputCanvas.width, this.outputCanvas.height);
-
         prediction?.forEach((x) => {
             const keypoints = x.scaledMesh as Coords3D;
             outputCtx.strokeStyle = "#000000";

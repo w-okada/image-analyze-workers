@@ -41,7 +41,7 @@ export const generateDefaultFacemeshParams = () => {
         type: FacemeshFunctionTypes.DetectMesh,
         processWidth: 300,
         processHeight: 300,
-        predictIrises: false,
+        predictIrises: true,
     };
     return defaultParams;
 };
@@ -75,7 +75,7 @@ export class LocalFM extends LocalWorker {
     };
 
     predict = async (config: FacemeshConfig, params: FacemeshOperatipnParams, targetCanvas: HTMLCanvasElement): Promise<AnnotatedPrediction[]> => {
-        console.log("Loacal BACKEND:", tf.getBackend());
+        // console.log("Loacal BACKEND:", tf.getBackend());
         const ctx = targetCanvas.getContext("2d")!;
         const newImg = ctx.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
 

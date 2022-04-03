@@ -58,9 +58,7 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
     }, [videoDevices, props.currentValue]);
 
     const loadFileClicked = () => {
-        console.log("clicked");
         const fileInput = document.getElementById(`${props.id}-file-input`) as HTMLInputElement;
-        console.log("clicked", fileInput);
         fileInput.onchange = (event: Event) => {
             if (!event || !event.target) {
                 return;
