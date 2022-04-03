@@ -1,15 +1,19 @@
-import { BrowserType } from "./BrowserUtil";
+import { BrowserTypes } from "@dannadori/000_WorkerBase";
 export const WorkerCommand = {
     INITIALIZE: "initialize",
     PREDICT: "predict",
-};
+} as const;
+export type WorkerCommand = typeof WorkerCommand[keyof typeof WorkerCommand];
 
 export const WorkerResponse = {
     INITIALIZED: "initialized",
     PREDICTED: "predicted",
-};
+} as const;
+export const FacemeshFunctionTypes = {
+    DetectMesh: "DetectMesh",
+} as const;
+export type FacemeshFunctionTypes = typeof FacemeshFunctionTypes[keyof typeof FacemeshFunctionTypes];
 
-// ModelConfig is not provided from officail. So create originally.
 export interface ModelConfig {
     maxContinuousChecks: number;
     detectionConfidence: number;
@@ -19,7 +23,7 @@ export interface ModelConfig {
 }
 
 export interface FacemeshConfig {
-    browserType: BrowserType;
+    browserType: BrowserTypes;
     useTFWasmBackend: boolean;
     useTFCPUBackend: boolean;
     wasmPath: string;
@@ -30,12 +34,8 @@ export interface FacemeshConfig {
 }
 
 export interface FacemeshOperatipnParams {
-    type: FacemeshFunctionType;
+    type: FacemeshFunctionTypes;
     processWidth: number;
     processHeight: number;
     predictIrises: boolean;
-}
-
-export enum FacemeshFunctionType {
-    DetectMesh,
 }

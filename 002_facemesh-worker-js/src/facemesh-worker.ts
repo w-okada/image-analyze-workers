@@ -1,18 +1,16 @@
-import { WorkerResponse, WorkerCommand, FacemeshConfig, FacemeshFunctionType, FacemeshOperatipnParams } from "./const";
+import { FacemeshConfig, FacemeshFunctionTypes, FacemeshOperatipnParams } from "./const";
 import * as faceLandmarksDetection from "@tensorflow-models/face-landmarks-detection";
-import { getBrowserType, BrowserType } from "./BrowserUtil";
 import * as tf from "@tensorflow/tfjs";
-import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 import { AnnotatedPrediction } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh";
 import { Coords3D } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh/util";
 
-export { FacemeshConfig, FacemeshFunctionType, FacemeshOperatipnParams } from "./const";
-export { BrowserType, getBrowserType } from "./BrowserUtil";
+export { FacemeshConfig, FacemeshOperatipnParams } from "./const";
 export { AnnotatedPrediction } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh";
 export { Coords3D } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh/util";
 
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./facemesh-worker-worker.ts";
+import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
 
 export const generateFacemeshDefaultConfig = (): FacemeshConfig => {
     const defaultConf: FacemeshConfig = {
@@ -36,7 +34,7 @@ export const generateFacemeshDefaultConfig = (): FacemeshConfig => {
 
 export const generateDefaultFacemeshParams = () => {
     const defaultParams: FacemeshOperatipnParams = {
-        type: FacemeshFunctionType.DetectMesh,
+        type: FacemeshFunctionTypes.DetectMesh,
         processWidth: 300,
         processHeight: 300,
         predictIrises: false,
@@ -44,31 +42,18 @@ export const generateDefaultFacemeshParams = () => {
     return defaultParams;
 };
 
-export class LocalFM {
+export class LocalFM extends LocalWorker {
     model: faceLandmarksDetection.FaceLandmarksDetector | null = null;
-    canvas: HTMLCanvasElement = (() => {
-        const newCanvas = document.createElement("canvas");
-        newCanvas.style.display = "none";
-        return newCanvas;
-    })();
 
     init = async (config: FacemeshConfig) => {
         this.model = await faceLandmarksDetection.load();
         console.log("facemesh loaded locally", config);
     };
 
-    predict = async (targetCanvas: HTMLCanvasElement, config: FacemeshConfig, params: FacemeshOperatipnParams): Promise<AnnotatedPrediction[]> => {
-        // console.log("current backend[main thread]:",tf.getBackend())
+    predict = async (config: FacemeshConfig, params: FacemeshOperatipnParams, targetCanvas: HTMLCanvasElement): Promise<AnnotatedPrediction[]> => {
+        const ctx = targetCanvas.getContext("2d")!;
+        const newImg = ctx.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
 
-        // ImageData作成
-        const processWidth = params.processWidth <= 0 || params.processHeight <= 0 ? targetCanvas.width : params.processWidth;
-        const processHeight = params.processWidth <= 0 || params.processHeight <= 0 ? targetCanvas.height : params.processHeight;
-
-        this.canvas.width = processWidth;
-        this.canvas.height = processHeight;
-        const ctx = this.canvas.getContext("2d")!;
-        ctx.drawImage(targetCanvas, 0, 0, processWidth, processHeight);
-        const newImg = ctx.getImageData(0, 0, processWidth, processHeight);
         await tf.ready();
         let tensor = tf.browser.fromPixels(newImg);
         const prediction = await this.model!.estimateFaces({
@@ -81,149 +66,34 @@ export class LocalFM {
     };
 }
 
-export class FacemeshWorkerManager {
-    private workerFM: Worker | null = null;
-    private canvas = document.createElement("canvas");
-
+export class FacemeshWorkerManager extends WorkerManagerBase {
     private config = generateFacemeshDefaultConfig();
-    private localFM = new LocalFM();
-    private wasmLoaded = false;
+    localWorker = new LocalFM();
 
-    private initializeModel_internal = () => {
-        const workerFM: Worker = new workerJs();
-
-        workerFM!.postMessage({
-            message: WorkerCommand.INITIALIZE,
-            config: this.config,
-        });
-        const p = new Promise<void>((onResolve, onFail) => {
-            workerFM!.onmessage = (event) => {
-                if (event.data.message === WorkerResponse.INITIALIZED) {
-                    console.log("WORKERSS INITIALIZED");
-                    this.workerFM = workerFM;
-                    onResolve();
-                } else {
-                    console.log("Facemesh Initialization something wrong..");
-                    onFail(event);
-                }
-            };
-        });
-        return p;
-    };
-
-    // I afraid facemesh model invoke memory leak...
-    // For work around, set the model_reload_interval. If set 0, no reload.
     init = async (config: FacemeshConfig | null) => {
-        if (config != null) {
-            this.config = config;
-        }
-        if (this.workerFM) {
-            this.workerFM.terminate();
-        }
-        this.workerFM = null;
-
-        // run on main thread
-        //// wasm on safari is enough fast, so run on main thread is not mandatory
-        const dirname = this.config.pageUrl.substr(0, this.config.pageUrl.lastIndexOf("/"));
-        const wasmPath = `${dirname}${this.config.wasmPath}`;
-        console.log(`use wasm backend ${wasmPath}`);
-        setWasmPath(wasmPath);
-        if (this.config.processOnLocal === true) {
-            if (this.config.useTFWasmBackend) {
-                require("@tensorflow/tfjs-backend-wasm");
-                await tf.setBackend("wasm");
-            } else {
-                console.log("use webgl backend");
-                require("@tensorflow/tfjs-backend-webgl");
-                await tf.setBackend("webgl");
-            }
-            await tf.ready();
-            await this.localFM!.init(this.config!);
-            return;
-        }
-
-        // run on worker thread
-        return this.initializeModel_internal();
+        this.config = config || generateFacemeshDefaultConfig();
+        await this.initCommon(
+            {
+                useWorkerForSafari: false,
+                processOnLocal: this.config.processOnLocal,
+                workerJs: () => {
+                    return new workerJs();
+                },
+            },
+            config
+        );
+        return;
     };
 
-    predict = async (targetCanvas: HTMLCanvasElement, params: FacemeshOperatipnParams) => {
-        if (this.config.processOnLocal === true) {
-            //Case.1 Main thread
-            const prediction = await this.localFM.predict(targetCanvas, this.config, params);
+    predict = async (params: FacemeshOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+        if (!this.worker) {
+            const resizedCanvas = this.generateTargetCanvas(targetCanvas, params.processWidth, params.processHeight);
+            const prediction = await this.localWorker.predict(this.config, params, resizedCanvas);
             return prediction;
         }
-
-        if (!this.workerFM) {
-            return null;
-        }
-
-        if (this.config.browserType == BrowserType.SAFARI) {
-            // Case.2 Safari on worker thread
-            // safariはwebworkerでcanvas(offscreencanvas)が使えないので、縮小・拡大が面倒。ここでやっておく。
-            let data: Uint8ClampedArray;
-            if (params.processHeight > 0 && params.processWidth > 0) {
-                this.canvas.width = params.processWidth;
-                this.canvas.height = params.processHeight;
-                this.canvas.getContext("2d")!.drawImage(targetCanvas, 0, 0, params.processWidth, params.processHeight);
-                data = this.canvas.getContext("2d")!.getImageData(0, 0, params.processWidth, params.processHeight).data;
-            } else {
-                const ctx = targetCanvas.getContext("2d")!;
-                data = ctx.getImageData(0, 0, targetCanvas.width, targetCanvas.height)!.data;
-            }
-            const uid = performance.now();
-
-            const p = new Promise(async (onResolve: (v: AnnotatedPrediction[]) => void, onFail) => {
-                this.workerFM!.postMessage(
-                    {
-                        message: WorkerCommand.PREDICT,
-                        uid: uid,
-                        config: this.config,
-                        params: params,
-                        data: data,
-                    },
-                    [data.buffer]
-                );
-
-                this.workerFM!.onmessage = (event) => {
-                    if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
-                        onResolve(event.data.prediction);
-                    } else {
-                        console.log("Facemesh Prediction something wrong..");
-                        onFail(event);
-                    }
-                };
-            });
-            return p;
-        } else {
-            // Case.3 Normal browser on worker thread
-            const offscreen = new OffscreenCanvas(targetCanvas.width, targetCanvas.height);
-            const offctx = offscreen.getContext("2d")!;
-            offctx.drawImage(targetCanvas, 0, 0, targetCanvas.width, targetCanvas.height);
-            const imageBitmap = offscreen.transferToImageBitmap();
-
-            const uid = performance.now();
-            const p = new Promise(async (onResolve: (v: AnnotatedPrediction[]) => void, onFail) => {
-                this.workerFM!.postMessage(
-                    {
-                        message: WorkerCommand.PREDICT,
-                        uid: uid,
-                        config: this.config,
-                        params: params,
-                        image: imageBitmap,
-                    },
-                    [imageBitmap]
-                );
-                this.workerFM!.onmessage = (event) => {
-                    if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
-                        onResolve(event.data.prediction);
-                    } else {
-                        console.log("Facemesh Prediction something wrong..");
-                        onFail(event);
-                    }
-                };
-            });
-            return p;
-        }
+        const imageBitmap = this.generateImageBitmap(targetCanvas, params.processWidth, params.processHeight);
+        const prediction = (await this.sendToWorker(this.config, params, imageBitmap)) as AnnotatedPrediction[];
+        return prediction;
     };
 }
 
