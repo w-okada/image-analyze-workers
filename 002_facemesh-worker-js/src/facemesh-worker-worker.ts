@@ -1,9 +1,9 @@
 //import * as facemesh from '@tensorflow-models/facemesh'
 import * as faceLandmarksDetection from "@tensorflow-models/face-landmarks-detection";
 
-import { FacemeshConfig, FacemeshOperatipnParams, WorkerCommand, WorkerResponse } from "./const";
+import { BackendTypes, FacemeshConfig, FacemeshOperatipnParams, WorkerCommand, WorkerResponse } from "./const";
 import * as tf from "@tensorflow/tfjs";
-import { setWasmPath } from "@tensorflow/tfjs-backend-wasm";
+import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 import { AnnotatedPrediction } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh";
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
@@ -11,23 +11,26 @@ const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 let model: faceLandmarksDetection.FaceLandmarksDetector | null;
 
 const load_module = async (config: FacemeshConfig) => {
-    const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
-    const wasmPath = `${dirname}${config.wasmPath}`;
-    console.log("use wasm backend", wasmPath);
-    setWasmPath(wasmPath);
-    if (config.useTFWasmBackend) {
-        require("@tensorflow/tfjs-backend-wasm");
+    if (config.backendType === BackendTypes.wasm) {
+        const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
+        const wasmPaths: { [key: string]: string } = {};
+        Object.keys(config.wasmPaths).forEach((key) => {
+            wasmPaths[key] = `${dirname}${config.wasmPaths[key]}`;
+        });
+        setWasmPaths(wasmPaths);
+        console.log("use wasm backend", wasmPaths);
         await tf.setBackend("wasm");
-    } else if (config.useTFCPUBackend) {
+    } else if (config.backendType === BackendTypes.cpu) {
         await tf.setBackend("cpu");
     } else {
         console.log("use webgl backend");
-        require("@tensorflow/tfjs-backend-webgl");
         await tf.setBackend("webgl");
     }
 };
 
 const predict = async (config: FacemeshConfig, params: FacemeshOperatipnParams, image: ImageBitmap): Promise<AnnotatedPrediction[]> => {
+    console.log("Worker BACKEND:", tf.getBackend());
+
     // ImageData作成
     const processWidth = params.processWidth <= 0 || params.processHeight <= 0 ? image.width : params.processWidth;
     const processHeight = params.processWidth <= 0 || params.processHeight <= 0 ? image.height : params.processHeight;
@@ -51,11 +54,12 @@ onmessage = async (event) => {
     //  console.log("event", event)
     if (event.data.message === WorkerCommand.INITIALIZE) {
         console.log("Initialize model!.", event);
-        await load_module(event.data.config as FacemeshConfig);
+        const config = event.data.config as FacemeshConfig;
+        await load_module(config);
         tf.ready().then(() => {
             tf.env().set("WEBGL_CPU_FORWARD", false);
             // facemesh.load().then(res => {
-            faceLandmarksDetection.load().then((res) => {
+            faceLandmarksDetection.load(faceLandmarksDetection.SupportedPackages.mediapipeFacemesh, config).then((res) => {
                 console.log("new model:", res);
                 model = res;
                 ctx.postMessage({ message: WorkerResponse.INITIALIZED });
