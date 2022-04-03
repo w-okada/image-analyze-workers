@@ -1,4 +1,4 @@
-import { OpenCVConfig, OpenCVOperatipnParams, OpenCVProcessTypes, Wasm, WorkerCommand, WorkerResponse } from "./const";
+import { OpenCVConfig, OpenCVOperatipnParams, OpenCVProcessTypes, Wasm } from "./const";
 export { OpenCVConfig, OpenCVOperatipnParams, OpenCVProcessTypes } from "./const";
 
 // @ts-ignore
@@ -8,7 +8,7 @@ import opencvWasmSimd from "../resources/custom_opencv-simd.wasm";
 
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./opencv-worker-worker.ts";
-import { BrowserType, getBrowserType } from "./BrowserUtil";
+import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
 
 export const generateOpenCVDefaultConfig = (): OpenCVConfig => {
     const defaultConf: OpenCVConfig = {
@@ -44,12 +44,12 @@ export const generateDefaultOpenCVParams = (): OpenCVOperatipnParams => {
     return defaultParams;
 };
 
-export class LocalCV {
+export class LocalCV extends LocalWorker {
     opencvLoaded = false;
     wasm: Wasm | null = null;
     init = async (config: OpenCVConfig) => {
         const browserType = getBrowserType();
-        if (config.useSimd && browserType !== BrowserType.SAFARI) {
+        if (config.useSimd && browserType !== BrowserTypes.SAFARI) {
             const modSimd = require("../resources/custom_opencv-simd.js");
             const b = Buffer.from(config.wasmSimdBase64!, "base64");
             this.wasm = await modSimd({ wasmBinary: b });
@@ -60,7 +60,7 @@ export class LocalCV {
         }
     };
 
-    predict = async (data: Uint8ClampedArray, config: OpenCVConfig, params: OpenCVOperatipnParams) => {
+    predict = async (config: OpenCVConfig, params: OpenCVOperatipnParams, data: Uint8ClampedArray) => {
         if (!this.wasm) {
             return null;
         }
@@ -83,83 +83,37 @@ export class LocalCV {
     };
 }
 
-export class OpenCVWorkerManager {
+export class OpenCVWorkerManager extends WorkerManagerBase {
     private workerCV: Worker | null = null;
     tmpCanvas = document.createElement("canvas");
 
     private config = generateOpenCVDefaultConfig();
-    private localCV = new LocalCV();
-    init = async (config: OpenCVConfig | null) => {
-        if (config != null) {
-            this.config = config;
-        }
-        if (this.workerCV) {
-            this.workerCV.terminate();
-        }
-        this.workerCV = null;
-
-        if (config!.processOnLocal === true) {
-            this.localCV.init(config!);
-            return;
-        } else {
-            const workerCV: Worker = new workerJs();
-            workerCV!.postMessage({
-                message: WorkerCommand.INITIALIZE,
-                config: this.config,
-            });
-
-            const p = new Promise<void>((onResolve, onFail) => {
-                workerCV!.onmessage = (event) => {
-                    if (event.data.message === WorkerResponse.INITIALIZED) {
-                        console.log("WORKERSS INITIALIZED");
-                        this.workerCV = workerCV;
-                        onResolve();
-                    } else {
-                        console.log("AsciiArt Initialization something wrong[1]..");
-                        onFail(event);
-                    }
-                };
-            });
-            return p;
-        }
-    };
-
-    predict = async (targetCanvas: HTMLCanvasElement, params = generateDefaultOpenCVParams()) => {
-        this.tmpCanvas.width = params.processWidth;
-        this.tmpCanvas.height = params.processHeight;
-        const ctx = this.tmpCanvas.getContext("2d")!;
-        ctx.drawImage(targetCanvas, 0, 0, this.tmpCanvas.width, this.tmpCanvas.height);
-        const imageData = ctx.getImageData(0, 0, this.tmpCanvas.width, this.tmpCanvas.height);
-
-        if (this.config.processOnLocal === true) {
-            const prediction = await this.localCV.predict(imageData.data, this.config, params);
-            return prediction;
-        } else {
-            if (!this.workerCV) {
-                return null;
-            }
-            const uid = performance.now();
-            this.workerCV!.postMessage(
-                {
-                    message: WorkerCommand.PREDICT,
-                    uid: uid,
-                    params: params,
-                    data: imageData.data,
+    localWorker = new LocalCV();
+    init = async (config: OpenCVConfig | null = null) => {
+        this.config = config || generateOpenCVDefaultConfig();
+        await this.initCommon(
+            {
+                useWorkerForSafari: true,
+                processOnLocal: this.config.processOnLocal,
+                workerJs: () => {
+                    return new workerJs();
                 },
-                [imageData.data.buffer]
-            );
-
-            const p = new Promise((onResolve: (data: Uint8ClampedArray) => void, onFail) => {
-                this.workerCV!.onmessage = (event) => {
-                    if (event.data.message === WorkerResponse.PREDICTED) {
-                        const data = event.data.converted as Uint8ClampedArray;
-                        onResolve(data);
-                    } else {
-                        console.log("OpenCV something wrong[2]..", event.data.uid, uid);
-                    }
-                };
-            });
-            return p;
+            },
+            config
+        );
+        return;
+    };
+    predict = async (params: OpenCVOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+        if (!this.worker) {
+            const resizedCanvas = this.generateTargetCanvas(targetCanvas, params.processWidth, params.processHeight);
+            const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
+            const prediction = await this.localWorker.predict(this.config, params, imageData.data);
+            return prediction;
         }
+
+        const resizedCanvas = this.generateTargetCanvas(targetCanvas, params.processWidth, params.processHeight);
+        const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
+        const prediction = (await this.sendToWorker(this.config, params, imageData.data)) as Uint8ClampedArray | null;
+        return prediction;
     };
 }

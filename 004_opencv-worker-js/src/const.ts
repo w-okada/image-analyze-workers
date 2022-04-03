@@ -1,17 +1,25 @@
-import { BrowserType } from "./BrowserUtil";
-
+import { BrowserTypes } from "@dannadori/000_WorkerBase";
 export const WorkerCommand = {
     INITIALIZE: "initialize",
     PREDICT: "predict",
-};
+} as const;
+export type WorkerCommand = typeof WorkerCommand[keyof typeof WorkerCommand];
 
 export const WorkerResponse = {
     INITIALIZED: "initialized",
     PREDICTED: "predicted",
-};
+} as const;
+export type WorkerResponse = typeof WorkerResponse[keyof typeof WorkerResponse];
+
+export const OpenCVProcessTypes = {
+    Canny: "Canny",
+    Blur: "Blur",
+    GausianBlur: "GausianBlur",
+} as const;
+export type OpenCVProcessTypes = typeof OpenCVProcessTypes[keyof typeof OpenCVProcessTypes];
 
 export interface OpenCVConfig {
-    browserType: BrowserType;
+    browserType: BrowserTypes;
     processOnLocal: boolean;
     wasmBase64?: string;
     wasmSimdBase64?: string;
@@ -26,13 +34,6 @@ export interface OpenCVOperatipnParams {
     processWidth: number;
     processHeight: number;
 }
-
-export const OpenCVProcessTypes = {
-    Canny: "Canny",
-    Blur: "Blur",
-    GausianBlur: "GausianBlur",
-} as const;
-export type OpenCVProcessTypes = typeof OpenCVProcessTypes[keyof typeof OpenCVProcessTypes];
 
 export interface CannyParams {
     threshold1: number;

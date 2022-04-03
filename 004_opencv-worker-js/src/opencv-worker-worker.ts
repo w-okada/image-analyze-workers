@@ -40,13 +40,17 @@ onmessage = async (event) => {
         console.log("initialized opencv worker");
         ctx.postMessage({ message: WorkerResponse.INITIALIZED });
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        // console.log("requested predict opencv.");
-        const data: Uint8ClampedArray = event.data.data;
-        const uid: number = event.data.uid;
         const config: OpenCVConfig = event.data.config;
         const params: OpenCVOperatipnParams = event.data.params;
+        const data: Uint8ClampedArray = event.data.data;
         const imageData = await predict(data, config, params);
-        ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, converted: imageData }, [imageData.buffer]);
+        ctx.postMessage(
+            {
+                message: WorkerResponse.PREDICTED,
+                prediction: imageData,
+            },
+            [imageData.buffer]
+        );
     }
 };
 
