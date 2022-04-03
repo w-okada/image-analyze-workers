@@ -10,7 +10,6 @@ export abstract class LocalWorker {
 export type WorkerManagerBaseInitProps = {
     useWorkerForSafari: boolean;
     processOnLocal: boolean;
-    localWorker?: () => LocalWorker;
     workerJs?: () => Worker;
 };
 

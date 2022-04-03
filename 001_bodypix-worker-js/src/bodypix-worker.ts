@@ -93,17 +93,6 @@ class LocalBP extends LocalWorker {
     };
 
     predict = async (config: BodyPixConfig, params: BodyPixOperatipnParams, targetCanvas: HTMLCanvasElement) => {
-        // // ImageData作成
-        // const processWidth = params.processWidth <= 0 || params.processHeight <= 0 ? targetCanvas.width : params.processWidth;
-        // const processHeight = params.processWidth <= 0 || params.processHeight <= 0 ? targetCanvas.height : params.processHeight;
-
-        // //console.log("process image size:", processWidth, processHeight)
-        // this.canvas.width = processWidth;
-        // this.canvas.height = processHeight;
-        // const ctx = this.canvas.getContext("2d")!;
-        // ctx.drawImage(targetCanvas, 0, 0, processWidth, processHeight);
-        // const newImg = ctx.getImageData(0, 0, processWidth, processHeight);
-
         const ctx = targetCanvas.getContext("2d")!;
         const newImg = ctx.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
 
@@ -125,7 +114,7 @@ class LocalBP extends LocalWorker {
 }
 
 export class BodypixWorkerManager extends WorkerManagerBase {
-    config: BodyPixConfig = generateBodyPixDefaultConfig();
+    private config: BodyPixConfig = generateBodyPixDefaultConfig();
     localWorker = new LocalBP();
     init = async (config: BodyPixConfig | null = null) => {
         this.config = config || generateBodyPixDefaultConfig();
@@ -133,9 +122,6 @@ export class BodypixWorkerManager extends WorkerManagerBase {
             {
                 useWorkerForSafari: false,
                 processOnLocal: this.config.processOnLocal,
-                localWorker: () => {
-                    return new workerJs!();
-                },
                 workerJs: () => {
                     return new workerJs();
                 },
