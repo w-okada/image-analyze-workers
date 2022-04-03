@@ -1,6 +1,5 @@
 import { ModelConfig, PersonInferenceConfig, MultiPersonInstanceInferenceConfig } from "@tensorflow-models/body-pix/dist/body_pix_model";
-import { BrowserTypes } from "worker-base";
-
+import { BrowserTypes } from "@dannadori/000_WorkerBase";
 export const WorkerCommand = {
     INITIALIZE: "initialize",
     PREDICT: "predict",

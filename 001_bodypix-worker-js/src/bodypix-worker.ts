@@ -1,7 +1,7 @@
 import { BodyPixConfig, BodyPixOperatipnParams, BodypixFunctionTypes, ModelConfigs } from "./const";
 import * as bodyPix from "@tensorflow-models/body-pix";
 import { SemanticPersonSegmentation } from "@tensorflow-models/body-pix";
-import { WorkerManagerBase, LocalWorker, getBrowserType } from "worker-base";
+import { WorkerManagerBase, LocalWorker, getBrowserType } from "@dannadori/000_WorkerBase";
 
 export { BodypixFunctionTypes, BodyPixConfig, BodyPixOperatipnParams } from "./const";
 export { SemanticPersonSegmentation, SemanticPartSegmentation, PersonSegmentation, PartSegmentation } from "@tensorflow-models/body-pix";

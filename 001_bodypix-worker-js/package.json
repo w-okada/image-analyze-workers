@@ -1,6 +1,6 @@
 {
     "name": "@dannadori/bodypix-worker-js",
-    "version": "1.0.43",
+    "version": "1.0.44",
     "description": "",
     "main": "dist/bodypix-worker.js",
     "scripts": {
@@ -44,6 +44,6 @@
         "@tensorflow/tfjs-backend-wasm": "^3.15.0",
         "@tensorflow/tfjs-converter": "^3.15.0",
         "@tensorflow/tfjs-core": "^3.15.0",
-        "worker-base": "file:../000_WorkerBase"
+        "@dannadori/000_WorkerBase": "file:../000_WorkerBase"
     }
 }
