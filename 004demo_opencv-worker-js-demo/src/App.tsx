@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import "./App.css";
 import { OpenCVProcessTypes, OpenCVWorkerManager } from "@dannadori/opencv-worker-js";
 import { useAppState } from "./provider/AppStateProvider";
 import { OpenCVDrawer } from "./OpenCVDrawer";
