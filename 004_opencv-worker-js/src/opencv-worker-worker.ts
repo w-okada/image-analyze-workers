@@ -1,3 +1,4 @@
+import { BrowserTypes } from "@dannadori/000_WorkerBase";
 import { WorkerCommand, WorkerResponse, OpenCVConfig, OpenCVOperatipnParams, Wasm } from "./const";
 
 export let Module = {};
@@ -42,6 +43,7 @@ onmessage = async (event) => {
     } else if (event.data.message === WorkerCommand.PREDICT) {
         const config: OpenCVConfig = event.data.config;
         const params: OpenCVOperatipnParams = event.data.params;
+
         const data: Uint8ClampedArray = event.data.data;
         const imageData = await predict(data, config, params);
         ctx.postMessage(

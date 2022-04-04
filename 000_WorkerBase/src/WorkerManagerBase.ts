@@ -55,7 +55,7 @@ export abstract class WorkerManagerBase {
                     this.worker = newWorker;
                     resolve();
                 } else {
-                    console.log("Bodypix Initialization something wrong..");
+                    console.log("Initialization something wrong..");
                     reject();
                 }
             };
@@ -99,7 +99,7 @@ export abstract class WorkerManagerBase {
         return this.targetCanvas;
     };
 
-    sendToWorker = async (config: any, params: any, data: any) => {
+    sendToWorker = async (config: any, params: any, data: any, transferable = true) => {
         if (this.sem.length > 100) {
             throw new Error(`queue is fulled: ${this.sem.length}`);
         }
@@ -109,25 +109,46 @@ export abstract class WorkerManagerBase {
                 if (event.data.message === WorkerResponse.PREDICTED) {
                     resolve(event.data.prediction);
                 } else {
-                    console.log("Bodypix Prediction something wrong..", event.data.message);
+                    console.log("Prediction something wrong..", event.data.message);
                     reject(event);
                 }
             };
-            this.worker!.postMessage(
-                {
+            if (transferable) {
+                if (data instanceof Uint8ClampedArray) {
+                    this.worker!.postMessage(
+                        {
+                            message: WorkerCommand.PREDICT,
+                            config: config,
+                            params: params,
+                            data: data,
+                        },
+                        [data.buffer]
+                    );
+                } else {
+                    this.worker!.postMessage(
+                        {
+                            message: WorkerCommand.PREDICT,
+                            config: config,
+                            params: params,
+                            data: data,
+                        },
+                        [data]
+                    );
+                }
+            } else {
+                this.worker!.postMessage({
                     message: WorkerCommand.PREDICT,
                     config: config,
                     params: params,
                     data: data,
-                },
-                [data]
-            );
+                });
+            }
         });
         let prediction;
         try {
             prediction = await p;
         } catch (error) {
-            console.log("worker prediction error");
+            console.log("worker prediction error. :", error);
         } finally {
             this.unlock(num);
         }
