@@ -1,485 +1,298 @@
-import React, { useEffect, useState } from "react";
-import { makeStyles } from "@material-ui/core";
-import {
-    DropDown,
-    SingleValueSlider,
-    Toggle,
-    VideoInputSelect,
-} from "./components/components";
-import { VideoInputType } from "./const";
-import { useVideoInputList } from "./hooks/useVideoInputList";
-import {
-    generateDefaultPoseNetParams,
-    generatePoseNetDefaultConfig,
-    getAdjacentKeyPoints,
-    PoseNetConfig,
-    PoseNetFunctionType,
-    PoseNetOperatipnParams,
-    PoseNetWorkerManager,
-} from "@dannadori/posenet-worker-js";
+import { PoseNetWorkerManager, PoseNetArchitecture, PoseNetFunctionTypes, PoseNetQuantBytes, MobileNetMultiplier, PoseNetOutputStride } from "@dannadori/posenet-worker-js";
+import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import "./App.css";
+import { PoseNetDrawer } from "./PoseNetDrawer";
+import { useAppState } from "./provider/AppStateProvider";
+import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 
 let GlobalLoopID = 0;
 
-const useStyles = makeStyles(() => ({
-    inputView: {
-        maxWidth: 512,
-        maxHeight: 512,
-    },
-}));
+const Controller = () => {
+    const { inputSourceType, setInputSourceType, setInputSource, config, setConfig, params, setParams } = useAppState();
 
-const models: { [name: string]: "ResNet50" | "MobileNetV1" } = {
-    MobileNetV1: "MobileNetV1",
-    ResNet50: "ResNet50",
-};
-const functions: { [name: string]: PoseNetFunctionType } = {
-    SinglePerson: PoseNetFunctionType.SinglePerson,
-    MultiPerson: PoseNetFunctionType.MultiPerson,
-};
-const outputStrides: { [name: string]: 8 | 16 | 32 } = {
-    "8": 8,
-    "16": 16,
-    "32": 32,
-};
-const multipliers: { [name: string]: 1 | 0.75 | 0.5 } = {
-    "0.5": 0.5,
-    "0.75": 0.75,
-    "1.0": 1.0,
-};
+    const videoInputSelectorProps: VideoInputSelectorProps = {
+        id: "video-input-selector",
+        currentValue: inputSourceType || "File",
+        onInputSourceTypeChanged: setInputSourceType,
+        onInputSourceChanged: setInputSource,
+    };
 
-const quantBytes: { [name: string]: 1 | 2 | 4 } = {
-    "1": 1,
-    "2": 2,
-    "4": 4,
+    const onLocalSwitchProps: CommonSwitchProps = {
+        id: "on-local-switch",
+        title: "process on local",
+        currentValue: config.processOnLocal,
+        onChange: (value: boolean) => {
+            config.processOnLocal = value;
+            setConfig({ ...config });
+        },
+    };
+
+    const modelSelectorProps: CommonSelectorProps<PoseNetArchitecture> = {
+        id: "model-selector",
+        title: "architecture",
+        currentValue: config.model.architecture,
+        options: {
+            MobileNetV1: "MobileNetV1",
+            ResNet50: "ResNet50",
+        },
+        onChange: (value: PoseNetArchitecture) => {
+            config.model.architecture = value;
+            if (value === "ResNet50") {
+                config.model.multiplier = 1;
+            }
+            setConfig({ ...config });
+        },
+    };
+
+    const functionSelectorProps: CommonSelectorProps<PoseNetFunctionTypes> = {
+        id: "function-selector",
+        title: "function",
+        currentValue: params.type,
+        options: {
+            singlePerson: PoseNetFunctionTypes.SinglePerson,
+            multiPerson: PoseNetFunctionTypes.MultiPerson,
+        },
+        onChange: (value: PoseNetFunctionTypes) => {
+            setParams({ ...params, type: value });
+        },
+    };
+
+    const outputStrideSelectorProps: CommonSelectorProps<string> = {
+        id: "output-stride-selector",
+        title: "output stride",
+        currentValue: "" + config.model.outputStride,
+        options: {
+            "8": "8",
+            "16": "16",
+            "32": "32",
+        },
+        onChange: (value: string) => {
+            config.model.outputStride = parseInt(value) as PoseNetOutputStride;
+            setConfig({ ...config });
+        },
+    };
+
+    const multiplierSelectorProps: CommonSelectorProps<string> = {
+        id: "multiplier-selector",
+        title: "multiplier",
+        currentValue: "" + config.model.multiplier,
+        options: {
+            "0.5": "0.5",
+            "0.75": "0.75",
+            "1.0": "1.0",
+        },
+        onChange: (value: string) => {
+            config.model.multiplier = parseFloat(value) as MobileNetMultiplier;
+            setConfig({ ...config });
+        },
+    };
+    const quantBytesSelectorProps: CommonSelectorProps<string> = {
+        id: "quant-bytes-selector",
+        title: "quant-bytes",
+        currentValue: "" + config.model.quantBytes,
+        options: {
+            "1": "1",
+            "2": "2",
+            "4": "4",
+        },
+        onChange: (value: string) => {
+            config.model.quantBytes = parseInt(value) as PoseNetQuantBytes;
+            setConfig({ ...config });
+        },
+    };
+
+    const maxDetectionSliderProps: CommonSliderProps = {
+        id: "max-detection-slider",
+        title: "max detection",
+        currentValue: params.multiPersonParams.maxDetections!,
+        max: 20,
+        min: 1,
+        step: 1,
+        width: "30%",
+        onChange: (value: number) => {
+            params.multiPersonParams.maxDetections = value;
+            setParams({ ...params });
+        },
+        integer: true,
+    };
+
+    const scoreThresholdSliderProps: CommonSliderProps = {
+        id: "score-threshold-slider",
+        title: "score threshold",
+        currentValue: params.multiPersonParams.scoreThreshold!,
+        max: 1,
+        min: 0,
+        step: 0.1,
+        width: "30%",
+        onChange: (value: number) => {
+            params.multiPersonParams.scoreThreshold = value;
+            setParams({ ...params });
+        },
+        integer: false,
+    };
+
+    const nmsRadiusSliderProps: CommonSliderProps = {
+        id: "nms-radius-slider",
+        title: "nms radius",
+        currentValue: params.multiPersonParams.nmsRadius!,
+        max: 50,
+        min: 1,
+        step: 1,
+        width: "30%",
+        onChange: (value: number) => {
+            params.multiPersonParams.nmsRadius = value;
+            setParams({ ...params });
+        },
+        integer: true,
+    };
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column" }}>
+            <VideoInputSelector {...videoInputSelectorProps}></VideoInputSelector>
+            <CommonSelector {...modelSelectorProps}></CommonSelector>
+            <CommonSwitch {...onLocalSwitchProps}></CommonSwitch>
+            <CommonSelector {...functionSelectorProps}></CommonSelector>
+
+            <CommonSelector {...outputStrideSelectorProps}></CommonSelector>
+            <CommonSelector {...multiplierSelectorProps}></CommonSelector>
+            <CommonSelector {...quantBytesSelectorProps}></CommonSelector>
+
+            <CommonSlider {...maxDetectionSliderProps}></CommonSlider>
+            <CommonSlider {...scoreThresholdSliderProps}></CommonSlider>
+            <CommonSlider {...nmsRadiusSliderProps}></CommonSlider>
+        </div>
+    );
 };
-
-interface WorkerProps {
-    manager: PoseNetWorkerManager;
-    config: PoseNetConfig;
-    params: PoseNetOperatipnParams;
-    count: number;
-}
-
-interface InputMedia {
-    mediaType: VideoInputType;
-    media: MediaStream | string;
-}
 
 const App = () => {
-    const classes = useStyles();
-    const { videoInputList } = useVideoInputList();
-    const [workerProps, setWorkerProps] = useState<WorkerProps>();
-
-    const [modelKey, setModelKey] = useState(Object.keys(models)[0]);
-    const [functionKey, setFunctionKey] = useState(Object.keys(functions)[0]);
-    const [outputStrideKey, setOutputStrideKey] = useState(
-        Object.keys(outputStrides)[1]
-    );
-    const [multiplierKey, setMultiplierKey] = useState(
-        Object.keys(multipliers)[1]
-    );
-    const [quantByteKey, setQuantByteKey] = useState(
-        Object.keys(quantBytes)[1]
-    );
-    const [internalWidth, setInternalWidth] = useState(257);
-    const [internalHeight, setInternalHeight] = useState(257);
-
-    const [onLocal, setOnLocal] = useState(true);
-    const [useWasm] = useState(false);
-    const [flip] = useState(false);
-    const [maxDetection, setMaxDetection] = useState(10);
-    const [socreThreshold, setScoreThreshold] = useState(0.3);
-    const [nmsRadius, setNmsRadius] = useState(50);
-
-    // const [ processWidth, setProcessWidth]                    = useState(300)
-    // const [ processHeight, setProcessHeight]                  = useState(300)
-    const [strict] = useState(false);
-    const [guiUpdateCount, setGuiUpdateCount] = useState(0);
-
-    const [inputMedia, setInputMedia] = useState<InputMedia>({
-        mediaType: "IMAGE",
-        media: "yuka_kawamura.jpg",
-    });
-    const inputChange = (
-        mediaType: VideoInputType,
-        input: MediaStream | string
-    ) => {
-        setInputMedia({ mediaType: mediaType, media: input });
-    };
-
-    ///////////////////////////
-    /// プロパティ設定      ///
-    ///////////////////////////
-    //// モデル切り替え
+    const { inputSource, config, params } = useAppState();
+    const managerRef = useRef<PoseNetWorkerManager>();
+    const [manager, setManager] = useState<PoseNetWorkerManager | undefined>(managerRef.current);
     useEffect(() => {
-        const init = async () => {
-            const m = workerProps
-                ? workerProps.manager
-                : new PoseNetWorkerManager();
-            const count = workerProps ? workerProps.count + 1 : 0;
-            const c = generatePoseNetDefaultConfig();
-            c.processOnLocal = onLocal;
-            c.useTFWasmBackend = useWasm;
-            c.model.architecture = models[modelKey];
-            c.model.multiplier = multipliers[multiplierKey];
-            c.model.outputStride = outputStrides[outputStrideKey];
-            c.model.quantBytes = quantBytes[quantByteKey];
-            c.model.inputResolution = {
-                width: internalWidth,
-                height: internalHeight,
-            };
-            await m.init(c);
-
-            const p = generateDefaultPoseNetParams();
-            p.type = functions[functionKey];
-            p.singlePersonParams.flipHorizontal = flip;
-            p.multiPersonParams.flipHorizontal = flip;
-            p.multiPersonParams.maxDetections = maxDetection;
-            p.multiPersonParams.nmsRadius = nmsRadius;
-            p.multiPersonParams.scoreThreshold = socreThreshold;
-
-            const newProps = { manager: m, config: c, params: p, count: count };
-            setWorkerProps(newProps);
+        const loadModel = async () => {
+            const m = manager ? manager : new PoseNetWorkerManager();
+            await m.init(config);
+            managerRef.current = m;
+            setManager(managerRef.current);
         };
-        init();
-    }, [
-        onLocal,
-        useWasm,
-        modelKey,
-        multiplierKey,
-        outputStrideKey,
-        quantByteKey,
-        internalWidth,
-        internalHeight,
-    ]); // eslint-disable-line
+        loadModel();
+    }, [config]);
 
-    //// パラメータ変更
+    const drawer = useMemo(() => {
+        return new PoseNetDrawer();
+    }, []);
+
     useEffect(() => {
-        if (!workerProps) {
+        const output = document.getElementById("output") as HTMLCanvasElement;
+        drawer.setOutputCanvas(output);
+    }, []);
+
+    const inputSourceElement = useMemo(() => {
+        let elem: HTMLVideoElement | HTMLImageElement;
+        if (typeof inputSource === "string") {
+            const sourceType = getDataTypeOfDataURL(inputSource);
+            if (sourceType === DataTypesOfDataURL.video) {
+                elem = document.createElement("video");
+                elem.controls = true;
+                elem.autoplay = true;
+                elem.loop = true;
+                elem.src = inputSource;
+            } else {
+                elem = document.createElement("img");
+                elem.src = inputSource;
+            }
+        } else {
+            elem = document.createElement("video");
+            elem.autoplay = true;
+            elem.srcObject = inputSource;
+        }
+        elem.style.objectFit = "contain";
+        elem.style.width = "100%";
+        elem.style.height = "100%";
+        return elem;
+    }, [inputSource]);
+
+    ////////////////
+    // Processing
+    ////////////////
+
+    useEffect(() => {
+        if (!managerRef.current) {
             return;
         }
-        const p = generateDefaultPoseNetParams();
-        p.type = functions[functionKey];
-        p.singlePersonParams.flipHorizontal = flip;
-        p.multiPersonParams.flipHorizontal = flip;
-        p.multiPersonParams.maxDetections = maxDetection;
-        p.multiPersonParams.nmsRadius = nmsRadius;
-        p.multiPersonParams.scoreThreshold = socreThreshold;
-
-        // setWorkerProps({...workerProps, params:p})
-        workerProps.params = p;
-    }, [flip, maxDetection, functionKey, nmsRadius, socreThreshold]); // eslint-disable-line
-
-    /// input設定
-    useEffect(() => {
-        const video = document.getElementById(
-            "input_video"
-        ) as HTMLVideoElement;
-        if (inputMedia.mediaType === "IMAGE") {
-            const img = document.getElementById(
-                "input_img"
-            ) as HTMLImageElement;
-            img.onloadeddata = () => {
-                resizeDst(img);
-            };
-            img.src = inputMedia.media as string;
-            if (guiUpdateCount === 0) {
-                setTimeout(() => {
-                    setGuiUpdateCount(guiUpdateCount + 1);
-                }, 1000 * 2);
-            }
-        } else if (inputMedia.mediaType === "MOVIE") {
-            const vid = document.getElementById(
-                "input_video"
-            ) as HTMLVideoElement;
-            vid.pause();
-            vid.srcObject = null;
-            vid.src = inputMedia.media as string;
-            vid.loop = true;
-            vid.onloadeddata = () => {
-                video.play();
-                resizeDst(vid);
-            };
-        } else {
-            const vid = document.getElementById(
-                "input_video"
-            ) as HTMLVideoElement;
-            vid.pause();
-            vid.srcObject = inputMedia.media as MediaStream;
-            vid.onloadeddata = () => {
-                video.play();
-                resizeDst(vid);
-            };
-        }
-    }, [inputMedia]);
-
-    /// resize
-    useEffect(() => {
-        const input =
-            document.getElementById("input_img") ||
-            document.getElementById("input_video");
-        resizeDst(input!);
-    });
-
-    //////////////
-    ///// util  //
-    //////////////
-    const resizeDst = (input: HTMLElement) => {
-        const cs = getComputedStyle(input);
-        const width = parseInt(cs.getPropertyValue("width"));
-        const height = parseInt(cs.getPropertyValue("height"));
-        const dst = document.getElementById("output") as HTMLCanvasElement;
-        const front = document.getElementById("front") as HTMLCanvasElement;
-        const srcCache = document.getElementById(
-            "src-cache"
-        ) as HTMLCanvasElement;
-
-        [dst, srcCache, front].forEach((c) => {
-            c.width = width;
-            c.height = height;
-        });
-    };
-
-    //////////////////
-    //  pipeline    //
-    //////////////////
-
-    useEffect(() => {
-        console.log("[Pipeline] Start", workerProps);
+        console.log("Renderer Initialized");
         let renderRequestId: number;
         const LOOP_ID = performance.now();
         GlobalLoopID = LOOP_ID;
 
+        const dst = document.getElementById("output") as HTMLCanvasElement;
+        const snap = document.createElement("canvas");
+        const info = document.getElementById("info") as HTMLDivElement;
+
+        const perfs: number[] = [];
+        const avr = (perfs: number[]) => {
+            const sum = perfs.reduce((prev, cur) => {
+                return prev + cur;
+            }, 0);
+            return (sum / perfs.length).toFixed(3);
+        };
         const render = async () => {
-            console.log(
-                "RENDER::::",
-                LOOP_ID,
-                renderRequestId,
-                workerProps?.params
-            );
             const start = performance.now();
-
-            const dst = document.getElementById("output") as HTMLCanvasElement;
-            if (workerProps) {
-                if (dst.width > 0 && dst.height > 0) {
-                    const src =
-                        (document.getElementById(
-                            "input_img"
-                        ) as HTMLImageElement) ||
-                        (document.getElementById(
-                            "input_video"
-                        ) as HTMLVideoElement);
-                    const dst = document.getElementById(
-                        "output"
-                    ) as HTMLCanvasElement;
-                    const srcCache = document.getElementById(
-                        "src-cache"
-                    ) as HTMLCanvasElement;
-
-                    const dstCtx = dst.getContext("2d")!;
-
-                    srcCache
-                        .getContext("2d")!
-                        .drawImage(src, 0, 0, srcCache.width, srcCache.height);
-
-                    const inference_start = performance.now();
-                    const prediction = await workerProps.manager.predict(
-                        srcCache!,
-                        workerProps.params
-                    );
-                    const inference_end = performance.now();
-                    const info1 = document.getElementById(
-                        "info"
-                    ) as HTMLCanvasElement;
-                    info1.innerText = `processing time: ${
-                        inference_end - inference_start
-                    }`;
-
-                    if (prediction) {
-                        // dstCtx.clearRect(0, 0, dst.width, dst.height)
-                        dstCtx.drawImage(src, 0, 0, dst.width, dst.height);
-
-                        prediction.forEach((x) => {
-                            // Draw Point
-                            const keypoints = x.keypoints;
-                            keypoints.forEach((k) => {
-                                const x = k.position.x;
-                                const y = k.position.y;
-                                dstCtx.fillStyle = "rgba(0,0,255,0.3)";
-                                dstCtx.fillRect(x, y, 6, 6);
-                            });
-
-                            // Draw Skeleton
-                            const adjacentKeyPoints = getAdjacentKeyPoints(
-                                x.keypoints,
-                                0.0
-                            );
-                            const scaleX = 1;
-                            const scaleY = 1;
-                            adjacentKeyPoints.forEach((keypoints) => {
-                                dstCtx.beginPath();
-                                dstCtx.moveTo(
-                                    keypoints[0].position.x * scaleX,
-                                    keypoints[0].position.y * scaleY
-                                );
-                                dstCtx.lineTo(
-                                    keypoints[1].position.x * scaleX,
-                                    keypoints[1].position.y * scaleY
-                                );
-                                dstCtx.lineWidth = 6;
-                                dstCtx.strokeStyle = "rgba(255,0,0,0.3)";
-                                dstCtx.stroke();
-                            });
-                        });
-                    }
+            [snap, dst].forEach((x) => {
+                const width = inputSourceElement instanceof HTMLVideoElement ? inputSourceElement.videoWidth : inputSourceElement.naturalWidth;
+                const height = inputSourceElement instanceof HTMLVideoElement ? inputSourceElement.videoHeight : inputSourceElement.naturalHeight;
+                if (x.width != width || x.height != height) {
+                    x.width = width;
+                    x.height = height;
                 }
-                if (GlobalLoopID === LOOP_ID) {
-                    renderRequestId = requestAnimationFrame(render);
+            });
+            const snapCtx = snap.getContext("2d")!;
+            snapCtx.drawImage(inputSourceElement, 0, 0, snap.width, snap.height);
+            try {
+                const prediction = await managerRef.current!.predict(params, snap);
+                if (prediction) {
+                    drawer.draw(snap, params, prediction);
                 }
+            } catch (error) {
+                console.log(error);
+            }
+
+            if (GlobalLoopID === LOOP_ID) {
+                renderRequestId = requestAnimationFrame(render);
             }
 
             const end = performance.now();
-            const info2 = document.getElementById("info2") as HTMLCanvasElement;
-            info2.innerText = `processing time: ${end - start}`;
+            if (perfs.length > 100) {
+                perfs.shift();
+            }
+            perfs.push(end - start);
+            const avrElapsedTime = avr(perfs);
+            info.innerText = `time:${avrElapsedTime}ms`;
         };
         render();
         return () => {
             console.log("CANCEL", renderRequestId);
             cancelAnimationFrame(renderRequestId);
         };
-    }, [workerProps, strict]);
+    }, [managerRef.current, inputSourceElement, config, params]);
 
-    /////////////
-    // render  //
-    /////////////
     return (
-        <div>
-            <div style={{ display: "flex" }}>
-                <div style={{ display: "flex" }}>
-                    {inputMedia.mediaType === "IMAGE" ? (
-                        <img
-                            className={classes.inputView}
-                            alt="input_img"
-                            id="input_img"
-                        ></img>
-                    ) : (
-                        <video
-                            className={classes.inputView}
-                            id="input_video"
-                        ></video>
-                    )}
-                    <canvas className={classes.inputView} id="output"></canvas>
-                </div>
-                <div className={classes.inputView}>
-                    <VideoInputSelect
-                        title="input"
-                        current={""}
-                        onchange={inputChange}
-                        options={videoInputList}
-                    />
-                    <DropDown
-                        title="model"
-                        current={modelKey}
-                        onchange={setModelKey}
-                        options={models}
-                    />
-                    <DropDown
-                        title="func"
-                        current={functionKey}
-                        onchange={setFunctionKey}
-                        options={functions}
-                    />
-                    <DropDown
-                        title="outputStride"
-                        current={outputStrideKey}
-                        onchange={setOutputStrideKey}
-                        options={outputStrides}
-                    />
-                    <DropDown
-                        title="multiplier"
-                        current={multiplierKey}
-                        onchange={setMultiplierKey}
-                        options={multipliers}
-                    />
-                    <DropDown
-                        title="quantByte"
-                        current={quantByteKey}
-                        onchange={setQuantByteKey}
-                        options={quantBytes}
-                    />
-
-                    <SingleValueSlider
-                        title="resolutionW"
-                        current={internalWidth}
-                        onchange={setInternalWidth}
-                        min={128}
-                        max={512}
-                        step={10}
-                    />
-                    <SingleValueSlider
-                        title="resolutionH"
-                        current={internalHeight}
-                        onchange={setInternalHeight}
-                        min={128}
-                        max={512}
-                        step={10}
-                    />
-                    <SingleValueSlider
-                        title="maxDetection"
-                        current={maxDetection}
-                        onchange={setMaxDetection}
-                        min={1}
-                        max={20}
-                        step={1}
-                    />
-                    <SingleValueSlider
-                        title="scoThreshold"
-                        current={socreThreshold}
-                        onchange={setScoreThreshold}
-                        min={0}
-                        max={1}
-                        step={0.1}
-                    />
-                    <SingleValueSlider
-                        title="nmsRadius"
-                        current={nmsRadius}
-                        onchange={setNmsRadius}
-                        min={1}
-                        max={50}
-                        step={1}
-                    />
-
-                    <Toggle
-                        title="onLocal"
-                        current={onLocal}
-                        onchange={setOnLocal}
-                    />
-
-                    <div>
-                        <a href="https://github.com/w-okada/image-analyze-workers">
-                            github repository
-                        </a>
-                    </div>
-                </div>
+        <div style={{ width: "100%", height: "100%", display: "flex", objectFit: "contain", alignItems: "flex-start" }}>
+            <div
+                style={{ width: "33%", objectFit: "contain" }}
+                ref={(ref) => {
+                    ref?.replaceChildren(inputSourceElement);
+                    // ref?.appendChild();
+                }}
+            ></div>
+            <div style={{ width: "33%", objectFit: "contain" }}>
+                <canvas id="output" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
             </div>
-            <div className={classes.inputView} id="output-div"></div>
-
-            <div style={{ display: "flex" }}>
-                <canvas className={classes.inputView} id="tmp" hidden></canvas>
-                <canvas
-                    className={classes.inputView}
-                    id="front"
-                    hidden
-                ></canvas>
-                <canvas
-                    className={classes.inputView}
-                    id="src-cache"
-                    hidden
-                ></canvas>
+            <div style={{ width: "30%", marginLeft: "3%", objectFit: "contain" }}>
+                <Controller></Controller>
             </div>
-            <div>
-                <div id="info"> </div>
-                <div id="info2"> </div>
-            </div>
+            <div style={{ position: "absolute", top: "2%", left: "2%", background: "#000000", color: "#aabbaa" }} id="info"></div>
         </div>
     );
 };

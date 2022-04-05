@@ -1,35 +1,26 @@
-import {
-    PoseNetConfig,
-    ModelConfigResNet50,
-    WorkerCommand,
-    WorkerResponse,
-    PoseNetFunctionType,
-    PoseNetOperatipnParams,
-} from "./const";
-import { getBrowserType, BrowserType } from "./BrowserUtil";
+import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
 import * as poseNet from "@tensorflow-models/posenet";
 import * as tf from "@tensorflow/tfjs";
+import { BackendTypes, ModelConfigs, PoseNetConfig, PoseNetFunctionTypes, PoseNetOperatipnParams } from "./const";
 
 export { Pose, getAdjacentKeyPoints } from "@tensorflow-models/posenet";
-export {
-    ModelConfigResNet50,
-    ModelConfigMobileNetV1,
-    PoseNetOperatipnParams,
-    PoseNetConfig,
-    PoseNetFunctionType,
-} from "./const";
-
+export { PoseNetOperatipnParams, PoseNetConfig, PoseNetFunctionTypes } from "./const";
+export type { PoseNetArchitecture, PoseNetOutputStride, MobileNetMultiplier, PoseNetQuantBytes } from "@tensorflow-models/posenet/dist/types";
 export const generatePoseNetDefaultConfig = (): PoseNetConfig => {
     const defaultConf: PoseNetConfig = {
         browserType: getBrowserType(),
-        model: ModelConfigResNet50,
+        backendType: BackendTypes.WebGL,
         processOnLocal: false,
-        useTFWasmBackend: false, // we can not use posenet with wasm.
-        wasmPath: "/tfjs-backend-wasm.wasm",
+        wasmPaths: {
+            "tfjs-backend-wasm.wasm": "/tfjs-backend-wasm.wasm",
+            "tfjs-backend-wasm-simd.wasm": "/tfjs-backend-wasm-simd.wasm",
+            "tfjs-backend-wasm-threaded-simd.wasm": "/tfjs-backend-wasm-threaded-simd.wasm",
+        },
         workerPath: "./posenet-worker-worker.js",
+        model: ModelConfigs.ModelConfigMobileNetV1,
     };
     // WASMバージョンがあまり早くないので、Safariはローカルで実施をデフォルトにする。
-    if (defaultConf.browserType == BrowserType.SAFARI) {
+    if (defaultConf.browserType == BrowserTypes.SAFARI) {
         defaultConf.processOnLocal = true;
     }
     return defaultConf;
@@ -37,7 +28,7 @@ export const generatePoseNetDefaultConfig = (): PoseNetConfig => {
 
 export const generateDefaultPoseNetParams = () => {
     const defaultParams: PoseNetOperatipnParams = {
-        type: PoseNetFunctionType.SinglePerson,
+        type: PoseNetFunctionTypes.SinglePerson,
         singlePersonParams: {
             flipHorizontal: false,
         },
@@ -47,6 +38,8 @@ export const generateDefaultPoseNetParams = () => {
             scoreThreshold: 0.5,
             nmsRadius: 20,
         },
+        processWidth: 300,
+        processHeight: 300,
     };
     return defaultParams;
 };
@@ -54,7 +47,7 @@ export const generateDefaultPoseNetParams = () => {
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./posenet-worker-worker.ts";
 
-class LocalPN {
+class LocalPN extends LocalWorker {
     model: poseNet.PoseNet | null = null;
     canvas: HTMLCanvasElement = document.createElement("canvas");
     init = (config: PoseNetConfig) => {
@@ -65,195 +58,54 @@ class LocalPN {
         });
     };
 
-    predict = async (
-        canvas: HTMLCanvasElement,
-        config: PoseNetConfig,
-        params: PoseNetOperatipnParams
-    ): Promise<poseNet.Pose[]> => {
-        console.log("current backend[main thread]:", tf.getBackend());
-        // ImageData作成
-        //// input resolutionにリサイズするのでここでのリサイズは不要
-        // const processWidth = (config.processWidth <= 0 || config.processHeight <= 0) ? image.width : config.processWidth
-        // const processHeight = (config.processWidth <= 0 || config.processHeight <= 0) ? image.height : config.processHeight
-        const processWidth = canvas.width;
-        const processHeight = canvas.height;
+    predict = async (config: PoseNetConfig, params: PoseNetOperatipnParams, canvas: HTMLCanvasElement): Promise<poseNet.Pose[]> => {
+        // console.log("current backend[main thread]:", tf.getBackend());
 
-        //console.log("process image size:", processWidth, processHeight)
-        this.canvas.width = processWidth;
-        this.canvas.height = processHeight;
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(canvas, 0, 0, processWidth, processHeight);
-        const newImg = ctx.getImageData(0, 0, processWidth, processHeight);
+        const newImg = canvas.getContext("2d")!.getImageData(0, 0, params.processWidth, params.processHeight);
 
-        if (params.type === PoseNetFunctionType.SinglePerson) {
-            const prediction = await this.model!.estimateSinglePose(
-                newImg,
-                params.singlePersonParams!
-            );
+        if (params.type === PoseNetFunctionTypes.SinglePerson) {
+            const prediction = await this.model!.estimateSinglePose(newImg, params.singlePersonParams!);
             return [prediction];
-        } else if (params.type === PoseNetFunctionType.MultiPerson) {
-            const prediction = await this.model!.estimateMultiplePoses(
-                newImg,
-                params.multiPersonParams!
-            );
+        } else if (params.type === PoseNetFunctionTypes.MultiPerson) {
+            const prediction = await this.model!.estimateMultiplePoses(newImg, params.multiPersonParams!);
             return prediction;
         } else {
             // multi に倒す
-            const prediction = await this.model!.estimateMultiplePoses(
-                newImg,
-                params.multiPersonParams!
-            );
+            const prediction = await this.model!.estimateMultiplePoses(newImg, params.multiPersonParams!);
             return prediction;
         }
     };
 }
 
-export class PoseNetWorkerManager {
-    private workerPN: Worker | null = null;
+export class PoseNetWorkerManager extends WorkerManagerBase {
+    private config = generatePoseNetDefaultConfig();
+    localWorker = new LocalPN();
 
-    private config: PoseNetConfig = generatePoseNetDefaultConfig();
-    private localPN = new LocalPN();
-    private canvas = document.createElement("canvas");
     init = async (config: PoseNetConfig | null = null) => {
-        if (config != null) {
-            this.config = config;
-        }
-        if (this.workerPN) {
-            this.workerPN.terminate();
-        }
-        this.workerPN = null;
-
-        if (this.config.processOnLocal === true) {
-            await this.localPN.init(this.config!);
-            return;
-        }
-
-        const workerPN: Worker = new workerJs();
-
-        workerPN!.postMessage({
-            message: WorkerCommand.INITIALIZE,
-            config: this.config,
-        });
-        const p = new Promise<void>((onResolve, onFail) => {
-            workerPN!.onmessage = (event) => {
-                if (event.data.message === WorkerResponse.INITIALIZED) {
-                    console.log("WORKERSS INITIALIZED");
-                    this.workerPN = workerPN;
-                    onResolve();
-                } else {
-                    console.log("Bodypix Initialization something wrong..");
-                    onFail(event);
-                }
-            };
-        });
-        return p;
+        this.config = config || generatePoseNetDefaultConfig();
+        await this.initCommon(
+            {
+                useWorkerForSafari: false,
+                processOnLocal: this.config.processOnLocal,
+                workerJs: () => {
+                    return new workerJs();
+                },
+            },
+            config
+        );
+        return;
     };
-
-    predict = async (
-        targetCanvas: HTMLCanvasElement,
-        params: PoseNetOperatipnParams = generateDefaultPoseNetParams()
-    ) => {
-        // if (this.config.browserType === BrowserType.SAFARI || this.config.processOnLocal === true) {
-        if (this.config.processOnLocal === true) {
-            const prediction = await this.localPN.predict(
-                targetCanvas,
-                this.config,
-                params
-            );
+    predict = async (params: PoseNetOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+        if (!this.worker) {
+            const resizedCanvas = this.generateTargetCanvas(targetCanvas, params.processWidth, params.processHeight);
+            const prediction = await this.localWorker.predict(this.config, params, resizedCanvas);
             return prediction;
         }
 
-        if (!this.workerPN) {
-            return null;
-        }
-
-        if (this.config.browserType === BrowserType.SAFARI) {
-            // Case.2 Safari on worker thread
-            //// input resolutionにリサイズするのでここでのリサイズはしない
-            const data = targetCanvas
-                .getContext("2d")!
-                .getImageData(
-                    0,
-                    0,
-                    targetCanvas.width,
-                    targetCanvas.height
-                ).data;
-            const uid = performance.now();
-            const p = new Promise(
-                async (onResolve: (v: poseNet.Pose[]) => void, onFail) => {
-                    this.workerPN!.postMessage(
-                        {
-                            message: WorkerCommand.PREDICT,
-                            uid: uid,
-                            config: this.config,
-                            params: params,
-                            data: data,
-                            width: targetCanvas.width,
-                            height: targetCanvas.height,
-                        },
-                        [data.buffer]
-                    );
-                    this.workerPN!.onmessage = (event) => {
-                        if (
-                            event.data.message === WorkerResponse.PREDICTED &&
-                            event.data.uid === uid
-                        ) {
-                            onResolve(event.data.prediction);
-                        } else {
-                            console.log(
-                                `Posenet Prediction something wrong.. ${event.data.message}, ${event.data.uid}, ${uid}`
-                            );
-                            // onFail(event)
-                        }
-                    };
-                }
-            );
-            return p;
-        } else {
-            // Case.3 Normal browser on worker thread
-            const offscreen = new OffscreenCanvas(
-                targetCanvas.width,
-                targetCanvas.height
-            );
-            const offctx = offscreen.getContext("2d")!;
-            offctx.drawImage(
-                targetCanvas,
-                0,
-                0,
-                targetCanvas.width,
-                targetCanvas.height
-            );
-            const imageBitmap = offscreen.transferToImageBitmap();
-            const uid = performance.now();
-            this.workerPN!.postMessage(
-                {
-                    message: WorkerCommand.PREDICT,
-                    uid: uid,
-                    image: imageBitmap,
-                    config: this.config,
-                    params: params,
-                },
-                [imageBitmap]
-            );
-            const p = new Promise(
-                (onResolve: (v: poseNet.Pose[]) => void, onFail) => {
-                    this.workerPN!.onmessage = (event) => {
-                        if (
-                            event.data.message === WorkerResponse.PREDICTED &&
-                            event.data.uid === uid
-                        ) {
-                            onResolve(event.data.prediction);
-                        } else {
-                            console.log(
-                                `Posenet Prediction something wrong.. ${event.data.message}, ${event.data.uid}, ${uid}`
-                            );
-                            // onFail(event)
-                        }
-                    };
-                }
-            );
-            return p;
-        }
+        const resizedCanvas = this.generateTargetCanvas(targetCanvas, params.processWidth, params.processHeight);
+        const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
+        const prediction = (await this.sendToWorker(this.config, params, imageData.data)) as poseNet.Pose[];
+        return prediction;
     };
 }
 
@@ -276,10 +128,7 @@ const drawPoints = (canvas: HTMLCanvasElement, prediction: poseNet.Pose) => {
 };
 
 const drawSkeleton = (canvas: HTMLCanvasElement, prediction: poseNet.Pose) => {
-    const adjacentKeyPoints = poseNet.getAdjacentKeyPoints(
-        prediction.keypoints,
-        0.0
-    );
+    const adjacentKeyPoints = poseNet.getAdjacentKeyPoints(prediction.keypoints, 0.0);
     // const scaleX = width/this.config.processWidth
     // const scaleY = height/this.config.processHeight
     const scaleX = 1;
@@ -288,24 +137,15 @@ const drawSkeleton = (canvas: HTMLCanvasElement, prediction: poseNet.Pose) => {
     const ctx = canvas.getContext("2d")!;
     adjacentKeyPoints.forEach((keypoints) => {
         ctx.beginPath();
-        ctx.moveTo(
-            keypoints[0].position.x * scaleX,
-            keypoints[0].position.y * scaleY
-        );
-        ctx.lineTo(
-            keypoints[1].position.x * scaleX,
-            keypoints[1].position.y * scaleY
-        );
+        ctx.moveTo(keypoints[0].position.x * scaleX, keypoints[0].position.y * scaleY);
+        ctx.lineTo(keypoints[1].position.x * scaleX, keypoints[1].position.y * scaleY);
         ctx.lineWidth = 6;
         ctx.strokeStyle = "rgba(255,0,0,0.3)";
         ctx.stroke();
     });
 };
 
-export const drawSkeltonAndPoint = (
-    srcCanvas: HTMLCanvasElement,
-    prediction: poseNet.Pose[]
-) => {
+export const drawSkeltonAndPoint = (srcCanvas: HTMLCanvasElement, prediction: poseNet.Pose[]) => {
     const canvas = document.createElement("canvas");
     canvas.width = srcCanvas.width;
     canvas.height = srcCanvas.height;
@@ -313,9 +153,7 @@ export const drawSkeltonAndPoint = (
         drawPoints(canvas, x);
         drawSkeleton(canvas, x);
     });
-    const imageData = canvas
-        .getContext("2d")!
-        .getImageData(0, 0, canvas.width, canvas.height);
+    const imageData = canvas.getContext("2d")!.getImageData(0, 0, canvas.width, canvas.height);
     canvas.remove();
     return imageData;
 };

@@ -39,7 +39,7 @@ export const ModelConfigs = {
         quantBytes: 2,
     },
 } as const;
-export type models = typeof ModelConfigs[keyof typeof ModelConfigs];
+export type ModelConfigs = typeof ModelConfigs[keyof typeof ModelConfigs];
 
 export type BodyPixConfig = {
     browserType: BrowserTypes;

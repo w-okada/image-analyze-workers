@@ -1,9 +1,5 @@
 import { WorkerCommand, WorkerResponse } from "./const";
-import {
-    PoseNetConfig,
-    PoseNetFunctionType,
-    PoseNetOperatipnParams,
-} from "./const";
+import { PoseNetConfig, PoseNetFunctionTypes, PoseNetOperatipnParams } from "./const";
 import * as poseNet from "@tensorflow-models/posenet";
 import * as tf from "@tensorflow/tfjs";
 
@@ -26,74 +22,44 @@ let model: poseNet.PoseNet | null;
 //     }
 // }
 
-const predict = async (
-    image: ImageBitmap,
-    config: PoseNetConfig,
-    params: PoseNetOperatipnParams
-): Promise<poseNet.Pose[]> => {
+// const predict = async (image: ImageBitmap, config: PoseNetConfig, params: PoseNetOperatipnParams): Promise<poseNet.Pose[]> => {
+//     // ImageData作成
+//     //// input resolutionにリサイズするのでここでのリサイズは不要
+//     // const processWidth = (config.processWidth <= 0 || config.processHeight <= 0) ? image.width : config.processWidth
+//     // const processHeight = (config.processWidth <= 0 || config.processHeight <= 0) ? image.height : config.processHeight
+//     const processWidth = image.width;
+//     const processHeight = image.height;
+
+//     //console.log("process image size:", processWidth, processHeight)
+//     const offscreen = new OffscreenCanvas(processWidth, processHeight);
+//     const ctx = offscreen.getContext("2d")!;
+//     ctx.drawImage(image, 0, 0, processWidth, processHeight);
+//     const newImg = ctx.getImageData(0, 0, processWidth, processHeight);
+
+//     if (params.type === PoseNetFunctionType.SinglePerson) {
+//         const prediction = await model!.estimateSinglePose(newImg, params.singlePersonParams!);
+//         return [prediction];
+//     } else if (params.type === PoseNetFunctionType.MultiPerson) {
+//         const prediction = await model!.estimateMultiplePoses(newImg, params.multiPersonParams!);
+//         return prediction;
+//     } else {
+//         // multi に倒す
+//         const prediction = await model!.estimateMultiplePoses(newImg, params.multiPersonParams!);
+//         return prediction;
+//     }
+// };
+
+const predict = async (config: PoseNetConfig, params: PoseNetOperatipnParams, newImg: ImageData) => {
     // ImageData作成
-    //// input resolutionにリサイズするのでここでのリサイズは不要
-    // const processWidth = (config.processWidth <= 0 || config.processHeight <= 0) ? image.width : config.processWidth
-    // const processHeight = (config.processWidth <= 0 || config.processHeight <= 0) ? image.height : config.processHeight
-    const processWidth = image.width;
-    const processHeight = image.height;
-
-    //console.log("process image size:", processWidth, processHeight)
-    const offscreen = new OffscreenCanvas(processWidth, processHeight);
-    const ctx = offscreen.getContext("2d")!;
-    ctx.drawImage(image, 0, 0, processWidth, processHeight);
-    const newImg = ctx.getImageData(0, 0, processWidth, processHeight);
-
-    if (params.type === PoseNetFunctionType.SinglePerson) {
-        const prediction = await model!.estimateSinglePose(
-            newImg,
-            params.singlePersonParams!
-        );
+    if (params.type === PoseNetFunctionTypes.SinglePerson) {
+        const prediction = await model!.estimateSinglePose(newImg, params.singlePersonParams!);
         return [prediction];
-    } else if (params.type === PoseNetFunctionType.MultiPerson) {
-        const prediction = await model!.estimateMultiplePoses(
-            newImg,
-            params.multiPersonParams!
-        );
+    } else if (params.type === PoseNetFunctionTypes.MultiPerson) {
+        const prediction = await model!.estimateMultiplePoses(newImg, params.multiPersonParams!);
         return prediction;
     } else {
         // multi に倒す
-        const prediction = await model!.estimateMultiplePoses(
-            newImg,
-            params.multiPersonParams!
-        );
-        return prediction;
-    }
-};
-
-const predictForSafari = async (
-    data: Uint8ClampedArray,
-    width: number,
-    height: number,
-    config: PoseNetConfig,
-    params: PoseNetOperatipnParams
-) => {
-    console.log("for safari");
-    // ImageData作成
-    const newImg = new ImageData(new Uint8ClampedArray(data), width, height);
-    if (params.type === PoseNetFunctionType.SinglePerson) {
-        const prediction = await model!.estimateSinglePose(
-            newImg,
-            params.singlePersonParams!
-        );
-        return [prediction];
-    } else if (params.type === PoseNetFunctionType.MultiPerson) {
-        const prediction = await model!.estimateMultiplePoses(
-            newImg,
-            params.multiPersonParams!
-        );
-        return prediction;
-    } else {
-        // multi に倒す
-        const prediction = await model!.estimateMultiplePoses(
-            newImg,
-            params.multiPersonParams!
-        );
+        const prediction = await model!.estimateMultiplePoses(newImg, params.multiPersonParams!);
         return prediction;
     }
 };
@@ -108,64 +74,11 @@ onmessage = async (event) => {
     } else if (event.data.message === WorkerCommand.PREDICT) {
         const config: PoseNetConfig = event.data.config;
         const params: PoseNetOperatipnParams = event.data.params;
-        const image: ImageBitmap = event.data.image;
+
         const data: Uint8ClampedArray = event.data.data;
-        const width = event.data.width;
-        const height = event.data.height;
-        const uid: number = event.data.uid;
-        const functionType = event.data.functionType;
-        //    console.log("functionType:", functionType)
-        // console.log("current backend[worker thread]:", tf.getBackend())
-        if (params.type === PoseNetFunctionType.SinglePerson) {
-            let prediction;
-            if (data) {
-                prediction = await predictForSafari(
-                    data,
-                    width,
-                    height,
-                    config,
-                    params
-                );
-                ctx.postMessage({
-                    message: WorkerResponse.PREDICTED,
-                    uid: uid,
-                    prediction: prediction,
-                });
-            } else {
-                prediction = await predict(image, config, params);
-                ctx.postMessage({
-                    message: WorkerResponse.PREDICTED,
-                    uid: uid,
-                    prediction: prediction,
-                });
-                image.close();
-            }
-        } else if (params.type === PoseNetFunctionType.MultiPerson) {
-            let prediction;
-            if (data) {
-                prediction = await predictForSafari(
-                    data,
-                    width,
-                    height,
-                    config,
-                    params
-                );
-                ctx.postMessage({
-                    message: WorkerResponse.PREDICTED,
-                    uid: uid,
-                    prediction: prediction,
-                });
-            } else {
-                prediction = await predict(image, config, params);
-                ctx.postMessage({
-                    message: WorkerResponse.PREDICTED,
-                    uid: uid,
-                    prediction: prediction,
-                });
-                image.close();
-            }
-        } else {
-            console.log("not implemented", functionType);
-        }
+        const newImg = new ImageData(new Uint8ClampedArray(data), params.processWidth, params.processHeight);
+
+        const prediction = await predict(config, params, newImg);
+        ctx.postMessage({ message: WorkerResponse.PREDICTED, prediction: prediction });
     }
 };
