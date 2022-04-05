@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import "./App.css";
 import { BackendTypes, HandPoseWorkerManager } from "@dannadori/handpose-worker-js";
 import { useAppState } from "./provider/AppStateProvider";
 import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
