@@ -1,8 +1,7 @@
-import { getBrowserType, BrowserType } from "./BrowserUtil";
 import * as tf from "@tensorflow/tfjs";
-import { BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperatipnParams, BisenetV2CelebAMaskFunctionType, WorkerCommand, WorkerResponse } from "./const";
-import { setWasmPath } from "@tensorflow/tfjs-backend-wasm";
-export { BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperatipnParams };
+import { BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperatipnParams, BisenetV2CelebAMaskFunctionTypes, WorkerCommand, WorkerResponse, BackendTypes } from "./const";
+import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
+export { BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperatipnParams, BackendTypes };
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./bisenetv2-celebamask-worker-worker.ts";
 
@@ -14,13 +13,18 @@ import modelWeight1 from "../resources/bisenetv2-celebamask/group1-shard1of3.bin
 import modelWeight2 from "../resources/bisenetv2-celebamask/group1-shard2of3.bin";
 // @ts-ignore
 import modelWeight3 from "../resources/bisenetv2-celebamask/group1-shard3of3.bin";
+import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
 
 export const generateBisenetV2CelebAMaskDefaultConfig = (): BisenetV2CelebAMaskConfig => {
     const defaultConf: BisenetV2CelebAMaskConfig = {
         browserType: getBrowserType(),
         processOnLocal: false,
-        useTFWasmBackend: false,
-        wasmPath: "/tfjs-backend-wasm.wasm",
+        backendType: BackendTypes.WebGL,
+        wasmPaths: {
+            "tfjs-backend-wasm.wasm": "/tfjs-backend-wasm.wasm",
+            "tfjs-backend-wasm-simd.wasm": "/tfjs-backend-wasm-simd.wasm",
+            "tfjs-backend-wasm-threaded-simd.wasm": "/tfjs-backend-wasm-threaded-simd.wasm",
+        },
         pageUrl: window.location.href,
         modelJson: modelJson,
         modelWeight1: modelWeight1,
@@ -32,185 +36,92 @@ export const generateBisenetV2CelebAMaskDefaultConfig = (): BisenetV2CelebAMaskC
 
 export const generateDefaultBisenetV2CelebAMaskParams = (): BisenetV2CelebAMaskOperatipnParams => {
     const defaultParams: BisenetV2CelebAMaskOperatipnParams = {
-        type: BisenetV2CelebAMaskFunctionType.Mask,
+        type: BisenetV2CelebAMaskFunctionTypes.Mask,
         processWidth: 256,
         processHeight: 256,
     };
     return defaultParams;
 };
 
-const load_module = async (config: BisenetV2CelebAMaskConfig) => {
-    const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
-    const wasmPath = `${dirname}${config.wasmPath}`;
-    console.log(`use wasm backend ${wasmPath}`);
-    setWasmPath(wasmPath);
-    //    if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
-    if (config.useTFWasmBackend) {
-        require("@tensorflow/tfjs-backend-wasm");
-        await tf.setBackend("wasm");
-    } else {
-        console.log("use webgl backend");
-        require("@tensorflow/tfjs-backend-webgl");
-        await tf.setBackend("webgl");
-    }
-};
-
-export class LocalCT {
+export class LocalCT extends LocalWorker {
     model: tf.GraphModel | null = null;
     canvas = document.createElement("canvas");
 
-    init = (config: BisenetV2CelebAMaskConfig) => {
-        const p = new Promise<void>((onResolve, onFail) => {
-            load_module(config).then(() => {
-                tf.ready().then(async () => {
-                    tf.env().set("WEBGL_CPU_FORWARD", false);
-
-                    const modelJson2 = new File([config.modelJson], "model.json", { type: "application/json" });
-                    const b1 = Buffer.from(config.modelWeight1.split(",")[1], "base64");
-                    const modelWeights1 = new File([b1], "group1-shard1of3.bin");
-                    const b2 = Buffer.from(config.modelWeight2.split(",")[1], "base64");
-                    const modelWeights2 = new File([b2], "group1-shard2of3.bin");
-                    const b3 = Buffer.from(config.modelWeight3.split(",")[1], "base64");
-                    const modelWeights3 = new File([b3], "group1-shard3of3.bin");
-
-                    this.model = await tf.loadGraphModel(tf.io.browserFiles([modelJson2, modelWeights1, modelWeights2, modelWeights3]));
-                    onResolve();
-                });
+    load_module = async (config: BisenetV2CelebAMaskConfig) => {
+        if (config.backendType === BackendTypes.wasm) {
+            const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
+            const wasmPaths: { [key: string]: string } = {};
+            Object.keys(config.wasmPaths).forEach((key) => {
+                wasmPaths[key] = `${dirname}${config.wasmPaths[key]}`;
             });
-        });
-        return p;
+            setWasmPaths(wasmPaths);
+            console.log("use wasm backend", wasmPaths);
+            await tf.setBackend("wasm");
+        } else if (config.backendType === BackendTypes.cpu) {
+            await tf.setBackend("cpu");
+        } else {
+            console.log("use webgl backend");
+            await tf.setBackend("webgl");
+        }
     };
 
-    predict = async (targetCanvas: HTMLCanvasElement, config: BisenetV2CelebAMaskConfig, params: BisenetV2CelebAMaskOperatipnParams): Promise<number[][]> => {
-        // console.log("current backend[main thread]:", tf.getBackend())
-        // ImageData作成
-        this.canvas.width = params.processWidth;
-        this.canvas.height = params.processHeight;
-        const ctx = this.canvas.getContext("2d")!;
-        ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height);
+    init = async (config: BisenetV2CelebAMaskConfig) => {
+        await this.load_module(config);
+        await tf.ready();
+        tf.env().set("WEBGL_CPU_FORWARD", false);
+
+        const modelJson2 = new File([config.modelJson], "model.json", { type: "application/json" });
+        const b1 = Buffer.from(config.modelWeight1.split(",")[1], "base64");
+        const modelWeights1 = new File([b1], "group1-shard1of3.bin");
+        const b2 = Buffer.from(config.modelWeight2.split(",")[1], "base64");
+        const modelWeights2 = new File([b2], "group1-shard2of3.bin");
+        const b3 = Buffer.from(config.modelWeight3.split(",")[1], "base64");
+        const modelWeights3 = new File([b3], "group1-shard3of3.bin");
+
+        this.model = await tf.loadGraphModel(tf.io.browserFiles([modelJson2, modelWeights1, modelWeights2, modelWeights3]));
+    };
+
+    predict = async (config: BisenetV2CelebAMaskConfig, params: BisenetV2CelebAMaskOperatipnParams, targetCanvas: HTMLCanvasElement): Promise<number[][]> => {
         let bm: number[][];
         tf.tidy(() => {
-            let tensor = tf.browser.fromPixels(this.canvas);
+            let tensor = tf.browser.fromPixels(targetCanvas);
             tensor = tf.sub(tensor.expandDims(0).div(127.5), 1);
             let prediction = this.model!.predict(tensor) as tf.Tensor;
-            // console.log(prediction)
             bm = prediction.arraySync() as number[][];
         });
         return bm!;
     };
 }
 
-export class BisenetV2CelebAMaskWorkerManager {
-    private workerCT: Worker | null = null;
-    private canvasOut = document.createElement("canvas");
-    private canvas = document.createElement("canvas");
+export class BisenetV2CelebAMaskWorkerManager extends WorkerManagerBase {
     private config = generateBisenetV2CelebAMaskDefaultConfig();
-    private localCT = new LocalCT();
+    localWorker = new LocalCT();
+
     init = async (config: BisenetV2CelebAMaskConfig | null) => {
-        if (config != null) {
-            this.config = config;
-        }
-        if (this.workerCT) {
-            this.workerCT.terminate();
-        }
-        this.workerCT = null;
-
-        if (this.config.processOnLocal == true) {
-            await this.localCT.init(this.config!);
-            return;
-        }
-
-        const workerCT: Worker = new workerJs();
-        workerCT!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config });
-        const p = new Promise<void>((onResolve, onFail) => {
-            workerCT!.onmessage = (event) => {
-                if (event.data.message === WorkerResponse.INITIALIZED) {
-                    console.log("WORKERSS INITIALIZED");
-                    this.workerCT = workerCT;
-                    onResolve();
-                } else {
-                    console.log("celeb a mask Initialization something wrong..");
-                    onFail(event);
-                }
-            };
-        });
-        return p;
+        this.config = config || generateBisenetV2CelebAMaskDefaultConfig();
+        await this.initCommon(
+            {
+                useWorkerForSafari: false,
+                processOnLocal: this.config.processOnLocal,
+                workerJs: () => {
+                    return new workerJs();
+                },
+            },
+            config
+        );
+        return;
     };
 
-    predict = async (targetCanvas: HTMLCanvasElement, params = generateDefaultBisenetV2CelebAMaskParams()) => {
-        if (this.config.processOnLocal == true) {
-            // Case.1 Process on local thread.
-            const prediction = await this.localCT.predict(targetCanvas, this.config, params);
+    predict = async (params: BisenetV2CelebAMaskOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+        const currentParams = { ...params };
+        const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
+        if (!this.worker) {
+            const prediction = await this.localWorker.predict(this.config, currentParams, resizedCanvas);
             return prediction;
         }
-        if (!this.workerCT) {
-            return null;
-        }
-
-        if (this.config.browserType === BrowserType.SAFARI) {
-            // Case.2 Process on worker thread, Safari (Send dataArray)
-            this.canvas.width = params.processWidth;
-            this.canvas.height = params.processHeight;
-            const ctx = this.canvas.getContext("2d")!;
-            ctx.drawImage(targetCanvas, 0, 0, this.canvas.width, this.canvas.height);
-            const imageData = ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-            const dataArray = imageData.data;
-            const width = imageData.width;
-            const height = imageData.height;
-            const uid = performance.now();
-
-            this.workerCT!.postMessage(
-                {
-                    message: WorkerCommand.PREDICT,
-                    uid: uid,
-                    config: this.config,
-                    params: params,
-                    data: dataArray,
-                },
-                [dataArray.buffer]
-            );
-            const p = new Promise((onResolve: (v: number[][]) => void, onFail) => {
-                this.workerCT!.onmessage = (event) => {
-                    if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
-                        const prediction = event.data.prediction;
-                        onResolve(prediction);
-                    } else {
-                        console.log("celeb a mask Prediction something wrong..");
-                        // onFail(event)
-                    }
-                };
-            });
-            return p;
-        } else {
-            // Case.3 Process on worker thread, Chrome (Send ImageBitmap)
-            const off = new OffscreenCanvas(targetCanvas.width, targetCanvas.height);
-            off.getContext("2d")!.drawImage(targetCanvas, 0, 0, targetCanvas.width, targetCanvas.height);
-            const imageBitmap = off.transferToImageBitmap();
-            const uid = performance.now();
-            this.workerCT!.postMessage(
-                {
-                    message: WorkerCommand.PREDICT,
-                    uid: uid,
-                    config: this.config,
-                    params: params,
-                    // data: data, width: inImageData.width, height:inImageData.height
-                    image: imageBitmap,
-                },
-                [imageBitmap]
-            );
-            const p = new Promise((onResolve: (v: number[][]) => void, onFail) => {
-                this.workerCT!.onmessage = (event) => {
-                    if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
-                        const prediction = event.data.prediction;
-                        onResolve(prediction);
-                    } else {
-                        console.log("celeb a mask Prediction something wrong..");
-                        // onFail(event)
-                    }
-                };
-            });
-            return p;
-        }
+        const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
+        const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as number[][] | null;
+        return prediction;
     };
 }
 

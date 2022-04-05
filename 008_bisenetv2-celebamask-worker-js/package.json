@@ -1,13 +1,13 @@
 {
     "name": "@dannadori/bisenetv2-celebamask-worker-js",
-    "version": "1.0.18",
+    "version": "1.0.19",
     "description": "",
     "main": "dist/bisenetv2-celebamask-worker.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "webpack": "npx webpack --config webpack.config.js",
         "clean": "rimraf dist/*",
-        "build": "cp ../common/*.ts ./src; npm-run-all clean webpack"
+        "build": "npm-run-all clean webpack"
     },
     "repository": {
         "type": "git",
@@ -37,6 +37,8 @@
     "dependencies": {
         "@tensorflow/tfjs": "^3.10.0",
         "@tensorflow/tfjs-backend-wasm": "^3.10.0",
-        "buffer": "^6.0.3"
+        "@tensorflow/tfjs-backend-webgl": "^3.15.0",
+        "buffer": "^6.0.3",
+        "@dannadori/000_WorkerBase": "file:../000_WorkerBase"
     }
 }
