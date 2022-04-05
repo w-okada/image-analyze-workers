@@ -1,6 +1,6 @@
 {
     "name": "@dannadori/opencv-worker-js",
-    "version": "1.0.36",
+    "version": "1.0.38",
     "description": "",
     "main": "dist/opencv-worker.js",
     "scripts": {

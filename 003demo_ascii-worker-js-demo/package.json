@@ -52,10 +52,10 @@
         "css-loader": "^6.7.1",
         "webpack-cli": "^4.9.2",
         "html-loader": "^3.1.0",
-        "webpack-dev-server": "^4.7.4"
+        "webpack-dev-server": "^4.8.0"
     },
     "dependencies": {
-        "@dannadori/asciiart-worker-js": "^1.0.30",
+        "@dannadori/asciiart-worker-js": "^1.0.31",
         "demo-base": "file:../000_DemoBase",
         "react": "^18.0.0",
         "react-dom": "^18.0.0"

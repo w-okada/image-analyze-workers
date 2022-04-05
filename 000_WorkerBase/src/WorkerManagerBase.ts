@@ -105,6 +105,9 @@ export abstract class WorkerManagerBase {
         }
         const num = await this.lock();
         const p = new Promise((resolve, reject) => {
+            if (!this.worker) {
+                throw new Error("worker is not activated.");
+            }
             this.worker!.onmessage = (event) => {
                 if (event.data.message === WorkerResponse.PREDICTED) {
                     resolve(event.data.prediction);

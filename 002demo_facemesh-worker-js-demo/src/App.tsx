@@ -400,42 +400,44 @@ const App = () => {
             const snapCtx = snap.getContext("2d")!;
             snapCtx.drawImage(inputSourceElement, 0, 0, snap.width, snap.height);
             try {
-                const prediction = await managerRef.current!.predict(params, snap);
-                if (prediction.length > 0) {
-                    if (results.length > 3) {
-                        results.shift();
-                    }
-                    results.push(prediction);
-                }
+                if (snap.width > 0 && snap.height > 0) {
+                    const prediction = await managerRef.current!.predict(params, snap);
+                    if (prediction.length > 0) {
+                        if (results.length > 3) {
+                            results.shift();
+                        }
+                        results.push(prediction);
 
-                const keypointsEach = results.map((pred) => {
-                    return pred[0].scaledMesh as Coords3D;
-                });
-                const summedKeypoints = keypointsEach.reduce((prev, cur) => {
-                    for (let i = 0; i < cur.length; i++) {
-                        if (prev[i]) {
-                            prev[i][0] = prev[i][0] + cur[i][0];
-                            prev[i][1] = prev[i][1] + cur[i][1];
-                            prev[i][2] = prev[i][2] + cur[i][2];
+                        const keypointsEach = results.map((pred) => {
+                            return pred[0].scaledMesh as Coords3D;
+                        });
+                        const summedKeypoints = keypointsEach.reduce((prev, cur) => {
+                            for (let i = 0; i < cur.length; i++) {
+                                if (prev[i]) {
+                                    prev[i][0] = prev[i][0] + cur[i][0];
+                                    prev[i][1] = prev[i][1] + cur[i][1];
+                                    prev[i][2] = prev[i][2] + cur[i][2];
+                                } else {
+                                    prev.push([cur[i][0], cur[i][1], cur[i][2]]);
+                                }
+                            }
+                            return prev;
+                        }, [] as Coords3D);
+                        for (let i = 0; i < summedKeypoints.length; i++) {
+                            summedKeypoints[i][0] = summedKeypoints[i][0] / results.length;
+                            summedKeypoints[i][1] = summedKeypoints[i][1] / results.length;
+                            summedKeypoints[i][2] = summedKeypoints[i][2] / results.length;
+                        }
+                        prediction[0].scaledMesh = summedKeypoints;
+
+                        if (applicationMode === ApplicationModes.facemesh) {
+                            drawer.draw(snap, params, prediction);
                         } else {
-                            prev.push([cur[i][0], cur[i][1], cur[i][2]]);
+                            const scaleX = snap.width / params.processWidth;
+                            const scaleY = snap.height / params.processHeight;
+                            faceswapDrawer.swapFace(snap, prediction, scaleX, scaleY);
                         }
                     }
-                    return prev;
-                }, [] as Coords3D);
-                for (let i = 0; i < summedKeypoints.length; i++) {
-                    summedKeypoints[i][0] = summedKeypoints[i][0] / results.length;
-                    summedKeypoints[i][1] = summedKeypoints[i][1] / results.length;
-                    summedKeypoints[i][2] = summedKeypoints[i][2] / results.length;
-                }
-                prediction[0].scaledMesh = summedKeypoints;
-
-                if (applicationMode === ApplicationModes.facemesh) {
-                    drawer.draw(snap, params, prediction);
-                } else {
-                    const scaleX = snap.width / params.processWidth;
-                    const scaleY = snap.height / params.processHeight;
-                    faceswapDrawer.swapFace(snap, prediction, scaleX, scaleY);
                 }
             } catch (error) {
                 console.log(error);

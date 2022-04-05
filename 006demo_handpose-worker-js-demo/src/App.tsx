@@ -231,9 +231,11 @@ const App = () => {
             const snapCtx = snap.getContext("2d")!;
             snapCtx.drawImage(inputSourceElement, 0, 0, snap.width, snap.height);
             try {
-                const prediction = await managerRef.current!.predict(params, snap);
-                if (prediction) {
-                    drawer.draw(snap, params, prediction);
+                if (snap.width > 0 && snap.height > 0) {
+                    const prediction = await managerRef.current!.predict(params, snap);
+                    if (prediction) {
+                        drawer.draw(snap, params, prediction);
+                    }
                 }
             } catch (error) {
                 console.log(error);

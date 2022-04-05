@@ -53,10 +53,10 @@
         "css-loader": "^6.7.1",
         "autoprefixer": "^10.4.4",
         "html-loader": "^3.1.0",
-        "webpack-dev-server": "^4.7.4"
+        "webpack-dev-server": "^4.8.0"
     },
     "dependencies": {
-        "@dannadori/opencv-worker-js": "^1.0.36",
+        "@dannadori/opencv-worker-js": "^1.0.38",
         "demo-base": "file:../000_DemoBase",
         "react": "^18.0.0",
         "react-dom": "^18.0.0"
