@@ -47,7 +47,7 @@ export interface PoseNetConfig {
     processOnLocal: boolean;
     backendType: BackendTypes;
     wasmPaths: { [key: string]: string };
-    workerPath: string;
+    pageUrl: string;
 }
 
 export interface PoseNetOperatipnParams {

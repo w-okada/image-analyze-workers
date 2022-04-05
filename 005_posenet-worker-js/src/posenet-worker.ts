@@ -2,10 +2,11 @@ import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@d
 import * as poseNet from "@tensorflow-models/posenet";
 import * as tf from "@tensorflow/tfjs";
 import { BackendTypes, ModelConfigs, PoseNetConfig, PoseNetFunctionTypes, PoseNetOperatipnParams } from "./const";
-
+import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 export { Pose, getAdjacentKeyPoints } from "@tensorflow-models/posenet";
 export { PoseNetOperatipnParams, PoseNetConfig, PoseNetFunctionTypes } from "./const";
 export type { PoseNetArchitecture, PoseNetOutputStride, MobileNetMultiplier, PoseNetQuantBytes } from "@tensorflow-models/posenet/dist/types";
+
 export const generatePoseNetDefaultConfig = (): PoseNetConfig => {
     const defaultConf: PoseNetConfig = {
         browserType: getBrowserType(),
@@ -16,8 +17,8 @@ export const generatePoseNetDefaultConfig = (): PoseNetConfig => {
             "tfjs-backend-wasm-simd.wasm": "/tfjs-backend-wasm-simd.wasm",
             "tfjs-backend-wasm-threaded-simd.wasm": "/tfjs-backend-wasm-threaded-simd.wasm",
         },
-        workerPath: "./posenet-worker-worker.js",
         model: ModelConfigs.ModelConfigMobileNetV1,
+        pageUrl: window.location.href,
     };
     // WASMバージョンがあまり早くないので、Safariはローカルで実施をデフォルトにする。
     if (defaultConf.browserType == BrowserTypes.SAFARI) {
@@ -50,12 +51,29 @@ import workerJs from "worker-loader?inline=no-fallback!./posenet-worker-worker.t
 class LocalPN extends LocalWorker {
     model: poseNet.PoseNet | null = null;
     canvas: HTMLCanvasElement = document.createElement("canvas");
-    init = (config: PoseNetConfig) => {
-        return poseNet.load(config.model).then((res) => {
-            console.log("posenet loaded locally", config);
-            this.model = res;
-            return;
-        });
+
+    load_module = async (config: PoseNetConfig) => {
+        if (config.backendType === BackendTypes.wasm) {
+            const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
+            const wasmPaths: { [key: string]: string } = {};
+            Object.keys(config.wasmPaths).forEach((key) => {
+                wasmPaths[key] = `${dirname}${config.wasmPaths[key]}`;
+            });
+            setWasmPaths(wasmPaths);
+            console.log("use wasm backend", wasmPaths);
+            await tf.setBackend("wasm");
+        } else if (config.backendType === BackendTypes.cpu) {
+            await tf.setBackend("cpu");
+        } else {
+            console.log("use webgl backend");
+            await tf.setBackend("webgl");
+        }
+    };
+
+    init = async (config: PoseNetConfig) => {
+        await this.load_module(config);
+        await tf.ready();
+        this.model = await poseNet.load(config.model);
     };
 
     predict = async (config: PoseNetConfig, params: PoseNetOperatipnParams, canvas: HTMLCanvasElement): Promise<poseNet.Pose[]> => {
@@ -85,7 +103,7 @@ export class PoseNetWorkerManager extends WorkerManagerBase {
         this.config = config || generatePoseNetDefaultConfig();
         await this.initCommon(
             {
-                useWorkerForSafari: false,
+                useWorkerForSafari: true,
                 processOnLocal: this.config.processOnLocal,
                 workerJs: () => {
                     return new workerJs();
@@ -95,16 +113,16 @@ export class PoseNetWorkerManager extends WorkerManagerBase {
         );
         return;
     };
+
     predict = async (params: PoseNetOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+        const currentParams = { ...params };
+        const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
         if (!this.worker) {
-            const resizedCanvas = this.generateTargetCanvas(targetCanvas, params.processWidth, params.processHeight);
-            const prediction = await this.localWorker.predict(this.config, params, resizedCanvas);
+            const prediction = await this.localWorker.predict(this.config, currentParams, resizedCanvas);
             return prediction;
         }
-
-        const resizedCanvas = this.generateTargetCanvas(targetCanvas, params.processWidth, params.processHeight);
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
-        const prediction = (await this.sendToWorker(this.config, params, imageData.data)) as poseNet.Pose[];
+        const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as poseNet.Pose[];
         return prediction;
     };
 }
