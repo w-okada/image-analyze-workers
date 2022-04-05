@@ -1,32 +1,41 @@
-import { BrowserType } from "./BrowserUtil";
+import { BrowserTypes } from "@dannadori/000_WorkerBase";
 
 export const WorkerCommand = {
     INITIALIZE: "initialize",
     PREDICT: "predict",
-};
+} as const;
+export type WorkerCommand = typeof WorkerCommand[keyof typeof WorkerCommand];
 
 export const WorkerResponse = {
     INITIALIZED: "initialized",
     PREDICTED: "predicted",
-};
+} as const;
+export type WorkerResponse = typeof WorkerResponse[keyof typeof WorkerResponse];
+
+export const BackendTypes = {
+    WebGL: "WebGL",
+    wasm: "wasm",
+    cpu: "cpu",
+} as const;
+export type BackendTypes = typeof BackendTypes[keyof typeof BackendTypes];
+
+export const CartoonFunctionTypes = {
+    Cartoon: "Cartoon",
+} as const;
+export type CartoonFunctionTypes = typeof CartoonFunctionTypes[keyof typeof CartoonFunctionTypes];
 
 export interface CartoonConfig {
-    browserType: BrowserType;
+    browserType: BrowserTypes;
     processOnLocal: boolean;
-    useTFWasmBackend: boolean;
-    wasmPath: string;
+    backendType: BackendTypes;
+    wasmPaths: { [key: string]: string };
     pageUrl: string;
     modelJson: string;
     modelWeight: string;
 }
 
 export interface CartoonOperatipnParams {
-    type: CartoonFunctionType;
+    type: CartoonFunctionTypes;
     processWidth: number;
     processHeight: number;
-}
-
-export enum CartoonFunctionType {
-    Cartoon,
-    xxx, // Not implemented
 }

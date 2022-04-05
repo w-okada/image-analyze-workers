@@ -1,16 +1,8 @@
-import {
-    WorkerResponse,
-    WorkerCommand,
-    CartoonConfig,
-    CartoonOperatipnParams,
-    CartoonFunctionType,
-} from "./const";
-import { getBrowserType, BrowserType } from "./BrowserUtil";
+import { WorkerResponse, WorkerCommand, CartoonConfig, CartoonOperatipnParams, CartoonFunctionTypes, BackendTypes } from "./const";
 import * as tf from "@tensorflow/tfjs";
-import { setWasmPath } from "@tensorflow/tfjs-backend-wasm";
+import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 
-export { CartoonConfig, CartoonOperatipnParams } from "./const";
-export { BrowserType, getBrowserType } from "./BrowserUtil";
+export { CartoonConfig, CartoonOperatipnParams, BackendTypes } from "./const";
 
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./white-box-cartoonization-worker-worker.ts";
@@ -19,13 +11,18 @@ import workerJs from "worker-loader?inline=no-fallback!./white-box-cartoonizatio
 import modelJson from "../resources/white-box-cartoonization/model.json";
 // @ts-ignore
 import modelWeight from "../resources/white-box-cartoonization/group1-shard1of1.bin";
+import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
 
 export const generateCartoonDefaultConfig = (): CartoonConfig => {
     const defaultConf: CartoonConfig = {
         browserType: getBrowserType(),
         processOnLocal: false,
-        useTFWasmBackend: false,
-        wasmPath: "/tfjs-backend-wasm.wasm",
+        backendType: BackendTypes.WebGL,
+        wasmPaths: {
+            "tfjs-backend-wasm.wasm": "/tfjs-backend-wasm.wasm",
+            "tfjs-backend-wasm-simd.wasm": "/tfjs-backend-wasm-simd.wasm",
+            "tfjs-backend-wasm-threaded-simd.wasm": "/tfjs-backend-wasm-threaded-simd.wasm",
+        },
         pageUrl: window.location.href,
         modelJson: modelJson,
         modelWeight: modelWeight,
@@ -35,36 +32,36 @@ export const generateCartoonDefaultConfig = (): CartoonConfig => {
 
 export const generateDefaultCartoonParams = (): CartoonOperatipnParams => {
     const defaultParams: CartoonOperatipnParams = {
-        type: CartoonFunctionType.Cartoon,
+        type: CartoonFunctionTypes.Cartoon,
         processWidth: 320,
         processHeight: 320,
     };
     return defaultParams;
 };
 
-const load_module = async (config: CartoonConfig) => {
-    //    if(config.useTFWasmBackend || config.browserType === BrowserType.SAFARI){
-    const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
-    const wasmPath = `${dirname}${config.wasmPath}`;
-    console.log(`use wasm backend ${wasmPath}`);
-    setWasmPath(wasmPath);
-
-    if (config.useTFWasmBackend) {
-        require("@tensorflow/tfjs-backend-wasm");
-        await tf.setBackend("wasm");
-    } else {
-        console.log("use webgl backend");
-        require("@tensorflow/tfjs-backend-webgl");
-        await tf.setBackend("webgl");
-    }
-};
-
-export class LocalCT {
+export class LocalCT extends LocalWorker {
     model: tf.GraphModel | null = null;
     canvas = document.createElement("canvas");
 
+    load_module = async (config: CartoonConfig) => {
+        if (config.backendType === BackendTypes.wasm) {
+            const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
+            const wasmPaths: { [key: string]: string } = {};
+            Object.keys(config.wasmPaths).forEach((key) => {
+                wasmPaths[key] = `${dirname}${config.wasmPaths[key]}`;
+            });
+            setWasmPaths(wasmPaths);
+            console.log("use wasm backend", wasmPaths);
+            await tf.setBackend("wasm");
+        } else if (config.backendType === BackendTypes.cpu) {
+            await tf.setBackend("cpu");
+        } else {
+            console.log("use webgl backend");
+            await tf.setBackend("webgl");
+        }
+    };
     init = async (config: CartoonConfig) => {
-        await load_module(config);
+        await this.load_module(config);
         await tf.ready();
         tf.env().set("WEBGL_CPU_FORWARD", false);
 
@@ -73,40 +70,18 @@ export class LocalCT {
         });
         const b = Buffer.from(config.modelWeight.split(",")[1], "base64");
         const modelWeights = new File([b], "group1-shard1of1.bin");
-        this.model = await tf.loadGraphModel(
-            tf.io.browserFiles([modelJson2, modelWeights])
-        );
+        this.model = await tf.loadGraphModel(tf.io.browserFiles([modelJson2, modelWeights]));
     };
 
-    predict = async (
-        targetCanvas: HTMLCanvasElement,
-        config: CartoonConfig,
-        params: CartoonOperatipnParams
-    ) => {
-        // console.log("current backend[main thread]:", tf.getBackend())
-        // ImageData作成
-        this.canvas.width = params.processWidth;
-        this.canvas.height = params.processHeight;
-        const ctx = this.canvas.getContext("2d")!;
-        ctx.drawImage(
-            targetCanvas,
-            0,
-            0,
-            this.canvas.width,
-            this.canvas.height
-        );
-
+    // outputArray: Uint8ClampedArray | null = null;
+    predict = async (config: CartoonConfig, params: CartoonOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+        let outputArray: Uint8ClampedArray | null = null;
         tf.tidy(() => {
-            let tensor = tf.browser.fromPixels(this.canvas);
+            let tensor = tf.browser.fromPixels(targetCanvas);
             tensor = tf.sub(tensor.expandDims(0).div(127.5), 1);
             let prediction = this.model!.predict(tensor) as tf.Tensor;
 
-            const alpha = tf.ones([
-                1,
-                params.processWidth,
-                params.processHeight,
-                1,
-            ]);
+            const alpha = tf.ones([1, params.processWidth, params.processHeight, 1]);
             prediction = tf.concat([prediction, alpha], 3);
             prediction = tf.add(prediction, 1);
             prediction = tf.mul(prediction, 127.5);
@@ -114,213 +89,43 @@ export class LocalCT {
             prediction = tf.cast(prediction, "int32");
             prediction = tf.squeeze(prediction as tf.Tensor);
             let imgArray = prediction.arraySync() as number[];
-            let imgArray2 = new Uint8ClampedArray(imgArray.length);
-            imgArray2.set(imgArray);
-            const outputImage = new ImageData(
-                imgArray2,
-                this.canvas.width,
-                this.canvas.height
-            );
-            ctx.putImageData(outputImage, 0, 0);
+            outputArray = new Uint8ClampedArray(imgArray.length);
+            outputArray.set(imgArray);
+            // const outputImage = new ImageData(imgArray2, this.canvas.width, this.canvas.height);
+            // ctx.putImageData(outputImage, 0, 0);
         });
 
-        return this.canvas;
+        return outputArray;
     };
 }
 
-export class CartoonWorkerManager {
-    private workerCT: Worker | null = null;
-    private canvasOut = document.createElement("canvas");
-    private canvas = document.createElement("canvas");
+export class CartoonWorkerManager extends WorkerManagerBase {
     private config = generateCartoonDefaultConfig();
-    private localCT = new LocalCT();
+    localWorker = new LocalCT();
+
     init = async (config: CartoonConfig | null) => {
-        if (config != null) {
-            this.config = config;
-        }
-        if (this.workerCT) {
-            this.workerCT.terminate();
-        }
-        this.workerCT = null;
-
-        if (this.config.processOnLocal == true) {
-            await this.localCT.init(this.config!);
-            return;
-        }
-
-        // Bodypix 用ワーカー
-        const workerCT: Worker = new workerJs();
-
-        workerCT!.postMessage({
-            message: WorkerCommand.INITIALIZE,
-            config: this.config,
-        });
-        const p = new Promise<void>((onResolve, onFail) => {
-            workerCT!.onmessage = (event) => {
-                if (event.data.message === WorkerResponse.INITIALIZED) {
-                    console.log("WORKERSS INITIALIZED");
-                    this.workerCT = workerCT;
-                    onResolve();
-                } else {
-                    console.log("cartoon Initialization something wrong..");
-                    onFail(event);
-                }
-            };
-        });
-        return p;
+        this.config = config || generateCartoonDefaultConfig();
+        await this.initCommon(
+            {
+                useWorkerForSafari: false,
+                processOnLocal: this.config.processOnLocal,
+                workerJs: () => {
+                    return new workerJs();
+                },
+            },
+            config
+        );
+        return;
     };
-
-    predict = async (
-        targetCanvas: HTMLCanvasElement,
-        params = generateDefaultCartoonParams()
-    ) => {
-        if (this.config.processOnLocal == true) {
-            const convertedCanvas = await this.localCT.predict(
-                targetCanvas,
-                this.config,
-                params
-            );
-            this.canvasOut.width = targetCanvas.width;
-            this.canvasOut.height = targetCanvas.height;
-            const ctx = this.canvasOut.getContext("2d")!;
-            ctx.drawImage(
-                convertedCanvas,
-                0,
-                0,
-                this.canvasOut.width,
-                this.canvasOut.height
-            );
-            return this.canvasOut;
+    predict = async (params: CartoonOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+        const currentParams = { ...params };
+        const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
+        if (!this.worker) {
+            const prediction = await this.localWorker.predict(this.config, currentParams, resizedCanvas);
+            return prediction;
         }
-
-        if (!this.workerCT) {
-            return null;
-        }
-
-        if (this.config.browserType === BrowserType.SAFARI) {
-            // Case.2 Process on worker thread, Safari (Send dataArray)
-            this.canvas.width = params.processWidth;
-            this.canvas.height = params.processHeight;
-            const ctx = this.canvas.getContext("2d")!;
-            ctx.drawImage(
-                targetCanvas,
-                0,
-                0,
-                this.canvas.width,
-                this.canvas.height
-            );
-            const imageData = ctx.getImageData(
-                0,
-                0,
-                this.canvas.width,
-                this.canvas.height
-            );
-            const dataArray = imageData.data;
-            const width = imageData.width;
-            const height = imageData.height;
-            const uid = performance.now();
-
-            this.workerCT!.postMessage(
-                {
-                    message: WorkerCommand.PREDICT,
-                    uid: uid,
-                    config: this.config,
-                    params: params,
-                    data: dataArray,
-                },
-                [dataArray.buffer]
-            );
-            const p = new Promise(
-                (onResolve: (v: HTMLCanvasElement) => void, onFail) => {
-                    this.workerCT!.onmessage = (event) => {
-                        if (
-                            event.data.message === WorkerResponse.PREDICTED &&
-                            event.data.uid === uid
-                        ) {
-                            const outDataArray = event.data.converted;
-                            const outImageData = new ImageData(
-                                outDataArray,
-                                imageData.width,
-                                imageData.height
-                            );
-                            this.canvas.width = imageData.width;
-                            this.canvas.height = imageData.height;
-                            this.canvas
-                                .getContext("2d")!
-                                .putImageData(outImageData, 0, 0);
-                            this.canvasOut.width = targetCanvas.width;
-                            this.canvasOut.height = targetCanvas.height;
-                            const ctx = this.canvasOut.getContext("2d")!;
-                            ctx.drawImage(
-                                this.canvas,
-                                0,
-                                0,
-                                this.canvasOut.width,
-                                this.canvasOut.height
-                            );
-                            onResolve(this.canvasOut);
-                        } else {
-                            console.log("cartoon Prediction something wrong..");
-                            // onFail(event)
-                        }
-                    };
-                }
-            );
-            return p;
-        } else {
-            // Case.3 Process on worker thread, Chrome (Send ImageBitmap)
-            const off = new OffscreenCanvas(
-                targetCanvas.width,
-                targetCanvas.height
-            );
-            off.getContext("2d")!.drawImage(
-                targetCanvas,
-                0,
-                0,
-                targetCanvas.width,
-                targetCanvas.height
-            );
-            const imageBitmap = off.transferToImageBitmap();
-            const uid = performance.now();
-            this.workerCT!.postMessage(
-                {
-                    message: WorkerCommand.PREDICT,
-                    uid: uid,
-                    config: this.config,
-                    params: params,
-                    // data: data, width: inImageData.width, height:inImageData.height
-                    image: imageBitmap,
-                },
-                [imageBitmap]
-            );
-            const p = new Promise(
-                (onResolve: (v: HTMLCanvasElement) => void, onFail) => {
-                    this.workerCT!.onmessage = (event) => {
-                        if (
-                            event.data.message === WorkerResponse.PREDICTED &&
-                            event.data.uid === uid
-                        ) {
-                            const imagedata = event.data.converted;
-                            this.canvasOut.width = targetCanvas.width;
-                            this.canvasOut.height = targetCanvas.height;
-                            const ctx = this.canvasOut.getContext("2d")!;
-                            ctx.drawImage(
-                                imagedata,
-                                0,
-                                0,
-                                targetCanvas.width,
-                                targetCanvas.height
-                            );
-                            onResolve(this.canvasOut);
-                            //                        console.log("worker!!!!", imageBitmap.width, imageBitmap.height)
-                        } else {
-                            console.log("cartoon Prediction something wrong..");
-                            // onFail(event)
-                        }
-                    };
-                }
-            );
-            return p;
-        }
+        const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
+        const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as Uint8ClampedArray | null;
+        return prediction;
     };
 }

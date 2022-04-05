@@ -1,13 +1,13 @@
 {
     "name": "@dannadori/white-box-cartoonization-worker-js",
-    "version": "1.0.22",
+    "version": "1.0.23",
     "description": "",
     "main": "dist/white-box-cartoonization-worker.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "webpack": "npx webpack --config webpack.config.js",
         "clean": "rimraf dist/*",
-        "build": "cp ../common/*.ts ./src; npm-run-all clean webpack"
+        "build": "npm-run-all clean webpack"
     },
     "repository": {
         "type": "git",
@@ -38,7 +38,8 @@
     "dependencies": {
         "@tensorflow/tfjs": "^3.10.0",
         "@tensorflow/tfjs-backend-wasm": "^3.10.0",
+        "@tensorflow/tfjs-backend-webgl": "^3.15.0",
         "buffer": "^6.0.3",
-        "seedrandom": "^3.0.5"
+        "@dannadori/000_WorkerBase": "file:../000_WorkerBase"
     }
 }
