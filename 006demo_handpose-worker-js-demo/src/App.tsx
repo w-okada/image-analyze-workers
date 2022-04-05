@@ -1,407 +1,279 @@
-import React, { useEffect, useState } from "react";
-import { makeStyles } from "@material-ui/core";
-import {
-    SingleValueSlider,
-    Toggle,
-    VideoInputSelect,
-} from "./components/components";
-import { VideoInputType } from "./const";
-import { useVideoInputList } from "./hooks/useVideoInputList";
-import {
-    generateDefaultHandPoseParams,
-    generateHandPoseDefaultConfig,
-    HandPoseWorkerManager,
-    HandPoseConfig,
-    HandPoseOperatipnParams,
-} from "@dannadori/handpose-worker-js";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { BackendTypes, HandPoseWorkerManager } from "@dannadori/handpose-worker-js";
+import { useAppState } from "./provider/AppStateProvider";
+import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import { HandPoseDrawer } from "./HandPoseDrawer";
+import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 
 let GlobalLoopID = 0;
 
-const fingerLookupIndices: { [key: string]: number[] } = {
-    thumb: [0, 1, 2, 3, 4],
-    indexFinger: [0, 5, 6, 7, 8],
-    middleFinger: [0, 9, 10, 11, 12],
-    ringFinger: [0, 13, 14, 15, 16],
-    pinky: [0, 17, 18, 19, 20],
+const Controller = () => {
+    const { inputSourceType, setInputSourceType, setInputSource, config, setConfig, params, setParams } = useAppState();
+    const videoInputSelectorProps: VideoInputSelectorProps = {
+        id: "video-input-selector",
+        currentValue: inputSourceType || "File",
+        onInputSourceTypeChanged: setInputSourceType,
+        onInputSourceChanged: setInputSource,
+    };
+
+    const onLocalSwitchProps: CommonSwitchProps = {
+        id: "on-local-switch",
+        title: "process on local",
+        currentValue: config.processOnLocal,
+        onChange: (value: boolean) => {
+            config.processOnLocal = value;
+            setConfig({ ...config });
+        },
+    };
+
+    const backendSelectorProps: CommonSelectorProps<BackendTypes> = {
+        id: "backend-selector",
+        title: "internal resolution",
+        currentValue: config.backendType,
+        options: {
+            WebGL: BackendTypes.WebGL,
+            wasm: BackendTypes.wasm,
+            cpu: BackendTypes.cpu,
+        },
+        onChange: (value: BackendTypes) => {
+            config.backendType = value;
+            setConfig({ ...config });
+        },
+    };
+
+    const maxContinuousCheckSliderProps: CommonSliderProps = {
+        id: "max-continuous-check-slider",
+        title: "max continuous check",
+        currentValue: config.model.maxContinuousChecks!,
+        max: 10,
+        min: 1,
+        step: 1,
+        width: "30%",
+        onChange: (value: number) => {
+            config.model.maxContinuousChecks = value;
+            setConfig({ ...config });
+        },
+        integer: true,
+    };
+
+    const confidenceSliderProps: CommonSliderProps = {
+        id: "confidence-slider",
+        title: "confidence",
+        currentValue: config.model.detectionConfidence!,
+        max: 1,
+        min: 0,
+        step: 0.1,
+        width: "30%",
+        onChange: (value: number) => {
+            config.model.detectionConfidence = value;
+            setConfig({ ...config });
+        },
+        integer: false,
+    };
+    const iouThresholdSliderProps: CommonSliderProps = {
+        id: "iou-threshold-slider",
+        title: "iou threshold",
+        currentValue: config.model.iouThreshold!,
+        max: 1,
+        min: 0,
+        step: 0.1,
+        width: "30%",
+        onChange: (value: number) => {
+            config.model.iouThreshold = value;
+            setConfig({ ...config });
+        },
+        integer: false,
+    };
+
+    const scoreThresholdSliderProps: CommonSliderProps = {
+        id: "score-threshold-slider",
+        title: "score threshold",
+        currentValue: config.model.scoreThreshold!,
+        max: 1,
+        min: 0,
+        step: 0.1,
+        width: "30%",
+        onChange: (value: number) => {
+            config.model.scoreThreshold = value;
+            setConfig({ ...config });
+        },
+        integer: false,
+    };
+
+    const processWidthSliderProps: CommonSliderProps = {
+        id: "process-width-slider",
+        title: "process width",
+        currentValue: params.processWidth,
+        max: 1000,
+        min: 100,
+        step: 10,
+        width: "30%",
+        onChange: (value: number) => {
+            params.processWidth = value;
+            setParams({ ...params });
+        },
+        integer: true,
+    };
+    const processHeightSliderProps: CommonSliderProps = {
+        id: "process-height-slider",
+        title: "process height",
+        currentValue: params.processHeight,
+        max: 1000,
+        min: 100,
+        step: 10,
+        width: "30%",
+        onChange: (value: number) => {
+            params.processHeight = value;
+            setParams({ ...params });
+        },
+        integer: true,
+    };
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column" }}>
+            <VideoInputSelector {...videoInputSelectorProps}></VideoInputSelector>
+            <CommonSwitch {...onLocalSwitchProps}></CommonSwitch>
+            <CommonSelector {...backendSelectorProps}></CommonSelector>
+
+            <CommonSlider {...maxContinuousCheckSliderProps}></CommonSlider>
+            <CommonSlider {...confidenceSliderProps}></CommonSlider>
+            <CommonSlider {...iouThresholdSliderProps}></CommonSlider>
+            <CommonSlider {...scoreThresholdSliderProps}></CommonSlider>
+
+            <CommonSlider {...processWidthSliderProps}></CommonSlider>
+            <CommonSlider {...processHeightSliderProps}></CommonSlider>
+        </div>
+    );
 };
 
-const useStyles = makeStyles(() => ({
-    inputView: {
-        maxWidth: 512,
-        maxHeight: 512,
-    },
-}));
-
-interface WorkerProps {
-    manager: HandPoseWorkerManager;
-    config: HandPoseConfig;
-    params: HandPoseOperatipnParams;
-    count: number;
-}
-
-interface InputMedia {
-    mediaType: VideoInputType;
-    media: MediaStream | string;
-}
-
 const App = () => {
-    const classes = useStyles();
-    const { videoInputList } = useVideoInputList();
-    const [workerProps, setWorkerProps] = useState<WorkerProps>();
-
-    const [maxContinuousCheck, setMaxContinuousCheck] = useState(1);
-    const [confidence, setConfidence] = useState(0.8);
-    const [iouThreshold, setIouThreshold] = useState(0.3);
-    const [scoreThreshold, setScoreThreshold] = useState(0.75);
-
-    const [onLocal, setOnLocal] = useState(true);
-    const [useWasm] = useState(false);
-    const [flip] = useState(false);
-
-    const [processWidth, setProcessWidth] = useState(300);
-    const [processHeight, setProcessHeight] = useState(300);
-    const [strict] = useState(false);
-
-    const [inputMedia, setInputMedia] = useState<InputMedia>({
-        mediaType: "IMAGE",
-        media: "yuka_kawamura.jpg",
-    });
-    const inputChange = (
-        mediaType: VideoInputType,
-        input: MediaStream | string
-    ) => {
-        setInputMedia({ mediaType: mediaType, media: input });
-    };
-
-    ///////////////////////////
-    /// プロパティ設定      ///
-    ///////////////////////////
-    //// モデル切り替え
+    const { inputSource, config, params } = useAppState();
+    const managerRef = useRef<HandPoseWorkerManager>();
+    const [manager, setManager] = useState<HandPoseWorkerManager | undefined>(managerRef.current);
     useEffect(() => {
-        const init = async () => {
-            const m = workerProps
-                ? workerProps.manager
-                : new HandPoseWorkerManager();
-            const count = workerProps ? workerProps.count + 1 : 0;
-            const c = generateHandPoseDefaultConfig();
-            c.processOnLocal = onLocal;
-            c.useTFWasmBackend = useWasm;
-            c.model.detectionConfidence = confidence;
-            c.model.iouThreshold = iouThreshold;
-            c.model.maxContinuousChecks = maxContinuousCheck;
-            c.model.scoreThreshold = scoreThreshold;
-            await m.init(c);
-
-            const p = generateDefaultHandPoseParams();
-            p.estimateHands.flipHorizontal = flip;
-            p.processHeight = processHeight;
-            p.processWidth = processWidth;
-
-            const newProps = { manager: m, config: c, params: p, count: count };
-            setWorkerProps(newProps);
+        const loadModel = async () => {
+            const m = manager ? manager : new HandPoseWorkerManager();
+            await m.init(config);
+            managerRef.current = m;
+            setManager(managerRef.current);
         };
-        init();
-    }, [onLocal, useWasm]); // eslint-disable-line
+        loadModel();
+    }, [config]);
 
-    //// パラメータ変更
+    const drawer = useMemo(() => {
+        return new HandPoseDrawer();
+    }, []);
+
     useEffect(() => {
-        if (!workerProps) {
+        const output = document.getElementById("output") as HTMLCanvasElement;
+        drawer.setOutputCanvas(output);
+    }, []);
+
+    const inputSourceElement = useMemo(() => {
+        let elem: HTMLVideoElement | HTMLImageElement;
+        if (typeof inputSource === "string") {
+            const sourceType = getDataTypeOfDataURL(inputSource);
+            if (sourceType === DataTypesOfDataURL.video) {
+                elem = document.createElement("video");
+                elem.controls = true;
+                elem.autoplay = true;
+                elem.loop = true;
+                elem.src = inputSource;
+            } else {
+                elem = document.createElement("img");
+                elem.src = inputSource;
+            }
+        } else {
+            elem = document.createElement("video");
+            elem.autoplay = true;
+            elem.srcObject = inputSource;
+        }
+        elem.style.objectFit = "contain";
+        elem.style.width = "100%";
+        elem.style.height = "100%";
+        return elem;
+    }, [inputSource]);
+
+    ////////////////
+    // Processing
+    ////////////////
+
+    useEffect(() => {
+        if (!managerRef.current) {
             return;
         }
-        const p = generateDefaultHandPoseParams();
-        p.estimateHands.flipHorizontal = flip;
-        p.processHeight = processHeight;
-        p.processWidth = processWidth;
-        // setWorkerProps({...workerProps, params:p})
-        workerProps.params = p;
-    }, [flip, processHeight, processWidth]); // eslint-disable-line
-
-    /// input設定
-    useEffect(() => {
-        const video = document.getElementById(
-            "input_video"
-        ) as HTMLVideoElement;
-        if (inputMedia.mediaType === "IMAGE") {
-            const img = document.getElementById(
-                "input_img"
-            ) as HTMLImageElement;
-            img.onloadeddata = () => {
-                resizeDst(img);
-            };
-            img.src = inputMedia.media as string;
-        } else if (inputMedia.mediaType === "MOVIE") {
-            const vid = document.getElementById(
-                "input_video"
-            ) as HTMLVideoElement;
-            vid.pause();
-            vid.srcObject = null;
-            vid.src = inputMedia.media as string;
-            vid.loop = true;
-            vid.onloadeddata = () => {
-                video.play();
-                resizeDst(vid);
-            };
-        } else {
-            const vid = document.getElementById(
-                "input_video"
-            ) as HTMLVideoElement;
-            vid.pause();
-            vid.srcObject = inputMedia.media as MediaStream;
-            vid.onloadeddata = () => {
-                video.play();
-                resizeDst(vid);
-            };
-        }
-    }, [inputMedia]);
-
-    /// resize
-    useEffect(() => {
-        const input =
-            document.getElementById("input_img") ||
-            document.getElementById("input_video");
-        resizeDst(input!);
-    });
-
-    //////////////
-    ///// util  //
-    //////////////
-    const resizeDst = (input: HTMLElement) => {
-        const cs = getComputedStyle(input);
-        const width = parseInt(cs.getPropertyValue("width"));
-        const height = parseInt(cs.getPropertyValue("height"));
-        const dst = document.getElementById("output") as HTMLCanvasElement;
-        const front = document.getElementById("front") as HTMLCanvasElement;
-        const srcCache = document.getElementById(
-            "src-cache"
-        ) as HTMLCanvasElement;
-
-        [dst, srcCache, front].forEach((c) => {
-            c.width = width;
-            c.height = height;
-        });
-    };
-
-    //////////////////
-    //  pipeline    //
-    //////////////////
-
-    useEffect(() => {
-        console.log("[Pipeline] Start", workerProps);
+        console.log("Renderer Initialized");
         let renderRequestId: number;
         const LOOP_ID = performance.now();
         GlobalLoopID = LOOP_ID;
 
+        const dst = document.getElementById("output") as HTMLCanvasElement;
+        const snap = document.createElement("canvas");
+        const info = document.getElementById("info") as HTMLDivElement;
+
+        const perfs: number[] = [];
+        const avr = (perfs: number[]) => {
+            const sum = perfs.reduce((prev, cur) => {
+                return prev + cur;
+            }, 0);
+            return (sum / perfs.length).toFixed(3);
+        };
         const render = async () => {
-            console.log(
-                "RENDER::::",
-                LOOP_ID,
-                renderRequestId,
-                workerProps?.params
-            );
             const start = performance.now();
-
-            const dst = document.getElementById("output") as HTMLCanvasElement;
-            if (workerProps) {
-                if (dst.width > 0 && dst.height > 0) {
-                    const src =
-                        (document.getElementById(
-                            "input_img"
-                        ) as HTMLImageElement) ||
-                        (document.getElementById(
-                            "input_video"
-                        ) as HTMLVideoElement);
-                    const dst = document.getElementById(
-                        "output"
-                    ) as HTMLCanvasElement;
-                    const srcCache = document.getElementById(
-                        "src-cache"
-                    ) as HTMLCanvasElement;
-
-                    const dstCtx = dst.getContext("2d")!;
-
-                    srcCache
-                        .getContext("2d")!
-                        .drawImage(src, 0, 0, srcCache.width, srcCache.height);
-
-                    const inference_start = performance.now();
-                    const prediction = await workerProps.manager.predict(
-                        srcCache!,
-                        workerProps.params
-                    );
-                    const inference_end = performance.now();
-                    const info1 = document.getElementById(
-                        "info"
-                    ) as HTMLCanvasElement;
-                    info1.innerText = `processing time: ${
-                        inference_end - inference_start
-                    }`;
-
-                    if (prediction) {
-                        console.log(prediction);
-                        const scaleX =
-                            src.width / workerProps.params.processWidth;
-                        const scaleY =
-                            src.height / workerProps.params.processHeight;
-                        dstCtx.drawImage(src, 0, 0, dst.width, dst.height);
-                        prediction.forEach((x) => {
-                            const landmarks = x.landmarks as number[][];
-                            landmarks.forEach((landmark) => {
-                                const x = landmark[0] * scaleX;
-                                const y = landmark[1] * scaleY;
-                                dstCtx.fillRect(x, y, 5, 5);
-                            });
-                            const fingers = Object.keys(fingerLookupIndices);
-                            fingers.forEach((x) => {
-                                const points = fingerLookupIndices[x].map(
-                                    (idx) => landmarks[idx]
-                                );
-
-                                dstCtx.beginPath();
-                                dstCtx.moveTo(
-                                    points[0][0] * scaleX,
-                                    points[0][1] * scaleY
-                                );
-                                for (let i = 1; i < points.length; i++) {
-                                    const point = points[i];
-                                    dstCtx.lineTo(
-                                        point[0] * scaleX,
-                                        point[1] * scaleY
-                                    );
-                                }
-                                dstCtx.lineWidth = 3;
-                                dstCtx.stroke();
-                                dstCtx.closePath();
-                            });
-                        });
-                    }
+            [snap, dst].forEach((x) => {
+                const width = inputSourceElement instanceof HTMLVideoElement ? inputSourceElement.videoWidth : inputSourceElement.naturalWidth;
+                const height = inputSourceElement instanceof HTMLVideoElement ? inputSourceElement.videoHeight : inputSourceElement.naturalHeight;
+                if (x.width != width || x.height != height) {
+                    x.width = width;
+                    x.height = height;
                 }
-                if (GlobalLoopID === LOOP_ID) {
-                    renderRequestId = requestAnimationFrame(render);
+            });
+            const snapCtx = snap.getContext("2d")!;
+            snapCtx.drawImage(inputSourceElement, 0, 0, snap.width, snap.height);
+            try {
+                const prediction = await managerRef.current!.predict(params, snap);
+                if (prediction) {
+                    drawer.draw(snap, params, prediction);
                 }
+            } catch (error) {
+                console.log(error);
+            }
+
+            if (GlobalLoopID === LOOP_ID) {
+                renderRequestId = requestAnimationFrame(render);
             }
 
             const end = performance.now();
-            const info2 = document.getElementById("info2") as HTMLCanvasElement;
-            info2.innerText = `processing time: ${end - start}`;
+            if (perfs.length > 100) {
+                perfs.shift();
+            }
+            perfs.push(end - start);
+            const avrElapsedTime = avr(perfs);
+            info.innerText = `time:${avrElapsedTime}ms`;
         };
         render();
         return () => {
             console.log("CANCEL", renderRequestId);
             cancelAnimationFrame(renderRequestId);
         };
-    }, [workerProps, strict]);
+    }, [managerRef.current, inputSourceElement, config, params]);
 
-    /////////////
-    // render  //
-    /////////////
     return (
-        <div>
-            <div style={{ display: "flex" }}>
-                <div style={{ display: "flex" }}>
-                    {inputMedia.mediaType === "IMAGE" ? (
-                        <img
-                            className={classes.inputView}
-                            alt="input_img"
-                            id="input_img"
-                        ></img>
-                    ) : (
-                        <video
-                            className={classes.inputView}
-                            id="input_video"
-                        ></video>
-                    )}
-                    <canvas className={classes.inputView} id="output"></canvas>
-                </div>
-                <div className={classes.inputView}>
-                    <VideoInputSelect
-                        title="input"
-                        current={""}
-                        onchange={inputChange}
-                        options={videoInputList}
-                    />
-
-                    <SingleValueSlider
-                        title="maxContinuousCheck"
-                        current={maxContinuousCheck}
-                        onchange={setMaxContinuousCheck}
-                        min={1}
-                        max={10}
-                        step={1}
-                    />
-                    <SingleValueSlider
-                        title="confidence"
-                        current={confidence}
-                        onchange={setConfidence}
-                        min={0}
-                        max={1}
-                        step={0.01}
-                    />
-                    <SingleValueSlider
-                        title="iouThreshold"
-                        current={iouThreshold}
-                        onchange={setIouThreshold}
-                        min={0}
-                        max={1}
-                        step={0.01}
-                    />
-                    <SingleValueSlider
-                        title="scoreThreshold"
-                        current={scoreThreshold}
-                        onchange={setScoreThreshold}
-                        min={0}
-                        max={1}
-                        step={0.01}
-                    />
-
-                    <SingleValueSlider
-                        title="processWidth"
-                        current={processWidth}
-                        onchange={setProcessWidth}
-                        min={100}
-                        max={1024}
-                        step={10}
-                    />
-                    <SingleValueSlider
-                        title="processHeight"
-                        current={processHeight}
-                        onchange={setProcessHeight}
-                        min={100}
-                        max={1024}
-                        step={10}
-                    />
-
-                    <Toggle
-                        title="onLocal"
-                        current={onLocal}
-                        onchange={setOnLocal}
-                    />
-
-                    <div>
-                        <a href="https://github.com/w-okada/image-analyze-workers">
-                            github repository
-                        </a>
-                    </div>
-                </div>
+        <div style={{ width: "100%", height: "100%", display: "flex", objectFit: "contain", alignItems: "flex-start" }}>
+            <div
+                style={{ width: "33%", objectFit: "contain" }}
+                ref={(ref) => {
+                    ref?.replaceChildren(inputSourceElement);
+                    // ref?.appendChild();
+                }}
+            ></div>
+            <div style={{ width: "33%", objectFit: "contain" }}>
+                <canvas id="output" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
             </div>
-            <div className={classes.inputView} id="output-div"></div>
-
-            <div style={{ display: "flex" }}>
-                <canvas className={classes.inputView} id="tmp" hidden></canvas>
-                <canvas
-                    className={classes.inputView}
-                    id="front"
-                    hidden
-                ></canvas>
-                <canvas
-                    className={classes.inputView}
-                    id="src-cache"
-                    hidden
-                ></canvas>
+            <div style={{ width: "30%", marginLeft: "3%", objectFit: "contain" }}>
+                <Controller></Controller>
             </div>
-            <div>
-                <div id="info"> </div>
-                <div id="info2"> </div>
-            </div>
+            <div style={{ position: "absolute", top: "2%", left: "2%", background: "#000000", color: "#aabbaa" }} id="info"></div>
         </div>
     );
 };

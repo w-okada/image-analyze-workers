@@ -22,15 +22,19 @@ module.exports = {
                     {
                         loader: "babel-loader",
                         options: {
-                            presets: [
-                                "@babel/preset-env",
-                                "@babel/preset-react",
-                                "@babel/preset-typescript",
-                            ],
+                            presets: ["@babel/preset-env", "@babel/preset-react", "@babel/preset-typescript"],
                             plugins: ["@babel/plugin-transform-runtime"],
                         },
                     },
                 ],
+            },
+            {
+                test: /\.css$/,
+                use: ["style-loader", { loader: "css-loader", options: { importLoaders: 1 } }, "postcss-loader"],
+            },
+            {
+                test: /\.html$/,
+                loader: "html-loader",
             },
         ],
     },

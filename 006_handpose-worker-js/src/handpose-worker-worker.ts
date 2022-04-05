@@ -1,73 +1,42 @@
 import * as handpose from "@tensorflow-models/handpose";
-import { BrowserType } from "./BrowserUtil";
-import {
-    HandPoseConfig,
-    HandPoseOperatipnParams,
-    HandPoseFunctionType,
-    WorkerCommand,
-    WorkerResponse,
-} from "./const";
+import { HandPoseConfig, HandPoseOperatipnParams, HandPoseFunctionType, WorkerCommand, WorkerResponse, BackendTypes } from "./const";
 import * as tf from "@tensorflow/tfjs";
-import { setWasmPath } from "@tensorflow/tfjs-backend-wasm";
+import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
 let model: handpose.HandPose | null;
 
 const load_module = async (config: HandPoseConfig) => {
-    const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
-    const wasmPath = `${dirname}${config.wasmPath}`;
-    console.log("use wasm backend", wasmPath);
-    setWasmPath(wasmPath);
-    if (config.useTFWasmBackend || config.browserType === BrowserType.SAFARI) {
-        require("@tensorflow/tfjs-backend-wasm");
+    if (config.backendType === BackendTypes.wasm) {
+        const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
+        const wasmPaths: { [key: string]: string } = {};
+        Object.keys(config.wasmPaths).forEach((key) => {
+            wasmPaths[key] = `${dirname}${config.wasmPaths[key]}`;
+        });
+        setWasmPaths(wasmPaths);
+        console.log("use wasm backend", wasmPaths);
         await tf.setBackend("wasm");
+    } else if (config.backendType === BackendTypes.cpu) {
+        await tf.setBackend("cpu");
     } else {
         console.log("use webgl backend");
-        require("@tensorflow/tfjs-backend-webgl");
         await tf.setBackend("webgl");
     }
 };
 
-const predict = async (
-    image: ImageBitmap,
-    config: HandPoseConfig,
-    params: HandPoseOperatipnParams
-) => {
-    // ImageData作成
-    const processWidth =
-        params.processWidth <= 0 || params.processHeight <= 0
-            ? image.width
-            : params.processWidth;
-    const processHeight =
-        params.processWidth <= 0 || params.processHeight <= 0
-            ? image.height
-            : params.processHeight;
-
-    //console.log("process image size:", processWidth, processHeight)
-    const offscreen = new OffscreenCanvas(processWidth, processHeight);
-    const ctx = offscreen.getContext("2d")!;
-    ctx.drawImage(image, 0, 0, processWidth, processHeight);
-    const newImg = ctx.getImageData(0, 0, processWidth, processHeight);
-
-    const prediction = await model!.estimateHands(newImg);
-    return prediction;
-};
-
-const predictForSafari = async (
-    data: Uint8ClampedArray,
-    config: HandPoseConfig,
-    params: HandPoseOperatipnParams
-) => {
-    // ImageData作成
-    const imageData = new ImageData(
-        data,
-        params.processWidth,
-        params.processHeight
-    );
-    const prediction = await model!.estimateHands(imageData);
-
-    return prediction;
+const predict = async (config: HandPoseConfig, params: HandPoseOperatipnParams, data: Uint8ClampedArray) => {
+    // console.log("Worker BACKEND:", tf.getBackend());
+    try {
+        const imageData = new ImageData(data, params.processWidth, params.processHeight);
+        const prediction = await model!.estimateHands(imageData);
+        return prediction;
+    } catch (error) {
+        console.log("error1", data);
+        console.log("error2", params);
+        console.log("error3", config);
+        throw error;
+    }
 };
 
 onmessage = async (event) => {
@@ -84,31 +53,14 @@ onmessage = async (event) => {
             });
         });
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        //    console.log("requested predict facemesh.")
-        const image: ImageBitmap = event.data.image;
-        const uid: number = event.data.uid;
-        const processWidth = event.data.processWidth;
-        const processHeight = event.data.processHeight;
-        const data = event.data.data;
         const config = event.data.config as HandPoseConfig;
         const params = event.data.params as HandPoseOperatipnParams;
-        console.log("current backend[worker thread]:", tf.getBackend());
+        const data: Uint8ClampedArray = event.data.data;
 
-        if (config.browserType == BrowserType.SAFARI) {
-            const prediction = await predictForSafari(data, config, params);
-            ctx.postMessage({
-                message: WorkerResponse.PREDICTED,
-                uid: uid,
-                prediction: prediction,
-            });
-        } else {
-            const prediction = await predict(image, config, params);
-            ctx.postMessage({
-                message: WorkerResponse.PREDICTED,
-                uid: uid,
-                prediction: prediction,
-            });
-            image.close();
-        }
+        const prediction = await predict(config, params, data);
+        ctx.postMessage({
+            message: WorkerResponse.PREDICTED,
+            prediction: prediction,
+        });
     }
 };

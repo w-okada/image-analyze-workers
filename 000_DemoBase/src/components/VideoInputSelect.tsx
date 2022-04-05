@@ -69,7 +69,7 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
             if (!event.target.files) {
                 return;
             }
-            if (!event.target.files[0].type.match("image.*") && !event.target.files[0].type.match("movie.*")) {
+            if (!event.target.files[0].type.match("image.*") && !event.target.files[0].type.match("video.*")) {
                 console.log("not image file", event.target.files[0].type);
                 return;
             }
