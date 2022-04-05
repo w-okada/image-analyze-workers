@@ -103,17 +103,16 @@ export class OpenCVWorkerManager extends WorkerManagerBase {
         );
         return;
     };
+
     predict = async (params: OpenCVOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+        const currentParams = { ...params };
+        const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
+        const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
         if (!this.worker) {
-            const resizedCanvas = this.generateTargetCanvas(targetCanvas, params.processWidth, params.processHeight);
-            const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
-            const prediction = await this.localWorker.predict(this.config, params, imageData.data);
+            const prediction = await this.localWorker.predict(this.config, currentParams, imageData.data);
             return prediction;
         }
-
-        const resizedCanvas = this.generateTargetCanvas(targetCanvas, params.processWidth, params.processHeight);
-        const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
-        const prediction = (await this.sendToWorker(this.config, params, imageData.data)) as Uint8ClampedArray | null;
+        const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as Uint8ClampedArray | null;
         return prediction;
     };
 }

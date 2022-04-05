@@ -28,20 +28,10 @@ const load_module = async (config: FacemeshConfig) => {
     }
 };
 
-const predict = async (config: FacemeshConfig, params: FacemeshOperatipnParams, image: ImageBitmap): Promise<AnnotatedPrediction[]> => {
-    // console.log("Worker BACKEND:", tf.getBackend());
+const predict = async (config: FacemeshConfig, params: FacemeshOperatipnParams, data: Uint8ClampedArray): Promise<AnnotatedPrediction[]> => {
+    const image = new ImageData(data, params.processWidth, params.processHeight);
 
-    // ImageData作成
-    const processWidth = params.processWidth <= 0 || params.processHeight <= 0 ? image.width : params.processWidth;
-    const processHeight = params.processWidth <= 0 || params.processHeight <= 0 ? image.height : params.processHeight;
-
-    //console.log("process image size:", processWidth, processHeight)
-    const offscreen = new OffscreenCanvas(processWidth, processHeight);
-    const ctx = offscreen.getContext("2d")!;
-    ctx.drawImage(image, 0, 0, processWidth, processHeight);
-    const newImg = ctx.getImageData(0, 0, processWidth, processHeight);
-
-    const tensor = tf.browser.fromPixels(newImg);
+    const tensor = tf.browser.fromPixels(image);
     const prediction = await model!.estimateFaces({
         input: tensor,
         predictIrises: params.predictIrises,
@@ -68,9 +58,9 @@ onmessage = async (event) => {
     } else if (event.data.message === WorkerCommand.PREDICT) {
         const config = event.data.config as FacemeshConfig;
         const params = event.data.params as FacemeshOperatipnParams;
-        const image: ImageBitmap = event.data.data;
+        const data: Uint8ClampedArray = event.data.data;
 
-        const prediction = await predict(config, params, image);
+        const prediction = await predict(config, params, data);
         ctx.postMessage({
             message: WorkerResponse.PREDICTED,
             prediction: prediction,

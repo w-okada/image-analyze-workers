@@ -31,8 +31,8 @@
         "@babel/runtime": "^7.17.8",
         "@types/react": "^17.0.43",
         "@types/react-dom": "^17.0.14",
-        "@typescript-eslint/eslint-plugin": "^5.17.0",
-        "@typescript-eslint/parser": "^5.17.0",
+        "@typescript-eslint/eslint-plugin": "^5.18.0",
+        "@typescript-eslint/parser": "^5.18.0",
         "autoprefixer": "^10.4.4",
         "babel-loader": "^8.2.4",
         "css-loader": "^6.7.1",
@@ -55,7 +55,7 @@
         "webpack-dev-server": "^4.7.4"
     },
     "dependencies": {
-        "@dannadori/bodypix-worker-js": "^1.0.48",
+        "@dannadori/bodypix-worker-js": "^1.0.50",
         "daisyui": "^2.13.6",
         "react": "^18.0.0",
         "react-dom": "^18.0.0",

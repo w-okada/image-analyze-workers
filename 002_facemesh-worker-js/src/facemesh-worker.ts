@@ -99,7 +99,7 @@ export class FacemeshWorkerManager extends WorkerManagerBase {
         this.config = config || generateFacemeshDefaultConfig();
         await this.initCommon(
             {
-                useWorkerForSafari: false,
+                useWorkerForSafari: true,
                 processOnLocal: this.config.processOnLocal,
                 workerJs: () => {
                     return new workerJs();
@@ -111,13 +111,14 @@ export class FacemeshWorkerManager extends WorkerManagerBase {
     };
 
     predict = async (params: FacemeshOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+        const currentParams = { ...params };
+        const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
         if (!this.worker) {
-            const resizedCanvas = this.generateTargetCanvas(targetCanvas, params.processWidth, params.processHeight);
-            const prediction = await this.localWorker.predict(this.config, params, resizedCanvas);
+            const prediction = await this.localWorker.predict(this.config, currentParams, resizedCanvas);
             return prediction;
         }
-        const imageBitmap = this.generateImageBitmap(targetCanvas, params.processWidth, params.processHeight);
-        const prediction = (await this.sendToWorker(this.config, params, imageBitmap)) as AnnotatedPrediction[];
+        const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
+        const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as AnnotatedPrediction[];
         return prediction;
     };
 }

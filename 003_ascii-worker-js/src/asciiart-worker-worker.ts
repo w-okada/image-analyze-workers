@@ -4,25 +4,27 @@ const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
 const contrastFactor = (259 * (128 + 255)) / (255 * (259 - 128));
 
-const predict = async (image: ImageBitmap, params: AsciiOperatipnParams) => {
+const predict = async (config: AsciiConfig, params: AsciiOperatipnParams, data: Uint8ClampedArray) => {
     const asciiStr = params.asciiStr;
     const fontSize = params.fontSize;
     const asciiCharacters = asciiStr.split("");
 
+    const imageData = new ImageData(data, params.processWidth, params.processHeight);
     // ImageData作成
-    const offscreen = new OffscreenCanvas(image.width, image.height);
+    const offscreen = new OffscreenCanvas(imageData.width, imageData.height);
     const ctx = offscreen.getContext("2d")!;
     ctx.font = fontSize + 'px "Courier New", monospace';
     ctx.textBaseline = "top";
+    ctx.putImageData(imageData, 0, 0);
     const m = ctx.measureText(asciiStr);
     const charWidth = Math.floor(m.width / asciiCharacters.length);
-    const tmpWidth = Math.ceil(image.width / charWidth);
-    const tmpHeight = Math.ceil(image.height / fontSize);
+    const tmpWidth = Math.ceil(imageData.width / charWidth);
+    const tmpHeight = Math.ceil(imageData.height / fontSize);
 
     // Generate Image for Brightness
     const offscreenForBrightness = new OffscreenCanvas(tmpWidth, tmpHeight);
     const brCtx = offscreenForBrightness.getContext("2d")!;
-    brCtx.drawImage(image, 0, 0, tmpWidth, tmpHeight);
+    brCtx.drawImage(offscreen, 0, 0, tmpWidth, tmpHeight);
     const brImageData = brCtx.getImageData(0, 0, tmpWidth, tmpHeight);
 
     // generate chars agaist the each dot
@@ -51,14 +53,13 @@ onmessage = async (event) => {
     } else if (event.data.message === WorkerCommand.PREDICT) {
         const config: AsciiConfig = event.data.config;
         const params: AsciiOperatipnParams = event.data.params;
-        const image: ImageBitmap = event.data.data;
+        const data: Uint8ClampedArray = event.data.data;
 
-        const prediction = await predict(image, params);
+        const prediction = await predict(config, params, data);
         ctx.postMessage({
             message: WorkerResponse.PREDICTED,
             prediction: prediction,
         });
-        image.close();
     } else {
         console.log("not implemented");
     }

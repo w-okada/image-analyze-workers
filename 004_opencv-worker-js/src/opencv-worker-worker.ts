@@ -6,7 +6,7 @@ export let Module = {};
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 let wasm: Wasm | null = null;
 
-const predict = async (data: Uint8ClampedArray, config: OpenCVConfig, params: OpenCVOperatipnParams) => {
+const predict = async (config: OpenCVConfig, params: OpenCVOperatipnParams, data: Uint8ClampedArray) => {
     const inputImageBufferOffset = wasm!._getInputImageBufferOffset();
     wasm!.HEAPU8.set(data, inputImageBufferOffset);
 
@@ -45,7 +45,7 @@ onmessage = async (event) => {
         const params: OpenCVOperatipnParams = event.data.params;
 
         const data: Uint8ClampedArray = event.data.data;
-        const imageData = await predict(data, config, params);
+        const imageData = await predict(config, params, data);
         ctx.postMessage(
             {
                 message: WorkerResponse.PREDICTED,

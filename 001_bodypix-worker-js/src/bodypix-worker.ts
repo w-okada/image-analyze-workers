@@ -120,7 +120,7 @@ export class BodypixWorkerManager extends WorkerManagerBase {
         this.config = config || generateBodyPixDefaultConfig();
         await this.initCommon(
             {
-                useWorkerForSafari: false,
+                useWorkerForSafari: true,
                 processOnLocal: this.config.processOnLocal,
                 workerJs: () => {
                     return new workerJs();
@@ -132,13 +132,14 @@ export class BodypixWorkerManager extends WorkerManagerBase {
     };
 
     predict = async (params: BodyPixOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+        const currentParams = { ...params };
+        const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
         if (!this.worker) {
-            const resizedCanvas = this.generateTargetCanvas(targetCanvas, params.processWidth, params.processHeight);
-            const prediction = await this.localWorker.predict(this.config, params, resizedCanvas);
+            const prediction = await this.localWorker.predict(this.config, currentParams, resizedCanvas);
             return prediction;
         }
-        const imageBitmap = this.generateImageBitmap(targetCanvas, params.processWidth, params.processHeight);
-        const prediction = (await this.sendToWorker(this.config, params, imageBitmap)) as bodyPix.SemanticPersonSegmentation | bodyPix.SemanticPartSegmentation | bodyPix.PersonSegmentation[] | bodyPix.PartSegmentation[];
+        const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
+        const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as bodyPix.SemanticPersonSegmentation | bodyPix.SemanticPartSegmentation | bodyPix.PersonSegmentation[] | bodyPix.PartSegmentation[];
         return prediction;
     };
 }
