@@ -1,13 +1,13 @@
 {
     "name": "@dannadori/googlemeet-segmentation-worker-js",
-    "version": "1.0.21",
+    "version": "1.0.24",
     "description": "",
     "main": "dist/googlemeet-segmentation-worker.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "webpack": "npx webpack --config webpack.config.js",
         "clean": "rimraf dist/*",
-        "build": "cp ../common/*.ts ./src; npm-run-all clean webpack"
+        "build": "npm-run-all clean webpack"
     },
     "repository": {
         "type": "git",
@@ -40,6 +40,6 @@
         "@tensorflow/tfjs-backend-wasm": "^3.8.0",
         "@types/emscripten": "^1.39.5",
         "buffer": "^6.0.3",
-        "seedrandom": "^3.0.5"
+        "@dannadori/000_WorkerBase": "file:../000_WorkerBase"
     }
 }

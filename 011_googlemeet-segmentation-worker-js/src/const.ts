@@ -1,21 +1,45 @@
-import { BrowserType } from "./BrowserUtil";
+import { BrowserTypes } from "@dannadori/000_WorkerBase";
 
 export const WorkerCommand = {
     INITIALIZE: "initialize",
     PREDICT: "predict",
-};
+} as const;
+export type WorkerCommand = typeof WorkerCommand[keyof typeof WorkerCommand];
 
 export const WorkerResponse = {
     INITIALIZED: "initialized",
     PREDICTED: "predicted",
-    NOT_READY: "not_ready",
-};
+} as const;
+export type WorkerResponse = typeof WorkerResponse[keyof typeof WorkerResponse];
+
+export const BackendTypes = {
+    WebGL: "WebGL",
+    wasm: "wasm",
+    cpu: "cpu",
+} as const;
+export type BackendTypes = typeof BackendTypes[keyof typeof BackendTypes];
+
+export const PostProcessTypes = {
+    none: 0,
+    softmax: 1,
+    jbf: 2,
+    softmax_jbf: 3,
+} as const;
+export type PostProcessTypes = typeof PostProcessTypes[keyof typeof PostProcessTypes];
+export const InterpolationTypes = {
+    nearest: 0,
+    liner: 1,
+    area: 2,
+    cubic: 3,
+    lanczos: 4,
+} as const;
+export type InterpolationTypes = typeof InterpolationTypes[keyof typeof InterpolationTypes];
 
 export interface GoogleMeetSegmentationConfig {
-    browserType: BrowserType;
+    browserType: BrowserTypes;
     processOnLocal: boolean;
-    useTFWasmBackend: boolean;
-    wasmPath: string;
+    backendType: BackendTypes;
+    wasmPaths: { [key: string]: string };
     pageUrl: string;
 
     modelJsons: { [key: string]: string };
@@ -23,7 +47,7 @@ export interface GoogleMeetSegmentationConfig {
     modelTFLites: { [key: string]: string };
     modelKey: string;
 
-    processSizes: { [key: string]: number[] };
+    modelInputs: { [key: string]: number[] };
 
     wasmBase64?: string;
     wasmSimdBase64?: string;
@@ -38,10 +62,13 @@ export interface GoogleMeetSegmentationOperationParams {
     jbfD: number;
     jbfSigmaC: number;
     jbfSigmaS: number;
-    jbfPostProcess: number;
+    jbfPostProcess: PostProcessTypes;
 
     threshold: number;
-    interpolation: number;
+    interpolation: InterpolationTypes;
+
+    processWidth: number;
+    processHeight: number;
 }
 
 export enum GoogleMeetSegmentationFunctionType {

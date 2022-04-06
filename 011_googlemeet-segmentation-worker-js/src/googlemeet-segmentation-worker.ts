@@ -1,10 +1,8 @@
-import { getBrowserType, BrowserType } from "./BrowserUtil";
 import * as tf from "@tensorflow/tfjs";
-import { GoogleMeetSegmentationConfig, GoogleMeetSegmentationFunctionType, GoogleMeetSegmentationOperationParams, GoogleMeetSegmentationSmoothingType, TFLite, WorkerCommand, WorkerResponse } from "./const";
-import { setWasmPath } from "@tensorflow/tfjs-backend-wasm";
-import { drawArrayToCanvas, imageToGrayScaleArray, padSymmetricImage } from "./utils";
-
-export { GoogleMeetSegmentationSmoothingType } from "./const";
+import { BackendTypes, GoogleMeetSegmentationConfig, GoogleMeetSegmentationFunctionType, GoogleMeetSegmentationOperationParams, GoogleMeetSegmentationSmoothingType, InterpolationTypes, PostProcessTypes, TFLite, WorkerCommand, WorkerResponse } from "./const";
+import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
+import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+export { GoogleMeetSegmentationSmoothingType, BackendTypes, PostProcessTypes, InterpolationTypes } from "./const";
 
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./googlemeet-segmentation-worker-worker.ts";
@@ -44,8 +42,12 @@ export const generateGoogleMeetSegmentationDefaultConfig = (): GoogleMeetSegment
     const defaultConf: GoogleMeetSegmentationConfig = {
         browserType: getBrowserType(),
         processOnLocal: false,
-        useTFWasmBackend: false,
-        wasmPath: "/tfjs-backend-wasm.wasm",
+        backendType: BackendTypes.WebGL,
+        wasmPaths: {
+            "tfjs-backend-wasm.wasm": "/tfjs-backend-wasm.wasm",
+            "tfjs-backend-wasm-simd.wasm": "/tfjs-backend-wasm-simd.wasm",
+            "tfjs-backend-wasm-threaded-simd.wasm": "/tfjs-backend-wasm-threaded-simd.wasm",
+        },
         pageUrl: window.location.href,
         modelJsons: {
             "160x96": modelJson_96x160,
@@ -65,12 +67,11 @@ export const generateGoogleMeetSegmentationDefaultConfig = (): GoogleMeetSegment
             "256x144": tflite_144x256.split(",")[1],
             "256x256": tflite_256x256.split(",")[1],
         },
-        processSizes: {
+        modelInputs: {
             "160x96": [160, 96],
             "128x128": [128, 128],
             "256x144": [256, 144],
             "256x256": [256, 256],
-            "512x512": [512, 512],
         },
         modelKey: "160x96",
         wasmBase64: wasm.split(",")[1],
@@ -88,34 +89,39 @@ export const generateDefaultGoogleMeetSegmentationParams = (): GoogleMeetSegment
         jbfD: 0,
         jbfSigmaC: 2,
         jbfSigmaS: 2,
-        jbfPostProcess: 3,
+        jbfPostProcess: PostProcessTypes.softmax_jbf,
         threshold: 0.5,
-        interpolation: 3,
+        interpolation: InterpolationTypes.lanczos,
+        processWidth: 128,
+        processHeight: 128,
     };
     return defaultParams;
 };
 
-const load_module = async (config: GoogleMeetSegmentationConfig) => {
-    const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
-    const wasmPath = `${dirname}${config.wasmPath}`;
-    console.log(`use wasm backend ${wasmPath}`);
-    setWasmPath(wasmPath);
-    if (config.useTFWasmBackend) {
-        require("@tensorflow/tfjs-backend-wasm");
-        await tf.setBackend("wasm");
-    } else {
-        console.log("use webgl backend");
-        require("@tensorflow/tfjs-backend-webgl");
-        await tf.setBackend("webgl");
-    }
-};
-
-export class LocalWorker {
+export class LocalGM extends LocalWorker {
     tfjsModel: tf.GraphModel | null = null;
     tfliteModel: TFLite | null = null;
 
     canvas = document.createElement("canvas");
     ready = false;
+
+    load_module = async (config: GoogleMeetSegmentationConfig) => {
+        if (config.backendType === BackendTypes.wasm) {
+            const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
+            const wasmPaths: { [key: string]: string } = {};
+            Object.keys(config.wasmPaths).forEach((key) => {
+                wasmPaths[key] = `${dirname}${config.wasmPaths[key]}`;
+            });
+            setWasmPaths(wasmPaths);
+            console.log("use wasm backend", wasmPaths);
+            await tf.setBackend("wasm");
+        } else if (config.backendType === BackendTypes.cpu) {
+            await tf.setBackend("cpu");
+        } else {
+            console.log("use webgl backend");
+            await tf.setBackend("webgl");
+        }
+    };
 
     init = async (config: GoogleMeetSegmentationConfig) => {
         this.ready = false;
@@ -123,9 +129,9 @@ export class LocalWorker {
         this.tfjsModel = null;
         this.tfliteModel = null;
 
+        // TensorflowJS
         if (config.useTFJS) {
-            /// (x) Tensorflow JS
-            await load_module(config);
+            await this.load_module(config);
             await tf.ready();
             await tf.env().set("WEBGL_CPU_FORWARD", false);
             const modelJson = new File([config.modelJsons[config.modelKey]], "model.json", { type: "application/json" });
@@ -136,11 +142,13 @@ export class LocalWorker {
 
         /// (x) TensorflowLite (always loaded for interpolutions.)
         const browserType = getBrowserType();
-        if (config.useSimd && browserType !== BrowserType.SAFARI) {
+        if (config.useSimd && browserType !== BrowserTypes.SAFARI) {
+            // SIMD
             const modSimd = require("../resources/wasm/tflite-simd.js");
             const b = Buffer.from(config.wasmSimdBase64!, "base64");
             this.tfliteModel = await modSimd({ wasmBinary: b });
         } else {
+            // Not-SIMD
             const mod = require("../resources/wasm/tflite.js");
             const b = Buffer.from(config.wasmBase64!, "base64");
             this.tfliteModel = await mod({ wasmBinary: b });
@@ -148,14 +156,12 @@ export class LocalWorker {
         const modelBufferOffset = this.tfliteModel!._getModelBufferMemoryOffset();
         const tfliteModel = Buffer.from(config.modelTFLites[config.modelKey], "base64");
         this.tfliteModel!.HEAPU8.set(new Uint8Array(tfliteModel), modelBufferOffset);
-        console.log("LOAD MODEL1 ");
         this.tfliteModel!._loadModel(tfliteModel.byteLength);
-        console.log("LOAD MODEL2 ");
 
         this.ready = true;
     };
 
-    predict = async (imageData: ImageData, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams) => {
+    predict = async (config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams, targetCanvas: HTMLCanvasElement) => {
         if (!this.tfliteModel && !this.tfjsModel) {
             return null;
         }
@@ -163,10 +169,10 @@ export class LocalWorker {
             return null;
         }
 
-        let res: ImageData | null = null;
+        let res: Uint8ClampedArray | null = null;
         if (config.useTFJS) {
             tf.tidy(() => {
-                let tensor = tf.browser.fromPixels(imageData);
+                let tensor = tf.browser.fromPixels(targetCanvas);
                 const tensorWidth = this.tfjsModel!.inputs[0].shape![2];
                 const tensorHeight = this.tfjsModel!.inputs[0].shape![1];
                 tensor = tf.image.resizeBilinear(tensor, [tensorHeight, tensorWidth]);
@@ -178,9 +184,9 @@ export class LocalWorker {
                 prediction = prediction.squeeze();
                 let segmentation: tf.Tensor<tf.Rank>;
                 if (prediction.shape.length === 2) {
-                    segmentation = prediction;
+                    segmentation = prediction.reshape([-1]);
                     const seg = segmentation.arraySync() as number[];
-                    res = new ImageData(new Uint8ClampedArray(seg), tensorWidth, tensorHeight);
+                    res = new Uint8ClampedArray(seg);
                 } else {
                     let [predTensor0, predTensor1] = tf.split(prediction, 2, 2) as tf.Tensor<tf.Rank>[];
                     predTensor0 = predTensor0.squeeze().flatten();
@@ -191,164 +197,56 @@ export class LocalWorker {
                     const jbfInputImageBufferOffset = this.tfliteModel!._getJbfInputImageBufferOffset();
                     this.tfliteModel!.HEAPF32.set(new Float32Array(seg0), jbfGuideImageBufferOffset / 4);
                     this.tfliteModel!.HEAPF32.set(new Float32Array(seg1), jbfInputImageBufferOffset / 4);
-                    this.tfliteModel!._jbf(tensorWidth, tensorHeight, imageData.width, imageData.height, params.jbfD, params.jbfSigmaC, params.jbfSigmaS, params.jbfPostProcess, params.interpolation, params.threshold);
+                    this.tfliteModel!._jbf(tensorWidth, tensorHeight, targetCanvas.width, targetCanvas.height, params.jbfD, params.jbfSigmaC, params.jbfSigmaS, params.jbfPostProcess, params.interpolation, params.threshold);
 
                     const outputImageBufferOffset = this.tfliteModel!._getOutputImageBufferOffset();
-                    res = new ImageData(new Uint8ClampedArray(this.tfliteModel!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + imageData.width * imageData.height * 4)), imageData.width, imageData.height);
+                    res = new Uint8ClampedArray(this.tfliteModel!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + targetCanvas.width * targetCanvas.height * 4));
                 }
             });
         } else {
+            const imageData = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
             const inputImageBufferOffset = this.tfliteModel!._getInputImageBufferOffset();
             this.tfliteModel!.HEAPU8.set(imageData.data, inputImageBufferOffset);
 
             this.tfliteModel!._exec_with_jbf(imageData.width, imageData.height, params.jbfD, params.jbfSigmaC, params.jbfSigmaS, params.jbfPostProcess, params.interpolation, params.threshold);
 
             const outputImageBufferOffset = this.tfliteModel!._getOutputImageBufferOffset();
-            res = new ImageData(new Uint8ClampedArray(this.tfliteModel!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + imageData.width * imageData.height * 4)), imageData.width, imageData.height);
+            res = new Uint8ClampedArray(this.tfliteModel!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + imageData.width * imageData.height * 4));
         }
         // console.log("RES:::", res);
         return res;
     };
 }
 
-export class GoogleMeetSegmentationWorkerManager {
-    private workerGM: Worker | null = null;
-    private tmpCanvas = document.createElement("canvas");
+export class GoogleMeetSegmentationWorkerManager extends WorkerManagerBase {
     private config = generateGoogleMeetSegmentationDefaultConfig();
-    private localWorker = new LocalWorker();
+    localWorker = new LocalGM();
+
     init = async (config: GoogleMeetSegmentationConfig | null) => {
-        if (config != null) {
-            this.config = config;
-        }
-        if (this.workerGM) {
-            this.workerGM.terminate();
-        }
-        this.workerGM = null;
-
-        if (this.config.processOnLocal == true) {
-            await this.localWorker.init(this.config!);
-            return;
-        }
-
-        // ワーカー
-        const workerGM: Worker = new workerJs();
-        const p = new Promise<void>((onResolve, onFail) => {
-            workerGM!.onmessage = (event) => {
-                if (event.data.message === WorkerResponse.INITIALIZED) {
-                    console.log("WORKERSS INITIALIZED");
-                    this.workerGM = workerGM;
-                    onResolve();
-                } else {
-                    console.log("celeb a mask Initialization something wrong..");
-                    onFail(event);
-                }
-            };
-        });
-        workerGM!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config });
+        this.config = config || generateGoogleMeetSegmentationDefaultConfig();
+        await this.initCommon(
+            {
+                useWorkerForSafari: false,
+                processOnLocal: this.config.processOnLocal,
+                workerJs: () => {
+                    return new workerJs();
+                },
+            },
+            config
+        );
         return;
     };
 
-    predict = async (targetCanvas: HTMLCanvasElement, params = generateDefaultGoogleMeetSegmentationParams()) => {
-        this.tmpCanvas.width = this.config.processSizes[params.processSizeKey][0];
-        this.tmpCanvas.height = this.config.processSizes[params.processSizeKey][1];
-        const ctx = this.tmpCanvas.getContext("2d")!;
-        ctx.drawImage(targetCanvas, 0, 0, this.tmpCanvas.width, this.tmpCanvas.height);
-        const imageData = ctx.getImageData(0, 0, this.tmpCanvas.width, this.tmpCanvas.height);
-
-        if (this.config.processOnLocal == true) {
-            // Case.1 Process on local thread.
-            // const prediction = await this.localWorker.predict_jbf_js_canvas(targetCanvas, this.config, params);
-            const prediction = await this.localWorker.predict(imageData, this.config, params);
-
+    predict = async (params = generateDefaultGoogleMeetSegmentationParams(), targetCanvas: HTMLCanvasElement) => {
+        const currentParams = { ...params };
+        const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
+        if (!this.worker) {
+            const prediction = await this.localWorker.predict(this.config, currentParams, resizedCanvas);
             return prediction;
         }
-        if (!this.workerGM) {
-            return null;
-        }
-
-        const uid = performance.now();
-        this.workerGM!.postMessage(
-            {
-                message: WorkerCommand.PREDICT,
-                uid: uid,
-                config: this.config,
-                params: params,
-                imageData: imageData,
-            },
-            [imageData.data.buffer]
-        );
-        const p = new Promise((onResolve: (v: ImageData | null) => void, onFail) => {
-            this.workerGM!.onmessage = (event) => {
-                if (event.data.message === WorkerResponse.PREDICTED) {
-                    const imageData = event.data.imageData;
-                    onResolve(imageData);
-                } else {
-                    console.log("Bodypix Prediction something wrong..", event.data.message, WorkerResponse.PREDICTED, event.data.uid, uid);
-                    // onFail(event)
-                }
-            };
-        });
-        return p;
-
-        // if (this.config.browserType === BrowserType.SAFARI) {
-        //     const imageData = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
-        //     const dataArray = imageData.data;
-        //     const uid = performance.now();
-        //     params.originalWidth = imageData.width;
-        //     params.originalHeight = imageData.height;
-
-        //     this.workerGM!.postMessage(
-        //         {
-        //             message: WorkerCommand.PREDICT,
-        //             uid: uid,
-        //             config: this.config,
-        //             params: params,
-        //             data: dataArray,
-        //         },
-        //         [dataArray.buffer]
-        //     );
-        //     const p = new Promise((onResolve: (v: number[][]) => void, onFail) => {
-        //         this.workerGM!.onmessage = (event) => {
-        //             if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
-        //                 const prediction = event.data.prediction;
-        //                 onResolve(prediction);
-        //             } else {
-        //                 console.log("Bodypix Prediction something wrong..", event.data.message, WorkerResponse.PREDICTED, event.data.uid, uid);
-        //                 //                        onFail(event)
-        //             }
-        //         };
-        //     });
-        //     return p;
-        // } else {
-        //     // Case.3 Process on worker thread, Chrome (Send ImageBitmap)
-        //     const off = new OffscreenCanvas(targetCanvas.width, targetCanvas.height);
-        //     off.getContext("2d")!.drawImage(targetCanvas, 0, 0, targetCanvas.width, targetCanvas.height);
-        //     const imageBitmap = off.transferToImageBitmap();
-        //     const uid = performance.now();
-        //     this.workerGM!.postMessage(
-        //         {
-        //             message: WorkerCommand.PREDICT,
-        //             uid: uid,
-        //             config: this.config,
-        //             params: params,
-        //             // data: data, width: inImageData.width, height:inImageData.height
-        //             image: imageBitmap,
-        //         },
-        //         [imageBitmap]
-        //     );
-        //     const p = new Promise((onResolve: (v: number[][]) => void, onFail) => {
-        //         this.workerGM!.onmessage = (event) => {
-        //             if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
-        //                 const prediction = event.data.prediction;
-        //                 onResolve(prediction);
-        //             } else {
-        //                 console.log("Bodypix Prediction something wrong..", event.data.message, WorkerResponse.PREDICTED, event.data.uid, uid);
-        //                 // onFail(event)
-        //             }
-        //         };
-        //     });
-        //     return p;
-        // }
+        const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
+        const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as Uint8ClampedArray;
+        return prediction;
     };
 }
 

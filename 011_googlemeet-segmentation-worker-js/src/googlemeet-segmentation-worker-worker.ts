@@ -1,9 +1,7 @@
-import { GoogleMeetSegmentationConfig, GoogleMeetSegmentationOperationParams, GoogleMeetSegmentationSmoothingType, TFLite, WorkerCommand, WorkerResponse } from "./const";
+import { BackendTypes, GoogleMeetSegmentationConfig, GoogleMeetSegmentationOperationParams, GoogleMeetSegmentationSmoothingType, TFLite, WorkerCommand, WorkerResponse } from "./const";
 import * as tf from "@tensorflow/tfjs";
-import { BrowserType } from "./BrowserUtil";
-import { setWasmPath } from "@tensorflow/tfjs-backend-wasm";
-import { drawArrayToCanvas, imageToGrayScaleArray, padSymmetricImage } from "./utils";
-import { browser } from "@tensorflow/tfjs";
+import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
+import { BrowserTypes } from "@dannadori/000_WorkerBase";
 
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
@@ -12,23 +10,26 @@ let tfliteModel: TFLite | null = null;
 let ready: boolean = false;
 
 const load_module = async (config: GoogleMeetSegmentationConfig) => {
-    const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
-    const wasmPath = `${dirname}${config.wasmPath}`;
-    console.log(`use wasm backend ${wasmPath}`);
-    setWasmPath(wasmPath);
-
-    if (config.useTFWasmBackend || config.browserType === BrowserType.SAFARI) {
-        require("@tensorflow/tfjs-backend-wasm");
+    if (config.backendType === BackendTypes.wasm) {
+        const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
+        const wasmPaths: { [key: string]: string } = {};
+        Object.keys(config.wasmPaths).forEach((key) => {
+            wasmPaths[key] = `${dirname}${config.wasmPaths[key]}`;
+        });
+        setWasmPaths(wasmPaths);
+        console.log("use wasm backend", wasmPaths);
         await tf.setBackend("wasm");
+    } else if (config.backendType === BackendTypes.cpu) {
+        await tf.setBackend("cpu");
     } else {
         console.log("use webgl backend");
-        require("@tensorflow/tfjs-backend-webgl");
         await tf.setBackend("webgl");
     }
 };
 
-const predict = async (imageData: ImageData, config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams) => {
-    let res: ImageData | null = null;
+const predict = async (config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams, data: Uint8ClampedArray) => {
+    const imageData = new ImageData(data, params.processWidth, params.processHeight);
+    let res: Uint8ClampedArray | null = null;
     if (config.useTFJS) {
         tf.tidy(() => {
             let tensor = tf.browser.fromPixels(imageData);
@@ -43,9 +44,12 @@ const predict = async (imageData: ImageData, config: GoogleMeetSegmentationConfi
             prediction = prediction.squeeze();
             let segmentation: tf.Tensor<tf.Rank>;
             if (prediction.shape.length === 2) {
-                segmentation = prediction;
+                // prediction = tf.stack([prediction.onesLike(), prediction.onesLike(), prediction.onesLike(), prediction], 2);
+                // prediction = tf.stack([prediction, prediction, prediction, prediction], 2);
+                console.log("newShape:::", prediction.shape);
+                segmentation = prediction.reshape([-1]);
                 const seg = segmentation.arraySync() as number[];
-                res = new ImageData(new Uint8ClampedArray(seg), tensorWidth, tensorHeight);
+                res = new Uint8ClampedArray(seg);
             } else {
                 let [predTensor0, predTensor1] = tf.split(prediction, 2, 2) as tf.Tensor<tf.Rank>[];
                 predTensor0 = predTensor0.squeeze().flatten();
@@ -59,7 +63,10 @@ const predict = async (imageData: ImageData, config: GoogleMeetSegmentationConfi
                 tfliteModel!._jbf(tensorWidth, tensorHeight, imageData.width, imageData.height, params.jbfD, params.jbfSigmaC, params.jbfSigmaS, params.jbfPostProcess, params.interpolation, params.threshold);
 
                 const outputImageBufferOffset = tfliteModel!._getOutputImageBufferOffset();
-                res = new ImageData(new Uint8ClampedArray(tfliteModel!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + imageData.width * imageData.height * 4)), imageData.width, imageData.height);
+                res = new Uint8ClampedArray(tfliteModel!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + imageData.width * imageData.height * 4));
+                // res = res.filter((x, index) => {
+                //     return index % 4 === 3;
+                // });
             }
         });
     } else {
@@ -69,10 +76,13 @@ const predict = async (imageData: ImageData, config: GoogleMeetSegmentationConfi
         tfliteModel!._exec_with_jbf(imageData.width, imageData.height, params.jbfD, params.jbfSigmaC, params.jbfSigmaS, params.jbfPostProcess, params.interpolation, params.threshold);
 
         const outputImageBufferOffset = tfliteModel!._getOutputImageBufferOffset();
-        res = new ImageData(new Uint8ClampedArray(tfliteModel!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + imageData.width * imageData.height * 4)), imageData.width, imageData.height);
+        res = new Uint8ClampedArray(tfliteModel!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + imageData.width * imageData.height * 4));
+        // res = res.filter((x, index) => {
+        //     return index % 4 === 3;
+        // });
     }
     // console.log("RES:::", res);
-    return res;
+    return res!;
 };
 
 onmessage = async (event) => {
@@ -96,7 +106,7 @@ onmessage = async (event) => {
 
         /// (x) TensorflowLite (always loaded for interpolutions.)
         const browserType = config.browserType;
-        if (config.useSimd && browserType !== BrowserType.SAFARI) {
+        if (config.useSimd && browserType !== BrowserTypes.SAFARI) {
             const modSimd = require("../resources/wasm/tflite-simd.js");
             const b = Buffer.from(config.wasmSimdBase64!, "base64");
             tfliteModel = await modSimd({ wasmBinary: b });
@@ -112,20 +122,11 @@ onmessage = async (event) => {
         ready = true;
         ctx.postMessage({ message: WorkerResponse.INITIALIZED });
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        const uid: number = event.data.uid;
         const config: GoogleMeetSegmentationConfig = event.data.config;
         const params: GoogleMeetSegmentationOperationParams = event.data.params;
-        const imageData = event.data.imageData as ImageData;
-        if (ready === false) {
-            console.log("NOTREADY!!", WorkerResponse.NOT_READY);
-            ctx.postMessage({ message: WorkerResponse.NOT_READY, uid: uid });
-        } else {
-            const resImageData = await predict(imageData, config, params);
-            if (resImageData) {
-                ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, imageData: resImageData }, [resImageData.data.buffer]);
-            } else {
-                ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, imageData: null });
-            }
-        }
+        const data: Uint8ClampedArray = event.data.data;
+
+        const prediction = await predict(config, params, data);
+        ctx.postMessage({ message: WorkerResponse.PREDICTED, prediction: prediction }, [prediction.buffer]);
     }
 };
