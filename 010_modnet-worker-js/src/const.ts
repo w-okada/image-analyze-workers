@@ -1,4 +1,4 @@
-import { BrowserType } from "./BrowserUtil";
+import { BrowserTypes } from "@dannadori/000_WorkerBase";
 
 export const WorkerCommand = {
     INITIALIZE: "initialize",
@@ -10,30 +10,34 @@ export const WorkerResponse = {
     PREDICTED: "predicted",
 };
 
+export const BackendTypes = {
+    WebGL: "WebGL",
+    wasm: "wasm",
+    cpu: "cpu",
+} as const;
+export type BackendTypes = typeof BackendTypes[keyof typeof BackendTypes];
+
+export const MODNetFunctionTypes = {
+    Segmentation: "Segmentation",
+} as const;
+export type MODNetFunctionTypes = typeof MODNetFunctionTypes[keyof typeof MODNetFunctionTypes];
+
 export type MODEL_INPUT_SIZES = 192 | 256 | 512;
 
 export interface MODNetConfig {
-    browserType: BrowserType;
+    browserType: BrowserTypes;
     processOnLocal: boolean;
-    useTFWasmBackend: boolean;
-    wasmPath: string;
+    backendType: BackendTypes;
+    wasmPaths: { [key: string]: string };
     pageUrl: string;
-    modelJson_192: string;
-    modelWeight_192: string;
-    modelJson_256: string;
-    modelWeight_256: string;
-    modelJson_512: string;
-    modelWeight_512: string;
-    modelInputSize: MODEL_INPUT_SIZES;
+    modelJson: { [key: string]: string };
+    modelWeight: { [key: string]: string };
+    modelInputs: { [key: string]: number[] };
+    modelKey: string;
 }
 
 export interface MODNetOperationParams {
-    type: MODNetFunctionType;
+    type: MODNetFunctionTypes;
     processWidth: number;
     processHeight: number;
-}
-
-export enum MODNetFunctionType {
-    Segmentation,
-    xxx, // Not implemented
 }

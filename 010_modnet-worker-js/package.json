@@ -1,6 +1,6 @@
 {
     "name": "@dannadori/modnet-worker-js",
-    "version": "1.0.9",
+    "version": "1.0.11",
     "description": "",
     "main": "dist/modnet-worker.js",
     "scripts": {
@@ -39,6 +39,6 @@
         "@tensorflow/tfjs-backend-wasm": "^3.10.0",
         "await-semaphore": "^0.1.3",
         "buffer": "^6.0.3",
-        "seedrandom": "^3.0.5"
+        "@dannadori/000_WorkerBase": "file:../000_WorkerBase"
     }
 }
