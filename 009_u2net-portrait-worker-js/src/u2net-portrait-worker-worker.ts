@@ -1,28 +1,40 @@
-import { WorkerCommand, WorkerResponse, U2NetPortraitConfig, U2NetPortraitOperationParams } from "./const";
+import { WorkerCommand, WorkerResponse, U2NetPortraitConfig, U2NetPortraitOperationParams, BackendTypes } from "./const";
 import * as tf from "@tensorflow/tfjs";
-import { BrowserType } from "./BrowserUtil";
-import { setWasmPath } from "@tensorflow/tfjs-backend-wasm";
+import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
+
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
 let model: tf.GraphModel | null;
 
 const load_module = async (config: U2NetPortraitConfig) => {
-    const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
-    const wasmPath = `${dirname}${config.wasmPath}`;
-    console.log(`use wasm backend ${wasmPath}`);
-    setWasmPath(wasmPath);
-
-    if (config.useTFWasmBackend || config.browserType === BrowserType.SAFARI) {
-        require("@tensorflow/tfjs-backend-wasm");
+    if (config.backendType === BackendTypes.wasm) {
+        const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
+        const wasmPaths: { [key: string]: string } = {};
+        Object.keys(config.wasmPaths).forEach((key) => {
+            wasmPaths[key] = `${dirname}${config.wasmPaths[key]}`;
+        });
+        setWasmPaths(wasmPaths);
+        console.log("use wasm backend", wasmPaths);
         await tf.setBackend("wasm");
+    } else if (config.backendType === BackendTypes.cpu) {
+        await tf.setBackend("cpu");
     } else {
         console.log("use webgl backend");
-        require("@tensorflow/tfjs-backend-webgl");
         await tf.setBackend("webgl");
     }
 };
 
-const predict = async (imageData: ImageData, config: U2NetPortraitConfig, params: U2NetPortraitOperationParams) => {
+const predict = async (config: U2NetPortraitConfig, params: U2NetPortraitOperationParams, data: Uint8ClampedArray) => {
+    const imageData = new ImageData(data, params.processWidth, params.processHeight);
+
+    // In my environment, memory leak happen. (maybe too complex to dispose tensor while interval...??)
+    // to avoid memory leak, use this wait.
+    await new Promise<void>((resolve, reject) => {
+        setTimeout(() => {
+            resolve();
+        }, 0);
+    });
+
     let bm: number[][] | null = null;
     tf.tidy(() => {
         let tensor = tf.browser.fromPixels(imageData);
@@ -37,7 +49,9 @@ const predict = async (imageData: ImageData, config: U2NetPortraitConfig, params
         prediction = prediction.sub(prediction.min()).div(prediction.max().sub(prediction.min()));
         prediction = prediction.squeeze();
         bm = prediction.arraySync() as number[][];
+        prediction.dispose();
     });
+
     return bm!;
 };
 
@@ -61,14 +75,11 @@ onmessage = async (event) => {
             ctx.postMessage({ message: WorkerResponse.INITIALIZED });
         });
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        //    console.log("requested predict bodypix.")
-        const image: ImageData = event.data.image;
         const config: U2NetPortraitConfig = event.data.config;
         const params: U2NetPortraitOperationParams = event.data.params;
-        const uid: number = event.data.uid;
+        const data: Uint8ClampedArray = event.data.data;
 
-        console.log("current backend[worker thread]:", tf.getBackend());
-        const prediction = await predict(image, config, params);
-        ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction });
+        const prediction = await predict(config, params, data);
+        ctx.postMessage({ message: WorkerResponse.PREDICTED, prediction: prediction });
     }
 };

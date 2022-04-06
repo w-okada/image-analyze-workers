@@ -2,6 +2,7 @@ const path = require("path");
 const webpack = require("webpack");
 
 const manager = {
+    // mode: "development",
     mode: "production",
     entry: "./src/u2net-portrait-worker.ts",
     resolve: {

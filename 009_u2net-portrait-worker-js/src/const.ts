@@ -1,20 +1,33 @@
-import { BrowserType } from "./BrowserUtil";
+import { BrowserTypes } from "@dannadori/000_WorkerBase";
 
 export const WorkerCommand = {
     INITIALIZE: "initialize",
     PREDICT: "predict",
-};
+} as const;
+export type WorkerCommand = typeof WorkerCommand[keyof typeof WorkerCommand];
 
 export const WorkerResponse = {
     INITIALIZED: "initialized",
     PREDICTED: "predicted",
-};
+} as const;
+export type WorkerResponse = typeof WorkerResponse[keyof typeof WorkerResponse];
+
+export const U2NetPortraitFunctionTypes = {
+    Portrait: "Portrait",
+} as const;
+export type U2NetPortraitFunctionTypes = typeof U2NetPortraitFunctionTypes[keyof typeof U2NetPortraitFunctionTypes];
+export const BackendTypes = {
+    WebGL: "WebGL",
+    wasm: "wasm",
+    cpu: "cpu",
+} as const;
+export type BackendTypes = typeof BackendTypes[keyof typeof BackendTypes];
 
 export interface U2NetPortraitConfig {
-    browserType: BrowserType;
+    browserType: BrowserTypes;
     processOnLocal: boolean;
-    useTFWasmBackend: boolean;
-    wasmPath: string;
+    backendType: BackendTypes;
+    wasmPaths: { [key: string]: string };
     pageUrl: string;
     modelJson: { [key: string]: string };
     modelWeight: { [key: string]: string };
@@ -23,14 +36,9 @@ export interface U2NetPortraitConfig {
 }
 
 export interface U2NetPortraitOperationParams {
-    type: U2NetPortraitFunctionType;
+    type: U2NetPortraitFunctionTypes;
     // blurParams?: BlurParams | null;
     processWidth: number;
     processHeight: number;
     // withBlurImage: boolean;
-}
-
-export enum U2NetPortraitFunctionType {
-    Portrait,
-    xxx, // Not implemented
 }
