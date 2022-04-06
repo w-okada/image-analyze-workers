@@ -56,7 +56,7 @@
         "webpack-dev-server": "^4.8.1"
     },
     "dependencies": {
-        "@dannadori/googlemeet-segmentation-worker-js": "^1.0.24",
+        "@dannadori/googlemeet-segmentation-worker-js": "^1.0.25",
         "demo-base": "file:../000_DemoBase",
         "react": "^18.0.0",
         "react-dom": "^18.0.0"

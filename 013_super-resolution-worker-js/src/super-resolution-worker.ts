@@ -1,6 +1,5 @@
-import { BrowserType, getBrowserType } from "./BrowserUtil";
-import { InterpolationTypes, SuperResolutionConfig, SuperResolutionOperationParams, TFLite, WorkerCommand, WorkerResponse } from "./const";
-import { setWasmPath } from "@tensorflow/tfjs-backend-wasm";
+import { BackendTypes, InterpolationTypes, SuperResolutionConfig, SuperResolutionOperationParams, TFLite } from "./const";
+import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 export { SuperResolutionConfig, InterpolationTypes, SuperResolutionOperationParams };
 import * as tf from "@tensorflow/tfjs";
 
@@ -31,17 +30,19 @@ import tflite_x4 from "../resources/tflite_models/model_x4_nopadding.tflite.bin"
 import opencvWasm from "../resources/wasm/tflite.wasm";
 // @ts-ignore
 import opencvWasmSimd from "../resources/wasm/tflite-simd.wasm";
+import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
 
 export const generateSuperResolutionDefaultConfig = (): SuperResolutionConfig => {
     const defaultConf: SuperResolutionConfig = {
         browserType: getBrowserType(),
         processOnLocal: true,
-        modelPath: "",
-        enableSIMD: true,
-        useTFWasmBackend: false,
-        wasmPath: "/tfjs-backend-wasm.wasm",
+        backendType: BackendTypes.WebGL,
+        wasmPaths: {
+            "tfjs-backend-wasm.wasm": "/tfjs-backend-wasm.wasm",
+            "tfjs-backend-wasm-simd.wasm": "/tfjs-backend-wasm-simd.wasm",
+            "tfjs-backend-wasm-threaded-simd.wasm": "/tfjs-backend-wasm-threaded-simd.wasm",
+        },
         pageUrl: window.location.href,
-        tfjsModelPath: "",
 
         modelJson: {
             x2: modelJson_x2,
@@ -63,7 +64,7 @@ export const generateSuperResolutionDefaultConfig = (): SuperResolutionConfig =>
             x3: 3,
             x4: 4,
         },
-        modelKey: "2x",
+        modelKey: "x2",
         interpolationTypes: InterpolationTypes,
 
         wasmBase64: opencvWasm.split(",")[1],
@@ -76,8 +77,8 @@ export const generateSuperResolutionDefaultConfig = (): SuperResolutionConfig =>
 
 export const generateDefaultSuperResolutionParams = (): SuperResolutionOperationParams => {
     const defaultParams: SuperResolutionOperationParams = {
-        inputWidth: 128,
-        inputHeight: 128,
+        processWidth: 128,
+        processHeight: 128,
         interpolation: InterpolationTypes.INTER_ESPCN,
     };
     return defaultParams;
@@ -92,31 +93,36 @@ const calcProcessSize = (width: number, height: number) => {
         return [width, height];
     }
 };
-const load_module = async (config: SuperResolutionConfig) => {
-    const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
-    const wasmPath = `${dirname}${config.wasmPath}`;
-    console.log(`use wasm backend ${wasmPath}`);
-    setWasmPath(wasmPath);
-    if (config.useTFWasmBackend) {
-        require("@tensorflow/tfjs-backend-wasm");
-        await tf.setBackend("wasm");
-    } else {
-        console.log("use webgl backend");
-        require("@tensorflow/tfjs-backend-webgl");
-        await tf.setBackend("webgl");
-    }
-};
 
-export class LocalWorker {
+export class LocalSR extends LocalWorker {
     mod: any;
     modSIMD: any;
     inputCanvas = document.createElement("canvas");
     resultArray: number[] = Array<number>(300 * 300);
 
-    ready = false; // TBD: to be more strict for critical section
-
     tflite: TFLite | null = null;
     tfjsModel: tf.LayersModel | null = null;
+
+    ready = false; // TBD: to be more strict for critical section
+
+    load_module = async (config: SuperResolutionConfig) => {
+        if (config.backendType === BackendTypes.wasm) {
+            const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
+            const wasmPaths: { [key: string]: string } = {};
+            Object.keys(config.wasmPaths).forEach((key) => {
+                wasmPaths[key] = `${dirname}${config.wasmPaths[key]}`;
+            });
+            setWasmPaths(wasmPaths);
+            console.log("use wasm backend", wasmPaths);
+            await tf.setBackend("wasm");
+        } else if (config.backendType === BackendTypes.cpu) {
+            await tf.setBackend("cpu");
+        } else {
+            console.log("use webgl backend");
+            await tf.setBackend("webgl");
+        }
+    };
+
     init = async (config: SuperResolutionConfig) => {
         this.ready = false;
 
@@ -125,7 +131,7 @@ export class LocalWorker {
 
         if (config.useTFJS) {
             /// (x) Tensorflow JS
-            await load_module(config);
+            await this.load_module(config);
             await tf.ready();
             tf.env().set("WEBGL_CPU_FORWARD", false);
 
@@ -137,7 +143,7 @@ export class LocalWorker {
 
         /// (x) TensorflowLite (always loaded for interpolutions.)
         const browserType = getBrowserType();
-        if (config.useSimd && browserType !== BrowserType.SAFARI) {
+        if (config.useSimd && browserType !== BrowserTypes.SAFARI) {
             const modSimd = require("../resources/wasm/tflite-simd.js");
             const b = Buffer.from(config.wasmSimdBase64!, "base64");
             this.tflite = await modSimd({ wasmBinary: b });
@@ -154,7 +160,7 @@ export class LocalWorker {
         this.ready = true;
     };
 
-    predict = async (imageData: ImageData, config: SuperResolutionConfig, params: SuperResolutionOperationParams) => {
+    predict = async (config: SuperResolutionConfig, params: SuperResolutionOperationParams, targetCanvas: HTMLCanvasElement) => {
         if (!this.tflite) {
             return null;
         }
@@ -163,38 +169,37 @@ export class LocalWorker {
             return null;
         }
 
+        const imageData = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
         if (config.useTFJS && params.interpolation === InterpolationTypes.INTER_ESPCN) {
-            console.log("TFJS");
-
             // EXTRACT Y with WASM(TFLITE)
             this.tflite!.HEAPU8.set(imageData.data, this.tflite!._getInputImageBufferOffset());
-            this.tflite!._extractY(params.inputWidth, params.inputHeight);
+            this.tflite!._extractY(params.processWidth, params.processHeight);
             const YBufferOffset = this.tflite!._getYBufferOffset();
-            const Y = this.tflite!.HEAPU8.slice(YBufferOffset, YBufferOffset + params.inputWidth * params.inputHeight);
+            const Y = this.tflite!.HEAPU8.slice(YBufferOffset, YBufferOffset + params.processWidth * params.processHeight);
 
             // Super Resolution with TFJS
-            const resizedWidth = params.inputWidth * config.scaleFactor[config.modelKey];
-            const resizedHeight = params.inputHeight * config.scaleFactor[config.modelKey];
+            const resizedWidth = params.processWidth * config.scaleFactor[config.modelKey];
+            const resizedHeight = params.processHeight * config.scaleFactor[config.modelKey];
             let bm = [0];
             try {
                 tf.tidy(() => {
                     let tensor = tf.tensor1d(Y);
-                    tensor = tensor.reshape([1, params.inputHeight, params.inputWidth, 1]);
+                    tensor = tensor.reshape([1, params.processHeight, params.processWidth, 1]);
                     tensor = tf.cast(tensor, "float32");
                     tensor = tensor.div(255.0);
                     // console.log(tensor)
                     let prediction = this.tfjsModel!.predict(tensor) as tf.Tensor;
                     //console.log(prediction)
-                    prediction = prediction.reshape([1, params.inputHeight, params.inputWidth, config.scaleFactor[config.modelKey], config.scaleFactor[config.modelKey], 1]);
+                    prediction = prediction.reshape([1, params.processHeight, params.processWidth, config.scaleFactor[config.modelKey], config.scaleFactor[config.modelKey], 1]);
                     // console.log(prediction)
-                    const prediction2 = prediction.split(params.inputHeight, 1);
+                    const prediction2 = prediction.split(params.processHeight, 1);
                     // console.log(prediction2)
-                    for (let i = 0; i < params.inputHeight; i++) {
+                    for (let i = 0; i < params.processHeight; i++) {
                         prediction2[i] = prediction2[i].squeeze([1]);
                     }
                     const prediction3 = tf.concat(prediction2, 2);
-                    const prediction4 = prediction3.split(params.inputWidth, 1);
-                    for (let i = 0; i < params.inputWidth; i++) {
+                    const prediction4 = prediction3.split(params.processWidth, 1);
+                    for (let i = 0; i < params.processWidth; i++) {
                         prediction4[i] = prediction4[i].squeeze([1]);
                     }
                     const prediction5 = tf.concat(prediction4, 2);
@@ -216,71 +221,46 @@ export class LocalWorker {
             // Merge Y with Other channels
             const scaledYBufferOffset = this.tflite!._getScaledYBufferOffset();
             this.tflite!.HEAPU8.set(scaledY, scaledYBufferOffset);
-            this.tflite!._mergeY(params.inputWidth, params.inputHeight, resizedWidth, resizedHeight);
+            this.tflite!._mergeY(params.processWidth, params.processHeight, resizedWidth, resizedHeight);
             const outputImageBufferOffset = this.tflite!._getOutputImageBufferOffset();
             return this.tflite!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + resizedWidth * resizedHeight * 4);
         } else {
             this.tflite!.HEAPU8.set(imageData.data, this.tflite!._getInputImageBufferOffset());
-            this.tflite!._exec(params.inputWidth, params.inputHeight, params.interpolation);
+            this.tflite!._exec(params.processWidth, params.processHeight, params.interpolation);
             const outputImageBufferOffset = this.tflite!._getOutputImageBufferOffset();
-            const resizedWidth = params.inputWidth * config.scaleFactor[config.modelKey];
-            const resizedHeight = params.inputHeight * config.scaleFactor[config.modelKey];
+            const resizedWidth = params.processWidth * config.scaleFactor[config.modelKey];
+            const resizedHeight = params.processHeight * config.scaleFactor[config.modelKey];
             return this.tflite!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + resizedWidth * resizedHeight * 4);
         }
     };
 }
 
-export class SuperResolutionWorkerManager {
-    private workerBSL: Worker | null = null;
-    orgCanvas = document.createElement("canvas"); // to resize canvas for WebWorker
-
+export class SuperResolutionWorkerManager extends WorkerManagerBase {
     private config = generateSuperResolutionDefaultConfig();
-    private localWorker = new LocalWorker();
+    localWorker = new LocalSR();
+    private orgCanvas = document.createElement("canvas");
+
     init = async (config: SuperResolutionConfig | null) => {
-        if (config != null) {
-            this.config = config;
-        }
-        if (this.workerBSL) {
-            this.workerBSL.terminate();
-        }
-        this.workerBSL = null;
-
-        //// Local
-        if (this.config.processOnLocal == true) {
-            await this.localWorker.init(this.config!);
-            return;
-        }
-
-        //// Remote
-        const workerBSL: Worker = new workerJs();
-        console.log("[manager] send initialize request");
-        workerBSL!.postMessage({
-            message: WorkerCommand.INITIALIZE,
-            config: this.config,
-        });
-        const p = new Promise<void>((onResolve, onFail) => {
-            workerBSL!.onmessage = (event) => {
-                console.log("[manager] receive event", event);
-                if (event.data.message === WorkerResponse.INITIALIZED) {
-                    console.log("WORKERSS INITIALIZED");
-                    this.workerBSL = workerBSL;
-                    onResolve();
-                } else {
-                    console.log("opencv Initialization something wrong..");
-                    onFail(event);
-                }
-            };
-        });
-        await p;
+        this.config = config || generateSuperResolutionDefaultConfig();
+        await this.initCommon(
+            {
+                useWorkerForSafari: false,
+                processOnLocal: this.config.processOnLocal,
+                workerJs: () => {
+                    return new workerJs();
+                },
+            },
+            config
+        );
         return;
     };
 
-    predict = async (src: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement, params = generateDefaultSuperResolutionParams()) => {
+    predict = async (params = generateDefaultSuperResolutionParams(), src: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement) => {
         //// (0) If select canvas as interpolationType, return here
         if (params.interpolation === InterpolationTypes.CANVAS) {
             const scaleFactor = this.config.scaleFactor[this.config.modelKey];
-            this.orgCanvas.width = params.inputWidth * scaleFactor;
-            this.orgCanvas.height = params.inputHeight * scaleFactor;
+            this.orgCanvas.width = params.processWidth * scaleFactor;
+            this.orgCanvas.height = params.processHeight * scaleFactor;
             const orgCanvasCtx = this.orgCanvas.getContext("2d")!;
             orgCanvasCtx.drawImage(src, 0, 0, this.orgCanvas.width, this.orgCanvas.height);
             const imageData = orgCanvasCtx.getImageData(0, 0, this.orgCanvas.width, this.orgCanvas.height);
@@ -288,53 +268,18 @@ export class SuperResolutionWorkerManager {
         }
 
         //// (1) generate input imagedata
-        this.orgCanvas.width = params.inputWidth;
-        this.orgCanvas.height = params.inputHeight;
+        this.orgCanvas.width = params.processWidth;
+        this.orgCanvas.height = params.processHeight;
         const orgCanvasCtx = this.orgCanvas.getContext("2d")!;
         orgCanvasCtx.drawImage(src, 0, 0, this.orgCanvas.width, this.orgCanvas.height);
+
+        if (!this.worker) {
+            const prediction = await this.localWorker.predict(this.config, params, this.orgCanvas);
+            return prediction;
+        }
+
         const imageData = orgCanvasCtx.getImageData(0, 0, this.orgCanvas.width, this.orgCanvas.height);
-
-        //// (2) Local or Safari
-        if (this.config.processOnLocal == true || this.config.browserType === BrowserType.SAFARI) {
-            const res = await this.localWorker.predict(imageData, this.config, params);
-            return res;
-        }
-
-        //// (3) WebWorker
-        /////// (3-1) Not initilaized return.
-        if (!this.workerBSL) {
-            return null;
-        }
-        /////// worker is initialized.
-        ///// (3-2) send data
-        const uid = performance.now();
-        this.workerBSL!.postMessage(
-            {
-                message: WorkerCommand.PREDICT,
-                uid: uid,
-                config: this.config,
-                params: params,
-                imageData: imageData,
-            },
-            [imageData.data.buffer]
-        );
-
-        ///// (3-3) recevie message
-        const p = new Promise<Uint8Array>((resolve, reject) => {
-            this.workerBSL!.onmessage = (event) => {
-                if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
-                    const prediction = event.data.prediction as Uint8Array;
-                    resolve(prediction);
-                } else {
-                    //// Only Drop the request...
-                    console.log("something wrong..", event, event.data.message);
-                    const prediction = event.data.prediction as Uint8Array;
-                    resolve(prediction);
-                    // reject()
-                }
-            };
-        });
-        const res = await p;
-        return res;
+        const prediction = (await this.sendToWorker(this.config, params, imageData.data)) as Uint8ClampedArray;
+        return prediction;
     };
 }

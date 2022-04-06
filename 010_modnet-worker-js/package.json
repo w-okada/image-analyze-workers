@@ -37,7 +37,6 @@
     "dependencies": {
         "@tensorflow/tfjs": "^3.10.0",
         "@tensorflow/tfjs-backend-wasm": "^3.10.0",
-        "await-semaphore": "^0.1.3",
         "buffer": "^6.0.3",
         "@dannadori/000_WorkerBase": "file:../000_WorkerBase"
     }

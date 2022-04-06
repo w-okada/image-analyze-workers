@@ -1,4 +1,4 @@
-import { BrowserType } from "./BrowserUtil";
+import { BrowserTypes } from "@dannadori/000_WorkerBase";
 
 export const WorkerCommand = {
     INITIALIZE: "initialize",
@@ -11,15 +11,19 @@ export const WorkerResponse = {
     NOT_READY: "not_ready",
 };
 
+export const BackendTypes = {
+    WebGL: "WebGL",
+    wasm: "wasm",
+    cpu: "cpu",
+} as const;
+export type BackendTypes = typeof BackendTypes[keyof typeof BackendTypes];
+
 export interface SuperResolutionConfig {
-    browserType: BrowserType;
+    browserType: BrowserTypes;
     processOnLocal: boolean;
-    modelPath: string;
-    enableSIMD: boolean;
-    useTFWasmBackend: boolean;
-    wasmPath: string;
+    backendType: BackendTypes;
+    wasmPaths: { [key: string]: string };
     pageUrl: string;
-    tfjsModelPath: string;
 
     modelJson: { [key: string]: string };
     modelWeight: { [key: string]: string };
@@ -35,8 +39,8 @@ export interface SuperResolutionConfig {
 }
 
 export interface SuperResolutionOperationParams {
-    inputWidth: number;
-    inputHeight: number;
+    processWidth: number;
+    processHeight: number;
     interpolation: number;
 }
 
@@ -48,7 +52,8 @@ export const InterpolationTypes = {
     INTER_LANCZOS4: 4,
     INTER_ESPCN: 100,
     CANVAS: 200,
-};
+} as const;
+export type InterpolationTypes = typeof InterpolationTypes[keyof typeof InterpolationTypes];
 
 export interface TFLite extends EmscriptenModule {
     _getModelBufferMemoryOffset(): number;
