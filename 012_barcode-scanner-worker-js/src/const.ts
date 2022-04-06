@@ -1,4 +1,4 @@
-import { BrowserType } from "./BrowserUtil";
+import { BrowserTypes } from "@dannadori/000_WorkerBase";
 
 export const WorkerCommand = {
     INITIALIZE: "initialize",
@@ -11,8 +11,28 @@ export const WorkerResponse = {
     NOT_READY: "not_ready",
 };
 
+export const ScanModes = {
+    original: "original",
+    pure_zbar: "pure_zbar",
+    pure_zxing: "pure_zxing",
+} as const;
+export type ScanModes = typeof ScanModes[keyof typeof ScanModes];
+
+export const ScanScales = {
+    "2x2": 2,
+    "3x3": 3,
+} as const;
+export type ScanScales = typeof ScanScales[keyof typeof ScanScales];
+
+export const BackendTypes = {
+    WebGL: "WebGL",
+    wasm: "wasm",
+    cpu: "cpu",
+} as const;
+export type BackendTypes = typeof BackendTypes[keyof typeof BackendTypes];
+
 export interface BarcodeScannerConfig {
-    browserType: BrowserType;
+    browserType: BrowserTypes;
     processOnLocal: boolean;
 
     modelTFLites: { [key: string]: string };
@@ -25,8 +45,10 @@ export interface BarcodeScannerConfig {
 }
 
 export interface BarcodeScannerOperationParams {
-    type: string;
-    scale: number;
+    type: ScanModes;
+    scale: ScanScales;
+    processWidth: number;
+    processHeight: number;
 }
 
 export interface TFLite extends EmscriptenModule {
@@ -72,17 +94,3 @@ export type BarcodeInfo = {
 
     scan_type: string;
 };
-export const ScanModes = {
-    original: "original",
-    pure_zbar: "pure_zbar",
-    pure_zxing: "pure_zxing",
-} as const;
-
-export type ScanModes = typeof ScanModes[keyof typeof ScanModes];
-
-export const ScanScales = {
-    "2x2": 2,
-    "3x3": 3,
-} as const;
-
-export type ScanScales = typeof ScanScales[keyof typeof ScanScales];

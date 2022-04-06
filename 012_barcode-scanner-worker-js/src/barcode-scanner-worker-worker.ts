@@ -1,4 +1,4 @@
-import { BrowserType, getBrowserType } from "./BrowserUtil";
+import { BrowserTypes } from "@dannadori/000_WorkerBase";
 import { BarcodeInfo, BarcodeScannerConfig, BarcodeScannerOperationParams, ScanModes, TFLite, WorkerCommand, WorkerResponse } from "./const";
 
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
@@ -183,10 +183,11 @@ const scan_by_pure_zxing = (imageData: ImageData, config: BarcodeScannerConfig, 
     return barcodeInfos;
 };
 
-const predict = async (imageData: ImageData, config: BarcodeScannerConfig, params: BarcodeScannerOperationParams) => {
+const predict = async (config: BarcodeScannerConfig, params: BarcodeScannerOperationParams, data: Uint8ClampedArray) => {
     if (!ready || !tflite) {
         return [];
     }
+    const imageData = new ImageData(data, params.processWidth, params.processHeight);
     switch (params.type) {
         case ScanModes.original:
             return barcodeScan(imageData, config, params);
@@ -205,7 +206,7 @@ onmessage = async (event) => {
         const config = event.data.config as BarcodeScannerConfig;
         tflite = null;
         console.log("[WORKER] module initializing...");
-        if (config.useSimd && config.browserType !== BrowserType.SAFARI) {
+        if (config.useSimd && config.browserType !== BrowserTypes.SAFARI) {
             const modSimd = require("../resources/wasm/tflite-simd.js");
             const b = Buffer.from(config.wasmSimdBase64!, "base64");
             tflite = await modSimd({ wasmBinary: b });
@@ -222,16 +223,16 @@ onmessage = async (event) => {
         ready = true;
         ctx.postMessage({ message: WorkerResponse.INITIALIZED });
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        const uid: number = event.data.uid;
         const config: BarcodeScannerConfig = event.data.config;
         const params: BarcodeScannerOperationParams = event.data.params;
-        const imageData: ImageData = event.data.imageData;
+        const data: Uint8ClampedArray = event.data.data;
+
         if (ready === false) {
             console.log("NOTREADY!!", WorkerResponse.NOT_READY);
-            ctx.postMessage({ message: WorkerResponse.NOT_READY, uid: uid });
+            ctx.postMessage({ message: WorkerResponse.NOT_READY });
         } else {
-            const prediction = await predict(imageData, config, params);
-            ctx.postMessage({ message: WorkerResponse.PREDICTED, uid: uid, prediction: prediction });
+            const prediction = await predict(config, params, data);
+            ctx.postMessage({ message: WorkerResponse.PREDICTED, prediction: prediction });
         }
     }
 };

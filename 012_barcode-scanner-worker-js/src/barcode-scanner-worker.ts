@@ -1,7 +1,6 @@
-import { BrowserType, getBrowserType } from "./BrowserUtil";
 import { BarcodeScannerConfig, BarcodeScannerOperationParams, TFLite, WorkerCommand, WorkerResponse, BarcodeInfo, ScanModes, ScanScales } from "./const";
 
-export { BarcodeScannerConfig, BarcodeScannerOperationParams, TFLite, WorkerCommand, WorkerResponse, BarcodeInfo };
+export { BarcodeScannerConfig, BarcodeScannerOperationParams, TFLite, WorkerCommand, WorkerResponse, BarcodeInfo, BrowserTypes, ScanModes, ScanScales };
 
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./barcode-scanner-worker-worker.ts";
@@ -13,6 +12,7 @@ import tfliteModel from "../resources/tflite_models/barcode172_light.tflite.bin"
 import barcodeWasm from "../resources/wasm/tflite.wasm";
 // @ts-ignore
 import barcodeWasmSimd from "../resources/wasm/tflite-simd.wasm";
+import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
 
 export const generateBarcodeScannerDefaultConfig = (): BarcodeScannerConfig => {
     const defaultConf: BarcodeScannerConfig = {
@@ -35,6 +35,8 @@ export const generateDefaultBarcodeScannerParams = (): BarcodeScannerOperationPa
     const defaultParams: BarcodeScannerOperationParams = {
         type: ScanModes.original,
         scale: ScanScales["2x2"],
+        processWidth: 0,
+        processHeight: 0,
     };
     return defaultParams;
 };
@@ -49,7 +51,7 @@ const calcProcessSize = (width: number, height: number) => {
     }
 };
 
-export class LocalWorker {
+export class WorkerBC extends LocalWorker {
     ready = false;
     tflite?: TFLite | null = null;
     orgCanvas = document.createElement("canvas");
@@ -62,7 +64,7 @@ export class LocalWorker {
         this.tflite = null;
 
         const browserType = getBrowserType();
-        if (config.useSimd && browserType !== BrowserType.SAFARI) {
+        if (config.useSimd && browserType !== BrowserTypes.SAFARI) {
             const modSimd = require("../resources/wasm/tflite-simd.js");
             const b = Buffer.from(config.wasmSimdBase64!, "base64");
             this.tflite = await modSimd({ wasmBinary: b });
@@ -261,11 +263,14 @@ export class LocalWorker {
         return barcodeInfos;
     };
 
-    predict = async (imageData: ImageData, config: BarcodeScannerConfig, params: BarcodeScannerOperationParams) => {
+    predict = async (config: BarcodeScannerConfig, params: BarcodeScannerOperationParams, targetCanvas: HTMLCanvasElement) => {
         if (this.ready) {
             if (!this.tflite) {
                 return [];
             }
+
+            const imageData = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
+
             switch (params.type) {
                 case ScanModes.original:
                     return this.barcodeScan(imageData, config, params);
@@ -281,111 +286,54 @@ export class LocalWorker {
     };
 }
 
-export class BarcodeScannerWorkerManager {
-    private workerBSL: Worker | null = null;
+export class BarcodeScannerWorkerManager extends WorkerManagerBase {
     orgCanvas = document.createElement("canvas"); // to resize canvas for WebWorker
 
     private config = generateBarcodeScannerDefaultConfig();
-    private localWorker = new LocalWorker();
+    localWorker = new WorkerBC();
     init = async (config: BarcodeScannerConfig | null) => {
-        if (config != null) {
-            this.config = config;
-        }
-        if (this.workerBSL) {
-            this.workerBSL.terminate();
-        }
-        this.workerBSL = null;
-
-        //// Local
-        if (this.config.processOnLocal == true) {
-            await this.localWorker.init(this.config!);
-            return;
-        }
-
-        //// Remote
-        const workerBSL: Worker = new workerJs();
-        console.log("[manager] send initialize request");
-        workerBSL!.postMessage({ message: WorkerCommand.INITIALIZE, config: this.config });
-        const p = new Promise<void>((onResolve, onFail) => {
-            workerBSL!.onmessage = (event) => {
-                console.log("[manager] receive event", event);
-                if (event.data.message === WorkerResponse.INITIALIZED) {
-                    console.log("WORKERSS INITIALIZED");
-                    this.workerBSL = workerBSL;
-                    onResolve();
-                } else {
-                    console.log("opencv Initialization something wrong..");
-                    onFail(event);
-                }
-            };
-        });
-        await p;
+        this.config = config || generateBarcodeScannerDefaultConfig();
+        await this.initCommon(
+            {
+                useWorkerForSafari: false,
+                processOnLocal: this.config.processOnLocal,
+                workerJs: () => {
+                    return new workerJs();
+                },
+            },
+            config
+        );
         return;
     };
 
-    predict = async (src: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement, params = generateDefaultBarcodeScannerParams()) => {
+    predict = async (params = generateDefaultBarcodeScannerParams(), src: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement) => {
         //// (1) generate original canvas
-        let processWidth, processHeight;
         if (src instanceof HTMLImageElement) {
-            [processWidth, processHeight] = calcProcessSize(src.naturalWidth, src.naturalHeight);
+            [params.processWidth, params.processHeight] = calcProcessSize(src.naturalWidth, src.naturalHeight);
         }
         if (src instanceof HTMLVideoElement) {
-            [processWidth, processHeight] = calcProcessSize(src.videoWidth, src.videoHeight);
+            [params.processWidth, params.processHeight] = calcProcessSize(src.videoWidth, src.videoHeight);
         }
         if (src instanceof HTMLCanvasElement) {
-            processWidth = src.width;
-            processHeight = src.height;
+            params.processWidth = src.width;
+            params.processHeight = src.height;
         }
-        if (processWidth === 0 || processHeight === 0 || !processWidth || !processHeight) {
+        if (params.processWidth === 0 || params.processHeight === 0 || !params.processWidth || !params.processHeight) {
             return [];
         }
-        this.orgCanvas.width = processWidth;
-        this.orgCanvas.height = processHeight;
+
+        this.orgCanvas.width = params.processWidth;
+        this.orgCanvas.height = params.processHeight;
         const orgCanvasCtx = this.orgCanvas.getContext("2d")!;
         orgCanvasCtx.drawImage(src, 0, 0, this.orgCanvas.width, this.orgCanvas.height);
-        const imageData = orgCanvasCtx.getImageData(0, 0, this.orgCanvas.width, this.orgCanvas.height);
 
-        //// (2) Local or Safari
-        if (this.config.processOnLocal == true || this.config.browserType === BrowserType.SAFARI) {
-            const res = await this.localWorker.predict(imageData, this.config, params);
-            return res;
+        if (!this.worker) {
+            const prediction = await this.localWorker.predict(this.config, params, this.orgCanvas);
+            return prediction;
         }
+        const imageData = this.orgCanvas.getContext("2d")!.getImageData(0, 0, this.orgCanvas.width, this.orgCanvas.height);
+        const prediction = (await this.sendToWorker(this.config, params, imageData.data)) as BarcodeInfo[];
 
-        //// (3) WebWorker
-        /////// (3-1) Not initilaized return.
-        if (!this.workerBSL) {
-            return [];
-        }
-        /////// worker is initialized.
-        ///// (3-2) post message
-        const uid = performance.now();
-        this.workerBSL!.postMessage(
-            {
-                message: WorkerCommand.PREDICT,
-                uid: uid,
-                config: this.config,
-                params: params,
-                imageData: imageData,
-            },
-            [imageData.data.buffer]
-        );
-
-        ///// (3-3) recevie message
-        const p = new Promise<BarcodeInfo[]>((resolve, reject) => {
-            this.workerBSL!.onmessage = (event) => {
-                if (event.data.message === WorkerResponse.PREDICTED && event.data.uid === uid) {
-                    const prediction = event.data.prediction as BarcodeInfo[];
-                    resolve(prediction);
-                } else {
-                    //// Only Drop the request...
-                    console.log("something wrong..", event, event.data.message);
-                    const prediction = event.data.prediction as BarcodeInfo[];
-                    resolve(prediction);
-                    // reject()
-                }
-            };
-        });
-        const res = await p;
-        return res;
+        return prediction;
     };
 }
