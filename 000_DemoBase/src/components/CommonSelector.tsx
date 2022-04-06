@@ -1,14 +1,14 @@
 import React from "react";
 import { useMemo } from "react";
 
-export type CommonSelectorProps<T extends string> = {
+export type CommonSelectorProps<T extends string | number> = {
     id: string;
     title: string;
     currentValue: string;
     options: { [label: string]: T };
     onChange: (value: T) => void;
 };
-export const CommonSelector = <T extends string>(props: CommonSelectorProps<T>) => {
+export const CommonSelector = <T extends string | number>(props: CommonSelectorProps<T>) => {
     const onChange = (value: T) => {
         props.onChange(value);
     };

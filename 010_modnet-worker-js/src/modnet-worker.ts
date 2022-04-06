@@ -2,7 +2,7 @@
 import * as tf from "@tensorflow/tfjs";
 import { MODNetConfig, MODNetFunctionTypes, MODNetOperationParams, WorkerCommand, WorkerResponse, MODEL_INPUT_SIZES, BackendTypes } from "./const";
 import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
-
+import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
 export { MODNetConfig, MODNetOperationParams, MODEL_INPUT_SIZES, BackendTypes  };
 
 
@@ -23,7 +23,7 @@ import modelWeight_256 from `../resources/webcam_16/256/group1-shard1of1.bin`;
 import modelJson_512 from `../resources/webcam_16/512/model.json`;
 // @ts-ignore
 import modelWeight_512 from `../resources/webcam_16/512/group1-shard1of1.bin`;
-import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+
 
 
 export const generateMODNetDefaultConfig = (): MODNetConfig => {

@@ -30,8 +30,9 @@ export interface MODNetConfig {
     backendType: BackendTypes;
     wasmPaths: { [key: string]: string };
     pageUrl: string;
-    modelJson: { [key: string]: string };
-    modelWeight: { [key: string]: string };
+    modelJsons: { [key: string]: string };
+    modelWeights: { [key: string]: string };
+    modelTFLites: { [key: string]: number[] };
     modelInputs: { [key: string]: number[] };
     modelKey: string;
 }
