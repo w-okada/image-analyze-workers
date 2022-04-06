@@ -8,6 +8,8 @@ export type VideoInputSelectorProps = {
     currentValue: string;
     onInputSourceTypeChanged: (value: string) => void;
     onInputSourceChanged: (value: MediaStream | string) => void;
+    cameraResolutions?: { [name: string]: number[] };
+    filePaths?: { [name: string]: string };
 };
 
 export const VideoInputSelector = (props: VideoInputSelectorProps) => {
@@ -24,7 +26,10 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
 
     /// Load Camera
     useEffect(() => {
-        if (props.currentValue === "File" || props.currentValue === "Window") {
+        if (props.currentValue === "File" || props.currentValue === "Window" || props.currentValue === "Sample") {
+            return;
+        }
+        if (props.cameraResolutions) {
             return;
         }
         navigator.mediaDevices
@@ -54,8 +59,75 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
         videoDevices.forEach((x) => {
             p.options[x.label] = x.deviceId;
         });
+        if (props.filePaths) {
+            p.options["Sample"] = "Sample";
+        }
         return p;
     }, [videoDevices, props.currentValue]);
+
+    // create camera resolution button
+    const cameraResolutionButtons = useMemo(() => {
+        if (!props.cameraResolutions) {
+            return <></>;
+        }
+        return Object.keys(props.cameraResolutions).map((x) => {
+            return (
+                <button
+                    className="btn btn-sm btn-outline"
+                    onClick={() => {
+                        navigator.mediaDevices
+                            .getUserMedia({
+                                audio: false,
+                                video: {
+                                    deviceId: props.currentValue,
+                                    width: { ideal: props.cameraResolutions![x][0], max: 1200 },
+                                    height: { ideal: props.cameraResolutions![x][1], max: 1500 },
+                                },
+                            })
+                            .then((media) => {
+                                props.onInputSourceChanged(media);
+                            });
+                    }}
+                >
+                    {x}
+                </button>
+            );
+        });
+    }, [props.currentValue]);
+
+    // create sample file button
+    const sampleFileButtons = useMemo(() => {
+        if (!props.filePaths) {
+            return <></>;
+        }
+        return Object.keys(props.filePaths).map((x) => {
+            return (
+                <button
+                    className="btn btn-sm btn-outline"
+                    onClick={async () => {
+                        const data = await loadURLAsDataURL(props.filePaths![x]);
+                        props.onInputSourceChanged(data);
+                    }}
+                >
+                    {x}
+                </button>
+            );
+        });
+    }, [props.currentValue]);
+
+    const loadURLAsDataURL = async (path: string) => {
+        const res = await fetch(path);
+        const b = await res.blob();
+
+        const reader = new FileReader();
+        const p = new Promise<string>((resolve, _reject) => {
+            reader.onload = () => {
+                resolve(reader.result as string);
+            };
+            reader.readAsDataURL(b);
+        });
+        return await p;
+    };
 
     const loadFileClicked = () => {
         const fileInput = document.getElementById(`${props.id}-file-input`) as HTMLInputElement;
@@ -122,7 +194,14 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
                 <></>
             )}
 
-            <></>
+            {videoDevices.find((x) => {
+                return x.deviceId === props.currentValue;
+            }) && props.cameraResolutions ? (
+                <div style={{ display: "flex" }}>{cameraResolutionButtons}</div>
+            ) : (
+                <></>
+            )}
+            {props.currentValue === "Sample" ? <div style={{ display: "flex" }}>{sampleFileButtons}</div> : <></>}
 
             <input type="file" id={`${props.id}-file-input`} hidden></input>
         </div>
