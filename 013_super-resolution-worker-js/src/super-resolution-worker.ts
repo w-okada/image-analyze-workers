@@ -1,6 +1,6 @@
 import { BackendTypes, InterpolationTypes, SuperResolutionConfig, SuperResolutionOperationParams, TFLite } from "./const";
 import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
-export { SuperResolutionConfig, InterpolationTypes, SuperResolutionOperationParams };
+export { SuperResolutionConfig, InterpolationTypes, SuperResolutionOperationParams, BackendTypes };
 import * as tf from "@tensorflow/tfjs";
 
 // @ts-ignore

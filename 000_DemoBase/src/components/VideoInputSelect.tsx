@@ -73,6 +73,7 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
         return Object.keys(props.cameraResolutions).map((x) => {
             return (
                 <button
+                    key={`sample-file-${x}`}
                     className="btn btn-sm btn-outline"
                     onClick={() => {
                         navigator.mediaDevices
@@ -103,6 +104,7 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
         return Object.keys(props.filePaths).map((x) => {
             return (
                 <button
+                    key={`sample-file-${x}`}
                     className="btn btn-sm btn-outline"
                     onClick={async () => {
                         const data = await loadURLAsDataURL(props.filePaths![x]);

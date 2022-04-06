@@ -47,11 +47,17 @@
         "typescript": "^4.4.4",
         "webpack": "^5.62.1",
         "webpack-cli": "^4.9.1",
+        "daisyui": "^2.13.6",
+        "style-loader": "^3.3.1",
+        "postcss-loader": "^6.2.1",
+        "css-loader": "^6.7.1",
+        "autoprefixer": "^10.4.4",
+        "html-loader": "^3.1.0",
         "webpack-dev-server": "^4.4.0"
     },
     "dependencies": {
         "@dannadori/super-resolution-worker-js": "^1.0.7",
-        "@material-ui/core": "^4.12.3",
+        "demo-base": "file:../000_DemoBase",
         "react": "^17.0.2",
         "react-dom": "^17.0.2"
     }

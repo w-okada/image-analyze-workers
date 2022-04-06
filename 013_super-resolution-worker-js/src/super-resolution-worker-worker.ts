@@ -136,7 +136,7 @@ onmessage = async (event) => {
         } else {
             console.log("READY!!");
             const prediction = await predict(config, params, data);
-            ctx.postMessage({ message: WorkerResponse.PREDICTED, prediction: prediction });
+            ctx.postMessage({ message: WorkerResponse.PREDICTED, prediction: prediction }, [prediction!.buffer]);
         }
     }
 };
