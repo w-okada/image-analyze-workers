@@ -1,4 +1,4 @@
-import { AnnotatedPrediction, FacemeshConfig, FacemeshOperatipnParams, FaceMeshPredictionEx, generateDefaultFacemeshParams, generateFacemeshDefaultConfig } from "@dannadori/facemesh-worker-js";
+import { FacemeshConfig, FacemeshOperatipnParams, FaceMeshPredictionEx, generateDefaultFacemeshParams, generateFacemeshDefaultConfig } from "@dannadori/facemesh-worker-js";
 import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
 import { loadURLAsDataURL } from "../utils/urlReader";

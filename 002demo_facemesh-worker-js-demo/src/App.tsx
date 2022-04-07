@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
-import { FacemeshWorkerManager, BackendTypes, AnnotatedPrediction, Coords3D, Face, ModelTypes, FaceMeshPredictionEx } from "@dannadori/facemesh-worker-js";
+import { FacemeshWorkerManager, BackendTypes, ModelTypes } from "@dannadori/facemesh-worker-js";
 import { ApplicationModes, useAppState } from "./provider/AppStateProvider";
 import { FacemeshDrawer } from "./FacemeshDrawer";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
@@ -14,7 +14,7 @@ type ControllerProps = {
 };
 
 const Controller = (props: ControllerProps) => {
-    const { inputSourceType, setInputSourceType, setInputSource, config, params, setConfig, setParams, applicationMode, setApplicationMode, setMaskCanvas } = useAppState();
+    const { inputSourceType, setInputSourceType, setInputSource, config, params, setConfig, setParams, applicationMode, setApplicationMode } = useAppState();
 
     const videoInputSelectorProps: VideoInputSelectorProps = {
         id: "video-input-selector",

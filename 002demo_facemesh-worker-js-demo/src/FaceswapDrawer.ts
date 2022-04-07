@@ -1,4 +1,4 @@
-import { AnnotatedPrediction, Coords3D, FacemeshOperatipnParams } from "@dannadori/facemesh-worker-js";
+import { Coords3D, FacemeshOperatipnParams } from "@dannadori/facemesh-worker-js";
 import { FacemeshRenderer } from "./FaceswapRenderer";
 
 export class FaceswapDrawer {

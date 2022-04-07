@@ -1,4 +1,4 @@
-import { AnnotatedPrediction, BoundingBox, Coords3D, FacemeshOperatipnParams, Keypoint, NUM_KEYPOINTS, TRIANGULATION } from "@dannadori/facemesh-worker-js";
+import { BoundingBox, Coords3D, FacemeshOperatipnParams, NUM_KEYPOINTS, TRIANGULATION } from "@dannadori/facemesh-worker-js";
 
 export class FacemeshDrawer {
     private outputCanvas: HTMLCanvasElement | null = null;
