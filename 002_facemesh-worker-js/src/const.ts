@@ -1,4 +1,9 @@
 import { BrowserTypes } from "@dannadori/000_WorkerBase";
+import * as faceLandmarksDetectionCurrent from "@tensorflow-models/face-landmarks-detection-current";
+import { Face, Keypoint } from "@tensorflow-models/face-landmarks-detection-current";
+import { BoundingBox } from "@tensorflow-models/face-landmarks-detection-current/dist/shared/calculators/interfaces/shape_interfaces";
+import { AnnotatedPrediction } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh";
+import { Coord2D, Coords3D } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh/util";
 export const WorkerCommand = {
     INITIALIZE: "initialize",
     PREDICT: "predict",
@@ -64,12 +69,20 @@ export const BackendTypes = {
 } as const;
 export type BackendTypes = typeof BackendTypes[keyof typeof BackendTypes];
 
+export const ModelTypes = {
+    old: "old",
+    mediapipe: "mediapipe",
+    tfjs: "tfjs",
+} as const;
+export type ModelTypes = typeof ModelTypes[keyof typeof ModelTypes];
+
 export interface ModelConfig {
     maxContinuousChecks: number;
     detectionConfidence: number;
     maxFaces: number;
     iouThreshold: number;
     scoreThreshold: number;
+    refineLandmarks: boolean;
 }
 
 export interface FacemeshConfig {
@@ -80,11 +93,29 @@ export interface FacemeshConfig {
     model: ModelConfig;
     processOnLocal: boolean;
     pageUrl: string;
+    modelType: ModelTypes;
 }
 
 export interface FacemeshOperatipnParams {
     type: FacemeshFunctionTypes;
+    movingAverageWindow: number;
     processWidth: number;
     processHeight: number;
     predictIrises: boolean;
 }
+
+export type FacemeshPredictionOld = {
+    modelType: "old";
+    rowPrediction: AnnotatedPrediction[] | null;
+    singlePersonKeypointsMovingAverage?: Coords3D;
+    singlePersonBoxMovingAverage?: BoundingBox;
+};
+
+export type FacemeshPredictionMediapipe = {
+    modelType: "mediapipe" | "tfjs";
+    rowPrediction: Face[] | null;
+    singlePersonKeypointsMovingAverage?: Coords3D;
+    singlePersonBoxMovingAverage?: BoundingBox;
+};
+
+export type FaceMeshPredictionEx = FacemeshPredictionOld | FacemeshPredictionMediapipe;

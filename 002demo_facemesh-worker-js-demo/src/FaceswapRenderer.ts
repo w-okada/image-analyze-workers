@@ -55,7 +55,8 @@ export class FacemeshRenderer {
 
     private masktexId?: WebGLTexture;
     // private masktexImage?: HTMLCanvasElement;
-    private maskPrediction?: AnnotatedPrediction[];
+    // private maskPrediction?: AnnotatedPrediction[];
+    private maskKeypoints?: Coords3D;
     private maskProcessedWidth = 300;
     private maskProcessedHeight = 300;
 
@@ -139,7 +140,7 @@ export class FacemeshRenderer {
     };
 
     /////
-    setMask = (gl: WebGLRenderingContext, maskImage: HTMLCanvasElement, maskPrediction: AnnotatedPrediction[], maskProcessedWidth: number, maskProcessedHeight: number) => {
+    setMask = (gl: WebGLRenderingContext, maskImage: HTMLCanvasElement, maskKeypoints: Coords3D, maskProcessedWidth: number, maskProcessedHeight: number) => {
         const masktexId = gl.createTexture()!;
 
         gl.bindTexture(gl.TEXTURE_2D, masktexId);
@@ -152,13 +153,15 @@ export class FacemeshRenderer {
 
         this.masktexId = masktexId;
         // this.masktexImage = maskImage;
-        this.maskPrediction = maskPrediction;
+        // this.maskPrediction = maskPrediction;
+        this.maskKeypoints = maskKeypoints;
 
         this.maskProcessedWidth = maskProcessedWidth;
         this.maskProcessedHeight = maskProcessedHeight;
     };
 
-    drawFacemesh = (gl: WebGLRenderingContext, videoFrameCanvas: HTMLCanvasElement, videoFramePrediction: AnnotatedPrediction[], scaleX: number, scaleY: number) => {
+    // drawFacemesh = (gl: WebGLRenderingContext, videoFrameCanvas: HTMLCanvasElement, videoFramePrediction: AnnotatedPrediction[], scaleX: number, scaleY: number) => {
+    drawFacemesh = (gl: WebGLRenderingContext, videoFrameCanvas: HTMLCanvasElement, videoFrameKeypoints: Coords3D, scaleX: number, scaleY: number) => {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         // let texid = gl.createTexture()!;
         // gl.bindTexture(gl.TEXTURE_2D, texid);
@@ -171,10 +174,40 @@ export class FacemeshRenderer {
         // //gl.generateMipmap (gl.TEXTURE_2D);
 
         this.create_vbo_alpha_array(gl, TRIANGULATION);
-        this.render_2d_scene(gl, videoFramePrediction, videoFrameCanvas.width, videoFrameCanvas.height, this.maskPrediction!, scaleX, scaleY);
+        this.render_2d_scene(gl, videoFrameKeypoints, videoFrameCanvas.width, videoFrameCanvas.height, this.maskKeypoints!, scaleX, scaleY);
+        // this.render_2d_scene(gl, videoFramePrediction, videoFrameCanvas.width, videoFrameCanvas.height, this.maskPrediction!, scaleX, scaleY);
     };
 
-    render_2d_scene(gl: WebGLRenderingContext, face_predictions: AnnotatedPrediction[], tex_w: number, tex_h: number, mask_predictions: AnnotatedPrediction[], scaleX: number, scaleY: number) {
+    render_2d_scene(gl: WebGLRenderingContext, videoFrameKeypoints: Coords3D, tex_w: number, tex_h: number, maskKeypoints: Coords3D, scaleX: number, scaleY: number) {
+        const s_srctex_region = this.calc_size_to_fit(tex_w, tex_h, tex_w, tex_h);
+
+        const tx = s_srctex_region.tex_x;
+        const ty = s_srctex_region.tex_y;
+
+        gl.disable(gl.DEPTH_TEST);
+
+        const mask_color = [this.mask_color_brightness, this.mask_color_brightness, this.mask_color_brightness, this.mask_color_alpha];
+
+        const keypoints = videoFrameKeypoints;
+        /* render the deformed mask image onto the camera image */
+        const mask_keypoints = maskKeypoints;
+
+        const face_vtx = new Array(keypoints.length * 3);
+        const face_uv = new Array(keypoints.length * 2);
+        for (let i = 0; i < keypoints.length; i++) {
+            const p = keypoints[i];
+            face_vtx[3 * i + 0] = p[0] * scaleX + tx;
+            face_vtx[3 * i + 1] = p[1] * scaleY + ty;
+            face_vtx[3 * i + 2] = p[2];
+
+            const q = mask_keypoints[i];
+            face_uv[2 * i + 0] = q[0] / this.maskProcessedWidth; // this.masktexImage!.width;
+            face_uv[2 * i + 1] = q[1] / this.maskProcessedHeight; // this.masktexImage!.height;
+        }
+        this.draw_facemesh_tri_tex(gl, this.masktexId, face_vtx, face_uv, mask_color);
+    }
+
+    render_2d_scene_old(gl: WebGLRenderingContext, face_predictions: AnnotatedPrediction[], tex_w: number, tex_h: number, mask_predictions: AnnotatedPrediction[], scaleX: number, scaleY: number) {
         const s_srctex_region = this.calc_size_to_fit(tex_w, tex_h, tex_w, tex_h);
 
         const tx = s_srctex_region.tex_x;

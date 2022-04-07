@@ -1,4 +1,4 @@
-import { AnnotatedPrediction, FacemeshConfig, FacemeshOperatipnParams, generateDefaultFacemeshParams, generateFacemeshDefaultConfig } from "@dannadori/facemesh-worker-js";
+import { AnnotatedPrediction, FacemeshConfig, FacemeshOperatipnParams, FaceMeshPredictionEx, generateDefaultFacemeshParams, generateFacemeshDefaultConfig } from "@dannadori/facemesh-worker-js";
 import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
 import { loadURLAsDataURL } from "../utils/urlReader";
@@ -22,8 +22,8 @@ type AppStateValue = {
 
     maskCanvas: HTMLCanvasElement | null;
     setMaskCanvas: (source: HTMLCanvasElement | null) => void;
-    maskPrediction: AnnotatedPrediction[] | null;
-    setMaskPrediction: (prediction: AnnotatedPrediction[]) => void;
+    maskPrediction: FaceMeshPredictionEx | null;
+    setMaskPrediction: (prediction: FaceMeshPredictionEx) => void;
 
     config: FacemeshConfig;
     setConfig: (config: FacemeshConfig) => void;
@@ -65,7 +65,7 @@ export const AppStateProvider = ({ children }: Props) => {
     };
 
     const [maskCanvas, setMaskCanvas] = useState<HTMLCanvasElement | null>(null);
-    const [maskPrediction, setMaskPrediction] = useState<AnnotatedPrediction[] | null>(null);
+    const [maskPrediction, setMaskPrediction] = useState<FaceMeshPredictionEx | null>(null);
 
     const [config, setConfig] = useState(initialConfig);
     const [params, setParams] = useState(initialParams);

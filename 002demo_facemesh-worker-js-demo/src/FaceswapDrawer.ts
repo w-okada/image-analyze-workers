@@ -1,4 +1,4 @@
-import { AnnotatedPrediction, FacemeshOperatipnParams } from "@dannadori/facemesh-worker-js";
+import { AnnotatedPrediction, Coords3D, FacemeshOperatipnParams } from "@dannadori/facemesh-worker-js";
 import { FacemeshRenderer } from "./FaceswapRenderer";
 
 export class FaceswapDrawer {
@@ -8,7 +8,7 @@ export class FaceswapDrawer {
     private facemeshRenderer: FacemeshRenderer | null = null;
 
     private maskImage?: HTMLCanvasElement;
-    private maskPrediction?: AnnotatedPrediction[];
+    private maskKeypoints?: Coords3D;
 
     setTestCanvas = (testCanvas: HTMLCanvasElement) => {
         this.webGLCanvas = testCanvas;
@@ -18,7 +18,7 @@ export class FaceswapDrawer {
         this.outputCanvas = outputCanvas;
         console.log(this.outputCanvas);
     };
-    setMask(maskImage: HTMLCanvasElement, maskPrediction: AnnotatedPrediction[], params: FacemeshOperatipnParams) {
+    setMask(maskImage: HTMLCanvasElement, maskKeypoints: Coords3D, params: FacemeshOperatipnParams) {
         if (!this.outputCanvas) {
             console.warn("set mask: not initialized");
             return;
@@ -29,11 +29,11 @@ export class FaceswapDrawer {
         this.facemeshRenderer = new FacemeshRenderer(this.webGLCanvas.getContext("webgl")!, this.webGLCanvas.width, this.webGLCanvas.height);
 
         this.maskImage = maskImage;
-        this.maskPrediction = maskPrediction;
-        this.facemeshRenderer.setMask(this.webGLCanvas.getContext("webgl")!, this.maskImage, this.maskPrediction, params.processWidth, params.processHeight);
+        this.maskKeypoints = maskKeypoints;
+        this.facemeshRenderer.setMask(this.webGLCanvas.getContext("webgl")!, this.maskImage, this.maskKeypoints, params.processWidth, params.processHeight);
     }
 
-    swapFace(videoFrame: HTMLCanvasElement, maskPrediction: AnnotatedPrediction[], scaleX: number, scaleY: number) {
+    swapFace(videoFrame: HTMLCanvasElement, keypoints: Coords3D, scaleX: number, scaleY: number) {
         if (!this.facemeshRenderer || !this.outputCanvas) {
             console.warn("swap face: not initialized");
             return;
@@ -42,17 +42,10 @@ export class FaceswapDrawer {
         if (this.maskImage) {
             const gl = this.webGLCanvas.getContext("webgl")!;
 
-            this.facemeshRenderer.drawFacemesh(gl, videoFrame, maskPrediction, scaleX, scaleY);
-            // this.facemeshRenderer.drawFacemesh(gl, videoFrame, maskPrediction, 1, 1);
+            this.facemeshRenderer.drawFacemesh(gl, videoFrame, keypoints, scaleX, scaleY);
         }
         const ctx = this.outputCanvas!.getContext("2d")!;
-        // ctx.fillStyle = "rgba(0,0,0,0.0)";
-        // ctx.fillStyle = "rgba(0,0,0,0.50)";
         ctx.clearRect(0, 0, this.outputCanvas.width, this.outputCanvas.height);
-        // ctx.fillRect(0, 0, this.outputCanvas.width, this.outputCanvas.height);
-        // ctx.fillRect(0, 0, 100, 100);
         ctx.drawImage(this.webGLCanvas, 0, 0, this.outputCanvas.width, this.outputCanvas.height);
-        // return this.glCanvasOut;
-        // return ctx.getImageData(0, 0, this.glCanvasOut.width, this.glCanvasOut.height)
     }
 }

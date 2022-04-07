@@ -1,14 +1,17 @@
 //import * as facemesh from '@tensorflow-models/facemesh'
 import * as faceLandmarksDetection from "@tensorflow-models/face-landmarks-detection";
 
-import { BackendTypes, FacemeshConfig, FacemeshOperatipnParams, WorkerCommand, WorkerResponse } from "./const";
+import { BackendTypes, FacemeshConfig, FacemeshOperatipnParams, ModelTypes, WorkerCommand, WorkerResponse } from "./const";
 import * as tf from "@tensorflow/tfjs";
 import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 import { AnnotatedPrediction } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh";
+import * as faceLandmarksDetectionCurrent from "@tensorflow-models/face-landmarks-detection-current";
+import * as faceMesh from "@mediapipe/face_mesh";
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
 //let model: facemesh.FaceMesh | null
-let model: faceLandmarksDetection.FaceLandmarksDetector | null;
+let model: faceLandmarksDetection.FaceLandmarksDetector | null = null;
+let model2: faceLandmarksDetectionCurrent.FaceLandmarksDetector | null = null;
 
 const load_module = async (config: FacemeshConfig) => {
     if (config.backendType === BackendTypes.wasm) {
@@ -28,16 +31,24 @@ const load_module = async (config: FacemeshConfig) => {
     }
 };
 
-const predict = async (config: FacemeshConfig, params: FacemeshOperatipnParams, data: Uint8ClampedArray): Promise<AnnotatedPrediction[]> => {
-    const image = new ImageData(data, params.processWidth, params.processHeight);
+const predict = async (config: FacemeshConfig, params: FacemeshOperatipnParams, data: Uint8ClampedArray): Promise<AnnotatedPrediction[] | faceLandmarksDetectionCurrent.Face[]> => {
+    const newImg = new ImageData(data, params.processWidth, params.processHeight);
 
-    const tensor = tf.browser.fromPixels(image);
-    const prediction = await model!.estimateFaces({
-        input: tensor,
-        predictIrises: params.predictIrises,
-    });
-    tensor.dispose();
-    return prediction!;
+    if (model) {
+        await tf.ready();
+        let tensor = tf.browser.fromPixels(newImg);
+        const prediction = await model!.estimateFaces({
+            input: tensor,
+            predictIrises: params.predictIrises,
+        });
+        tensor.dispose();
+        return prediction;
+    } else if (model2) {
+        const prediction = await model2.estimateFaces(newImg, { flipHorizontal: false });
+        return prediction;
+    } else {
+        return [];
+    }
 };
 
 onmessage = async (event) => {
@@ -46,15 +57,41 @@ onmessage = async (event) => {
         console.log("Initialize model!.", event);
         const config = event.data.config as FacemeshConfig;
         await load_module(config);
-        tf.ready().then(() => {
-            tf.env().set("WEBGL_CPU_FORWARD", false);
-            // facemesh.load().then(res => {
-            faceLandmarksDetection.load(faceLandmarksDetection.SupportedPackages.mediapipeFacemesh, config).then((res) => {
-                console.log("new model:", res);
-                model = res;
-                ctx.postMessage({ message: WorkerResponse.INITIALIZED });
+        await tf.ready();
+        tf.env().set("WEBGL_CPU_FORWARD", false);
+
+        if (config.modelType === ModelTypes.old) {
+            model = await faceLandmarksDetection.load(faceLandmarksDetection.SupportedPackages.mediapipeFacemesh, config);
+            ctx.postMessage({ message: WorkerResponse.INITIALIZED });
+            model2?.dispose();
+            model2 = null;
+        } else if (config.modelType === ModelTypes.mediapipe) {
+            // Maybe this module is not work.....(20220408)
+            model = null;
+            const prevModel2 = model2;
+            try {
+                model2 = await faceLandmarksDetectionCurrent.createDetector(faceLandmarksDetectionCurrent.SupportedModels.MediaPipeFaceMesh, {
+                    runtime: "mediapipe",
+                    refineLandmarks: config.model.refineLandmarks,
+                    maxFaces: config.model.maxFaces,
+                    solutionPath: `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@${faceMesh.VERSION}`,
+                });
+            } catch (error) {
+                console.log("error", error);
+            }
+            ctx.postMessage({ message: WorkerResponse.INITIALIZED });
+            prevModel2?.dispose();
+        } else {
+            model = null;
+            const prevModel2 = model2;
+            model2 = await faceLandmarksDetectionCurrent.createDetector(faceLandmarksDetectionCurrent.SupportedModels.MediaPipeFaceMesh, {
+                runtime: "tfjs",
+                refineLandmarks: config.model.refineLandmarks,
+                maxFaces: config.model.maxFaces,
             });
-        });
+            ctx.postMessage({ message: WorkerResponse.INITIALIZED });
+            prevModel2?.dispose();
+        }
     } else if (event.data.message === WorkerCommand.PREDICT) {
         const config = event.data.config as FacemeshConfig;
         const params = event.data.params as FacemeshOperatipnParams;

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
-import { FacemeshWorkerManager, BackendTypes, AnnotatedPrediction, Coords3D } from "@dannadori/facemesh-worker-js";
+import { FacemeshWorkerManager, BackendTypes, AnnotatedPrediction, Coords3D, Face, ModelTypes, FaceMeshPredictionEx } from "@dannadori/facemesh-worker-js";
 import { ApplicationModes, useAppState } from "./provider/AppStateProvider";
 import { FacemeshDrawer } from "./FacemeshDrawer";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
@@ -8,8 +8,13 @@ import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, C
 import { FaceswapDrawer } from "./FaceswapDrawer";
 let GlobalLoopID = 0;
 
-const Controller = () => {
-    const { inputSourceType, setInputSourceType, setInputSource, config, params, setConfig, setParams, applicationMode, setApplicationMode, setMaskCanvas, maskCanvas, setMaskPrediction } = useAppState();
+type ControllerProps = {
+    selectMaskClicked: () => void;
+    fitMaskClicked: () => void;
+};
+
+const Controller = (props: ControllerProps) => {
+    const { inputSourceType, setInputSourceType, setInputSource, config, params, setConfig, setParams, applicationMode, setApplicationMode, setMaskCanvas } = useAppState();
 
     const videoInputSelectorProps: VideoInputSelectorProps = {
         id: "video-input-selector",
@@ -43,6 +48,22 @@ const Controller = () => {
         },
     };
 
+    const modelTypeSelectorProps: CommonSelectorProps<ModelTypes> = {
+        id: "model-type-selector",
+        title: "model type",
+        currentValue: config.modelType,
+        options: {
+            old: "old",
+            mediapipe: "mediapipe",
+            tfjs: "tfjs",
+        },
+        onChange: (value: ModelTypes) => {
+            config.modelType = value;
+            console.log("load mod00001");
+            setConfig({ ...config });
+        },
+    };
+
     const irisSwitchProps: CommonSwitchProps = {
         id: "iris-switch",
         title: "iris",
@@ -53,6 +74,15 @@ const Controller = () => {
         },
     };
 
+    const refineLandmarksSwitchProps: CommonSwitchProps = {
+        id: "refine-landmark-switch",
+        title: "refine landmark",
+        currentValue: config.model.refineLandmarks,
+        onChange: (value: boolean) => {
+            config.model.refineLandmarks = value;
+            setConfig({ ...config });
+        },
+    };
     const applicationModeSelectorProps: CommonSelectorProps<ApplicationModes> = {
         id: "application-mode-selector",
         title: "application mode",
@@ -170,6 +200,126 @@ const Controller = () => {
         integer: true,
     };
 
+    const movingAverageWindowSliderProps: CommonSliderProps = {
+        id: "moving-average-window-slider",
+        title: "moving average window",
+        currentValue: params.movingAverageWindow,
+        max: 100,
+        min: 1,
+        step: 1,
+        width: "30%",
+        onChange: (value: number) => {
+            params.movingAverageWindow = value;
+            setParams({ ...params });
+        },
+        integer: true,
+    };
+    // //// (2) Mask
+    // const managerForMaskRef = useRef<FacemeshWorkerManager>();
+    // const [manager, setManager] = useState<FacemeshWorkerManager | undefined>(managerForMaskRef.current);
+    // useEffect(() => {
+    //     if (applicationMode === "faceswap") {
+    //         const loadModel = async () => {
+    //             const m = manager ? manager : new FacemeshWorkerManager();
+    //             await m.init(config);
+    //             managerForMaskRef.current = m;
+    //             setManager(managerForMaskRef.current);
+    //         };
+    //         setTimeout(() => {
+    //             loadModel();
+    //         }, 1000 * 5);
+    //     }
+    // }, [config, applicationMode]);
+    // useEffect(() => {
+    //     if (!managerForMaskRef.current || !maskCanvas) {
+    //         console.log("mask prediction initialize not");
+    //         return;
+    //     }
+    //     console.log("Mask Prediction...");
+    //     const maskPrediction = async () => {
+    //         await managerForMaskRef.current!.predict(params, maskCanvas);
+    //         await managerForMaskRef.current!.predict(params, maskCanvas);
+    //         await managerForMaskRef.current!.predict(params, maskCanvas);
+    //         await managerForMaskRef.current!.predict(params, maskCanvas);
+    //         const prediction = await managerForMaskRef.current!.predict(params, maskCanvas);
+    //         setMaskPrediction(prediction);
+    //         console.log("mask image", maskCanvas.width, maskCanvas.height);
+    //     };
+    //     maskPrediction();
+    // }, [managerForMaskRef.current, maskCanvas, config, params]);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column" }}>
+            <VideoInputSelector {...videoInputSelectorProps}></VideoInputSelector>
+            <CommonSwitch {...onLocalSwitchProps}></CommonSwitch>
+            <CommonSelector {...backendSelectorProps}></CommonSelector>
+            <CommonSelector {...modelTypeSelectorProps}></CommonSelector>
+            <CommonSwitch {...irisSwitchProps}></CommonSwitch>
+            <CommonSwitch {...refineLandmarksSwitchProps}></CommonSwitch>
+
+            <CommonSelector {...applicationModeSelectorProps}></CommonSelector>
+            {applicationMode === ApplicationModes.faceswap ? (
+                <div style={{ display: "flex" }}>
+                    <button
+                        className="btn btn-sm btn-outline"
+                        onClick={() => {
+                            props.selectMaskClicked();
+                        }}
+                    >
+                        select mask
+                    </button>
+                    <div>
+                        {" "}
+                        --{">"}
+                        {">"}{" "}
+                    </div>
+                    <button
+                        className="btn btn-sm btn-accent"
+                        onClick={() => {
+                            props.fitMaskClicked();
+                        }}
+                    >
+                        fit mask
+                    </button>
+                    <input type="file" id={`select-mask-file-input`} hidden></input>
+                </div>
+            ) : (
+                <></>
+            )}
+
+            <CommonSlider {...maxContinuousCheckSliderProps}></CommonSlider>
+            <CommonSlider {...confidenceSliderProps}></CommonSlider>
+            <CommonSlider {...maxFacesSliderProps}></CommonSlider>
+            <CommonSlider {...iouThresholdSliderProps}></CommonSlider>
+            <CommonSlider {...scoreThresholdSliderProps}></CommonSlider>
+
+            <CommonSlider {...processWidthSliderProps}></CommonSlider>
+            <CommonSlider {...processHeightSliderProps}></CommonSlider>
+            <CommonSlider {...movingAverageWindowSliderProps}></CommonSlider>
+        </div>
+    );
+};
+const App = () => {
+    const { applicationMode, inputSource, config, params, maskCanvas, maskPrediction, setMaskPrediction, setMaskCanvas } = useAppState();
+    const managerRef = useRef<FacemeshWorkerManager>();
+    const [manager, setManager] = useState<FacemeshWorkerManager | undefined>(managerRef.current);
+    const managerForMaskRef = useRef<FacemeshWorkerManager>();
+    const [managerForMask, setManagerForMask] = useState<FacemeshWorkerManager | undefined>(managerForMaskRef.current);
+    useEffect(() => {
+        const loadModel = async () => {
+            const m = manager ? manager : new FacemeshWorkerManager();
+            await m.init(config);
+            managerRef.current = m;
+            setManager(managerRef.current);
+
+            const mForMask = managerForMask ? managerForMask : new FacemeshWorkerManager();
+            await mForMask.init(config);
+            managerForMaskRef.current = mForMask;
+            setManagerForMask(managerForMaskRef.current);
+        };
+        loadModel();
+    }, [config]);
+
     const selectMaskClicked = () => {
         const fileInput = document.getElementById(`select-mask-file-input`) as HTMLInputElement;
         fileInput.onchange = (event: Event) => {
@@ -190,14 +340,12 @@ const Controller = () => {
             reader.onload = () => {
                 const maskImage = document.createElement("img");
                 maskImage.onload = () => {
-                    const maskCanvas = document.createElement("canvas");
-                    const maskCanvas2 = document.getElementById("mask") as HTMLCanvasElement;
+                    // const maskCanvas = document.createElement("canvas");
+                    const maskCanvas = document.getElementById("mask") as HTMLCanvasElement;
                     maskCanvas.width = maskImage.naturalWidth;
                     maskCanvas.height = maskImage.naturalHeight;
-                    maskCanvas2.width = maskImage.naturalWidth;
-                    maskCanvas2.height = maskImage.naturalHeight;
                     maskCanvas.getContext("2d")!.drawImage(maskImage, 0, 0, maskCanvas.width, maskCanvas.height);
-                    maskCanvas2.getContext("2d")!.drawImage(maskImage, 0, 0, maskCanvas2.width, maskCanvas2.height);
+
                     setMaskCanvas(maskCanvas);
                 };
                 maskImage.src = reader.result as string;
@@ -207,37 +355,7 @@ const Controller = () => {
         fileInput.click();
     };
 
-    //// (2) Mask
-    const managerForMaskRef = useRef<FacemeshWorkerManager>();
-    const [manager, setManager] = useState<FacemeshWorkerManager | undefined>(managerForMaskRef.current);
-    useEffect(() => {
-        const loadModel = async () => {
-            const m = manager ? manager : new FacemeshWorkerManager();
-            await m.init(config);
-            managerForMaskRef.current = m;
-            setManager(managerForMaskRef.current);
-        };
-        loadModel();
-    }, [config]);
-    // useEffect(() => {
-    //     if (!managerForMaskRef.current || !maskCanvas) {
-    //         console.log("mask prediction initialize not");
-    //         return;
-    //     }
-    //     console.log("Mask Prediction...");
-    //     const maskPrediction = async () => {
-    //         await managerForMaskRef.current!.predict(params, maskCanvas);
-    //         await managerForMaskRef.current!.predict(params, maskCanvas);
-    //         await managerForMaskRef.current!.predict(params, maskCanvas);
-    //         await managerForMaskRef.current!.predict(params, maskCanvas);
-    //         const prediction = await managerForMaskRef.current!.predict(params, maskCanvas);
-    //         setMaskPrediction(prediction);
-    //         console.log("mask image", maskCanvas.width, maskCanvas.height);
-    //     };
-    //     maskPrediction();
-    // }, [managerForMaskRef.current, maskCanvas, config, params]);
-
-    const fitMaskClicked = async () => {
+    const fitMaskClicked = () => {
         if (!managerForMaskRef.current || !maskCanvas) {
             console.log("mask prediction initialize not");
             return;
@@ -249,72 +367,13 @@ const Controller = () => {
             await managerForMaskRef.current!.predict(params, maskCanvas);
             await managerForMaskRef.current!.predict(params, maskCanvas);
             const prediction = await managerForMaskRef.current!.predict(params, maskCanvas);
-            setMaskPrediction(prediction);
+            console.log("Mask Prediction...", prediction);
+            if (prediction) {
+                setMaskPrediction(prediction);
+            }
         };
         maskPrediction();
     };
-
-    return (
-        <div style={{ display: "flex", flexDirection: "column" }}>
-            <VideoInputSelector {...videoInputSelectorProps}></VideoInputSelector>
-            <CommonSwitch {...onLocalSwitchProps}></CommonSwitch>
-            <CommonSelector {...backendSelectorProps}></CommonSelector>
-            <CommonSwitch {...irisSwitchProps}></CommonSwitch>
-
-            <CommonSelector {...applicationModeSelectorProps}></CommonSelector>
-            {applicationMode === ApplicationModes.faceswap ? (
-                <div style={{ display: "flex" }}>
-                    <button
-                        className="btn btn-sm btn-outline"
-                        onClick={() => {
-                            selectMaskClicked();
-                        }}
-                    >
-                        select mask
-                    </button>
-                    <div>
-                        {" "}
-                        --{">"}
-                        {">"}{" "}
-                    </div>
-                    <button
-                        className="btn btn-sm btn-accent"
-                        onClick={() => {
-                            fitMaskClicked();
-                        }}
-                    >
-                        fit mask
-                    </button>
-                    <input type="file" id={`select-mask-file-input`} hidden></input>
-                </div>
-            ) : (
-                <></>
-            )}
-
-            <CommonSlider {...maxContinuousCheckSliderProps}></CommonSlider>
-            <CommonSlider {...confidenceSliderProps}></CommonSlider>
-            <CommonSlider {...maxFacesSliderProps}></CommonSlider>
-            <CommonSlider {...iouThresholdSliderProps}></CommonSlider>
-            <CommonSlider {...scoreThresholdSliderProps}></CommonSlider>
-
-            <CommonSlider {...processWidthSliderProps}></CommonSlider>
-            <CommonSlider {...processHeightSliderProps}></CommonSlider>
-        </div>
-    );
-};
-const App = () => {
-    const { applicationMode, inputSource, config, params, maskCanvas, maskPrediction } = useAppState();
-    const managerRef = useRef<FacemeshWorkerManager>();
-    const [manager, setManager] = useState<FacemeshWorkerManager | undefined>(managerRef.current);
-    useEffect(() => {
-        const loadModel = async () => {
-            const m = manager ? manager : new FacemeshWorkerManager();
-            await m.init(config);
-            managerRef.current = m;
-            setManager(managerRef.current);
-        };
-        loadModel();
-    }, [config]);
 
     const drawer = useMemo(() => {
         return new FacemeshDrawer();
@@ -386,7 +445,6 @@ const App = () => {
             return (sum / perfs.length).toFixed(3);
         };
 
-        const results: AnnotatedPrediction[][] = [];
         const render = async () => {
             const start = performance.now();
             [snap, dst, test].forEach((x) => {
@@ -402,40 +460,17 @@ const App = () => {
             try {
                 if (snap.width > 0 && snap.height > 0) {
                     const prediction = await managerRef.current!.predict(params, snap);
-                    if (prediction.length > 0) {
-                        if (results.length > 3) {
-                            results.shift();
-                        }
-                        results.push(prediction);
+                    // console.log("prediction", prediction);
 
-                        const keypointsEach = results.map((pred) => {
-                            return pred[0].scaledMesh as Coords3D;
-                        });
-                        const summedKeypoints = keypointsEach.reduce((prev, cur) => {
-                            for (let i = 0; i < cur.length; i++) {
-                                if (prev[i]) {
-                                    prev[i][0] = prev[i][0] + cur[i][0];
-                                    prev[i][1] = prev[i][1] + cur[i][1];
-                                    prev[i][2] = prev[i][2] + cur[i][2];
-                                } else {
-                                    prev.push([cur[i][0], cur[i][1], cur[i][2]]);
-                                }
-                            }
-                            return prev;
-                        }, [] as Coords3D);
-                        for (let i = 0; i < summedKeypoints.length; i++) {
-                            summedKeypoints[i][0] = summedKeypoints[i][0] / results.length;
-                            summedKeypoints[i][1] = summedKeypoints[i][1] / results.length;
-                            summedKeypoints[i][2] = summedKeypoints[i][2] / results.length;
+                    if (applicationMode === ApplicationModes.facemesh) {
+                        if (prediction.singlePersonKeypointsMovingAverage) {
+                            drawer.draw(snap, params, prediction.singlePersonKeypointsMovingAverage, prediction.singlePersonBoxMovingAverage);
                         }
-                        prediction[0].scaledMesh = summedKeypoints;
-
-                        if (applicationMode === ApplicationModes.facemesh) {
-                            drawer.draw(snap, params, prediction);
-                        } else {
+                    } else {
+                        if (prediction.singlePersonKeypointsMovingAverage) {
                             const scaleX = snap.width / params.processWidth;
                             const scaleY = snap.height / params.processHeight;
-                            faceswapDrawer.swapFace(snap, prediction, scaleX, scaleY);
+                            faceswapDrawer.swapFace(snap, prediction.singlePersonKeypointsMovingAverage, scaleX, scaleY);
                         }
                     }
                 }
@@ -466,7 +501,7 @@ const App = () => {
         if (!maskCanvas || !maskPrediction) {
             return;
         }
-        faceswapDrawer.setMask(maskCanvas, maskPrediction, params);
+        faceswapDrawer.setMask(maskCanvas, maskPrediction.singlePersonKeypointsMovingAverage!, params);
     }, [maskCanvas, maskPrediction]);
 
     return (
@@ -482,7 +517,7 @@ const App = () => {
                     <canvas id="output" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                 </div>
                 <div style={{ width: "30%", marginLeft: "3%", objectFit: "contain" }}>
-                    <Controller></Controller>
+                    <Controller {...{ fitMaskClicked, selectMaskClicked }}></Controller>
                 </div>
                 <div style={{ position: "absolute", top: "2%", left: "2%", background: "#000000", color: "#aabbaa" }} id="info"></div>
             </div>
