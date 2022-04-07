@@ -1,8 +1,8 @@
 const path = require("path");
 
 const manager = {
-    mode: "development",
-    // mode: "production",
+    // mode: "development",
+    mode: "production",
     entry: "./src/facemesh-worker.ts",
     resolve: {
         extensions: [".ts", ".js"],
