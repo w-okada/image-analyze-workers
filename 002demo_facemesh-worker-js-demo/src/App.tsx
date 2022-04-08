@@ -256,8 +256,6 @@ const Controller = (props: ControllerProps) => {
             <CommonSwitch {...onLocalSwitchProps}></CommonSwitch>
             <CommonSelector {...backendSelectorProps}></CommonSelector>
             <CommonSelector {...modelTypeSelectorProps}></CommonSelector>
-            <CommonSwitch {...irisSwitchProps}></CommonSwitch>
-            <CommonSwitch {...refineLandmarksSwitchProps}></CommonSwitch>
 
             <CommonSelector {...applicationModeSelectorProps}></CommonSelector>
             {applicationMode === ApplicationModes.faceswap ? (
@@ -288,13 +286,20 @@ const Controller = (props: ControllerProps) => {
             ) : (
                 <></>
             )}
-
-            <CommonSlider {...maxContinuousCheckSliderProps}></CommonSlider>
-            <CommonSlider {...confidenceSliderProps}></CommonSlider>
-            <CommonSlider {...maxFacesSliderProps}></CommonSlider>
-            <CommonSlider {...iouThresholdSliderProps}></CommonSlider>
-            <CommonSlider {...scoreThresholdSliderProps}></CommonSlider>
-
+            {config.modelType === ModelTypes.old ? (
+                <>
+                    <CommonSwitch {...irisSwitchProps}></CommonSwitch>
+                    <CommonSlider {...maxContinuousCheckSliderProps}></CommonSlider>
+                    <CommonSlider {...confidenceSliderProps}></CommonSlider>
+                    <CommonSlider {...maxFacesSliderProps}></CommonSlider>
+                    <CommonSlider {...iouThresholdSliderProps}></CommonSlider>
+                    <CommonSlider {...scoreThresholdSliderProps}></CommonSlider>
+                </>
+            ) : (
+                <>
+                    <CommonSwitch {...refineLandmarksSwitchProps}></CommonSwitch>
+                </>
+            )}
             <CommonSlider {...processWidthSliderProps}></CommonSlider>
             <CommonSlider {...processHeightSliderProps}></CommonSlider>
             <CommonSlider {...movingAverageWindowSliderProps}></CommonSlider>
