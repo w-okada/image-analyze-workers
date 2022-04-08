@@ -1,4 +1,5 @@
 import { BoundingBox, Coords3D, FacemeshOperatipnParams, NUM_KEYPOINTS, TRIANGULATION } from "@dannadori/facemesh-worker-js";
+import { TrackingArea } from "@dannadori/facemesh-worker-js/dist/const";
 
 export class FacemeshDrawer {
     private outputCanvas: HTMLCanvasElement | null = null;
@@ -6,6 +7,19 @@ export class FacemeshDrawer {
     setOutputCanvas = (outputCanvas: HTMLCanvasElement) => {
         this.outputCanvas = outputCanvas;
         console.log(this.outputCanvas);
+    };
+
+    tracking = (snap: HTMLCanvasElement, _params: FacemeshOperatipnParams, trackingArea: TrackingArea, scaleX: number, scaleY: number) => {
+        if (!this.outputCanvas) {
+            console.log("not ready:::", this.outputCanvas);
+            return;
+        }
+        const outputCtx = this.outputCanvas.getContext("2d")!;
+        outputCtx.clearRect(0, 0, this.outputCanvas.width, this.outputCanvas.height);
+        const width = trackingArea.width * scaleX;
+        const height = trackingArea.height * scaleY;
+        const projectionRatio = Math.min(this.outputCanvas.width / width, this.outputCanvas.height / height);
+        outputCtx.drawImage(snap, trackingArea.xMin * scaleX, trackingArea.yMin * scaleY, width, height, 0, 0, width * projectionRatio, height * projectionRatio);
     };
 
     draw = (snap: HTMLCanvasElement, params: FacemeshOperatipnParams, keypoints: Coords3D, box: BoundingBox) => {

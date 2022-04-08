@@ -90,6 +90,7 @@ const Controller = (props: ControllerProps) => {
         options: {
             facemesh: ApplicationModes.facemesh,
             faceswap: ApplicationModes.faceswap,
+            tracking: ApplicationModes.tracking,
         },
         onChange: (value: ApplicationModes) => {
             setApplicationMode(value);
@@ -473,11 +474,17 @@ const App = () => {
                         if (prediction.singlePersonKeypointsMovingAverage) {
                             drawer.draw(snap, params, prediction.singlePersonKeypointsMovingAverage, prediction.singlePersonBoxMovingAverage);
                         }
-                    } else {
+                    } else if (applicationMode === ApplicationModes.faceswap) {
                         if (prediction.singlePersonKeypointsMovingAverage) {
                             const scaleX = snap.width / params.processWidth;
                             const scaleY = snap.height / params.processHeight;
                             faceswapDrawer.swapFace(snap, prediction.singlePersonKeypointsMovingAverage, scaleX, scaleY);
+                        }
+                    } else {
+                        if (prediction.trackingArea) {
+                            const scaleX = snap.width / params.processWidth;
+                            const scaleY = snap.height / params.processHeight;
+                            drawer.tracking(snap, params, prediction.trackingArea, scaleX, scaleY);
                         }
                     }
                 }

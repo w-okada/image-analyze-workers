@@ -9,6 +9,7 @@ type Props = {
 export const ApplicationModes = {
     facemesh: "facemesh",
     faceswap: "faceswap",
+    tracking: "tracking",
 } as const;
 export type ApplicationModes = typeof ApplicationModes[keyof typeof ApplicationModes];
 

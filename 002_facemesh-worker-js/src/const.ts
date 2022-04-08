@@ -99,16 +99,31 @@ export interface FacemeshConfig {
 export interface FacemeshOperatipnParams {
     type: FacemeshFunctionTypes;
     movingAverageWindow: number;
+    trackingAreaMarginRatioX: number;
+    trackingAreaMarginRatioTop: number;
+    trackingAreaMarginRatioBottom: number;
     processWidth: number;
     processHeight: number;
     predictIrises: boolean;
 }
+
+export type TrackingArea = {
+    centerX: number;
+    centerY: number;
+    xMin: number;
+    yMin: number;
+    xMax: number;
+    yMax: number;
+    width: number;
+    height: number;
+};
 
 export type FacemeshPredictionOld = {
     modelType: "old";
     rowPrediction: AnnotatedPrediction[] | null;
     singlePersonKeypointsMovingAverage?: Coords3D;
     singlePersonBoxMovingAverage?: BoundingBox;
+    trackingArea?: TrackingArea;
 };
 
 export type FacemeshPredictionMediapipe = {
@@ -116,6 +131,7 @@ export type FacemeshPredictionMediapipe = {
     rowPrediction: Face[] | null;
     singlePersonKeypointsMovingAverage?: Coords3D;
     singlePersonBoxMovingAverage?: BoundingBox;
+    trackingArea?: TrackingArea;
 };
 
 export type FaceMeshPredictionEx = FacemeshPredictionOld | FacemeshPredictionMediapipe;

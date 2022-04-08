@@ -54,6 +54,9 @@ export const generateDefaultFacemeshParams = () => {
         processHeight: 300,
         predictIrises: false,
         movingAverageWindow: 10,
+        trackingAreaMarginRatioX: 0.3,
+        trackingAreaMarginRatioTop: 0.8,
+        trackingAreaMarginRatioBottom: 0.2,
     };
     return defaultParams;
 };
@@ -251,6 +254,28 @@ export class FacemeshWorkerManager extends WorkerManagerBase {
                 summedBoundingBox.yMin /= this.annotatedPredictionsMV.length;
                 /// (3-4) 追加
                 predictionEx.singlePersonBoxMovingAverage = summedBoundingBox;
+
+                /// (4)Tracking Area
+                const trackingAreaCenterX = (summedBoundingBox.xMax + summedBoundingBox.xMin) / 2;
+                const trackingAreaCenterY = (summedBoundingBox.yMax + summedBoundingBox.yMin) / 2;
+                const idearlRadiusX = (summedBoundingBox.width / 2) * (1 + params.trackingAreaMarginRatioX);
+                const idearlRadiusTop = (summedBoundingBox.height / 2) * (1 + params.trackingAreaMarginRatioTop);
+                const idearlRadiusBottom = (summedBoundingBox.height / 2) * (1 + params.trackingAreaMarginRatioBottom);
+
+                const trackingAreaCenterXMin = trackingAreaCenterX - idearlRadiusX > 0 ? trackingAreaCenterX - idearlRadiusX : 0;
+                const trackingAreaCenterXMax = trackingAreaCenterX + idearlRadiusX < params.processWidth ? trackingAreaCenterX + idearlRadiusX : params.processWidth;
+                const trackingAreaCenterYmin = trackingAreaCenterY - idearlRadiusTop > 0 ? trackingAreaCenterY - idearlRadiusTop : 0;
+                const trackingAreaCenterYmax = trackingAreaCenterY - idearlRadiusBottom < params.processHeight ? trackingAreaCenterY + idearlRadiusTop : params.processHeight;
+                predictionEx.trackingArea = {
+                    centerX: trackingAreaCenterX,
+                    centerY: trackingAreaCenterY,
+                    xMin: trackingAreaCenterXMin,
+                    xMax: trackingAreaCenterXMax,
+                    yMin: trackingAreaCenterYmin,
+                    yMax: trackingAreaCenterYmax,
+                    width: trackingAreaCenterXMax - trackingAreaCenterXMin,
+                    height: trackingAreaCenterYmax - trackingAreaCenterYmin,
+                };
             }
 
             return predictionEx;
@@ -335,6 +360,28 @@ export class FacemeshWorkerManager extends WorkerManagerBase {
                 summedBoundingBox.yMin /= this.facesMV.length;
                 /// (2-4) 追加
                 predictionEx.singlePersonBoxMovingAverage = summedBoundingBox;
+
+                /// (4)Tracking Area
+                const trackingAreaCenterX = (summedBoundingBox.xMax + summedBoundingBox.xMin) / 2;
+                const trackingAreaCenterY = (summedBoundingBox.yMax + summedBoundingBox.yMin) / 2;
+                const idearlRadiusX = (summedBoundingBox.width / 2) * (1 + params.trackingAreaMarginRatioX);
+                const idearlRadiusTop = (summedBoundingBox.height / 2) * (1 + params.trackingAreaMarginRatioTop);
+                const idearlRadiusBottom = (summedBoundingBox.height / 2) * (1 + params.trackingAreaMarginRatioBottom);
+
+                const trackingAreaCenterXMin = trackingAreaCenterX - idearlRadiusX > 0 ? trackingAreaCenterX - idearlRadiusX : 0;
+                const trackingAreaCenterXMax = trackingAreaCenterX + idearlRadiusX < params.processWidth ? trackingAreaCenterX + idearlRadiusX : params.processWidth;
+                const trackingAreaCenterYmin = trackingAreaCenterY - idearlRadiusTop > 0 ? trackingAreaCenterY - idearlRadiusTop : 0;
+                const trackingAreaCenterYmax = trackingAreaCenterY - idearlRadiusBottom < params.processHeight ? trackingAreaCenterY + idearlRadiusTop : params.processHeight;
+                predictionEx.trackingArea = {
+                    centerX: trackingAreaCenterX,
+                    centerY: trackingAreaCenterY,
+                    xMin: trackingAreaCenterXMin,
+                    xMax: trackingAreaCenterXMax,
+                    yMin: trackingAreaCenterYmin,
+                    yMax: trackingAreaCenterYmax,
+                    width: trackingAreaCenterXMax - trackingAreaCenterXMin,
+                    height: trackingAreaCenterYmax - trackingAreaCenterYmin,
+                };
             }
 
             return predictionEx;
