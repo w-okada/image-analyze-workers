@@ -7,6 +7,8 @@ export { CommonSwitch } from "./components/CommonSwitch";
 export type { CommonSwitchProps } from "./components/CommonSwitch";
 export { CommonSlider } from "./components/CommonSlider";
 export type { CommonSliderProps } from "./components/CommonSlider";
+export { Credit } from "./components/Credit";
+export type { CreditProps } from "./components/Credit";
 
 /// Hooks
 export { useDeviceManager } from "./hooks/useDeviceManager";

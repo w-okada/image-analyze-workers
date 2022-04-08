@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
-import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
 import { useAppState } from "./provider/AppStateProvider";
 import { BackendTypes, CartoonWorkerManager } from "@dannadori/white-box-cartoonization-worker-js";
 import { CartoonDrawer } from "./CartoonDrawer";
@@ -83,6 +83,8 @@ const Controller = () => {
 
     return (
         <div style={{ display: "flex", flexDirection: "column" }}>
+            <Credit></Credit>
+
             <VideoInputSelector {...videoInputSelectorProps}></VideoInputSelector>
             <CommonSwitch {...onLocalSwitchProps}></CommonSwitch>
             <CommonSelector {...backendSelectorProps}></CommonSelector>

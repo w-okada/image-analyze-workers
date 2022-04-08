@@ -3,7 +3,7 @@ import { AsciiArtWorkerManager } from "@dannadori/asciiart-worker-js";
 import { useAppState } from "./provider/AppStateProvider";
 import { AsciiArtDrawer } from "./AsciiArtDraw";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
-import { CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import { CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
 
 let GlobalLoopID = 0;
 
@@ -43,6 +43,8 @@ const Controller = () => {
 
     return (
         <div style={{ display: "flex", flexDirection: "column" }}>
+            <Credit></Credit>
+
             <VideoInputSelector {...videoInputSelectorProps}></VideoInputSelector>
             <CommonSwitch {...onLocalSwitchProps}></CommonSwitch>
             <CommonSlider {...fontSizeSliderProps}></CommonSlider>

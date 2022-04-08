@@ -5,7 +5,7 @@ import { useAppState } from "./provider/AppStateProvider";
 import { GoogleMeetDrawer } from "./GoogleMeetDrawer";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 import { BackendTypes, GoogleMeetSegmentationWorkerManager, InterpolationTypes, PostProcessTypes } from "@dannadori/googlemeet-segmentation-worker-js";
-import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
 let GlobalLoopID = 0;
 
 const Controller = () => {
@@ -181,6 +181,8 @@ const Controller = () => {
     };
     return (
         <div style={{ display: "flex", flexDirection: "column" }}>
+            <Credit></Credit>
+
             <VideoInputSelector {...videoInputSelectorProps}></VideoInputSelector>
             <VideoInputSelector {...backgroundSelectorProps}></VideoInputSelector>
             <CommonSelector {...modelSelectorProps}></CommonSelector>

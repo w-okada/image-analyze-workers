@@ -1,0 +1,2 @@
+https://feathericons.com/
+size 24px, stroke width 2px, color #000000

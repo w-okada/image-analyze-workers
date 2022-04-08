@@ -4,7 +4,7 @@ import { MODNetWorkerManager, BackendTypes } from "@dannadori/modnet-worker-js";
 import { useAppState } from "./provider/AppStateProvider";
 import { MODNetDrawer } from "./MODNetDrawer";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
-import { CommonSelector, CommonSelectorProps, CommonSwitch, CommonSwitchProps, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import { CommonSelector, CommonSelectorProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
 
 let GlobalLoopID = 0;
 
@@ -69,6 +69,8 @@ const Controller = () => {
 
     return (
         <div style={{ display: "flex", flexDirection: "column" }}>
+            <Credit></Credit>
+
             <VideoInputSelector {...videoInputSelectorProps}></VideoInputSelector>
             <VideoInputSelector {...backgroundSelectorProps}></VideoInputSelector>
             <CommonSwitch {...onLocalSwitchProps}></CommonSwitch>

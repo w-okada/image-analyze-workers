@@ -1,5 +1,5 @@
 import { PoseNetWorkerManager, PoseNetArchitecture, PoseNetFunctionTypes, PoseNetQuantBytes, MobileNetMultiplier, PoseNetOutputStride } from "@dannadori/posenet-worker-js";
-import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import { PoseNetDrawer } from "./PoseNetDrawer";
@@ -149,6 +149,8 @@ const Controller = () => {
 
     return (
         <div style={{ display: "flex", flexDirection: "column" }}>
+            <Credit></Credit>
+
             <VideoInputSelector {...videoInputSelectorProps}></VideoInputSelector>
             <CommonSelector {...modelSelectorProps}></CommonSelector>
             <CommonSwitch {...onLocalSwitchProps}></CommonSwitch>

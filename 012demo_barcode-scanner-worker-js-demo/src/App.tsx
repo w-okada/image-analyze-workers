@@ -4,7 +4,7 @@ import { BarcodeScannerWorkerManager, ScanModes, ScanScales } from "@dannadori/b
 import { useAppState } from "./provider/AppStateProvider";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 import { BarcodeScannerDrawer } from "./BarcodeScannerDrawer";
-import { CommonSelector, CommonSelectorProps, CommonSwitch, CommonSwitchProps, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import { CommonSelector, CommonSelectorProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
 
 let GlobalLoopID = 0;
 
@@ -90,6 +90,8 @@ const Controller = () => {
 
     return (
         <div style={{ display: "flex", flexDirection: "column" }}>
+            <Credit></Credit>
+
             <VideoInputSelector {...videoInputSelectorProps}></VideoInputSelector>
             <CommonSwitch {...onLocalSwitchProps}></CommonSwitch>
             <CommonSwitch {...useSimdSwitchProps}></CommonSwitch>
