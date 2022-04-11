@@ -1,6 +1,6 @@
 import { ReactNode, useContext, useEffect, useState } from "react";
 import { useWindowStateChangeListener, WindowSize } from "demo-base";
-import { generateDefaultPoseNetParams, generatePoseNetDefaultConfig, PoseNetConfig, PoseNetOperatipnParams } from "@dannadori/posenet-worker-js";
+import { generateDefaultPoseNetParams, generatePoseNetDefaultConfig, PoseNetConfig, PoseNetOperationParams } from "@dannadori/posenet-worker-js";
 import React from "react";
 import { loadURLAsDataURL } from "../utils/urlReader";
 
@@ -17,8 +17,8 @@ type AppStateValue = {
 
     config: PoseNetConfig;
     setConfig: (config: PoseNetConfig) => void;
-    params: PoseNetOperatipnParams;
-    setParams: (params: PoseNetOperatipnParams) => void;
+    params: PoseNetOperationParams;
+    setParams: (params: PoseNetOperationParams) => void;
 };
 
 const AppStateContext = React.createContext<AppStateValue | null>(null);

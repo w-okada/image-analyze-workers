@@ -14,11 +14,11 @@ $ npm install \@dannadori/opencv-worker-js
 
 ```
 generateOpenCVDefaultConfig: () => OpenCVConfig;
-generateDefaultOpenCVParams: () => OpenCVOperatipnParams;
+generateDefaultOpenCVParams: () => OpenCVOperationParams;
 
 OpenCVWorkerManager
 init(config: OpenCVConfig | null): Promise<unknown>;
-predict(targetCanvas: HTMLCanvasElement, params?: OpenCVOperatipnParams): Promise<HTMLCanvasElement>;
+predict(targetCanvas: HTMLCanvasElement, params?: OpenCVOperationParams): Promise<HTMLCanvasElement>;
 
 ```
 
@@ -31,7 +31,7 @@ export interface OpenCVConfig {
     processOnLocal : boolean;
     workerPath     : string
 }
-export interface OpenCVOperatipnParams {
+export interface OpenCVOperationParams {
     type: OpenCVFunctionType;
     cannyParams: CannyParams | null;
     processWidth: number;

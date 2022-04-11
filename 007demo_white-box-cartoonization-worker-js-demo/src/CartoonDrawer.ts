@@ -1,4 +1,4 @@
-import { CartoonOperatipnParams } from "@dannadori/white-box-cartoonization-worker-js";
+import { CartoonOperationParams } from "@dannadori/white-box-cartoonization-worker-js";
 
 export class CartoonDrawer {
     private outputCanvas: HTMLCanvasElement | null = null;
@@ -7,7 +7,7 @@ export class CartoonDrawer {
         this.outputCanvas = outputCanvas;
     };
 
-    draw = (_snap: HTMLCanvasElement, params: CartoonOperatipnParams, prediction: Uint8ClampedArray): void => {
+    draw = (_snap: HTMLCanvasElement, params: CartoonOperationParams, prediction: Uint8ClampedArray): void => {
         if (!this.outputCanvas) {
             console.log("not ready:::", this.outputCanvas);
             return;

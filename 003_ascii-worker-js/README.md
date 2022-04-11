@@ -14,11 +14,11 @@ $ npm install \@dannadori/asciiart-worker-js
 
 ```
 generateAsciiArtDefaultConfig: () => AsciiConfig;
-generateDefaultAsciiArtParams: () => AsciiOperatipnParams;
+generateDefaultAsciiArtParams: () => AsciiOperationParams;
 
 AsciiArtWorkerManager
 init: (config: AsciiConfig | null) => Promise<unknown>;
-predict(targetCanvas: HTMLCanvasElement, params: AsciiOperatipnParams): Promise<HTMLCanvasElement>;
+predict(targetCanvas: HTMLCanvasElement, params: AsciiOperationParams): Promise<HTMLCanvasElement>;
 ```
 
 ## Configuration and Parameter
@@ -31,7 +31,7 @@ export interface AsciiConfig{
 }
 
 
-export interface AsciiOperatipnParams{
+export interface AsciiOperationParams{
     type: AsciiFunctionType
     processWidth        : number
     processHeight       : number

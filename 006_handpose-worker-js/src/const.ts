@@ -39,7 +39,7 @@ export enum HandPoseFunctionType {
     EstimateHands,
 }
 
-export interface HandPoseOperatipnParams {
+export interface HandPoseOperationParams {
     type: HandPoseFunctionType;
     estimateHands: EstimateHandsParams;
     processWidth: number;

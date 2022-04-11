@@ -1,9 +1,9 @@
-import { BodyPixConfig, BodyPixOperatipnParams, BodypixFunctionTypes, ModelConfigs } from "./const";
+import { BodyPixConfig, BodyPixOperationParams, BodypixFunctionTypes, ModelConfigs } from "./const";
 import * as bodyPix from "@tensorflow-models/body-pix";
 import { SemanticPersonSegmentation } from "@tensorflow-models/body-pix";
 import { WorkerManagerBase, LocalWorker, getBrowserType } from "@dannadori/000_WorkerBase";
 
-export { BodypixFunctionTypes, BodyPixConfig, BodyPixOperatipnParams } from "./const";
+export { BodypixFunctionTypes, BodyPixConfig, BodyPixOperationParams } from "./const";
 export { SemanticPersonSegmentation, SemanticPartSegmentation, PersonSegmentation, PartSegmentation } from "@tensorflow-models/body-pix";
 export { BodyPixInternalResolution, BodyPixArchitecture, BodyPixMultiplier, BodyPixOutputStride, BodyPixQuantBytes } from "@tensorflow-models/body-pix/dist/types";
 
@@ -35,7 +35,7 @@ export const generateBodyPixDefaultConfig = (): BodyPixConfig => {
 };
 
 export const generateDefaultBodyPixParams = () => {
-    const defaultParams: BodyPixOperatipnParams = {
+    const defaultParams: BodyPixOperationParams = {
         type: BodypixFunctionTypes.SegmentPerson,
         segmentPersonParams: {
             flipHorizontal: false,
@@ -92,7 +92,7 @@ class LocalBP extends LocalWorker {
         this.model = await bodyPix.load(config.model);
     };
 
-    predict = async (config: BodyPixConfig, params: BodyPixOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+    predict = async (config: BodyPixConfig, params: BodyPixOperationParams, targetCanvas: HTMLCanvasElement) => {
         const ctx = targetCanvas.getContext("2d")!;
         const newImg = ctx.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
 
@@ -131,7 +131,7 @@ export class BodypixWorkerManager extends WorkerManagerBase {
         return;
     };
 
-    predict = async (params: BodyPixOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+    predict = async (params: BodyPixOperationParams, targetCanvas: HTMLCanvasElement) => {
         const currentParams = { ...params };
         const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
         if (!this.worker) {

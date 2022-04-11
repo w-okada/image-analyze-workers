@@ -26,7 +26,7 @@ export interface OpenCVConfig {
     useSimd: boolean;
 }
 
-export interface OpenCVOperatipnParams {
+export interface OpenCVOperationParams {
     type: OpenCVProcessTypes;
     cannyParams?: CannyParams | null;
     blurParams?: BlurParams | null;

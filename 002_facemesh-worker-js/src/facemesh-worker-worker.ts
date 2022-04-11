@@ -1,7 +1,7 @@
 //import * as facemesh from '@tensorflow-models/facemesh'
 import * as faceLandmarksDetection from "@tensorflow-models/face-landmarks-detection";
 
-import { BackendTypes, FacemeshConfig, FacemeshOperatipnParams, ModelTypes, WorkerCommand, WorkerResponse } from "./const";
+import { BackendTypes, FacemeshConfig, FacemeshOperationParams, ModelTypes, WorkerCommand, WorkerResponse } from "./const";
 import * as tf from "@tensorflow/tfjs";
 import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 import { AnnotatedPrediction } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh";
@@ -24,6 +24,7 @@ const load_module = async (config: FacemeshConfig) => {
         console.log("use wasm backend", wasmPaths);
         await tf.setBackend("wasm");
     } else if (config.backendType === BackendTypes.cpu) {
+        console.log("use cpu backend");
         await tf.setBackend("cpu");
     } else {
         console.log("use webgl backend");
@@ -31,7 +32,7 @@ const load_module = async (config: FacemeshConfig) => {
     }
 };
 
-const predict = async (config: FacemeshConfig, params: FacemeshOperatipnParams, data: Uint8ClampedArray): Promise<AnnotatedPrediction[] | faceLandmarksDetectionCurrent.Face[]> => {
+const predict = async (config: FacemeshConfig, params: FacemeshOperationParams, data: Uint8ClampedArray): Promise<AnnotatedPrediction[] | faceLandmarksDetectionCurrent.Face[]> => {
     const newImg = new ImageData(data, params.processWidth, params.processHeight);
 
     if (model) {
@@ -47,12 +48,12 @@ const predict = async (config: FacemeshConfig, params: FacemeshOperatipnParams, 
         const prediction = await model2.estimateFaces(newImg, { flipHorizontal: false });
         return prediction;
     } else {
+        console.log("model not initialized!");
         return [];
     }
 };
 
 onmessage = async (event) => {
-    //  console.log("event", event)
     if (event.data.message === WorkerCommand.INITIALIZE) {
         console.log("Initialize model!.", event);
         const config = event.data.config as FacemeshConfig;
@@ -94,7 +95,7 @@ onmessage = async (event) => {
         }
     } else if (event.data.message === WorkerCommand.PREDICT) {
         const config = event.data.config as FacemeshConfig;
-        const params = event.data.params as FacemeshOperatipnParams;
+        const params = event.data.params as FacemeshOperationParams;
         const data: Uint8ClampedArray = event.data.data;
 
         const prediction = await predict(config, params, data);

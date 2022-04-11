@@ -1,6 +1,6 @@
 {
     "name": "@dannadori/modnet-worker-js",
-    "version": "1.0.12",
+    "version": "1.0.13",
     "description": "",
     "main": "dist/modnet-worker.js",
     "scripts": {

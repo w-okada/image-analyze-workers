@@ -34,7 +34,7 @@ export interface BisenetV2CelebAMaskConfig {
     modelWeight3: string;
 }
 
-export interface BisenetV2CelebAMaskOperatipnParams {
+export interface BisenetV2CelebAMaskOperationParams {
     type: BisenetV2CelebAMaskFunctionTypes;
     processWidth: number;
     processHeight: number;

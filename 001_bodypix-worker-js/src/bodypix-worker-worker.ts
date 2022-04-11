@@ -1,4 +1,4 @@
-import { WorkerCommand, WorkerResponse, BodyPixConfig, BodyPixOperatipnParams, BodypixFunctionTypes } from "./const";
+import { WorkerCommand, WorkerResponse, BodyPixConfig, BodyPixOperationParams, BodypixFunctionTypes } from "./const";
 import * as bodyPix from "@tensorflow-models/body-pix";
 import * as tf from "@tensorflow/tfjs";
 import { BrowserTypes } from "@dannadori/000_WorkerBase";
@@ -54,7 +54,7 @@ const generateImage = (image: ImageBitmap, prediction: bodyPix.SemanticPersonSeg
     return resizedMaskOffscreen;
 };
 
-const predict = async (config: BodyPixConfig, params: BodyPixOperatipnParams, data: Uint8ClampedArray) => {
+const predict = async (config: BodyPixConfig, params: BodyPixOperationParams, data: Uint8ClampedArray) => {
     const image = new ImageData(data, params.processWidth, params.processHeight);
     let prediction;
     if (params.type === BodypixFunctionTypes.SegmentPerson) {
@@ -83,7 +83,7 @@ onmessage = async (event) => {
         });
     } else if (event.data.message === WorkerCommand.PREDICT) {
         const config: BodyPixConfig = event.data.config;
-        const params: BodyPixOperatipnParams = event.data.params;
+        const params: BodyPixOperationParams = event.data.params;
         const data: Uint8ClampedArray = event.data.data;
 
         const prediction = await predict(config, params, data);

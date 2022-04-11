@@ -1,4 +1,4 @@
-import { AsciiOperatipnParams } from "@dannadori/asciiart-worker-js";
+import { AsciiOperationParams } from "@dannadori/asciiart-worker-js";
 
 export class AsciiArtDrawer {
     private outputCanvas: HTMLCanvasElement | null = null;
@@ -13,7 +13,7 @@ export class AsciiArtDrawer {
         this.outputDiv = outputDiv;
     };
 
-    draw = (_snap: HTMLCanvasElement, params: AsciiOperatipnParams, prediction: string[]): void => {
+    draw = (_snap: HTMLCanvasElement, params: AsciiOperationParams, prediction: string[]): void => {
         if (!this.outputCanvas || !this.outputDiv) {
             console.log("not ready:::", this.outputCanvas);
             return;

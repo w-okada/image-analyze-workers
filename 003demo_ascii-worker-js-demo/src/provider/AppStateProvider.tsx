@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
 import { useWindowStateChangeListener, WindowSize } from "demo-base";
 import { loadURLAsDataURL } from "../utils/urlReader";
-import { AsciiConfig, AsciiOperatipnParams, generateAsciiArtDefaultConfig, generateDefaultAsciiArtParams } from "@dannadori/asciiart-worker-js";
+import { AsciiConfig, AsciiOperationParams, generateAsciiArtDefaultConfig, generateDefaultAsciiArtParams } from "@dannadori/asciiart-worker-js";
 
 type Props = {
     children: ReactNode;
@@ -17,8 +17,8 @@ type AppStateValue = {
 
     config: AsciiConfig;
     setConfig: (config: AsciiConfig) => void;
-    params: AsciiOperatipnParams;
-    setParams: (params: AsciiOperatipnParams) => void;
+    params: AsciiOperationParams;
+    setParams: (params: AsciiOperationParams) => void;
 };
 
 const AppStateContext = React.createContext<AppStateValue | null>(null);

@@ -1,6 +1,6 @@
 {
     "name": "@dannadori/googlemeet-segmentation-worker-js",
-    "version": "1.0.26",
+    "version": "1.0.27",
     "description": "",
     "main": "dist/googlemeet-segmentation-worker.js",
     "scripts": {

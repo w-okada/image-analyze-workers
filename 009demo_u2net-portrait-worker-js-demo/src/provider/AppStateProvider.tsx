@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 import { useWindowStateChangeListener, WindowSize } from "demo-base";
 import { loadURLAsDataURL } from "../utils/urlReader";
 import { generateDefaultU2NetPortraitParams, generateU2NetPortraitDefaultConfig, U2NetPortraitConfig, U2NetPortraitOperationParams } from "@dannadori/u2net-portrait-worker-js";
-import { generateDefaultOpenCVParams, generateOpenCVDefaultConfig, OpenCVConfig, OpenCVOperatipnParams } from "@dannadori/opencv-worker-js";
+import { generateDefaultOpenCVParams, generateOpenCVDefaultConfig, OpenCVConfig, OpenCVOperationParams } from "@dannadori/opencv-worker-js";
 
 type Props = {
     children: ReactNode;
@@ -23,8 +23,8 @@ type AppStateValue = {
 
     configCV: OpenCVConfig;
     setConfigCV: (config: OpenCVConfig) => void;
-    paramsCV: OpenCVOperatipnParams;
-    setParamsCV: (params: OpenCVOperatipnParams) => void;
+    paramsCV: OpenCVOperationParams;
+    setParamsCV: (params: OpenCVOperationParams) => void;
 
     useBlurBlend: boolean;
     setUseBlurBlend: (val: boolean) => void;

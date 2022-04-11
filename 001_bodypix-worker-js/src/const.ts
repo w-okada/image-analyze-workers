@@ -48,7 +48,7 @@ export type BodyPixConfig = {
     useTFWasmBackend: boolean;
 };
 
-export interface BodyPixOperatipnParams {
+export interface BodyPixOperationParams {
     type: BodypixFunctionTypes;
     segmentPersonParams: PersonInferenceConfig;
     segmentPersonPartsParams: PersonInferenceConfig;

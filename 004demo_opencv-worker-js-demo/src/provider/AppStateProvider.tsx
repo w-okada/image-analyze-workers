@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
 import { useWindowStateChangeListener, WindowSize } from "demo-base";
 import { loadURLAsDataURL } from "../utils/urlReader";
-import { generateDefaultOpenCVParams, generateOpenCVDefaultConfig, OpenCVConfig, OpenCVOperatipnParams } from "@dannadori/opencv-worker-js";
+import { generateDefaultOpenCVParams, generateOpenCVDefaultConfig, OpenCVConfig, OpenCVOperationParams } from "@dannadori/opencv-worker-js";
 
 type Props = {
     children: ReactNode;
@@ -17,8 +17,8 @@ type AppStateValue = {
 
     config: OpenCVConfig;
     setConfig: (config: OpenCVConfig) => void;
-    params: OpenCVOperatipnParams;
-    setParams: (params: OpenCVOperatipnParams) => void;
+    params: OpenCVOperationParams;
+    setParams: (params: OpenCVOperationParams) => void;
 };
 
 const AppStateContext = React.createContext<AppStateValue | null>(null);

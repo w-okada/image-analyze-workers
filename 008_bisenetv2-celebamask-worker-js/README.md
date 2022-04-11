@@ -3,22 +3,24 @@
 ![image](https://user-images.githubusercontent.com/48346627/97803282-822e3e80-1c8c-11eb-8635-74d937e5a8f6.png)
 
 ## Install
+
 ```
 ## install
 $ npm install @dannadori/bisenetv2-celebamask-worker-js
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 
 ```
+
 ## API
 
 ```
 generateBisenetV2CelebAMaskDefaultConfig: () => BisenetV2CelebAMaskConfig;
-generateDefaultBisenetV2CelebAMaskParams: () => BisenetV2CelebAMaskOperatipnParams;
+generateDefaultBisenetV2CelebAMaskParams: () => BisenetV2CelebAMaskOperationParams;
 export declare const createForegroundImage: (srcCanvas: HTMLCanvasElement, prediction: number[][]) => ImageData;
 
 BisenetV2CelebAMaskWorkerManager
 init(config: BisenetV2CelebAMaskConfig | null): Promise<unknown>;
-predict(targetCanvas: HTMLCanvasElement, params?: BisenetV2CelebAMaskOperatipnParams): Promise<number[][]>;
+predict(targetCanvas: HTMLCanvasElement, params?: BisenetV2CelebAMaskOperationParams): Promise<number[][]>;
 ```
 
 ## Configuration and Parameter
@@ -33,7 +35,7 @@ export interface BisenetV2CelebAMaskConfig{
     workerPath          : string
 }
 
-export interface BisenetV2CelebAMaskOperatipnParams{
+export interface BisenetV2CelebAMaskOperationParams{
     type        : BisenetV2CelebAMaskFunctionType
     processWidth        : number
     processHeight       : number
@@ -48,7 +50,9 @@ export enum BisenetV2CelebAMaskFunctionType{
 ```
 
 ## Step by step
+
 ### Create environment and install package
+
 ```
 $ npx create-react-app demo  --template typescript
 $ cd demo/
@@ -57,10 +61,12 @@ $ npm install @dannadori/bisenetv2-celebamask-worker-js
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 ```
 
-### Add source image to public. 
+### Add source image to public.
+
 In this time, the name is "srcImage.jpg"
 
 ### Edit src/App.tsx
+
 Sample code is here.
 
 ```
@@ -69,7 +75,7 @@ import './App.css';
 import { BisenetV2CelebAMaskWorkerManager, generateBisenetV2CelebAMaskDefaultConfig, generateDefaultBisenetV2CelebAMaskParams, createForegroundImage } from '@dannadori/bisenetv2-celebamask-worker-js'
 
 class App extends React.Component{
-  
+
   manager = new BisenetV2CelebAMaskWorkerManager()
   config = generateBisenetV2CelebAMaskDefaultConfig()
   params = generateDefaultBisenetV2CelebAMaskParams()
@@ -112,8 +118,3 @@ export default App;
 ```
 $ npm run start
 ```
-
-
-
-
-

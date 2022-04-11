@@ -32,7 +32,6 @@ export interface MODNetConfig {
     pageUrl: string;
     modelJsons: { [key: string]: string };
     modelWeights: { [key: string]: string };
-    modelTFLites: { [key: string]: number[] };
     modelInputs: { [key: string]: number[] };
     modelKey: string;
 }

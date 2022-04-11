@@ -15,12 +15,12 @@ $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm pub
 
 ```
 generateFacemeshDefaultConfig: () => FacemeshConfig;
-generateDefaultFacemeshParams: () => FacemeshOperatipnParams;
-drawFacemeshImage: (srcCanvas: HTMLCanvasElement, prediction: facemesh.AnnotatedPrediction[], params: FacemeshOperatipnParams) => ImageData;
+generateDefaultFacemeshParams: () => FacemeshOperationParams;
+drawFacemeshImage: (srcCanvas: HTMLCanvasElement, prediction: facemesh.AnnotatedPrediction[], params: FacemeshOperationParams) => ImageData;
 
 FacemeshWorkerManager
 init: (config: FacemeshConfig | null) => Promise<unknown>;
-predict: (targetCanvas: HTMLCanvasElement, params: FacemeshOperatipnParams) => Promise<any>;
+predict: (targetCanvas: HTMLCanvasElement, params: FacemeshOperationParams) => Promise<any>;
 
 ```
 
@@ -44,7 +44,7 @@ export interface FacemeshConfig {
     processOnLocal      : boolean
 }
 
-export interface FacemeshOperatipnParams {
+export interface FacemeshOperationParams {
     type: FacemeshFunctionType;
     processWidth: number;
     processHeight: number;

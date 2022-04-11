@@ -1,5 +1,5 @@
-import { OpenCVConfig, OpenCVOperatipnParams, OpenCVProcessTypes, Wasm } from "./const";
-export { OpenCVConfig, OpenCVOperatipnParams, OpenCVProcessTypes } from "./const";
+import { OpenCVConfig, OpenCVOperationParams, OpenCVProcessTypes, Wasm } from "./const";
+export { OpenCVConfig, OpenCVOperationParams, OpenCVProcessTypes } from "./const";
 
 // @ts-ignore
 import opencvWasm from "../resources/custom_opencv.wasm";
@@ -21,8 +21,8 @@ export const generateOpenCVDefaultConfig = (): OpenCVConfig => {
     return defaultConf;
 };
 
-export const generateDefaultOpenCVParams = (): OpenCVOperatipnParams => {
-    const defaultParams: OpenCVOperatipnParams = {
+export const generateDefaultOpenCVParams = (): OpenCVOperationParams => {
+    const defaultParams: OpenCVOperationParams = {
         type: OpenCVProcessTypes.Blur,
         cannyParams: {
             threshold1: 50,
@@ -60,7 +60,7 @@ export class LocalCV extends LocalWorker {
         }
     };
 
-    predict = async (config: OpenCVConfig, params: OpenCVOperatipnParams, data: Uint8ClampedArray) => {
+    predict = async (config: OpenCVConfig, params: OpenCVOperationParams, data: Uint8ClampedArray) => {
         if (!this.wasm) {
             return null;
         }
@@ -104,7 +104,7 @@ export class OpenCVWorkerManager extends WorkerManagerBase {
         return;
     };
 
-    predict = async (params: OpenCVOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+    predict = async (params: OpenCVOperationParams, targetCanvas: HTMLCanvasElement) => {
         const currentParams = { ...params };
         const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);

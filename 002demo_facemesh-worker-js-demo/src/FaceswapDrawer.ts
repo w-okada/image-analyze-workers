@@ -1,4 +1,4 @@
-import { Coords3D, FacemeshOperatipnParams } from "@dannadori/facemesh-worker-js";
+import { Coords3D, FacemeshOperationParams } from "@dannadori/facemesh-worker-js";
 import { FacemeshRenderer } from "./FaceswapRenderer";
 
 export class FaceswapDrawer {
@@ -18,7 +18,7 @@ export class FaceswapDrawer {
         this.outputCanvas = outputCanvas;
         console.log(this.outputCanvas);
     };
-    setMask(maskImage: HTMLCanvasElement, maskKeypoints: Coords3D, params: FacemeshOperatipnParams) {
+    setMask(maskImage: HTMLCanvasElement, maskKeypoints: Coords3D, params: FacemeshOperationParams) {
         if (!this.outputCanvas) {
             console.warn("set mask: not initialized");
             return;

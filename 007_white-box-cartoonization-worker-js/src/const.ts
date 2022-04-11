@@ -34,7 +34,7 @@ export interface CartoonConfig {
     modelWeight: string;
 }
 
-export interface CartoonOperatipnParams {
+export interface CartoonOperationParams {
     type: CartoonFunctionTypes;
     processWidth: number;
     processHeight: number;

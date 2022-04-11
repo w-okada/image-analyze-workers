@@ -1,10 +1,10 @@
-import { WorkerCommand, WorkerResponse, AsciiOperatipnParams, AsciiConfig } from "./const";
+import { WorkerCommand, WorkerResponse, AsciiOperationParams, AsciiConfig } from "./const";
 
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
 const contrastFactor = (259 * (128 + 255)) / (255 * (259 - 128));
 
-const predict = async (config: AsciiConfig, params: AsciiOperatipnParams, data: Uint8ClampedArray) => {
+const predict = async (config: AsciiConfig, params: AsciiOperationParams, data: Uint8ClampedArray) => {
     const asciiStr = params.asciiStr;
     const fontSize = params.fontSize;
     const asciiCharacters = asciiStr.split("");
@@ -52,7 +52,7 @@ onmessage = async (event) => {
         ctx.postMessage({ message: WorkerResponse.INITIALIZED });
     } else if (event.data.message === WorkerCommand.PREDICT) {
         const config: AsciiConfig = event.data.config;
-        const params: AsciiOperatipnParams = event.data.params;
+        const params: AsciiOperationParams = event.data.params;
         const data: Uint8ClampedArray = event.data.data;
 
         const prediction = await predict(config, params, data);

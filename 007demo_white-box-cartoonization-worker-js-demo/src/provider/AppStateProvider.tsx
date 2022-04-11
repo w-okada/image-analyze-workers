@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
 import { useWindowStateChangeListener, WindowSize } from "demo-base";
 import { loadURLAsDataURL } from "../utils/urlReader";
-import { CartoonConfig, CartoonOperatipnParams, generateCartoonDefaultConfig, generateDefaultCartoonParams } from "@dannadori/white-box-cartoonization-worker-js";
+import { CartoonConfig, CartoonOperationParams, generateCartoonDefaultConfig, generateDefaultCartoonParams } from "@dannadori/white-box-cartoonization-worker-js";
 
 type Props = {
     children: ReactNode;
@@ -17,8 +17,8 @@ type AppStateValue = {
 
     config: CartoonConfig;
     setConfig: (config: CartoonConfig) => void;
-    params: CartoonOperatipnParams;
-    setParams: (params: CartoonOperatipnParams) => void;
+    params: CartoonOperationParams;
+    setParams: (params: CartoonOperationParams) => void;
 };
 
 const AppStateContext = React.createContext<AppStateValue | null>(null);

@@ -1,7 +1,7 @@
 import * as handpose from "@tensorflow-models/handpose";
-import { HandPoseConfig, HandPoseOperatipnParams, HandPoseFunctionType, WorkerCommand, WorkerResponse, BackendTypes } from "./const";
+import { HandPoseConfig, HandPoseOperationParams, HandPoseFunctionType, WorkerCommand, WorkerResponse, BackendTypes } from "./const";
 import * as tf from "@tensorflow/tfjs";
-import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
+import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
@@ -25,7 +25,7 @@ const load_module = async (config: HandPoseConfig) => {
     }
 };
 
-const predict = async (config: HandPoseConfig, params: HandPoseOperatipnParams, data: Uint8ClampedArray) => {
+const predict = async (config: HandPoseConfig, params: HandPoseOperationParams, data: Uint8ClampedArray) => {
     // console.log("Worker BACKEND:", tf.getBackend());
     try {
         const imageData = new ImageData(data, params.processWidth, params.processHeight);
@@ -54,7 +54,7 @@ onmessage = async (event) => {
         });
     } else if (event.data.message === WorkerCommand.PREDICT) {
         const config = event.data.config as HandPoseConfig;
-        const params = event.data.params as HandPoseOperatipnParams;
+        const params = event.data.params as HandPoseOperationParams;
         const data: Uint8ClampedArray = event.data.data;
 
         const prediction = await predict(config, params, data);

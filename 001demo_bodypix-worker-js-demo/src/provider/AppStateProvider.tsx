@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
 import { useWindowStateChangeListener, WindowSize } from "demo-base";
-import { BodyPixConfig, BodyPixOperatipnParams, generateBodyPixDefaultConfig, generateDefaultBodyPixParams } from "@dannadori/bodypix-worker-js";
+import { BodyPixConfig, BodyPixOperationParams, generateBodyPixDefaultConfig, generateDefaultBodyPixParams } from "@dannadori/bodypix-worker-js";
 import { loadURLAsDataURL } from "../utils/urlReader";
 
 type Props = {
@@ -21,8 +21,8 @@ type AppStateValue = {
 
     config: BodyPixConfig;
     setConfig: (config: BodyPixConfig) => void;
-    params: BodyPixOperatipnParams;
-    setParams: (params: BodyPixOperatipnParams) => void;
+    params: BodyPixOperationParams;
+    setParams: (params: BodyPixOperationParams) => void;
 };
 
 const AppStateContext = React.createContext<AppStateValue | null>(null);

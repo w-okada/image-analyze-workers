@@ -1,23 +1,25 @@
 This is webworker module for [Posenet](https://github.com/tensorflow/tfjs-models/tree/master/posenet).
 
 ## PoseNet
+
 ![image](https://user-images.githubusercontent.com/48346627/95988122-6260e300-0e63-11eb-9b1e-8712b47410dd.png)
 
-
 ## Install
+
 ```
 $ npm install \@dannadori/posenet-worker-js
 ```
+
 ## API
 
 ```
 generatePoseNetDefaultConfig: () => PoseNetConfig;
-generateDefaultPoseNetParams: () => PoseNetOperatipnParams;
+generateDefaultPoseNetParams: () => PoseNetOperationParams;
 drawSkeltonAndPoint: (srcCanvas: HTMLCanvasElement, prediction: poseNet.Pose[]) => ImageData;
 
 PoseNetWorkerManager
 init(config?: PoseNetConfig | null): Promise<unknown>;
-predict(targetCanvas: HTMLCanvasElement, params?: PoseNetOperatipnParams): Promise<poseNet.Pose[]>;
+predict(targetCanvas: HTMLCanvasElement, params?: PoseNetOperationParams): Promise<poseNet.Pose[]>;
 
 ```
 
@@ -37,7 +39,7 @@ export enum PoseNetFunctionType{
     MultiPerson,// Not implemented
 }
 
-export interface PoseNetOperatipnParams{
+export interface PoseNetOperationParams{
     type               : PoseNetFunctionType
     singlePersonParams : SinglePersonInterfaceConfig
     multiPersonParams  : MultiPersonInferenceConfig
@@ -46,7 +48,9 @@ export interface PoseNetOperatipnParams{
 ```
 
 ## Step by step
+
 ### Create environment and install package
+
 ```
 $ npx create-react-app demo  --template typescript
 $ cd demo/
@@ -54,10 +58,12 @@ $ npm install
 $ npm install @dannadori/posenet-worker-js
 ```
 
-### Add source image to public. 
+### Add source image to public.
+
 In this time, the name is "srcImage.jpg"
 
 ### Edit src/App.tsx
+
 Sample code is here.
 
 ```
@@ -66,7 +72,7 @@ import './App.css';
 import { PoseNetWorkerManager, generateDefaultPoseNetParams, generatePoseNetDefaultConfig, drawSkeltonAndPoint } from '@dannadori/posenet-worker-js'
 
 class App extends React.Component{
-  
+
   manager = new PoseNetWorkerManager()
   config = generatePoseNetDefaultConfig()
   params = generateDefaultPoseNetParams()
@@ -110,8 +116,3 @@ export default App;
 ```
 $ npm run start
 ```
-
-
-
-
-

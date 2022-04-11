@@ -50,7 +50,7 @@ const Controller = () => {
     };
 
     const modelOptions: { [key: string]: string } = {};
-    Object.keys(config.modelJson).map((x) => {
+    Object.keys(config.modelJsons).map((x) => {
         modelOptions[x] = x;
     });
     const modelSelectorProps: CommonSelectorProps<string> = {

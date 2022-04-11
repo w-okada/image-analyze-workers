@@ -1,10 +1,10 @@
-import { BackendTypes, FacemeshConfig, FacemeshFunctionTypes, FacemeshOperatipnParams, FaceMeshPredictionEx, FacemeshPredictionMediapipe, FacemeshPredictionOld, ModelTypes, TRIANGULATION } from "./const";
+import { BackendTypes, FacemeshConfig, FacemeshFunctionTypes, FacemeshOperationParams, FaceMeshPredictionEx, FacemeshPredictionMediapipe, FacemeshPredictionOld, ModelTypes, TRIANGULATION } from "./const";
 import * as faceLandmarksDetection from "@tensorflow-models/face-landmarks-detection";
 import * as tf from "@tensorflow/tfjs";
 import { AnnotatedPrediction } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh";
 import { Coord2D, Coords3D } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh/util";
 
-export { FacemeshConfig, FacemeshOperatipnParams, NUM_KEYPOINTS, TRIANGULATION, BackendTypes, ModelTypes, FaceMeshPredictionEx } from "./const";
+export { FacemeshConfig, FacemeshOperationParams, NUM_KEYPOINTS, TRIANGULATION, BackendTypes, ModelTypes, FaceMeshPredictionEx } from "./const";
 export { AnnotatedPrediction } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh";
 export { Coords3D } from "@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh/util";
 
@@ -48,7 +48,7 @@ export const generateFacemeshDefaultConfig = (): FacemeshConfig => {
 };
 
 export const generateDefaultFacemeshParams = () => {
-    const defaultParams: FacemeshOperatipnParams = {
+    const defaultParams: FacemeshOperationParams = {
         type: FacemeshFunctionTypes.DetectMesh,
         processWidth: 300,
         processHeight: 300,
@@ -112,7 +112,7 @@ export class LocalFM extends LocalWorker {
         console.log("facemesh loaded locally", config);
     };
 
-    predict = async (config: FacemeshConfig, params: FacemeshOperatipnParams, targetCanvas: HTMLCanvasElement): Promise<AnnotatedPrediction[] | Face[] | null> => {
+    predict = async (config: FacemeshConfig, params: FacemeshOperationParams, targetCanvas: HTMLCanvasElement): Promise<AnnotatedPrediction[] | Face[] | null> => {
         // console.log("Loacal BACKEND:", tf.getBackend());
         const ctx = targetCanvas.getContext("2d")!;
         const newImg = ctx.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
@@ -155,7 +155,7 @@ export class FacemeshWorkerManager extends WorkerManagerBase {
         return;
     };
 
-    predict = async (params: FacemeshOperatipnParams, targetCanvas: HTMLCanvasElement): Promise<FaceMeshPredictionEx> => {
+    predict = async (params: FacemeshOperationParams, targetCanvas: HTMLCanvasElement | HTMLVideoElement): Promise<FaceMeshPredictionEx> => {
         const currentParams = { ...params };
         const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
         if (!this.worker) {
@@ -170,7 +170,7 @@ export class FacemeshWorkerManager extends WorkerManagerBase {
     annotatedPredictionsMV: AnnotatedPrediction[][] = [];
     facesMV: Face[][] = [];
 
-    generatePredictionEx = (config: FacemeshConfig, params: FacemeshOperatipnParams, prediction: AnnotatedPrediction[] | Face[] | null): FaceMeshPredictionEx => {
+    generatePredictionEx = (config: FacemeshConfig, params: FacemeshOperationParams, prediction: AnnotatedPrediction[] | Face[] | null): FaceMeshPredictionEx => {
         if (config.modelType === ModelTypes.old) {
             const annotatedPredictions = prediction as AnnotatedPrediction[] | null;
             const predictionEx: FacemeshPredictionOld = {
@@ -185,7 +185,8 @@ export class FacemeshWorkerManager extends WorkerManagerBase {
                         // console.log("datanum", this.annotatedPredictionsMV.length);
                     }
                 }
-                if (annotatedPredictions) {
+
+                if (annotatedPredictions && annotatedPredictions.length > 0) {
                     this.annotatedPredictionsMV.push(annotatedPredictions);
                 }
 
@@ -258,23 +259,14 @@ export class FacemeshWorkerManager extends WorkerManagerBase {
                 /// (4)Tracking Area
                 const trackingAreaCenterX = (summedBoundingBox.xMax + summedBoundingBox.xMin) / 2;
                 const trackingAreaCenterY = (summedBoundingBox.yMax + summedBoundingBox.yMin) / 2;
-                const idearlRadiusX = (summedBoundingBox.width / 2) * (1 + params.trackingAreaMarginRatioX);
-                const idearlRadiusTop = (summedBoundingBox.height / 2) * (1 + params.trackingAreaMarginRatioTop);
-                const idearlRadiusBottom = (summedBoundingBox.height / 2) * (1 + params.trackingAreaMarginRatioBottom);
 
-                const trackingAreaCenterXMin = trackingAreaCenterX - idearlRadiusX > 0 ? trackingAreaCenterX - idearlRadiusX : 0;
-                const trackingAreaCenterXMax = trackingAreaCenterX + idearlRadiusX < params.processWidth ? trackingAreaCenterX + idearlRadiusX : params.processWidth;
-                const trackingAreaCenterYmin = trackingAreaCenterY - idearlRadiusTop > 0 ? trackingAreaCenterY - idearlRadiusTop : 0;
-                const trackingAreaCenterYmax = trackingAreaCenterY - idearlRadiusBottom < params.processHeight ? trackingAreaCenterY + idearlRadiusTop : params.processHeight;
                 predictionEx.trackingArea = {
                     centerX: trackingAreaCenterX,
                     centerY: trackingAreaCenterY,
-                    xMin: trackingAreaCenterXMin,
-                    xMax: trackingAreaCenterXMax,
-                    yMin: trackingAreaCenterYmin,
-                    yMax: trackingAreaCenterYmax,
-                    width: trackingAreaCenterXMax - trackingAreaCenterXMin,
-                    height: trackingAreaCenterYmax - trackingAreaCenterYmin,
+                    xMin: summedBoundingBox.xMin,
+                    xMax: summedBoundingBox.xMax,
+                    yMin: summedBoundingBox.yMin,
+                    yMax: summedBoundingBox.yMax,
                 };
             }
 
@@ -364,33 +356,70 @@ export class FacemeshWorkerManager extends WorkerManagerBase {
                 /// (4)Tracking Area
                 const trackingAreaCenterX = (summedBoundingBox.xMax + summedBoundingBox.xMin) / 2;
                 const trackingAreaCenterY = (summedBoundingBox.yMax + summedBoundingBox.yMin) / 2;
-                const idearlRadiusX = (summedBoundingBox.width / 2) * (1 + params.trackingAreaMarginRatioX);
-                const idearlRadiusTop = (summedBoundingBox.height / 2) * (1 + params.trackingAreaMarginRatioTop);
-                const idearlRadiusBottom = (summedBoundingBox.height / 2) * (1 + params.trackingAreaMarginRatioBottom);
 
-                const trackingAreaCenterXMin = trackingAreaCenterX - idearlRadiusX > 0 ? trackingAreaCenterX - idearlRadiusX : 0;
-                const trackingAreaCenterXMax = trackingAreaCenterX + idearlRadiusX < params.processWidth ? trackingAreaCenterX + idearlRadiusX : params.processWidth;
-                const trackingAreaCenterYmin = trackingAreaCenterY - idearlRadiusTop > 0 ? trackingAreaCenterY - idearlRadiusTop : 0;
-                const trackingAreaCenterYmax = trackingAreaCenterY - idearlRadiusBottom < params.processHeight ? trackingAreaCenterY + idearlRadiusTop : params.processHeight;
                 predictionEx.trackingArea = {
                     centerX: trackingAreaCenterX,
                     centerY: trackingAreaCenterY,
-                    xMin: trackingAreaCenterXMin,
-                    xMax: trackingAreaCenterXMax,
-                    yMin: trackingAreaCenterYmin,
-                    yMax: trackingAreaCenterYmax,
-                    width: trackingAreaCenterXMax - trackingAreaCenterXMin,
-                    height: trackingAreaCenterYmax - trackingAreaCenterYmin,
+                    xMin: summedBoundingBox.xMin,
+                    xMax: summedBoundingBox.xMax,
+                    yMin: summedBoundingBox.yMin,
+                    yMax: summedBoundingBox.yMax,
                 };
             }
 
             return predictionEx;
         }
     };
+
+    fitCroppedArea = (prediction: FaceMeshPredictionEx, orgWidth: number, orgHeight: number, processedWidth: number, processedHeight: number, outputWidth: number, outputHeight: number) => {
+        const scaleX = orgWidth / processedWidth;
+        const scaleY = orgHeight / processedHeight;
+        const scaledXMin = prediction.trackingArea!.xMin * scaleX;
+        const scaledXMax = prediction.trackingArea!.xMax * scaleX;
+        const scaledWidth = scaledXMax - scaledXMin;
+        const scaledYMin = prediction.trackingArea!.yMin * scaleY;
+        const scaledYMax = prediction.trackingArea!.yMax * scaleY;
+        const scaledHeight = scaledYMax - scaledYMin;
+
+        const outputAspect = outputHeight / outputWidth;
+
+        let idealWidth;
+        let idealHeight;
+        if (scaledWidth * outputAspect > scaledHeight) {
+            //高さが足りない
+            idealWidth = scaledWidth;
+            idealHeight = scaledWidth * outputAspect;
+        } else {
+            //幅が足りない
+            idealWidth = scaledHeight / outputAspect;
+            idealHeight = scaledHeight;
+        }
+
+        const scaledCenterX = prediction.trackingArea!.centerX * scaleX;
+        const scaledCenterY = prediction.trackingArea!.centerY * scaleY;
+        let xmin;
+        if (scaledCenterX - idealWidth / 2 < 0) {
+            xmin = 0;
+        } else if (scaledCenterX + idealWidth / 2 > orgWidth) {
+            xmin = orgWidth - idealWidth;
+        } else {
+            xmin = scaledCenterX - idealWidth / 2;
+        }
+
+        let ymin;
+        if (scaledCenterY - idealHeight / 2 < 0) {
+            ymin = 0;
+        } else if (scaledCenterY + idealHeight / 2 > orgHeight) {
+            ymin = orgHeight - idealHeight;
+        } else {
+            ymin = scaledCenterY - idealHeight / 2;
+        }
+        return { xmin: xmin, ymin: ymin, width: idealWidth, height: idealHeight };
+    };
 }
 
 //// Utility for Demo
-export const drawFacemeshImage = (srcCanvas: HTMLCanvasElement, prediction: AnnotatedPrediction[], params: FacemeshOperatipnParams) => {
+export const drawFacemeshImage = (srcCanvas: HTMLCanvasElement, prediction: AnnotatedPrediction[], params: FacemeshOperationParams) => {
     const tmpCanvas = document.createElement("canvas");
     tmpCanvas.width = srcCanvas.width;
     tmpCanvas.height = srcCanvas.height;

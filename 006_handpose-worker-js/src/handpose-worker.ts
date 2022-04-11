@@ -1,9 +1,9 @@
-import { HandPoseConfig, HandPoseOperatipnParams, HandPoseFunctionType, BackendTypes } from "./const";
+import { HandPoseConfig, HandPoseOperationParams, HandPoseFunctionType, BackendTypes } from "./const";
 import * as handpose from "@tensorflow-models/handpose";
 import * as tf from "@tensorflow/tfjs";
-import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
+import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 
-export { HandPoseConfig, HandPoseOperatipnParams };
+export { HandPoseConfig, HandPoseOperationParams };
 export { AnnotatedPrediction } from "@tensorflow-models/handpose";
 export { FingerLookupIndices, BackendTypes } from "./const";
 // @ts-ignore
@@ -37,7 +37,7 @@ export const generateHandPoseDefaultConfig = (): HandPoseConfig => {
 };
 
 export const generateDefaultHandPoseParams = () => {
-    const defaultParams: HandPoseOperatipnParams = {
+    const defaultParams: HandPoseOperationParams = {
         type: HandPoseFunctionType.EstimateHands,
         estimateHands: {
             flipHorizontal: false,
@@ -81,7 +81,7 @@ export class LocalHP extends LocalWorker {
         this.model = await handpose.load(config.model);
     };
 
-    predict = async (config: HandPoseConfig, params: HandPoseOperatipnParams, targetCanvas: HTMLCanvasElement): Promise<handpose.AnnotatedPrediction[]> => {
+    predict = async (config: HandPoseConfig, params: HandPoseOperationParams, targetCanvas: HTMLCanvasElement): Promise<handpose.AnnotatedPrediction[]> => {
         // console.log("Loacal BACKEND:", tf.getBackend());
 
         const processWidth = params.processWidth <= 0 || params.processHeight <= 0 ? targetCanvas.width : params.processWidth;
@@ -117,7 +117,7 @@ export class HandPoseWorkerManager extends WorkerManagerBase {
         return;
     };
 
-    predict = async (params: HandPoseOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+    predict = async (params: HandPoseOperationParams, targetCanvas: HTMLCanvasElement) => {
         const currentParams = { ...params };
         const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
         if (!this.worker) {
@@ -138,7 +138,7 @@ const fingerLookupIndices: { [key: string]: number[] } = {
     pinky: [0, 17, 18, 19, 20],
 };
 
-export const drawHandSkelton = (srcCanvas: HTMLCanvasElement, prediction: any, params: HandPoseOperatipnParams) => {
+export const drawHandSkelton = (srcCanvas: HTMLCanvasElement, prediction: any, params: HandPoseOperationParams) => {
     const canvas = document.createElement("canvas");
     canvas.width = srcCanvas.width;
     canvas.height = srcCanvas.height;

@@ -50,7 +50,7 @@ export interface PoseNetConfig {
     pageUrl: string;
 }
 
-export interface PoseNetOperatipnParams {
+export interface PoseNetOperationParams {
     type: PoseNetFunctionTypes;
     singlePersonParams: SinglePersonInterfaceConfig;
     multiPersonParams: MultiPersonInferenceConfig;

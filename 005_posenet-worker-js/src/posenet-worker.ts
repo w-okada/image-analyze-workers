@@ -1,10 +1,10 @@
 import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
 import * as poseNet from "@tensorflow-models/posenet";
 import * as tf from "@tensorflow/tfjs";
-import { BackendTypes, ModelConfigs, PoseNetConfig, PoseNetFunctionTypes, PoseNetOperatipnParams } from "./const";
+import { BackendTypes, ModelConfigs, PoseNetConfig, PoseNetFunctionTypes, PoseNetOperationParams } from "./const";
 import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 export { Pose, getAdjacentKeyPoints } from "@tensorflow-models/posenet";
-export { PoseNetOperatipnParams, PoseNetConfig, PoseNetFunctionTypes } from "./const";
+export { PoseNetOperationParams, PoseNetConfig, PoseNetFunctionTypes } from "./const";
 export type { PoseNetArchitecture, PoseNetOutputStride, MobileNetMultiplier, PoseNetQuantBytes } from "@tensorflow-models/posenet/dist/types";
 
 export const generatePoseNetDefaultConfig = (): PoseNetConfig => {
@@ -28,7 +28,7 @@ export const generatePoseNetDefaultConfig = (): PoseNetConfig => {
 };
 
 export const generateDefaultPoseNetParams = () => {
-    const defaultParams: PoseNetOperatipnParams = {
+    const defaultParams: PoseNetOperationParams = {
         type: PoseNetFunctionTypes.SinglePerson,
         singlePersonParams: {
             flipHorizontal: false,
@@ -76,7 +76,7 @@ class LocalPN extends LocalWorker {
         this.model = await poseNet.load(config.model);
     };
 
-    predict = async (config: PoseNetConfig, params: PoseNetOperatipnParams, canvas: HTMLCanvasElement): Promise<poseNet.Pose[]> => {
+    predict = async (config: PoseNetConfig, params: PoseNetOperationParams, canvas: HTMLCanvasElement): Promise<poseNet.Pose[]> => {
         // console.log("current backend[main thread]:", tf.getBackend());
 
         const newImg = canvas.getContext("2d")!.getImageData(0, 0, params.processWidth, params.processHeight);
@@ -114,7 +114,7 @@ export class PoseNetWorkerManager extends WorkerManagerBase {
         return;
     };
 
-    predict = async (params: PoseNetOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+    predict = async (params: PoseNetOperationParams, targetCanvas: HTMLCanvasElement) => {
         const currentParams = { ...params };
         const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
         if (!this.worker) {

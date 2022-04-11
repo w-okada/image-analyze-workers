@@ -1,4 +1,4 @@
-import { WorkerCommand, WorkerResponse, BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperatipnParams, BackendTypes } from "./const";
+import { WorkerCommand, WorkerResponse, BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperationParams, BackendTypes } from "./const";
 import * as tf from "@tensorflow/tfjs";
 import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 import { Buffer } from "buffer";
@@ -25,7 +25,7 @@ const load_module = async (config: BisenetV2CelebAMaskConfig) => {
     }
 };
 // Case.1 Use ImageBitmap (for Chrome default)
-const predict = async (config: BisenetV2CelebAMaskConfig, params: BisenetV2CelebAMaskOperatipnParams, data: Uint8ClampedArray) => {
+const predict = async (config: BisenetV2CelebAMaskConfig, params: BisenetV2CelebAMaskOperationParams, data: Uint8ClampedArray) => {
     const imageData = new ImageData(data, params.processWidth, params.processHeight);
     let bm: number[][] | null = null;
     tf.tidy(() => {
@@ -63,7 +63,7 @@ onmessage = async (event) => {
         });
     } else if (event.data.message === WorkerCommand.PREDICT) {
         const config: BisenetV2CelebAMaskConfig = event.data.config;
-        const params: BisenetV2CelebAMaskOperatipnParams = event.data.params;
+        const params: BisenetV2CelebAMaskOperationParams = event.data.params;
         const data: Uint8ClampedArray = event.data.data;
 
         const prediction = await predict(config, params, data);

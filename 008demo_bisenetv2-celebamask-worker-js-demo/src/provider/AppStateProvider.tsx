@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
 import { useWindowStateChangeListener, WindowSize } from "demo-base";
 import { loadURLAsDataURL } from "../utils/urlReader";
-import { BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperatipnParams, generateBisenetV2CelebAMaskDefaultConfig, generateDefaultBisenetV2CelebAMaskParams } from "@dannadori/bisenetv2-celebamask-worker-js";
+import { BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperationParams, generateBisenetV2CelebAMaskDefaultConfig, generateDefaultBisenetV2CelebAMaskParams } from "@dannadori/bisenetv2-celebamask-worker-js";
 
 type Props = {
     children: ReactNode;
@@ -17,8 +17,8 @@ type AppStateValue = {
 
     config: BisenetV2CelebAMaskConfig;
     setConfig: (config: BisenetV2CelebAMaskConfig) => void;
-    params: BisenetV2CelebAMaskOperatipnParams;
-    setParams: (params: BisenetV2CelebAMaskOperatipnParams) => void;
+    params: BisenetV2CelebAMaskOperationParams;
+    setParams: (params: BisenetV2CelebAMaskOperationParams) => void;
 };
 
 const AppStateContext = React.createContext<AppStateValue | null>(null);

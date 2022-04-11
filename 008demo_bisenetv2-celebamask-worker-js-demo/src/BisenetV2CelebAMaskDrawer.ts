@@ -1,4 +1,4 @@
-import { BisenetV2CelebAMaskOperatipnParams } from "@dannadori/bisenetv2-celebamask-worker-js";
+import { BisenetV2CelebAMaskOperationParams } from "@dannadori/bisenetv2-celebamask-worker-js";
 export const rainbow = [
     [110, 64, 170],
     [143, 61, 178],
@@ -33,7 +33,7 @@ export class BisenetV2CelebAMaskDrawer {
         this.outputCanvas = outputCanvas;
     };
 
-    draw = (snap: HTMLCanvasElement, _params: BisenetV2CelebAMaskOperatipnParams, prediction: number[][]): void => {
+    draw = (snap: HTMLCanvasElement, _params: BisenetV2CelebAMaskOperationParams, prediction: number[][]): void => {
         if (!this.outputCanvas) {
             console.log("not ready:::", this.outputCanvas);
             return;

@@ -96,7 +96,7 @@ export interface FacemeshConfig {
     modelType: ModelTypes;
 }
 
-export interface FacemeshOperatipnParams {
+export interface FacemeshOperationParams {
     type: FacemeshFunctionTypes;
     movingAverageWindow: number;
     trackingAreaMarginRatioX: number;
@@ -110,12 +110,11 @@ export interface FacemeshOperatipnParams {
 export type TrackingArea = {
     centerX: number;
     centerY: number;
+
     xMin: number;
-    yMin: number;
     xMax: number;
+    yMin: number;
     yMax: number;
-    width: number;
-    height: number;
 };
 
 export type FacemeshPredictionOld = {

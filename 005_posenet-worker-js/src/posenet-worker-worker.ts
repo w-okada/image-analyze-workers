@@ -1,5 +1,5 @@
 import { BackendTypes, WorkerCommand, WorkerResponse } from "./const";
-import { PoseNetConfig, PoseNetFunctionTypes, PoseNetOperatipnParams } from "./const";
+import { PoseNetConfig, PoseNetFunctionTypes, PoseNetOperationParams } from "./const";
 import * as poseNet from "@tensorflow-models/posenet";
 import * as tf from "@tensorflow/tfjs";
 import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
@@ -25,7 +25,7 @@ const load_module = async (config: PoseNetConfig) => {
     }
 };
 
-const predict = async (config: PoseNetConfig, params: PoseNetOperatipnParams, data: Uint8ClampedArray) => {
+const predict = async (config: PoseNetConfig, params: PoseNetOperationParams, data: Uint8ClampedArray) => {
     const newImg = new ImageData(new Uint8ClampedArray(data), params.processWidth, params.processHeight);
     if (params.type === PoseNetFunctionTypes.SinglePerson) {
         const prediction = await model!.estimateSinglePose(newImg, params.singlePersonParams!);
@@ -50,7 +50,7 @@ onmessage = async (event) => {
         ctx.postMessage({ message: WorkerResponse.INITIALIZED });
     } else if (event.data.message === WorkerCommand.PREDICT) {
         const config: PoseNetConfig = event.data.config;
-        const params: PoseNetOperatipnParams = event.data.params;
+        const params: PoseNetOperationParams = event.data.params;
 
         const data: Uint8ClampedArray = event.data.data;
 

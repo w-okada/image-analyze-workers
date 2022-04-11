@@ -1,4 +1,4 @@
-import { getAdjacentKeyPoints, Pose, PoseNetOperatipnParams } from "@dannadori/posenet-worker-js";
+import { getAdjacentKeyPoints, Pose, PoseNetOperationParams } from "@dannadori/posenet-worker-js";
 
 export class PoseNetDrawer {
     private outputCanvas: HTMLCanvasElement | null = null;
@@ -6,7 +6,7 @@ export class PoseNetDrawer {
         this.outputCanvas = outputCanvas;
     };
 
-    draw = (_snap: HTMLCanvasElement, _params: PoseNetOperatipnParams, prediction: Pose[]): void => {
+    draw = (_snap: HTMLCanvasElement, _params: PoseNetOperationParams, prediction: Pose[]): void => {
         if (!this.outputCanvas) {
             console.log("not ready:::", this.outputCanvas);
             return;

@@ -1,5 +1,5 @@
-import { AsciiConfig, AsciiFunctionTypes, AsciiOperatipnParams } from "./const";
-export { AsciiConfig, AsciiOperatipnParams, AsciiFunctionTypes } from "./const";
+import { AsciiConfig, AsciiFunctionTypes, AsciiOperationParams } from "./const";
+export { AsciiConfig, AsciiOperationParams, AsciiFunctionTypes } from "./const";
 import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
 
 export const generateAsciiArtDefaultConfig = (): AsciiConfig => {
@@ -11,7 +11,7 @@ export const generateAsciiArtDefaultConfig = (): AsciiConfig => {
 };
 
 export const generateDefaultAsciiArtParams = () => {
-    const defaultParams: AsciiOperatipnParams = {
+    const defaultParams: AsciiOperationParams = {
         type: AsciiFunctionTypes.AsciiArt,
         processWidth: 300,
         processHeight: 300,
@@ -31,7 +31,7 @@ class LocalAA extends LocalWorker {
     drawingCanvas = document.createElement("canvas");
 
     init = async (config: AsciiConfig) => {};
-    predict = async (config: AsciiConfig, params: AsciiOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+    predict = async (config: AsciiConfig, params: AsciiOperationParams, targetCanvas: HTMLCanvasElement) => {
         const asciiStr = params.asciiStr;
         const fontSize = params.fontSize;
         const asciiCharacters = asciiStr.split("");
@@ -94,7 +94,7 @@ export class AsciiArtWorkerManager extends WorkerManagerBase {
         return;
     };
 
-    predict = async (params: AsciiOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+    predict = async (params: AsciiOperationParams, targetCanvas: HTMLCanvasElement) => {
         const currentParams = { ...params };
         const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
         if (!this.worker) {

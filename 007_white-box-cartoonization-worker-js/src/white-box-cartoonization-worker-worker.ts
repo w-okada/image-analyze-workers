@@ -1,4 +1,4 @@
-import { WorkerCommand, WorkerResponse, CartoonConfig, CartoonOperatipnParams, BackendTypes } from "./const";
+import { WorkerCommand, WorkerResponse, CartoonConfig, CartoonOperationParams, BackendTypes } from "./const";
 import * as tf from "@tensorflow/tfjs";
 import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 import { Buffer } from "buffer";
@@ -28,7 +28,7 @@ const load_module = async (config: CartoonConfig) => {
     }
 };
 
-const predict = async (config: CartoonConfig, params: CartoonOperatipnParams, data: Uint8ClampedArray) => {
+const predict = async (config: CartoonConfig, params: CartoonOperationParams, data: Uint8ClampedArray) => {
     const imageData = new ImageData(data, params.processWidth, params.processHeight);
 
     let imgArray2: Uint8ClampedArray;
@@ -76,7 +76,7 @@ onmessage = async (event) => {
         });
     } else if (event.data.message === WorkerCommand.PREDICT) {
         const config = event.data.config as CartoonConfig;
-        const params = event.data.params as CartoonOperatipnParams;
+        const params = event.data.params as CartoonOperationParams;
         const data: Uint8ClampedArray = event.data.data;
 
         const prediction = await predict(config, params, data);

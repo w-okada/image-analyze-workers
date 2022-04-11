@@ -1,8 +1,8 @@
-import { WorkerResponse, WorkerCommand, CartoonConfig, CartoonOperatipnParams, CartoonFunctionTypes, BackendTypes } from "./const";
+import { WorkerResponse, WorkerCommand, CartoonConfig, CartoonOperationParams, CartoonFunctionTypes, BackendTypes } from "./const";
 import * as tf from "@tensorflow/tfjs";
 import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 
-export { CartoonConfig, CartoonOperatipnParams, BackendTypes } from "./const";
+export { CartoonConfig, CartoonOperationParams, BackendTypes } from "./const";
 
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./white-box-cartoonization-worker-worker.ts";
@@ -30,8 +30,8 @@ export const generateCartoonDefaultConfig = (): CartoonConfig => {
     return defaultConf;
 };
 
-export const generateDefaultCartoonParams = (): CartoonOperatipnParams => {
-    const defaultParams: CartoonOperatipnParams = {
+export const generateDefaultCartoonParams = (): CartoonOperationParams => {
+    const defaultParams: CartoonOperationParams = {
         type: CartoonFunctionTypes.Cartoon,
         processWidth: 320,
         processHeight: 320,
@@ -74,7 +74,7 @@ export class LocalCT extends LocalWorker {
     };
 
     // outputArray: Uint8ClampedArray | null = null;
-    predict = async (config: CartoonConfig, params: CartoonOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+    predict = async (config: CartoonConfig, params: CartoonOperationParams, targetCanvas: HTMLCanvasElement) => {
         let outputArray: Uint8ClampedArray | null = null;
         tf.tidy(() => {
             let tensor = tf.browser.fromPixels(targetCanvas);
@@ -117,7 +117,7 @@ export class CartoonWorkerManager extends WorkerManagerBase {
         );
         return;
     };
-    predict = async (params: CartoonOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+    predict = async (params: CartoonOperationParams, targetCanvas: HTMLCanvasElement) => {
         const currentParams = { ...params };
         const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
         if (!this.worker) {

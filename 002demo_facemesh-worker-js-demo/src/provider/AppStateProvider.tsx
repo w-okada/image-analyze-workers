@@ -1,4 +1,4 @@
-import { FacemeshConfig, FacemeshOperatipnParams, FaceMeshPredictionEx, generateDefaultFacemeshParams, generateFacemeshDefaultConfig } from "@dannadori/facemesh-worker-js";
+import { FacemeshConfig, FacemeshOperationParams, FaceMeshPredictionEx, generateDefaultFacemeshParams, generateFacemeshDefaultConfig } from "@dannadori/facemesh-worker-js";
 import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
 import { loadURLAsDataURL } from "../utils/urlReader";
@@ -28,8 +28,8 @@ type AppStateValue = {
 
     config: FacemeshConfig;
     setConfig: (config: FacemeshConfig) => void;
-    params: FacemeshOperatipnParams;
-    setParams: (params: FacemeshOperatipnParams) => void;
+    params: FacemeshOperationParams;
+    setParams: (params: FacemeshOperationParams) => void;
 };
 
 const AppStateContext = React.createContext<AppStateValue | null>(null);

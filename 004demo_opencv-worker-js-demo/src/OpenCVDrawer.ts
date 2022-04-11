@@ -1,4 +1,4 @@
-import { OpenCVOperatipnParams } from "@dannadori/opencv-worker-js";
+import { OpenCVOperationParams } from "@dannadori/opencv-worker-js";
 
 export class OpenCVDrawer {
     private outputCanvas: HTMLCanvasElement | null = null;
@@ -6,7 +6,7 @@ export class OpenCVDrawer {
         this.outputCanvas = outputCanvas;
     };
 
-    draw = (_snap: HTMLCanvasElement, params: OpenCVOperatipnParams, prediction: Uint8ClampedArray): void => {
+    draw = (_snap: HTMLCanvasElement, params: OpenCVOperationParams, prediction: Uint8ClampedArray): void => {
         if (!this.outputCanvas) {
             console.log("not ready:::", this.outputCanvas);
             return;

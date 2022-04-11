@@ -1,24 +1,27 @@
 This is webworker module for [HandPose](https://github.com/tensorflow/tfjs-models/tree/master/handpose).
 
 ## HandPose
+
 ![image](https://user-images.githubusercontent.com/48346627/95988209-88868300-0e63-11eb-809a-35a52b7f77fe.png)
 
 ## Install
+
 ```
 $ npm install \@dannadori/handpose-worker-js
 $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
 
 ```
+
 ## API
 
 ```
 generateHandPoseDefaultConfig: () => HandPoseConfig;
-generateDefaultHandPoseParams: () => HandPoseOperatipnParams;
-drawHandSkelton: (srcCanvas: HTMLCanvasElement, prediction: any, params: HandPoseOperatipnParams) => ImageData;
+generateDefaultHandPoseParams: () => HandPoseOperationParams;
+drawHandSkelton: (srcCanvas: HTMLCanvasElement, prediction: any, params: HandPoseOperationParams) => ImageData;
 
 HandPoseWorkerManager {
 init: (config: HandPoseConfig | null) => Promise<unknown>;
-predict: (targetCanvas: HTMLCanvasElement, params: HandPoseOperatipnParams) => Promise<any>;
+predict: (targetCanvas: HTMLCanvasElement, params: HandPoseOperationParams) => Promise<any>;
 
 ```
 
@@ -38,7 +41,7 @@ export enum HandPoseFunctionType{
     EstimateHands,
 }
 
-export interface HandPoseOperatipnParams{
+export interface HandPoseOperationParams{
     type                : HandPoseFunctionType
     estimateHands       : EstimateHandsParams
     processWidth        : number
@@ -52,7 +55,9 @@ export interface EstimateHandsParams{
 ```
 
 ## Step by step
+
 ### Create environment and install package
+
 ```
 $ npx create-react-app demo  --template typescript
 $ cd demo/
@@ -62,10 +67,12 @@ $ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm pub
 
 ```
 
-### Add source image to public. 
+### Add source image to public.
+
 In this time, the name is "srcImage.jpg"
 
 ### Edit src/App.tsx
+
 Sample code is here.
 
 ```
@@ -74,7 +81,7 @@ import './App.css';
 import { HandPoseWorkerManager, generateDefaultHandPoseParams, generateHandPoseDefaultConfig, drawHandSkelton } from '@dannadori/handpose-worker-js'
 
 class App extends React.Component{
-  
+
   manager = new HandPoseWorkerManager()
   config = generateHandPoseDefaultConfig()
   params = generateDefaultHandPoseParams()
@@ -118,8 +125,3 @@ export default App;
 ```
 $ npm run start
 ```
-
-
-
-
-

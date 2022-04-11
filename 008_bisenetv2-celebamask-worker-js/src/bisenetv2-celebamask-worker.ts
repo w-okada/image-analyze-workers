@@ -1,7 +1,7 @@
 import * as tf from "@tensorflow/tfjs";
-import { BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperatipnParams, BisenetV2CelebAMaskFunctionTypes, WorkerCommand, WorkerResponse, BackendTypes } from "./const";
+import { BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperationParams, BisenetV2CelebAMaskFunctionTypes, WorkerCommand, WorkerResponse, BackendTypes } from "./const";
 import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
-export { BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperatipnParams, BackendTypes };
+export { BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperationParams, BackendTypes };
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./bisenetv2-celebamask-worker-worker.ts";
 
@@ -34,8 +34,8 @@ export const generateBisenetV2CelebAMaskDefaultConfig = (): BisenetV2CelebAMaskC
     return defaultConf;
 };
 
-export const generateDefaultBisenetV2CelebAMaskParams = (): BisenetV2CelebAMaskOperatipnParams => {
-    const defaultParams: BisenetV2CelebAMaskOperatipnParams = {
+export const generateDefaultBisenetV2CelebAMaskParams = (): BisenetV2CelebAMaskOperationParams => {
+    const defaultParams: BisenetV2CelebAMaskOperationParams = {
         type: BisenetV2CelebAMaskFunctionTypes.Mask,
         processWidth: 256,
         processHeight: 256,
@@ -81,7 +81,7 @@ export class LocalCT extends LocalWorker {
         this.model = await tf.loadGraphModel(tf.io.browserFiles([modelJson2, modelWeights1, modelWeights2, modelWeights3]));
     };
 
-    predict = async (config: BisenetV2CelebAMaskConfig, params: BisenetV2CelebAMaskOperatipnParams, targetCanvas: HTMLCanvasElement): Promise<number[][]> => {
+    predict = async (config: BisenetV2CelebAMaskConfig, params: BisenetV2CelebAMaskOperationParams, targetCanvas: HTMLCanvasElement): Promise<number[][]> => {
         let bm: number[][];
         tf.tidy(() => {
             let tensor = tf.browser.fromPixels(targetCanvas);
@@ -112,7 +112,7 @@ export class BisenetV2CelebAMaskWorkerManager extends WorkerManagerBase {
         return;
     };
 
-    predict = async (params: BisenetV2CelebAMaskOperatipnParams, targetCanvas: HTMLCanvasElement) => {
+    predict = async (params: BisenetV2CelebAMaskOperationParams, targetCanvas: HTMLCanvasElement) => {
         const currentParams = { ...params };
         const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
         if (!this.worker) {

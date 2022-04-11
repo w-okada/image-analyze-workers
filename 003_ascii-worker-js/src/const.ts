@@ -22,7 +22,7 @@ export interface AsciiConfig {
     processOnLocal: boolean;
 }
 
-export interface AsciiOperatipnParams {
+export interface AsciiOperationParams {
     type: AsciiFunctionTypes;
     processWidth: number;
     processHeight: number;

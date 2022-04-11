@@ -1,4 +1,4 @@
-import { HandPoseOperatipnParams, AnnotatedPrediction, FingerLookupIndices } from "@dannadori/handpose-worker-js";
+import { HandPoseOperationParams, AnnotatedPrediction, FingerLookupIndices } from "@dannadori/handpose-worker-js";
 
 export class HandPoseDrawer {
     private outputCanvas: HTMLCanvasElement | null = null;
@@ -6,7 +6,7 @@ export class HandPoseDrawer {
         this.outputCanvas = outputCanvas;
     };
 
-    draw = (snap: HTMLCanvasElement, params: HandPoseOperatipnParams, prediction: AnnotatedPrediction[]): void => {
+    draw = (snap: HTMLCanvasElement, params: HandPoseOperationParams, prediction: AnnotatedPrediction[]): void => {
         if (!this.outputCanvas) {
             console.log("not ready:::", this.outputCanvas);
             return;

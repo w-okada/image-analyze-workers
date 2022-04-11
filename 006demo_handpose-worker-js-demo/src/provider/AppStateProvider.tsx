@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
 import { useWindowStateChangeListener, WindowSize } from "demo-base";
 import { loadURLAsDataURL } from "../utils/urlReader";
-import { generateDefaultHandPoseParams, generateHandPoseDefaultConfig, HandPoseConfig, HandPoseOperatipnParams } from "@dannadori/handpose-worker-js";
+import { generateDefaultHandPoseParams, generateHandPoseDefaultConfig, HandPoseConfig, HandPoseOperationParams } from "@dannadori/handpose-worker-js";
 
 type Props = {
     children: ReactNode;
@@ -17,8 +17,8 @@ type AppStateValue = {
 
     config: HandPoseConfig;
     setConfig: (config: HandPoseConfig) => void;
-    params: HandPoseOperatipnParams;
-    setParams: (params: HandPoseOperatipnParams) => void;
+    params: HandPoseOperationParams;
+    setParams: (params: HandPoseOperationParams) => void;
 };
 
 const AppStateContext = React.createContext<AppStateValue | null>(null);

@@ -1,6 +1,4 @@
-import { BoundingBox, Coords3D, FacemeshOperatipnParams, NUM_KEYPOINTS, TRIANGULATION } from "@dannadori/facemesh-worker-js";
-import { TrackingArea } from "@dannadori/facemesh-worker-js/dist/const";
-
+import { Coords3D, FacemeshOperationParams, NUM_KEYPOINTS, TRIANGULATION } from "@dannadori/facemesh-worker-js";
 export class FacemeshDrawer {
     private outputCanvas: HTMLCanvasElement | null = null;
 
@@ -9,20 +7,7 @@ export class FacemeshDrawer {
         console.log(this.outputCanvas);
     };
 
-    tracking = (snap: HTMLCanvasElement, _params: FacemeshOperatipnParams, trackingArea: TrackingArea, scaleX: number, scaleY: number) => {
-        if (!this.outputCanvas) {
-            console.log("not ready:::", this.outputCanvas);
-            return;
-        }
-        const outputCtx = this.outputCanvas.getContext("2d")!;
-        outputCtx.clearRect(0, 0, this.outputCanvas.width, this.outputCanvas.height);
-        const width = trackingArea.width * scaleX;
-        const height = trackingArea.height * scaleY;
-        const projectionRatio = Math.min(this.outputCanvas.width / width, this.outputCanvas.height / height);
-        outputCtx.drawImage(snap, trackingArea.xMin * scaleX, trackingArea.yMin * scaleY, width, height, 0, 0, width * projectionRatio, height * projectionRatio);
-    };
-
-    draw = (snap: HTMLCanvasElement, params: FacemeshOperatipnParams, keypoints: Coords3D, box: BoundingBox) => {
+    draw = (snap: HTMLCanvasElement, params: FacemeshOperationParams, keypoints: Coords3D) => {
         if (!this.outputCanvas) {
             console.log("not ready:::", this.outputCanvas);
             return;
@@ -60,11 +45,29 @@ export class FacemeshDrawer {
                 outputCtx.stroke(region);
             }
         }
-        outputCtx.fillStyle = "#ff000066";
-        outputCtx.fillRect((box.xMin / params.processWidth) * this.outputCanvas.width, (box.yMin / params.processHeight) * this.outputCanvas.height, (box.width / params.processWidth) * this.outputCanvas.width, (box.height / params.processHeight) * this.outputCanvas.height);
+    };
+    drawTrackingArea = (xmin: number, ymin: number, width: number, height: number) => {
+        if (!this.outputCanvas) {
+            console.log("not ready:::", this.outputCanvas);
+            return;
+        }
+        const outputCtx = this.outputCanvas.getContext("2d")!;
+        outputCtx.fillStyle = "#00ff0066";
+        outputCtx.fillRect(xmin, ymin, width, height);
     };
 
-    // draw = (snap: HTMLCanvasElement, params: FacemeshOperatipnParams, keypoints: Keypoint[]) => {
+    cropTrackingArea = (snap: HTMLCanvasElement, xmin: number, ymin: number, width: number, height: number) => {
+        if (!this.outputCanvas) {
+            console.log("not ready:::", this.outputCanvas);
+            return;
+        }
+        const outputCtx = this.outputCanvas.getContext("2d")!;
+        outputCtx.clearRect(0, 0, this.outputCanvas.width, this.outputCanvas.height);
+
+        outputCtx.drawImage(snap, xmin, ymin, width, height, 0, 0, this.outputCanvas.width, this.outputCanvas.height);
+    };
+
+    // draw = (snap: HTMLCanvasElement, params: FacemeshOperationParams, keypoints: Keypoint[]) => {
     //     if (!this.outputCanvas) {
     //         console.log("not ready:::", this.outputCanvas);
     //         return;

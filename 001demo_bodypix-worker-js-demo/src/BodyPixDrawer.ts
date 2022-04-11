@@ -1,4 +1,4 @@
-import { BodypixFunctionTypes, BodyPixOperatipnParams, PartSegmentation, PersonSegmentation, SemanticPartSegmentation, SemanticPersonSegmentation } from "@dannadori/bodypix-worker-js";
+import { BodypixFunctionTypes, BodyPixOperationParams, PartSegmentation, PersonSegmentation, SemanticPartSegmentation, SemanticPersonSegmentation } from "@dannadori/bodypix-worker-js";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 
 export const rainbow = [
@@ -216,7 +216,7 @@ export class BodyPixDrawer {
         outputCtx.drawImage(snap, 0, 0, this.outputCanvas.width, this.outputCanvas.height);
         outputCtx.drawImage(this.tmpCanvas, 0, 0, this.outputCanvas.width, this.outputCanvas.height);
     };
-    draw = (snap: HTMLCanvasElement, params: BodyPixOperatipnParams, prediction: SemanticPersonSegmentation | SemanticPartSegmentation | PersonSegmentation[] | PartSegmentation[]) => {
+    draw = (snap: HTMLCanvasElement, params: BodyPixOperationParams, prediction: SemanticPersonSegmentation | SemanticPartSegmentation | PersonSegmentation[] | PartSegmentation[]) => {
         switch (params.type) {
             case BodypixFunctionTypes.SegmentPerson:
                 this.drawSegmentation(snap, prediction as SemanticPersonSegmentation);

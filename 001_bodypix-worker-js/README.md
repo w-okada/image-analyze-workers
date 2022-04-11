@@ -14,12 +14,12 @@ $ npm install \@dannadori/bodypix-worker-js
 
 ```
 generateBodyPixDefaultConfig: () => BodyPixConfig;
-generateDefaultBodyPixParams: () => BodyPixOperatipnParams;
+generateDefaultBodyPixParams: () => BodyPixOperationParams;
 createForegroundImage: (srcCanvas: HTMLCanvasElement, prediction: SemanticPersonSegmentation) => ImageData
 
 BodypixWorkerManager
 init(config?: BodyPixConfig | null): Promise<unknown>;
-predict(targetCanvas: HTMLCanvasElement, params: BodyPixOperatipnParams): Promise<any>;
+predict(targetCanvas: HTMLCanvasElement, params: BodyPixOperationParams): Promise<any>;
 ```
 
 ## Configuration and Parameter
@@ -31,7 +31,7 @@ export interface BodyPixConfig {
     processOnLocal: boolean;
 }
 
-export interface BodyPixOperatipnParams {
+export interface BodyPixOperationParams {
     type: BodypixFunctionType;
     segmentPersonParams: PersonInferenceConfig;
     segmentPersonPartsParams: PersonInferenceConfig;

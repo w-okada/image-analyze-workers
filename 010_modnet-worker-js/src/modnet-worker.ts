@@ -37,13 +37,13 @@ export const generateMODNetDefaultConfig = (): MODNetConfig => {
             "tfjs-backend-wasm-threaded-simd.wasm": "/tfjs-backend-wasm-threaded-simd.wasm",
         },
         pageUrl: window.location.href,
-        modelJson: {
-            "192x192":modelJson_192,
-            "256x256":modelJson_256,
-            "512x512":  modelJson_512,
+        modelJsons: {
+            "192x192": modelJson_192,
+            "256x256": modelJson_256,
+            "512x512": modelJson_512,
         },
-        modelWeight: {
-            "192x192":modelWeight_192,
+        modelWeights: {
+            "192x192": modelWeight_192,
             "256x256": modelWeight_256,
             "512x512": modelWeight_512,
         },
@@ -53,7 +53,6 @@ export const generateMODNetDefaultConfig = (): MODNetConfig => {
             "512x512": [512, 512],
         },
         modelKey: "192x192",
-
     };
     return defaultConf;
 };
@@ -92,8 +91,8 @@ export class WorkerMD  extends LocalWorker{
         await this.load_module(config)
         await  tf.ready()
         tf.env().set("WEBGL_CPU_FORWARD", false);
-        const modelJson = new File([config.modelJson[config.modelKey]], "model.json", { type: "application/json" });
-        const weight = Buffer.from(config.modelWeight[config.modelKey].split(",")[1], "base64");
+        const modelJson = new File([config.modelJsons[config.modelKey]], "model.json", { type: "application/json" });
+        const weight = Buffer.from(config.modelWeights[config.modelKey].split(",")[1], "base64");
         const modelWeights = new File([weight], "group1-shard1of1.bin");
         this.model = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
     };

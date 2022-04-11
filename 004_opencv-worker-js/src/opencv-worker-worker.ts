@@ -1,12 +1,12 @@
 import { BrowserTypes } from "@dannadori/000_WorkerBase";
-import { WorkerCommand, WorkerResponse, OpenCVConfig, OpenCVOperatipnParams, Wasm } from "./const";
+import { WorkerCommand, WorkerResponse, OpenCVConfig, OpenCVOperationParams, Wasm } from "./const";
 
 export let Module = {};
 
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 let wasm: Wasm | null = null;
 
-const predict = async (config: OpenCVConfig, params: OpenCVOperatipnParams, data: Uint8ClampedArray) => {
+const predict = async (config: OpenCVConfig, params: OpenCVOperationParams, data: Uint8ClampedArray) => {
     const inputImageBufferOffset = wasm!._getInputImageBufferOffset();
     wasm!.HEAPU8.set(data, inputImageBufferOffset);
 
@@ -42,7 +42,7 @@ onmessage = async (event) => {
         ctx.postMessage({ message: WorkerResponse.INITIALIZED });
     } else if (event.data.message === WorkerCommand.PREDICT) {
         const config: OpenCVConfig = event.data.config;
-        const params: OpenCVOperatipnParams = event.data.params;
+        const params: OpenCVOperationParams = event.data.params;
 
         const data: Uint8ClampedArray = event.data.data;
         const imageData = await predict(config, params, data);
