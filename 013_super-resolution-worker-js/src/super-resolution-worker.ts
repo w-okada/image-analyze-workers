@@ -95,8 +95,6 @@ const calcProcessSize = (width: number, height: number) => {
 };
 
 export class LocalSR extends LocalWorker {
-    mod: any;
-    modSIMD: any;
     inputCanvas = document.createElement("canvas");
     resultArray: number[] = Array<number>(300 * 300);
 
