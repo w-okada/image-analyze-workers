@@ -296,7 +296,7 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t13_super-resolution
 
 ### demo
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t14_blazefaceindex.html
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t14_blazeface/index.html
 
 # TFLite Wasm
 
