@@ -1,0 +1,34 @@
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# TensorFlow
+local_repository(
+  name = "org_tensorflow",
+  path = "/tensorflow_src",
+)
+
+# load("@org_tensorflow//tensorflow:workspace.bzl", "tf_workspace")
+# tf_workspace(tf_repo_name = "org_tensorflow")
+load("@org_tensorflow//tensorflow:workspace3.bzl", "tf_workspace3")
+tf_workspace3()
+
+load("@org_tensorflow//tensorflow:workspace2.bzl", "tf_workspace2")
+tf_workspace2()
+
+load("@org_tensorflow//tensorflow:workspace1.bzl", "tf_workspace1")
+tf_workspace1()
+
+load("@org_tensorflow//tensorflow:workspace0.bzl", "tf_workspace0")
+tf_workspace0()
+
+
+local_repository(
+  name = "emsdk",
+  path = "/emsdk/bazel",
+)
+
+load("@emsdk//:deps.bzl", emsdk_deps = "deps")
+emsdk_deps()
+
+load("@emsdk//:emscripten_deps.bzl", emsdk_emscripten_deps = "emscripten_deps")
+emsdk_emscripten_deps()
+
