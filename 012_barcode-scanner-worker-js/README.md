@@ -13,6 +13,7 @@ predict: (src: HTMLCanvasElement | HTMLImageElement | HTMLVideoElement, params?:
 ```
 
 ## Configuration and Parameter
+
 ```
 export interface BarcodeScannerConfig {
     browserType: BrowserType;
@@ -26,7 +27,7 @@ export interface BarcodeScannerOperationParams {
     processWidth: number;
     processHeight: number;
     scale: number;
-    sizeThresold: number;
+    sizeThreshold: number;
     interpolation: number;
     useSIMD: boolean;
 }
@@ -37,9 +38,10 @@ export declare enum BarcodeScannerType {
 }
 ```
 
-
 ## Step by step
+
 ### Create environment and install package
+
 ```
 $ npx create-react-app demo --template typescript
 $ cd demo/
@@ -52,15 +54,17 @@ $ cp node_modules/\@dannadori/barcode-scanner-worker-js/resources/tflite-simd.wa
 ```
 
 ### Download Model
+
 Model file is under "CC BY-NC-SA 4.0" license.
 
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t12_barcode-scanner/models/barcode172_light.tflite
 
+### Add source image to public.
 
-### Add source image to public. 
 In this time, the name is "srcImage.jpg"
 
 ### Edit src/App.tsx
+
 TBD
 
 ### build and start
@@ -68,6 +72,3 @@ TBD
 ```
 $ npm run start
 ```
-
-
-
