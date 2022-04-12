@@ -55,7 +55,7 @@
         "webpack-dev-server": "^4.8.1"
     },
     "dependencies": {
-        "@dannadori/facemesh-worker-js": "^1.0.65",
+        "@dannadori/facemesh-worker-js": "^1.0.67",
         "demo-base": "file:../000_DemoBase",
         "react": "^18.0.0",
         "react-dom": "^18.0.0"

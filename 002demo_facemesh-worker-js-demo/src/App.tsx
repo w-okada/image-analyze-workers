@@ -468,8 +468,9 @@ const App = () => {
             try {
                 if (snap.width > 0 && snap.height > 0) {
                     const prediction = await managerRef.current!.predict(params, snap);
-                    const trackingArea = managerRef.current?.fitCroppedArea(prediction, snap.width, snap.height, params.processWidth, params.processHeight, dst.width, dst.height);
-                    // console.log("prediction", prediction);
+                    const trackingArea = managerRef.current?.fitCroppedArea(prediction, snap.width, snap.height, params.processWidth, params.processHeight, dst.width, dst.height, 0, 0, 0, 0);
+                    // console.log("prediction1", prediction);
+                    // console.log("prediction2", trackingArea);
 
                     if (applicationMode === ApplicationModes.facemesh) {
                         if (prediction.singlePersonKeypointsMovingAverage) {
@@ -483,7 +484,7 @@ const App = () => {
                             faceswapDrawer.swapFace(snap, prediction.singlePersonKeypointsMovingAverage, scaleX, scaleY);
                         }
                     } else {
-                        if (prediction.trackingArea) {
+                        if (trackingArea!.width > 0 && trackingArea!.height > 0) {
                             drawer.cropTrackingArea(snap, trackingArea!.xmin, trackingArea!.ymin, trackingArea!.width, trackingArea!.height);
                         }
                     }

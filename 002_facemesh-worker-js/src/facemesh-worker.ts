@@ -54,9 +54,9 @@ export const generateDefaultFacemeshParams = () => {
         processHeight: 300,
         predictIrises: false,
         movingAverageWindow: 10,
-        trackingAreaMarginRatioX: 0.3,
-        trackingAreaMarginRatioTop: 0.8,
-        trackingAreaMarginRatioBottom: 0.2,
+        // trackingAreaMarginRatioX: 0.3,
+        // trackingAreaMarginRatioTop: 0.8,
+        // trackingAreaMarginRatioBottom: 0.2,
     };
     return defaultParams;
 };
@@ -256,18 +256,18 @@ export class FacemeshWorkerManager extends WorkerManagerBase {
                 /// (3-4) 追加
                 predictionEx.singlePersonBoxMovingAverage = summedBoundingBox;
 
-                /// (4)Tracking Area
-                const trackingAreaCenterX = (summedBoundingBox.xMax + summedBoundingBox.xMin) / 2;
-                const trackingAreaCenterY = (summedBoundingBox.yMax + summedBoundingBox.yMin) / 2;
+                // /// (4)Tracking Area
+                // const trackingAreaCenterX = (summedBoundingBox.xMax + summedBoundingBox.xMin) / 2;
+                // const trackingAreaCenterY = (summedBoundingBox.yMax + summedBoundingBox.yMin) / 2;
 
-                predictionEx.trackingArea = {
-                    centerX: trackingAreaCenterX,
-                    centerY: trackingAreaCenterY,
-                    xMin: summedBoundingBox.xMin,
-                    xMax: summedBoundingBox.xMax,
-                    yMin: summedBoundingBox.yMin,
-                    yMax: summedBoundingBox.yMax,
-                };
+                // predictionEx.trackingArea = {
+                //     centerX: trackingAreaCenterX,
+                //     centerY: trackingAreaCenterY,
+                //     xMin: summedBoundingBox.xMin,
+                //     xMax: summedBoundingBox.xMax,
+                //     yMin: summedBoundingBox.yMin,
+                //     yMax: summedBoundingBox.yMax,
+                // };
             }
 
             return predictionEx;
@@ -353,66 +353,85 @@ export class FacemeshWorkerManager extends WorkerManagerBase {
                 /// (2-4) 追加
                 predictionEx.singlePersonBoxMovingAverage = summedBoundingBox;
 
-                /// (4)Tracking Area
-                const trackingAreaCenterX = (summedBoundingBox.xMax + summedBoundingBox.xMin) / 2;
-                const trackingAreaCenterY = (summedBoundingBox.yMax + summedBoundingBox.yMin) / 2;
+                // /// (4)Tracking Area
+                // const trackingAreaCenterX = (summedBoundingBox.xMax + summedBoundingBox.xMin) / 2;
+                // const trackingAreaCenterY = (summedBoundingBox.yMax + summedBoundingBox.yMin) / 2;
 
-                predictionEx.trackingArea = {
-                    centerX: trackingAreaCenterX,
-                    centerY: trackingAreaCenterY,
-                    xMin: summedBoundingBox.xMin,
-                    xMax: summedBoundingBox.xMax,
-                    yMin: summedBoundingBox.yMin,
-                    yMax: summedBoundingBox.yMax,
-                };
+                // predictionEx.trackingArea = {
+                //     centerX: trackingAreaCenterX,
+                //     centerY: trackingAreaCenterY,
+                //     xMin: summedBoundingBox.xMin,
+                //     xMax: summedBoundingBox.xMax,
+                //     yMin: summedBoundingBox.yMin,
+                //     yMax: summedBoundingBox.yMax,
+                // };
             }
 
             return predictionEx;
         }
     };
 
-    fitCroppedArea = (prediction: FaceMeshPredictionEx, orgWidth: number, orgHeight: number, processedWidth: number, processedHeight: number, outputWidth: number, outputHeight: number) => {
+    fitCroppedArea = (prediction: FaceMeshPredictionEx, orgWidth: number, orgHeight: number, processedWidth: number, processedHeight: number, outputWidth: number, outputHeight: number, extendRatioTop: number, extendRatioBottom: number, extendRatioLeft: number, extendRatioRight: number) => {
+        if (!prediction.singlePersonBoxMovingAverage) {
+            return { xmin: 0, ymin: 0, width: 0, height: 0 };
+        }
         const scaleX = orgWidth / processedWidth;
         const scaleY = orgHeight / processedHeight;
-        const scaledXMin = prediction.trackingArea!.xMin * scaleX;
-        const scaledXMax = prediction.trackingArea!.xMax * scaleX;
+        const scaledXMin = prediction.singlePersonBoxMovingAverage!.xMin * scaleX;
+        const scaledXMax = prediction.singlePersonBoxMovingAverage!.xMax * scaleX;
         const scaledWidth = scaledXMax - scaledXMin;
-        const scaledYMin = prediction.trackingArea!.yMin * scaleY;
-        const scaledYMax = prediction.trackingArea!.yMax * scaleY;
+        const scaledYMin = prediction.singlePersonBoxMovingAverage!.yMin * scaleY;
+        const scaledYMax = prediction.singlePersonBoxMovingAverage!.yMax * scaleY;
         const scaledHeight = scaledYMax - scaledYMin;
+        const scaledCenterX = (scaledXMax + scaledXMin) / 2;
+        const scaledCenterY = (scaledYMax + scaledYMin) / 2;
+        const scaledRadiusX = scaledXMax - scaledCenterX;
+        const scaledRadiusY = scaledYMax - scaledCenterY;
+
+        let extendedXmin = scaledCenterX - scaledRadiusX * (1 + extendRatioLeft);
+        extendedXmin = extendedXmin < 0 ? 0 : extendedXmin;
+        let extendedXmax = scaledCenterX + scaledRadiusX * (1 + extendRatioRight);
+        extendedXmax = extendedXmax > orgWidth ? orgWidth : extendedXmax;
+        let extendedYmin = scaledCenterY - scaledRadiusY * (1 + extendRatioTop);
+        extendedYmin = extendedYmin < 0 ? 0 : extendedYmin;
+        let extendedYmax = scaledCenterY + scaledRadiusY * (1 + extendRatioBottom);
+        extendedYmax = extendedYmax > orgHeight ? orgHeight : extendedYmax;
+
+        const extendedWidth = extendedXmax - extendedXmin;
+        const extendedHeight = extendedYmax - extendedYmin;
+        const extendedCenterX = (extendedXmax + extendedXmin) / 2;
+        const extendedCenterY = (extendedYmax + extendedYmin) / 2;
 
         const outputAspect = outputHeight / outputWidth;
 
         let idealWidth;
         let idealHeight;
-        if (scaledWidth * outputAspect > scaledHeight) {
+        if (extendedWidth * outputAspect > extendedHeight) {
             //高さが足りない
-            idealWidth = scaledWidth;
-            idealHeight = scaledWidth * outputAspect;
+            idealWidth = extendedWidth;
+            idealHeight = extendedWidth * outputAspect;
         } else {
             //幅が足りない
-            idealWidth = scaledHeight / outputAspect;
-            idealHeight = scaledHeight;
+            idealWidth = extendedHeight / outputAspect;
+            idealHeight = extendedHeight;
         }
 
-        const scaledCenterX = prediction.trackingArea!.centerX * scaleX;
-        const scaledCenterY = prediction.trackingArea!.centerY * scaleY;
         let xmin;
-        if (scaledCenterX - idealWidth / 2 < 0) {
+        if (extendedCenterX - idealWidth / 2 < 0) {
             xmin = 0;
-        } else if (scaledCenterX + idealWidth / 2 > orgWidth) {
+        } else if (extendedCenterX + idealWidth / 2 > orgWidth) {
             xmin = orgWidth - idealWidth;
         } else {
-            xmin = scaledCenterX - idealWidth / 2;
+            xmin = extendedCenterX - idealWidth / 2;
         }
 
         let ymin;
-        if (scaledCenterY - idealHeight / 2 < 0) {
+        if (extendedCenterY - idealHeight / 2 < 0) {
             ymin = 0;
-        } else if (scaledCenterY + idealHeight / 2 > orgHeight) {
+        } else if (extendedCenterY + idealHeight / 2 > orgHeight) {
             ymin = orgHeight - idealHeight;
         } else {
-            ymin = scaledCenterY - idealHeight / 2;
+            ymin = extendedCenterY - idealHeight / 2;
         }
         return { xmin: xmin, ymin: ymin, width: idealWidth, height: idealHeight };
     };
