@@ -57,24 +57,27 @@ Note. some module is not provided as webworker for safari because of it's restri
   - [Super Resolution](#super-resolution)
     - [installation and usage](#installation-and-usage-12)
     - [demo](#demo-12)
+  - [Blazeface](#blazeface)
+    - [installation and usage](#installation-and-usage-13)
+    - [demo](#demo-13)
 - [TFLite Wasm](#tflite-wasm)
   - [Google meet person segmentation(TFLite wasm)](#google-meet-person-segmentationtflite-wasm)
-    - [demo](#demo-13)
-  - [White-Box-Cartoon(TFLite wasm)](#white-box-cartoontflite-wasm)
     - [demo](#demo-14)
+  - [White-Box-Cartoon(TFLite wasm)](#white-box-cartoontflite-wasm)
+    - [demo](#demo-15)
     - [License](#license-1)
   - [ESPCN (TFLite wasm)](#espcn-tflite-wasm)
-    - [demo](#demo-15)
+    - [demo](#demo-16)
 - [Libs](#libs)
   - [FaceSwap](#faceswap)
-    - [demo](#demo-16)
+    - [demo](#demo-17)
 - [Experiments](#experiments)
   - [Exp.1 Multi-version based tfjs model](#exp1-multi-version-based-tfjs-model)
-    - [demo](#demo-17)
+    - [demo](#demo-18)
     - [src](#src)
     - [Citation](#citation-1)
   - [Exp.2 Performance improvement](#exp2-performance-improvement)
-    - [demo](#demo-18)
+    - [demo](#demo-19)
     - [src](#src-1)
     - [Citation](#citation-2)
 - [Reference](#reference-1)
@@ -281,6 +284,19 @@ This project (code, pre-trained models, demos, etc.) is released under the Creat
 ### demo
 
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t13_super-resolution/index.html
+
+## Blazeface
+
+![image](https://user-images.githubusercontent.com/48346627/162868657-d4d6eaa8-0438-49dd-9316-e5ab09d34bd3.png)
+![image](https://user-images.githubusercontent.com/48346627/162868780-c5ac0aa0-2ea5-458c-ab0a-ed8b721eb034.png)
+
+### installation and usage
+
+[See here](/014_blazeface-worker-js)
+
+### demo
+
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t14_blazefaceindex.html
 
 # TFLite Wasm
 
