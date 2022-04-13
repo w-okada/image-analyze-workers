@@ -10,7 +10,8 @@ import { loadURLAsDataURL } from "../utils/urlReader";
 // import tflite_float32 from "../../resources/tflite/model_weight_quant.bin";
 // import tflite_float32 from "../../resources/tflite/model_integer_quant.bin";
 // import tflite_float32 from "../../resources/tflite/model_float16_quant.bin";
-import tflite_float32 from "../../resources/tflite/model_dynamic_range_quant.bin";
+// import tflite_float32 from "../../resources/tflite/model_dynamic_range_quant.bin";
+import tflite_float32 from "../../resources/tflite/hand_recrop.bin";
 
 // @ts-ignore
 import wasm from "../../resources/wasm/tflite.wasm";

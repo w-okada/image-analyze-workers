@@ -32,3 +32,17 @@ emsdk_deps()
 load("@emsdk//:emscripten_deps.bzl", emsdk_emscripten_deps = "emscripten_deps")
 emsdk_emscripten_deps()
 
+
+# opencv
+new_local_repository(
+    name = "opencv",
+    path = "/build_wasm",
+    build_file = "opencv.BUILD",
+)
+
+# opencv
+new_local_repository(
+    name = "opencv_simd",
+    path = "/build_wasm_simd",
+    build_file = "opencv.BUILD",
+)

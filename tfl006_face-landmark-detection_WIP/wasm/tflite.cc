@@ -5,25 +5,27 @@
 #include "tensorflow/lite/model.h"
 #include <cmath>
 #include <chrono>
+#include "opencv2/opencv.hpp"
+#include "test.hpp"
 
-#define CHECK_TFLITE_ERROR(x)                                    \
-    if (!(x))                                                    \
-    {                                                            \
-        printf("[WASM] Error at %s:%d\n", __FILE__, __LINE__);   \
-        return 1;                                                \
+#define CHECK_TFLITE_ERROR(x)                                  \
+    if (!(x))                                                  \
+    {                                                          \
+        printf("[WASM] Error at %s:%d\n", __FILE__, __LINE__); \
+        return 1;                                              \
     }
 
+namespace
+{
+    const int MAX_WIDTH = 512;
+    const int MAX_HEIGHT = 512;
+    char modelBuffer[1024 * 1024 * 256];
 
-namespace{
-    const int MAX_WIDTH   = 512;
-    const int MAX_HEIGHT  = 512;
-    char modelBuffer[1024*1024*256]; 
-    
     ///// Buffer for image processing
-    unsigned char inputImageBuffer[3 * MAX_WIDTH * MAX_HEIGHT]; 
-    // unsigned char resizedImageBuffer[3 * MAX_WIDTH * MAX_HEIGHT]; 
+    // unsigned char inputImageBuffer[3 * MAX_WIDTH * MAX_HEIGHT];
+    // unsigned char resizedImageBuffer[3 * MAX_WIDTH * MAX_HEIGHT];
     // unsigned char resultImageBuffer[3 * MAX_WIDTH * MAX_HEIGHT];
-    unsigned char outputImageBuffer[3 * MAX_WIDTH * MAX_HEIGHT];  
+    unsigned char outputImageBuffer[3 * MAX_WIDTH * MAX_HEIGHT];
 
 }
 
@@ -36,43 +38,47 @@ auto count = 0;
 extern "C"
 {
     EMSCRIPTEN_KEEPALIVE
-    char *getModelBufferMemoryOffset(){
+    char *getModelBufferMemoryOffset()
+    {
         return modelBuffer;
     }
 
-    EMSCRIPTEN_KEEPALIVE
-    unsigned char *getInputImageBufferOffset(){
-        return inputImageBuffer;
-    }
+    // EMSCRIPTEN_KEEPALIVE
+    // unsigned char *getInputImageBufferOffset()
+    // {
+    //     return inputImageBuffer;
+    // }
 
     EMSCRIPTEN_KEEPALIVE
-    unsigned char *getOutputImageBufferOffset(){
+    unsigned char *getOutputImageBufferOffset()
+    {
         return outputImageBuffer;
     }
 
     EMSCRIPTEN_KEEPALIVE
-    int exec(int width, int height){
+    int exec(int width, int height)
+    {
         int tensorBatch = interpreter->input_tensor(0)->dims->data[0];
-        int tensorWidth  = interpreter->input_tensor(0)->dims->data[2];
+        int tensorWidth = interpreter->input_tensor(0)->dims->data[2];
         int tensorHeight = interpreter->input_tensor(0)->dims->data[1];
         int tensorCh = interpreter->input_tensor(0)->dims->data[3];
         printf("[WASM] TensorSize IN:(%d, %d, %d, %d)\n", tensorBatch, tensorWidth, tensorHeight, tensorCh);
-        
+
         int out0 = interpreter->output_tensor(0)->dims->data[0];
-        int outTensorWidth  = interpreter->output_tensor(0)->dims->data[2];
+        int outTensorWidth = interpreter->output_tensor(0)->dims->data[2];
         int outTensorHeight = interpreter->output_tensor(0)->dims->data[1];
-        int out3  = interpreter->output_tensor(0)->dims->data[3];
-        int out4  = interpreter->output_tensor(0)->dims->data[4];
-        int out5  = interpreter->output_tensor(0)->dims->data[5];
-        int out6  = interpreter->output_tensor(0)->dims->data[6];
-        printf("[WASM] TensorSize OUT:(%d, %d, %d, %d, %d, %d, %d)\n",out0, outTensorWidth, outTensorHeight, out3, out4, out5, out6);
+        int out3 = interpreter->output_tensor(0)->dims->data[3];
+        int out4 = interpreter->output_tensor(0)->dims->data[4];
+        int out5 = interpreter->output_tensor(0)->dims->data[5];
+        int out6 = interpreter->output_tensor(0)->dims->data[6];
+        printf("[WASM] TensorSize OUT:(%d, %d, %d, %d, %d, %d, %d)\n", out0, outTensorWidth, outTensorHeight, out3, out4, out5, out6);
 
-        for (auto i : interpreter->outputs()) {
-            const TfLiteTensor* tensor = interpreter->tensor(i);
+        for (auto i : interpreter->outputs())
+        {
+            const TfLiteTensor *tensor = interpreter->tensor(i);
             printf("[wasm]: OUTPUT:%s %zu\n", tensor->name, tensor->bytes);
-            printf("[wasm]: OUTPUT:%d, %d, %d, %d, %d, %d\n", tensor->dims->data[0],tensor->dims->data[1],tensor->dims->data[2],tensor->dims->data[3],tensor->dims->data[4],tensor->dims->data[5]);
+            printf("[wasm]: OUTPUT:%d, %d, %d, %d, %d, %d\n", tensor->dims->data[0], tensor->dims->data[1], tensor->dims->data[2], tensor->dims->data[3], tensor->dims->data[4], tensor->dims->data[5]);
         }
-
 
         // //// Resize
         // cv::Mat inputImage(height, width, CV_8UC3, (unsigned char*)inputImageBuffer);
@@ -87,7 +93,7 @@ extern "C"
         //     input[i * 3 + 2] = resizedImageBuffer[i * 3 + 2] / 127.5 - 1;
         // }
 
-        // // infer       
+        // // infer
         // CHECK_TFLITE_ERROR(interpreter->Invoke() == kTfLiteOk);
 
         // // output
@@ -95,7 +101,7 @@ extern "C"
         // cv::Mat resultImage32FC(tensorHeight, tensorWidth, CV_32FC3, output);
         // cv::Mat resultImage8UC(tensorHeight, tensorWidth, CV_8UC3, resultImageBuffer);
         // cv::Mat resizedResultImage(height, width, CV_8UC3, outputImageBuffer);
-        
+
         // resultImage32FC = resultImage32FC +  cv::Scalar(1, 1, 1);
         // resultImage32FC = resultImage32FC * 127.5;
         // resultImage32FC.convertTo(resultImage8UC, CV_8UC3);
@@ -103,9 +109,10 @@ extern "C"
 
         return 0;
     }
-    
+
     EMSCRIPTEN_KEEPALIVE
-    int loadModel(int bufferSize){
+    int loadModel(int bufferSize)
+    {
         printf("[WASM] --------------------------------------------------------\n");
         printf("[WASM] - TFLite Model Loader for white-box-cartoonization     -\n");
         printf("[WASM] - Bug report:                                          -\n");
