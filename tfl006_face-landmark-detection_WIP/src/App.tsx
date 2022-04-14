@@ -1,18 +1,21 @@
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import "./App.css";
+import { useAppState } from "./provider/AppStateProvider";
+import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 // import { useAppState } from "./provider/AppStateProvider";
 // import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
-// import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
-// let GlobalLoopID = 0;
+import { Credit, VideoInputSelector, VideoInputSelectorProps} from "demo-base";
+import { INPUT_HEIGHT, INPUT_WIDTH } from "./const";
+let GlobalLoopID = 0;
 
-// const Controller = () => {
-// const { inputSourceType, setInputSourceType, setInputSource, config, params, setConfig, setParams, applicationMode, setApplicationMode } = useAppState();
-// const videoInputSelectorProps: VideoInputSelectorProps = {
-//     id: "video-input-selector",
-//     currentValue: inputSourceType || "File",
-//     onInputSourceTypeChanged: setInputSourceType,
-//     onInputSourceChanged: setInputSource,
-// };
+const Controller = () => {
+const { inputSourceType, setInputSourceType, setInputSource, config, params, setConfig, setParams, applicationMode, setApplicationMode } = useAppState();
+const videoInputSelectorProps: VideoInputSelectorProps = {
+    id: "video-input-selector",
+    currentValue: inputSourceType || "File",
+    onInputSourceTypeChanged: setInputSourceType,
+    onInputSourceChanged: setInputSource,
+};
 // const onLocalSwitchProps: CommonSwitchProps = {
 //     id: "on-local-switch",
 //     title: "process on local",
@@ -141,25 +144,26 @@ import "./App.css";
 //     },
 //     integer: true,
 // };
-// return (
-//     <div style={{ display: "flex", flexDirection: "column" }}>
-//         <Credit></Credit>
-//         <VideoInputSelector {...videoInputSelectorProps}></VideoInputSelector>
-//         <CommonSwitch {...onLocalSwitchProps}></CommonSwitch>
-//         <CommonSelector {...backendSelectorProps}></CommonSelector>
-//         <CommonSwitch {...annotateBoxSwitchProps}></CommonSwitch>
-//         <CommonSelector {...applicationModeSelectorProps}></CommonSelector>
-//         <CommonSlider {...maxFacesSliderProps}></CommonSlider>
-//         <CommonSlider {...iouThresholdSliderProps}></CommonSlider>
-//         <CommonSlider {...scoreThresholdSliderProps}></CommonSlider>
-//         <CommonSlider {...processWidthSliderProps}></CommonSlider>
-//         <CommonSlider {...processHeightSliderProps}></CommonSlider>
-//         <CommonSlider {...movingAverageWindowSliderProps}></CommonSlider>
-//     </div>
-// );
-// };
+return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+        <Credit></Credit>
+        <VideoInputSelector {...videoInputSelectorProps}></VideoInputSelector>
+        {/* <CommonSwitch {...onLocalSwitchProps}></CommonSwitch> */}
+        {/* <CommonSelector {...backendSelectorProps}></CommonSelector> */}
+        {/* <CommonSwitch {...annotateBoxSwitchProps}></CommonSwitch> */}
+        {/* <CommonSelector {...applicationModeSelectorProps}></CommonSelector> */}
+        {/* <CommonSlider {...maxFacesSliderProps}></CommonSlider> */}
+        {/* <CommonSlider {...iouThresholdSliderProps}></CommonSlider> */}
+        {/* <CommonSlider {...scoreThresholdSliderProps}></CommonSlider> */}
+        {/* <CommonSlider {...processWidthSliderProps}></CommonSlider> */}
+        {/* <CommonSlider {...processHeightSliderProps}></CommonSlider> */}
+        {/* <CommonSlider {...movingAverageWindowSliderProps}></CommonSlider> */}
+    </div>
+);
+};
+
 const App = () => {
-    // const { applicationMode, inputSource, config, params } = useAppState();
+    const { tflite, inputSource  } = useAppState();
     // const managerRef = useRef<BlazefaceWorkerManager>();
     // const [manager, setManager] = useState<BlazefaceWorkerManager | undefined>(managerRef.current);
     // useEffect(() => {
@@ -189,105 +193,139 @@ const App = () => {
     //     faceswapDrawer.setOutputCanvas(output);
     // }, []);
 
-    // const inputSourceElement = useMemo(() => {
-    //     let elem: HTMLVideoElement | HTMLImageElement;
-    //     if (typeof inputSource === "string") {
-    //         const sourceType = getDataTypeOfDataURL(inputSource);
-    //         if (sourceType === DataTypesOfDataURL.video) {
-    //             elem = document.createElement("video");
-    //             elem.controls = true;
-    //             elem.autoplay = true;
-    //             elem.loop = true;
-    //             elem.src = inputSource;
-    //         } else {
-    //             elem = document.createElement("img");
-    //             elem.src = inputSource;
-    //         }
-    //     } else {
-    //         elem = document.createElement("video");
-    //         elem.autoplay = true;
-    //         elem.srcObject = inputSource;
-    //     }
-    //     elem.style.objectFit = "contain";
-    //     elem.style.width = "100%";
-    //     elem.style.height = "100%";
-    //     return elem;
-    // }, [inputSource]);
+    const inputSourceElement = useMemo(() => {
+        let elem: HTMLVideoElement | HTMLImageElement;
+        if (typeof inputSource === "string") {
+            const sourceType = getDataTypeOfDataURL(inputSource);
+            if (sourceType === DataTypesOfDataURL.video) {
+                elem = document.createElement("video");
+                elem.controls = true;
+                elem.autoplay = true;
+                elem.loop = true;
+                elem.src = inputSource;
+            } else {
+                elem = document.createElement("img");
+                elem.src = inputSource;
+            }
+        } else {
+            elem = document.createElement("video");
+            elem.autoplay = true;
+            elem.srcObject = inputSource;
+        }
+        elem.style.objectFit = "contain";
+        elem.style.width = "100%";
+        elem.style.height = "100%";
+        return elem;
+    }, [inputSource]);
 
-    // ////////////////
-    // // Processing
-    // ////////////////
-    // //// (1) Main
-    // useEffect(() => {
-    //     if (!managerRef.current) {
-    //         return;
-    //     }
-    //     console.log("Renderer Initialized");
-    //     let renderRequestId: number;
-    //     const LOOP_ID = performance.now();
-    //     GlobalLoopID = LOOP_ID;
+    ////////////////
+    // Processing
+    ////////////////
+    //// (1) Main
+    useEffect(() => {
+        if (!tflite) {
+            return;
+        }
+        console.log("Renderer Initialized");
+        let renderRequestId: number;
+        const LOOP_ID = performance.now();
+        GlobalLoopID = LOOP_ID;
 
-    //     const dst = document.getElementById("output") as HTMLCanvasElement;
-    //     const test = document.getElementById("test") as HTMLCanvasElement;
-    //     const snap = document.createElement("canvas");
-    //     const info = document.getElementById("info") as HTMLDivElement;
+        const dst = document.getElementById("output") as HTMLCanvasElement;
+        const test = document.getElementById("test") as HTMLCanvasElement;
+        const snap = document.createElement("canvas");
+        const info = document.getElementById("info") as HTMLDivElement;
 
-    //     const perfs: number[] = [];
-    //     const avr = (perfs: number[]) => {
-    //         const sum = perfs.reduce((prev, cur) => {
-    //             return prev + cur;
-    //         }, 0);
-    //         return (sum / perfs.length).toFixed(3);
-    //     };
+        const perfs: number[] = [];
+        const avr = (perfs: number[]) => {
+            const sum = perfs.reduce((prev, cur) => {
+                return prev + cur;
+            }, 0);
+            return (sum / perfs.length).toFixed(3);
+        };
 
-    //     const render = async () => {
-    //         const start = performance.now();
-    //         [snap, dst, test].forEach((x) => {
-    //             const width = inputSourceElement instanceof HTMLVideoElement ? inputSourceElement.videoWidth : inputSourceElement.naturalWidth;
-    //             const height = inputSourceElement instanceof HTMLVideoElement ? inputSourceElement.videoHeight : inputSourceElement.naturalHeight;
-    //             if (x.width != width || x.height != height) {
-    //                 x.width = width;
-    //                 x.height = height;
-    //             }
-    //         });
-    //         const snapCtx = snap.getContext("2d")!;
-    //         snapCtx.drawImage(inputSourceElement, 0, 0, snap.width, snap.height);
-    //         try {
-    //             if (snap.width > 0 && snap.height > 0) {
-    //                 const prediction = await managerRef.current!.predict(params, snap);
-    //                 if (applicationMode === ApplicationModes.facemask) {
-    //                     drawer.draw(snap, params, prediction);
-    //                 } else {
-    //                     const trackingArea = managerRef.current!.fitCroppedArea(prediction, snap.width, snap.height, params.processWidth, params.processHeight, dst.width, dst.height, 1, 0.4, 0, 0);
-    //                     drawer.cropTrackingArea(snap, trackingArea.xmin, trackingArea.ymin, trackingArea.width, trackingArea.height);
-    //                 }
-    //             }
-    //         } catch (error) {
-    //             console.log(error);
-    //         }
+        const render = async () => {
+            const start = performance.now();
+            [snap, dst, test].forEach((x) => {
+                const width = inputSourceElement instanceof HTMLVideoElement ? inputSourceElement.videoWidth : inputSourceElement.naturalWidth;
+                const height = inputSourceElement instanceof HTMLVideoElement ? inputSourceElement.videoHeight : inputSourceElement.naturalHeight;
+                if (x.width != width || x.height != height) {
+                    x.width = width;
+                    x.height = height;
+                }
+            });
+            snap.width=INPUT_WIDTH
+            snap.height=INPUT_HEIGHT
+            const snapCtx = snap.getContext("2d")!;
+            snapCtx.drawImage(inputSourceElement, 0, 0, snap.width, snap.height);
+            try {
+                if (snap.width > 0 && snap.height > 0) {
+                    const image =snapCtx.getImageData(0,0,INPUT_WIDTH,INPUT_HEIGHT)
+                    const res = tflite.exec(image)
 
-    //         if (GlobalLoopID === LOOP_ID) {
-    //             renderRequestId = requestAnimationFrame(render);
-    //         }
+                    const dstCtx = dst.getContext("2d")!
+                    dstCtx.putImageData(res, 0, 0)
+                    dstCtx.fillStyle="#ff0000aa"
+                    dstCtx.fillRect(108,98,116-108,185-98)
 
-    //         const end = performance.now();
-    //         if (perfs.length > 100) {
-    //             perfs.shift();
-    //         }
-    //         perfs.push(end - start);
-    //         const avrElapsedTime = avr(perfs);
-    //         info.innerText = `time:${avrElapsedTime}ms`;
-    //     };
-    //     render();
-    //     return () => {
-    //         console.log("CANCEL", renderRequestId);
-    //         cancelAnimationFrame(renderRequestId);
-    //     };
-    // }, [managerRef.current, applicationMode, inputSourceElement, config, params]);
+                         
+
+                    // // old 255
+                    // const minX = 0.0940507*INPUT_WIDTH
+                    // const minY = 0.462365*INPUT_HEIGHT
+                    // const maxX = 0.438625*INPUT_WIDTH
+                    // const maxY = 0.806948*INPUT_HEIGHT
+
+                    // new 
+                    // const minX = 0.144223*INPUT_WIDTH
+                    // const minY =0.509382*INPUT_HEIGHT
+                    // const maxX = 0.366676*INPUT_WIDTH
+                    // const maxY =0.7318*INPUT_HEIGHT
+
+                    // const minX = 0.353351*INPUT_WIDTH
+                    // const minY =0.349766*INPUT_HEIGHT
+                    // const maxX = 0.519861*INPUT_WIDTH
+                    // const maxY =0.516098*INPUT_HEIGHT
+
+                    const minX =  0.472038*INPUT_WIDTH
+                    const minY =0.231114*INPUT_HEIGHT
+                    const maxX = 0.654068*INPUT_WIDTH
+                    const maxY =0.412961 *INPUT_HEIGHT
+
+
+                      
+                    dstCtx.fillRect(minX, minY, maxX-minX, maxY-minY)
+
+                }
+            } catch (error) {
+                console.log("ERROR drawing", error);
+            }
+
+            if (GlobalLoopID === LOOP_ID) {
+                renderRequestId = requestAnimationFrame(render);
+                // setTimeout(()=>{
+                //     render()
+                // },1000*1)
+            }
+
+            const end = performance.now();
+            if (perfs.length > 100) {
+                perfs.shift();
+            }
+            perfs.push(end - start);
+            const avrElapsedTime = avr(perfs);
+            info.innerText = `time:${avrElapsedTime}ms`;
+        };
+        render();
+        return () => {
+            console.log("CANCEL", renderRequestId);
+            cancelAnimationFrame(renderRequestId);
+        };
+    }, [inputSourceElement]);
 
     return (
         <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", objectFit: "contain", alignItems: "flex-start" }}>
-            {/* <div style={{ width: "100%", display: "flex", objectFit: "contain", alignItems: "flex-start" }}>
+            <div style={{ width: "100%", display: "flex", objectFit: "contain", alignItems: "flex-start" }}>
                 <div
                     style={{ width: "33%", objectFit: "contain" }}
                     ref={(ref) => {
@@ -305,7 +343,7 @@ const App = () => {
             <div style={{ width: "100%", display: "flex", objectFit: "contain", alignItems: "flex-start" }}>
                 <canvas id="test" style={{ width: "33%", objectFit: "contain" }}></canvas>
                 <canvas id="mask" style={{ width: "33%", objectFit: "contain" }}></canvas>
-            </div> */}
+            </div>
         </div>
     );
 };

@@ -3,33 +3,60 @@
 #include "test.hpp"
 #include <emscripten.h>
 
-MemoryUtil *m = new MemoryUtil();
+// MemoryUtil<unsigned char> *m = new MemoryUtil<unsigned char>();
+
+MemoryUtil<unsigned char, unsigned char> *m = new MemoryUtil<unsigned char, unsigned char>();
 
 extern "C"
 {
+
     EMSCRIPTEN_KEEPALIVE
-    unsigned char *getInputImageBufferOffset()
+    int initModelBuffer(int size)
     {
-        return m->inputImageBuffer;
+        m->initModelBuffer(size);
+        return 0;
     }
-}
+    EMSCRIPTEN_KEEPALIVE
+    char *getModelBufferAddress()
+    {
+        return m->modelBuffer;
+    }
+    EMSCRIPTEN_KEEPALIVE
+    int loadModel(int size)
+    {
+        m->loadModel(size);
+        return 0;
+    }
 
-MemoryUtil::MemoryUtil()
-{
-}
+    EMSCRIPTEN_KEEPALIVE
+    int initInputBuffer(int width, int height, int channel)
+    {
+        m->initInputBuffer(width, height, channel);
+        return 0;
+    }
+    EMSCRIPTEN_KEEPALIVE
+    unsigned char *getInputBufferAddress()
+    {
+        return m->inputBuffer;
+    }
 
-MemoryUtil::~MemoryUtil()
-{
-    delete this->inputImageBuffer;
-    std::cout << "destroy memory util." << std::endl;
-}
+    EMSCRIPTEN_KEEPALIVE
+    unsigned char *getOutputBufferAddress()
+    {
+        return m->outputBuffer;
+    }
 
-void MemoryUtil::init(int width, int height, int channel)
-{
-    this->inputImageBuffer = new unsigned char[width * height * channel];
-}
+    EMSCRIPTEN_KEEPALIVE
+    int copySrc2Dst(int width, int height, int channel)
+    {
+        m->copySrc2Dst(width, height, channel);
+        return 0;
+    }
 
-unsigned char *MemoryUtil::getInputImageBufferAddress()
-{
-    return inputImageBuffer;
+    EMSCRIPTEN_KEEPALIVE
+    int exec2(int width, int height)
+    {
+        m->exec2(width, height);
+        return 0;
+    }
 }

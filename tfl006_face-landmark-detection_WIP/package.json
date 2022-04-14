@@ -15,8 +15,10 @@
         "build_docker": "docker build -t tflite_wasm docker",
         "start_docker": "docker run -dit -v $PWD/wasm:/tflite_src -v $PWD/resources/wasm:/tflite_build --name tflite_wasm      tflite_wasm bash",
         "stop_docker": "docker rm -f tflite_wasm",
-        "build_wasm": "docker exec -w /tflite_src tflite_wasm      bazel build --config=wasm -c opt                    :tflite            && docker exec tflite_wasm   tar xvf /tflite_src/bazel-bin/tflite            -C /tflite_build",
-        "build_wasm_simd": "docker exec -w /tflite_src tflite_wasm      bazel build --config=wasm -c opt --copt='-msimd128' :tflite-simd       && docker exec tflite_wasm   tar xvf /tflite_src/bazel-bin/tflite-simd       -C /tflite_build",
+        "build_wasm_outside": "docker exec -w /tflite_src tflite_wasm      bazel build --config=wasm -c opt                    :tflite            && docker exec tflite_wasm   tar xvf /tflite_src/bazel-bin/tflite            -C /tflite_build",
+        "build_wasm":"cd wasm && bazel build --config=wasm -c opt :tflite && tar xvf bazel-bin/tflite -C ../resources/wasm/ && cd -",
+        "build_wasm_simd":"cd wasm && bazel build --config=wasm -c opt --copt='-msimd128' :tflite-simd && tar xvf bazel-bin/tflite-simd -C ../resources/wasm/ && cd -",
+        "build_wasm_simd_outside": "docker exec -w /tflite_src tflite_wasm      bazel build --config=wasm -c opt --copt='-msimd128' :tflite-simd       && docker exec tflite_wasm   tar xvf /tflite_src/bazel-bin/tflite-simd       -C /tflite_build",        
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [],

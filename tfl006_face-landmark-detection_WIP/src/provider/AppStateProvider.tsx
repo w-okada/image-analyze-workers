@@ -11,10 +11,26 @@ import { loadURLAsDataURL } from "../utils/urlReader";
 // import tflite_float32 from "../../resources/tflite/model_integer_quant.bin";
 // import tflite_float32 from "../../resources/tflite/model_float16_quant.bin";
 // import tflite_float32 from "../../resources/tflite/model_dynamic_range_quant.bin";
-import tflite_float32 from "../../resources/tflite/hand_recrop.bin";
+// import tflite_float32 from "../../resources/tflite/hand_recrop.bin";
+
+
+// import tflite_float32 from "../../resources/tflite/palm_detection_lite.bin";
+// import tflite_float32 from "../../resources/tflite/palm_detection_full.bin";
+
+// import tflite_float32 from "../../resources/tflite/palm_model_full_integer_quant.bin";
+// import tflite_float32 from "../../resources/tflite/palm_model_float16_quant.bin";
+// import tflite_float32 from "../../resources/tflite/palm_model_dynamic_range_quant.bin";
+// import tflite_float32 from "../../resources/tflite/palm_model_float32.bin";
+
+import tflite_float32 from "../../resources/tflite/palm_detection_old.bin";
+
+
+
 
 // @ts-ignore
 import wasm from "../../resources/wasm/tflite.wasm";
+// @ts-ignore
+import wasmSimd from "../../resources/wasm/tflite-simd.wasm";
 import { TFLiteWrapper } from "./class/TFLiteWrapper";
 
 export const generateBlazefaceDefaultConfig = (): BlazefaceConfig => {
@@ -32,9 +48,9 @@ export const generateBlazefaceDefaultConfig = (): BlazefaceConfig => {
             float32: tflite_float32.split(",")[1],
         },
         modelKey: "float32",
-        useSimd: false,
+        useSimd: true,
         wasmBase64: wasm.split(",")[1],
-        // wasmSimdBase64: barcodeWasmSimd.split(",")[1],
+        wasmSimdBase64:wasmSimd.split(",")[1],
     };
     return defaultConf;
 };
@@ -68,6 +84,7 @@ type AppStateValue = {
     setConfig: (config: BlazefaceConfig) => void;
     params: BlazefaceOperationParams;
     setParams: (params: BlazefaceOperationParams) => void;
+    tflite?:TFLiteWrapper 
 };
 
 const AppStateContext = React.createContext<AppStateValue | null>(null);
@@ -80,14 +97,18 @@ export const useAppState = (): AppStateValue => {
     return state;
 };
 
-const initialInputSourcePath = "mov/Model.mp4";
+// const initialInputSourcePath = "mov/Model.mp4";
+const initialInputSourcePath = "img/hand.jpg";
+// const initialInputSourcePath = "img/5hand.jpg";
+
+
 
 const initialConfig = generateBlazefaceDefaultConfig();
 const initialParams = generateDefaultBlazefaceParams();
 
 export const AppStateProvider = ({ children }: Props) => {
     const TFLiteWrapperRef = useRef<TFLiteWrapper>();
-    // const [tfliteWrapper, setTfliteWrapper] = useState<TFLiteWrapper>(TFLiteWrapperRef.current);
+    const [tfliteWrapper, setTfliteWrapper] = useState<TFLiteWrapper|undefined>(TFLiteWrapperRef.current);
 
     const [applicationMode, setApplicationMode] = useState<ApplicationModes>(ApplicationModes.facemask);
 
@@ -116,6 +137,7 @@ export const AppStateProvider = ({ children }: Props) => {
     useEffect(() => {
         TFLiteWrapperRef.current = new TFLiteWrapper();
         TFLiteWrapperRef.current.init(initialConfig);
+        setTfliteWrapper(TFLiteWrapperRef.current)
     }, []);
 
     const providerValue = {
@@ -129,6 +151,7 @@ export const AppStateProvider = ({ children }: Props) => {
         setConfig,
         params,
         setParams,
+        tflite:TFLiteWrapperRef.current
     };
 
     return <AppStateContext.Provider value={providerValue}>{children}</AppStateContext.Provider>;

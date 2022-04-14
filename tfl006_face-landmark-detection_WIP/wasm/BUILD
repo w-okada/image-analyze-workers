@@ -5,7 +5,7 @@ load("@org_tensorflow//tensorflow/lite:build_def.bzl", "tflite_linkopts")
 
 cc_binary(
   name = "tflite",
-  srcs = ["tflite.cc", "test.cpp", "test.hpp"],
+  srcs = ["tflite.cc", "test.cpp", "test.hpp","handpose.hpp", "custom/transpose_conv_bias.cc", "custom/transpose_conv_bias.h"],
   linkopts = tflite_linkopts() + [
     "-s ALLOW_MEMORY_GROWTH=1",
     "-s USE_PTHREADS=0",
@@ -24,7 +24,7 @@ cc_binary(
 
 cc_binary(
   name = "tflite-simd",
-  srcs = ["tflite.cc"],
+  srcs = ["tflite.cc", "test.cpp", "test.hpp","handpose.hpp", "custom/transpose_conv_bias.cc", "custom/transpose_conv_bias.h"],
   linkopts = tflite_linkopts() + [
     "-s ALLOW_MEMORY_GROWTH=1",
     "-s USE_PTHREADS=0",

@@ -17,7 +17,7 @@ export interface BlazefaceConfig {
     modelTFLites: { [key: string]: string };
     modelKey: string;
     wasmBase64: string;
-    // wasmSimdBase64: string;
+    wasmSimdBase64: string;
     useSimd: boolean;
 }
 
@@ -27,10 +27,18 @@ export interface BlazefaceOperationParams {
 }
 
 export interface TFLite extends EmscriptenModule {
-    _getModelBufferMemoryOffset(): number;
-    _getInputImageBufferOffset(): number;
-    _getOutputImageBufferOffset(): number;
+    _getModelBufferAddress(): number;
+    _getInputBufferAddress(): number;
+    _getOutputBufferAddress(): number;
+
+    _initModelBuffer(size: number): void;
+    _initInputBuffer(width: number, height: number, channel: number): void
 
     _loadModel(bufferSize: number): number;
-    _exec(widht: number, height: number): number;
+    _exec2(widht: number, height: number): number;
+    _copySrc2Dst(width: number, height: number, channel: number): void
 }
+
+export const INPUT_WIDTH = 256
+export const INPUT_HEIGHT = 256
+
