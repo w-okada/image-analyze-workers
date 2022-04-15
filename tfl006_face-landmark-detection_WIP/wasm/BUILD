@@ -19,6 +19,8 @@ cc_binary(
     "mediapipe/KeypointDecoder.hpp",
     "mediapipe/NonMaxSuppression.cpp",
     "mediapipe/NonMaxSuppression.hpp",
+    "mediapipe/PackPalmResult.cpp",
+    "mediapipe/PackPalmResult.hpp",
     ],
   linkopts = tflite_linkopts() + [
     "-s ALLOW_MEMORY_GROWTH=1",
@@ -52,6 +54,8 @@ cc_binary(
     "mediapipe/KeypointDecoder.hpp",
     "mediapipe/NonMaxSuppression.cpp",
     "mediapipe/NonMaxSuppression.hpp",
+    "mediapipe/PackPalmResult.cpp",
+    "mediapipe/PackPalmResult.hpp",
   ],
   linkopts = tflite_linkopts() + [
     "-s ALLOW_MEMORY_GROWTH=1",

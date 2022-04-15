@@ -23,29 +23,6 @@ int decode_keypoints(std::list<palm_t> &palm_list, float score_thresh, float *po
 
     palm_t palm_item;
 
-    // for (auto i : interpreter->outputs())
-    // {
-    //     const TfLiteTensor *tensor = interpreter->tensor(i);
-    //     // if (strcmp(tensor->name, "Identity:0") == 0)
-    //     // if (strcmp(tensor->name, "Identity") == 0)
-    //     if (strcmp(tensor->name, "regressors") == 0)
-    //     {
-    //         // scores_ptr = interpreter->typed_output_tensor<float>(i); // fake
-    //         points_ptr = interpreter->typed_output_tensor<float>(0);
-    //     }
-    //     // else if (strcmp(tensor->name, "Identity_1:0") == 0)
-    //     // else if (strcmp(tensor->name, "Identity_1") == 0)
-    //     else if (strcmp(tensor->name, "classificators") == 0)
-    //     {
-    //         // points_ptr = interpreter->typed_output_tensor<float>(i); // fake
-    //         scores_ptr = interpreter->typed_output_tensor<float>(1);
-    //     }
-    //     else
-    //     {
-    //         printf("[WASM]: UNKNOWN OUTPUT[%d]: Name:%s Size:%zu\n", i, tensor->name, tensor->bytes);
-    //     }
-    // }
-
     int i = 0;
     for (auto itr = anchors->begin(); itr != anchors->end(); i++, itr++)
     {
