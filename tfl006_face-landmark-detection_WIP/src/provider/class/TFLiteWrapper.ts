@@ -22,9 +22,16 @@ export class TFLiteWrapper {
         const tfliteModel = Buffer.from(config.modelTFLites[config.modelKey], "base64");
         this.tflite!._initModelBuffer(tfliteModel.byteLength);
         const modelBufferOffset = this.tflite!._getModelBufferAddress();
-
         this.tflite!.HEAPU8.set(new Uint8Array(tfliteModel), modelBufferOffset);
         this.tflite!._loadModel(tfliteModel.byteLength);
+
+
+        const tfliteLandmarkModel = Buffer.from(config.landmarkModelTFLites[config.modelKey], "base64");
+        this.tflite!._initLandmarkModelBuffer(tfliteLandmarkModel.byteLength);
+        const landmarkModelBufferOffset = this.tflite!._getLandmarkModelBufferAddress();
+        this.tflite!.HEAPU8.set(new Uint8Array(tfliteLandmarkModel), landmarkModelBufferOffset);
+        this.tflite!._loadLandmarkModel(tfliteLandmarkModel.byteLength);
+
         const s = this.tflite!._getInputBufferAddress()
         console.log("address;;;;;", s)
         this.tflite!._initInputBuffer(this.width, this.height, 4)

@@ -15,6 +15,7 @@ export interface BlazefaceConfig {
     pageUrl: string;
 
     modelTFLites: { [key: string]: string };
+    landmarkModelTFLites: { [key: string]: string };
     modelKey: string;
     wasmBase64: string;
     wasmSimdBase64: string;
@@ -31,10 +32,17 @@ export interface TFLite extends EmscriptenModule {
     _getInputBufferAddress(): number;
     _getOutputBufferAddress(): number;
 
+    _getLandmarkModelBufferAddress(): number;
+    _getLandmarkInputBufferAddress(): number;
+    _getLandmarkOutputBufferAddress(): number;
+
+
     _initModelBuffer(size: number): void;
+    _initLandmarkModelBuffer(size: number): void;
     _initInputBuffer(width: number, height: number, channel: number): void
 
     _loadModel(bufferSize: number): number;
+    _loadLandmarkModel(bufferSize: number): number;
     _exec2(widht: number, height: number): number;
     _copySrc2Dst(width: number, height: number, channel: number): void
 }

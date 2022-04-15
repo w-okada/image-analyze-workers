@@ -29,6 +29,24 @@ extern "C"
     }
 
     EMSCRIPTEN_KEEPALIVE
+    int initLandmarkModelBuffer(int size)
+    {
+        m->initLandmarkModelBuffer(size);
+        return 0;
+    }
+    EMSCRIPTEN_KEEPALIVE
+    char *getLandmarkModelBufferAddress()
+    {
+        return m->landmarkModelBuffer;
+    }
+    EMSCRIPTEN_KEEPALIVE
+    int loadLandmarkModel(int size)
+    {
+        m->loadLandmarkModel(size);
+        return 0;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
     int initInputBuffer(int width, int height, int channel)
     {
         m->initInputBuffer(width, height, channel);

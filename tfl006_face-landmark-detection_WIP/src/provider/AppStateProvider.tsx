@@ -24,6 +24,8 @@ import { loadURLAsDataURL } from "../utils/urlReader";
 
 import tflite_float32 from "../../resources/tflite/palm_detection_old.bin";
 
+// @ts-ignore
+import tflite_model_landmark from "../../resources/tflite/landmark_old.bin";
 
 
 
@@ -47,6 +49,10 @@ export const generateBlazefaceDefaultConfig = (): BlazefaceConfig => {
         modelTFLites: {
             float32: tflite_float32.split(",")[1],
         },
+        landmarkModelTFLites: {
+            float32: tflite_model_landmark.split(",")[1],
+        },
+
         modelKey: "float32",
         useSimd: true,
         wasmBase64: wasm.split(",")[1],
