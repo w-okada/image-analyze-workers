@@ -15,6 +15,10 @@ cc_binary(
     "custom_ops/transpose_conv_bias.h",
     "mediapipe/Anchor.cpp",
     "mediapipe/Anchor.hpp",
+    "mediapipe/KeypointDecoder.cpp",
+    "mediapipe/KeypointDecoder.hpp",
+    "mediapipe/NonMaxSuppression.cpp",
+    "mediapipe/NonMaxSuppression.hpp",
     ],
   linkopts = tflite_linkopts() + [
     "-s ALLOW_MEMORY_GROWTH=1",
@@ -44,6 +48,10 @@ cc_binary(
     "custom_ops/transpose_conv_bias.h",
     "mediapipe/Anchor.cpp",
     "mediapipe/Anchor.hpp",
+    "mediapipe/KeypointDecoder.cpp",
+    "mediapipe/KeypointDecoder.hpp",
+    "mediapipe/NonMaxSuppression.cpp",
+    "mediapipe/NonMaxSuppression.hpp",
   ],
   linkopts = tflite_linkopts() + [
     "-s ALLOW_MEMORY_GROWTH=1",

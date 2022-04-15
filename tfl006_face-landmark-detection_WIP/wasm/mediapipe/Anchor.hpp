@@ -1,7 +1,6 @@
 #ifndef __MEDIAPIPE_ANCHOR_HPP__
 #define __MEDIAPIPE_ANCHOR_HPP__
 
-#include <list>
 #include <vector>
 
 typedef struct Anchor

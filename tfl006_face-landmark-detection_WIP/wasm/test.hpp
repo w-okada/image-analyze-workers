@@ -8,6 +8,8 @@
 #include "handpose.hpp"
 #include "custom_ops/transpose_conv_bias.h"
 #include "mediapipe/Anchor.hpp"
+#include "mediapipe/KeypointDecoder.hpp"
+#include "mediapipe/NonMaxSuppression.hpp"
 #include "const.hpp"
 std::unique_ptr<tflite::Interpreter> interpreter;
 
@@ -16,174 +18,6 @@ static std::vector<Anchor> s_anchors;
 /* -------------------------------------------------- *
  *  Decode palm detection result
  * -------------------------------------------------- */
-static int
-decode_keypoints(std::list<palm_t> &palm_list, float score_thresh)
-{
-    palm_t palm_item;
-    float *scores_ptr;
-    float *points_ptr;
-    int img_w = 256;
-    int img_h = 256;
-    // int img_w = 192;
-    // int img_h = 192;
-
-    for (auto i : interpreter->outputs())
-    {
-        const TfLiteTensor *tensor = interpreter->tensor(i);
-        // if (strcmp(tensor->name, "Identity:0") == 0)
-        // if (strcmp(tensor->name, "Identity") == 0)
-        if (strcmp(tensor->name, "regressors") == 0)
-        {
-            // scores_ptr = interpreter->typed_output_tensor<float>(i); // fake
-            points_ptr = interpreter->typed_output_tensor<float>(0);
-        }
-        // else if (strcmp(tensor->name, "Identity_1:0") == 0)
-        // else if (strcmp(tensor->name, "Identity_1") == 0)
-        else if (strcmp(tensor->name, "classificators") == 0)
-        {
-            // points_ptr = interpreter->typed_output_tensor<float>(i); // fake
-            scores_ptr = interpreter->typed_output_tensor<float>(1);
-        }
-        else
-        {
-            printf("[WASM]: UNKNOWN OUTPUT[%d]: Name:%s Size:%zu\n", i, tensor->name, tensor->bytes);
-        }
-    }
-
-    int i = 0;
-    for (auto itr = s_anchors.begin(); itr != s_anchors.end(); i++, itr++)
-    {
-        Anchor anchor = *itr;
-        float score0 = scores_ptr[i];
-        float score = 1.0f / (1.0f + exp(-score0));
-        // printf("score %f ,  %f \n", score, score0);
-
-        if (score > score_thresh)
-        {
-            float *p = points_ptr + (i * 18);
-
-            /* boundary box */
-            float sx = p[0];
-            float sy = p[1];
-            float w = p[2];
-            float h = p[3];
-            // printf("pos %f %f %f %f\n", sx, sy, w, h);
-
-            float cx = sx + anchor.x_center * img_w;
-            float cy = sy + anchor.y_center * img_h;
-
-            cx /= (float)img_w;
-            cy /= (float)img_h;
-            w /= (float)img_w;
-            h /= (float)img_h;
-
-            fvec2 topleft, btmright;
-            topleft.x = cx - w * 0.5f;
-            topleft.y = cy - h * 0.5f;
-            btmright.x = cx + w * 0.5f;
-            btmright.y = cy + h * 0.5f;
-
-            palm_item.score = score;
-            palm_item.rect.topleft = topleft;
-            palm_item.rect.btmright = btmright;
-
-            /* landmark positions (7 keys) */
-            for (int j = 0; j < 7; j++)
-            {
-                float lx = p[4 + (2 * j) + 0];
-                float ly = p[4 + (2 * j) + 1];
-                lx += anchor.x_center * img_w;
-                ly += anchor.y_center * img_h;
-                lx /= (float)img_w;
-                ly /= (float)img_h;
-
-                palm_item.keys[j].x = lx;
-                palm_item.keys[j].y = ly;
-            }
-
-            palm_list.push_back(palm_item);
-        }
-    }
-    return 0;
-}
-
-static bool
-compare(palm_t &v1, palm_t &v2)
-{
-    if (v1.score > v2.score)
-        return true;
-    else
-        return false;
-}
-
-static float
-calc_intersection_over_union(rect_t &rect0, rect_t &rect1)
-{
-    float sx0 = rect0.topleft.x;
-    float sy0 = rect0.topleft.y;
-    float ex0 = rect0.btmright.x;
-    float ey0 = rect0.btmright.y;
-    float sx1 = rect1.topleft.x;
-    float sy1 = rect1.topleft.y;
-    float ex1 = rect1.btmright.x;
-    float ey1 = rect1.btmright.y;
-
-    float xmin0 = std::min(sx0, ex0);
-    float ymin0 = std::min(sy0, ey0);
-    float xmax0 = std::max(sx0, ex0);
-    float ymax0 = std::max(sy0, ey0);
-    float xmin1 = std::min(sx1, ex1);
-    float ymin1 = std::min(sy1, ey1);
-    float xmax1 = std::max(sx1, ex1);
-    float ymax1 = std::max(sy1, ey1);
-
-    float area0 = (ymax0 - ymin0) * (xmax0 - xmin0);
-    float area1 = (ymax1 - ymin1) * (xmax1 - xmin1);
-    if (area0 <= 0 || area1 <= 0)
-        return 0.0f;
-
-    float intersect_xmin = std::max(xmin0, xmin1);
-    float intersect_ymin = std::max(ymin0, ymin1);
-    float intersect_xmax = std::min(xmax0, xmax1);
-    float intersect_ymax = std::min(ymax0, ymax1);
-
-    float intersect_area = std::max(intersect_ymax - intersect_ymin, 0.0f) *
-                           std::max(intersect_xmax - intersect_xmin, 0.0f);
-
-    return intersect_area / (area0 + area1 - intersect_area);
-}
-static int
-non_max_suppression(std::list<palm_t> &face_list, std::list<palm_t> &face_sel_list, float iou_thresh)
-{
-    face_list.sort(compare);
-
-    for (auto itr = face_list.begin(); itr != face_list.end(); itr++)
-    {
-        palm_t face_candidate = *itr;
-
-        int ignore_candidate = false;
-        for (auto itr_sel = face_sel_list.rbegin(); itr_sel != face_sel_list.rend(); itr_sel++)
-        {
-            palm_t face_sel = *itr_sel;
-
-            float iou = calc_intersection_over_union(face_candidate.rect, face_sel.rect);
-            if (iou >= iou_thresh)
-            {
-                ignore_candidate = true;
-                break;
-            }
-        }
-
-        if (!ignore_candidate)
-        {
-            face_sel_list.push_back(face_candidate);
-            if (face_sel_list.size() >= MAX_PALM_NUM)
-                break;
-        }
-    }
-
-    return 0;
-}
 
 #define CHECK_TFLITE_ERROR(x)                                  \
     if (!(x))                                                  \
@@ -471,27 +305,38 @@ public:
         float score_thresh = 0.7f;
         std::list<palm_t> palm_list;
 
-        decode_keypoints(palm_list, score_thresh);
+        float *scores_ptr;
+        float *points_ptr;
 
-        // // for (int i = 0; i < (int)s_anchors.size(); i++)
-        // // {
-        // //     printf("[%4d](%f, %f, %f, %f)\n", i,
-        // //            s_anchors[i].x_center, s_anchors[i].y_center, s_anchors[i].w, s_anchors[i].h);
-        // // }
+        int output_num = interpreter->outputs().size();
+        for (int i = 0; i < output_num; i++)
+        {
+            int tensor_idx = interpreter->outputs()[i];
+            const char *tensor_name = interpreter->tensor(tensor_idx)->name;
+            if (strcmp(tensor_name, "regressors") == 0 || strcmp(tensor_name, "Identity:0") == 0 || strcmp(tensor_name, "Identity") == 0)
+            {
+                // regressors: old-ver, Identity:0: Pinto's, Identity: new-ver
+                points_ptr = interpreter->typed_output_tensor<float>(i);
+            }
+            else if (strcmp(tensor_name, "classificators") == 0 || strcmp(tensor_name, "Identity_1:0") == 0 || strcmp(tensor_name, "Identity_1") == 0)
+            {
+                scores_ptr = interpreter->typed_output_tensor<float>(i);
+            }
+            else
+            {
+                printf("[WASM]: UNKNOWN OUTPUT[%d,%d]: Name:%s\n", i, tensor_idx, tensor_name);
+            }
+        }
 
-        // printf("palm::::start \n");
-        // std::for_each(
-        //     palm_list.cbegin(), palm_list.cend(), [](palm_t x)
-        //     { std::cout << x.score << " " << x.hand_cx << " " << x.hand_cy << " " << x.hand_w << " " << x.hand_h << " \n"; });
-        // printf("palm::::end \n");
+        decode_keypoints(palm_list, score_thresh, points_ptr, scores_ptr, &s_anchors, PALM_256);
 
         float iou_thresh = 0.03f;
         std::list<palm_t> palm_nms_list;
 
         non_max_suppression(palm_list, palm_nms_list, iou_thresh);
-        std::for_each(
-            palm_nms_list.cbegin(), palm_nms_list.cend(), [](palm_t x)
-            { std::cout << x.score << " " << x.rect.topleft.x << " " << x.rect.topleft.y << " " << x.rect.btmright.x << " " << x.rect.btmright.y << " \n"; });
+        // std::for_each(
+        //     palm_nms_list.cbegin(), palm_nms_list.cend(), [](palm_t x)
+        //     { std::cout << x.score << " " << x.rect.topleft.x << " " << x.rect.topleft.y << " " << x.rect.btmright.x << " " << x.rect.btmright.y << " \n"; });
 
         palm_detection_result_t *palm_result = new palm_detection_result_t;
         pack_palm_result(palm_result, palm_nms_list);
