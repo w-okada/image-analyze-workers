@@ -1,32 +1,19 @@
 import { getBrowserType } from "@dannadori/000_WorkerBase";
 import React, { useContext, useEffect, useState, useRef } from "react";
 import { ReactNode } from "react";
-import { BackendTypes, BlazefaceConfig, BlazefaceOperationParams } from "../const";
+import { BackendTypes, HandposeConfig, HandposeOperationParams } from "../const";
 import { loadURLAsDataURL } from "../utils/urlReader";
 
 // @ts-ignore
-// import tflite_float32 from "../../resources/tflite/org.bin";
-// import tflite_float32 from "../../resources/tflite/model_float32.bin";
-// import tflite_float32 from "../../resources/tflite/model_weight_quant.bin";
-// import tflite_float32 from "../../resources/tflite/model_integer_quant.bin";
-// import tflite_float32 from "../../resources/tflite/model_float16_quant.bin";
-// import tflite_float32 from "../../resources/tflite/model_dynamic_range_quant.bin";
-// import tflite_float32 from "../../resources/tflite/hand_recrop.bin";
+// import tflite_float32 from "../../resources/tflite/palm/palm_detection_lite.bin";
+import tflite_float32 from "../../resources/tflite/palm/palm_detection_full.bin";
+// import tflite_float32 from "../../resources/tflite/palm/palm_detection_old.bin";
 
-
-// import tflite_float32 from "../../resources/tflite/palm_detection_lite.bin";
-// import tflite_float32 from "../../resources/tflite/palm_detection_full.bin";
-
-// import tflite_float32 from "../../resources/tflite/palm_model_full_integer_quant.bin";
-// import tflite_float32 from "../../resources/tflite/palm_model_float16_quant.bin";
-// import tflite_float32 from "../../resources/tflite/palm_model_dynamic_range_quant.bin";
-// import tflite_float32 from "../../resources/tflite/palm_model_float32.bin";
-
-import tflite_float32 from "../../resources/tflite/palm_detection_old.bin";
 
 // @ts-ignore
-import tflite_model_landmark from "../../resources/tflite/landmark_old.bin";
-
+// import tflite_model_landmark from "../../resources/tflite/landmark/hand_landmark_lite.bin";
+import tflite_model_landmark from "../../resources/tflite/landmark/hand_landmark_full.bin";
+// import tflite_model_landmark from "../../resources/tflite/landmark/landmark_old.bin";
 
 
 // @ts-ignore
@@ -35,8 +22,8 @@ import wasm from "../../resources/wasm/tflite.wasm";
 import wasmSimd from "../../resources/wasm/tflite-simd.wasm";
 import { TFLiteWrapper } from "./class/TFLiteWrapper";
 
-export const generateBlazefaceDefaultConfig = (): BlazefaceConfig => {
-    const defaultConf: BlazefaceConfig = {
+export const generateHandposeDefaultConfig = (): HandposeConfig => {
+    const defaultConf: HandposeConfig = {
         browserType: getBrowserType(),
         backendType: BackendTypes.WebGL,
         processOnLocal: false,
@@ -56,15 +43,17 @@ export const generateBlazefaceDefaultConfig = (): BlazefaceConfig => {
         modelKey: "float32",
         useSimd: true,
         wasmBase64: wasm.split(",")[1],
-        wasmSimdBase64:wasmSimd.split(",")[1],
+        wasmSimdBase64: wasmSimd.split(",")[1],
+        maxProcessWidth: 1024 /2,
+        maxProcessHeight: 1024 /2
     };
     return defaultConf;
 };
 
-export const generateDefaultBlazefaceParams = () => {
-    const defaultParams: BlazefaceOperationParams = {
-        processWidth: 300,
-        processHeight: 300,
+export const generateDefaultHandposeParams = () => {
+    const defaultParams: HandposeOperationParams = {
+        processWidth: 1024 /2,
+        processHeight: 1024 /2,
     };
     return defaultParams;
 };
@@ -86,10 +75,10 @@ type AppStateValue = {
     inputSource: string | MediaStream | null;
     setInputSource: (source: MediaStream | string | null) => void;
 
-    config: BlazefaceConfig;
-    setConfig: (config: BlazefaceConfig) => void;
-    params: BlazefaceOperationParams;
-    setParams: (params: BlazefaceOperationParams) => void;
+    config: HandposeConfig;
+    setConfig: (config: HandposeConfig) => void;
+    params: HandposeOperationParams;
+    setParams: (params: HandposeOperationParams) => void;
     tflite?:TFLiteWrapper 
 };
 
@@ -109,8 +98,8 @@ const initialInputSourcePath = "img/hand.jpg";
 
 
 
-const initialConfig = generateBlazefaceDefaultConfig();
-const initialParams = generateDefaultBlazefaceParams();
+const initialConfig = generateHandposeDefaultConfig();
+const initialParams = generateDefaultHandposeParams();
 
 export const AppStateProvider = ({ children }: Props) => {
     const TFLiteWrapperRef = useRef<TFLiteWrapper>();

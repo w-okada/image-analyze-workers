@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-#define MAX_PALM_NUM 5
+#define MAX_PALM_NUM 2
 #define HAND_JOINT_NUM 21
 
     typedef struct fvec2

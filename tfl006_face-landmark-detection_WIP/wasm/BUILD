@@ -27,7 +27,7 @@ cc_binary(
     "-s USE_PTHREADS=0",
     "-s MODULARIZE=1",
     "-s EXPORT_NAME=createTFLiteModule",
-    "-s INITIAL_MEMORY=536870912",
+    "-s INITIAL_MEMORY=1073741824",
     "-O3",
   ],
   deps = [
@@ -62,7 +62,7 @@ cc_binary(
     "-s USE_PTHREADS=0",
     "-s MODULARIZE=1",
     "-s EXPORT_NAME=createTFLiteSIMDModule",
-    "-s INITIAL_MEMORY=536870912",
+    "-s INITIAL_MEMORY=1073741824",
     "-O3",
   ],
   deps = [

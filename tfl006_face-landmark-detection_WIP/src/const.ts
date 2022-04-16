@@ -7,7 +7,7 @@ export const BackendTypes = {
 } as const;
 export type BackendTypes = typeof BackendTypes[keyof typeof BackendTypes];
 
-export interface BlazefaceConfig {
+export interface HandposeConfig {
     browserType: BrowserTypes;
     processOnLocal: boolean;
     backendType: BackendTypes;
@@ -20,9 +20,12 @@ export interface BlazefaceConfig {
     wasmBase64: string;
     wasmSimdBase64: string;
     useSimd: boolean;
+
+    maxProcessWidth: number
+    maxProcessHeight: number
 }
 
-export interface BlazefaceOperationParams {
+export interface HandposeOperationParams {
     processWidth: number;
     processHeight: number;
 }

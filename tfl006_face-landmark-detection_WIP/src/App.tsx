@@ -163,7 +163,7 @@ return (
 };
 
 const App = () => {
-    const { tflite, inputSource  } = useAppState();
+    const { tflite, inputSource, config, params  } = useAppState();
     // const managerRef = useRef<BlazefaceWorkerManager>();
     // const [manager, setManager] = useState<BlazefaceWorkerManager | undefined>(managerRef.current);
     // useEffect(() => {
@@ -254,19 +254,20 @@ const App = () => {
                     x.height = height;
                 }
             });
-            snap.width=INPUT_WIDTH
-            snap.height=INPUT_HEIGHT
+            snap.width=params.processWidth
+            snap.height=params.processHeight
+            dst.width=params.processWidth
+            dst.height=params.processHeight
             const snapCtx = snap.getContext("2d")!;
             snapCtx.drawImage(inputSourceElement, 0, 0, snap.width, snap.height);
             try {
                 if (snap.width > 0 && snap.height > 0) {
-                    const image =snapCtx.getImageData(0,0,INPUT_WIDTH,INPUT_HEIGHT)
-                    const res = tflite.exec(image)
+                    const res = tflite.exec(config, params, snap)
 
                     const dstCtx = dst.getContext("2d")!
                     dstCtx.putImageData(res, 0, 0)
-                    dstCtx.fillStyle="#ff0000aa"
-                    dstCtx.fillRect(108,98,116-108,185-98)
+                    // dstCtx.fillStyle="#ff0000aa"
+                    // dstCtx.fillRect(108,98,116-108,185-98)
 
                          
 
@@ -287,14 +288,14 @@ const App = () => {
                     // const maxX = 0.519861*INPUT_WIDTH
                     // const maxY =0.516098*INPUT_HEIGHT
 
-                    const minX =  0.472038*INPUT_WIDTH
-                    const minY =0.231114*INPUT_HEIGHT
-                    const maxX = 0.654068*INPUT_WIDTH
-                    const maxY =0.412961 *INPUT_HEIGHT
+                    // const minX =  0.472038*INPUT_WIDTH
+                    // const minY =0.231114*INPUT_HEIGHT
+                    // const maxX = 0.654068*INPUT_WIDTH
+                    // const maxY =0.412961 *INPUT_HEIGHT
 
 
                       
-                    dstCtx.fillRect(minX, minY, maxX-minX, maxY-minY)
+                    // dstCtx.fillRect(minX, minY, maxX-minX, maxY-minY)
 
                 }
             } catch (error) {

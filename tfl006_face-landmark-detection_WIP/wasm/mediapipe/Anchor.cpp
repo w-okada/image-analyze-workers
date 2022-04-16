@@ -134,8 +134,8 @@ int generate_ssd_anchors(std::vector<Anchor> *anchors, int type)
         anchor_options.aspect_ratios.push_back(1.0);
         anchor_options.fixed_anchor_size = true;
 
-        // // anchor_options.reduce_boxes_in_lowest_layer = false;
-        // // anchor_options.interpolated_scale_aspect_ratio = 1.0;
+        anchor_options.reduce_boxes_in_lowest_layer = false;
+        anchor_options.interpolated_scale_aspect_ratio = 1.0;
     }
     else
     {
