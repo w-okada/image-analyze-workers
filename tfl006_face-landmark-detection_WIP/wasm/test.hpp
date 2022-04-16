@@ -338,27 +338,6 @@ public:
         // // (2) Infer
         CHECK_TFLITE_ERROR(interpreter->Invoke() == kTfLiteOk);
 
-        // int output_num = interpreter->outputs().size();
-        // printf("[WASM] processing 3\n");
-        // for (int i = 0; i < output_num; i++)
-        // {
-        //     int tensor_idx = interpreter->outputs()[i];
-        //     const char *tensor_name = interpreter->tensor(tensor_idx)->name;
-        //     if (strcmp(tensor_name, "regressors") == 0 || strcmp(tensor_name, "Identity:0") == 0 || strcmp(tensor_name, "Identity") == 0)
-        //     {
-        //         // regressors: old-ver, Identity:0: Pinto's, Identity: new-ver
-        //         points_ptr = interpreter->typed_output_tensor<float>(i);
-        //     }
-        //     else if (strcmp(tensor_name, "classificators") == 0 || strcmp(tensor_name, "Identity_1:0") == 0 || strcmp(tensor_name, "Identity_1") == 0)
-        //     {
-        //         scores_ptr = interpreter->typed_output_tensor<float>(i);
-        //     }
-        //     else
-        //     {
-        //         printf("[WASM]: UNKNOWN OUTPUT[%d,%d]: Name:%s\n", i, tensor_idx, tensor_name);
-        //     }
-        // }
-
         //// decode keyoiints
         float score_thresh = 0.7f;
         std::list<palm_t> palm_list;
@@ -394,6 +373,10 @@ public:
         {
             for (int i = 0; i < palm_result->num; i++)
             {
+                // if (i != 0)
+                // {
+                //     continue;
+                // }
                 int minX = width;
                 int minY = height;
                 int maxX = 0;
@@ -438,7 +421,6 @@ public:
                         maxY = pos_y;
                     }
                 }
-                // printf("crop::%d, %d, %d, %d\n", minX, minY, maxX, maxY);
                 if (minX < 0)
                 {
                     minX = 0;
@@ -461,17 +443,22 @@ public:
                 int crop_width = maxX - minX;
                 int crop_height = maxY - minY;
 
+                printf("crop::%d, %d, %d, %d\n", minX, minY, crop_width, crop_height);
                 cv::Mat hand(inputImage, cv::Rect(minX, minY, crop_width, crop_height));
-                // float centerX = palm_result->palms[i].keys[0].x * width - minX;
-                // float centerY = palm_result->palms[i].keys[0].y * height - minY;
-                // cv::Mat hand(inputImage, cv::Rect(0, 0, width, height));
-                // float centerX = palm_result->palms[i].keys[0].x * width;
-                // float centerY = palm_result->palms[i].keys[0].y * height;
-                // cv::Point2f center = cv::Point2f((crop_width / 2), (crop_height / 2));
-                // cv::Point2f center = cv::Point2f(centerX, centerY);
-                // printf("rotation: %f \n", palm_result->palms[i].rotation);
-                // cv::Mat change = cv::getRotationMatrix2D(center, palm_result->palms[i].rotation * 90, 0.5);
-                // cv::warpAffine(hand, hand, change, hand.size(), cv::INTER_CUBIC, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+                float centerX = crop_width / 2;
+                float centerY = crop_height / 2;
+
+                cv::Point2f center = cv::Point2f(centerX, centerY);
+                printf("rotation: %f, center:[%f, %f(%d,%d)]\n", palm_result->palms[i].rotation, centerX, centerY, crop_width, crop_height);
+                cv::Mat change = cv::getRotationMatrix2D(center, palm_result->palms[i].rotation * 90, 1);
+                cv::Mat reverse;
+                cv::warpAffine(hand, hand, change, hand.size(), cv::INTER_CUBIC, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+                cv::invertAffineTransform(change, reverse);
+                cv::Mat reverse3x3;
+                reverse3x3.push_back(reverse.row(0));
+                reverse3x3.push_back(reverse.row(1));
+                cv::Mat none = (cv::Mat_<double>(1, 3) << 0.0, 0.0, 1.0);
+                reverse3x3.push_back(none.row(0));
 
                 // cv::Mat resized(height, width, CV_8UC4, outputBuffer);
                 cv::Mat resized(landmark_input_height, landmark_input_width, CV_8UC4);
@@ -494,13 +481,19 @@ public:
                 {
                     for (int j = 0; j < 21; j++)
                     {
-                        // float x = ((*(landmark_ptr + (j * 3) + 0) / width) * (maxX - minX)) + minX;
-                        // float y = ((*(landmark_ptr + (j * 3) + 1) / height) * (maxY - minY)) + minY;
                         float x_ratio = landmark_ptr[j * 3 + 0] / landmark_input_width;
                         float y_ratio = landmark_ptr[j * 3 + 1] / landmark_input_height;
-                        float x = x_ratio * (maxX - minX) + minX;
-                        float y = y_ratio * (maxY - minY) + minY;
-                        // float z = *(landmark_ptr + j * 3 + 2);
+                        float x_position_in_crop = x_ratio * crop_width;
+                        float y_position_in_crop = y_ratio * crop_height;
+                        std::vector<cv::Point2f> src_points;
+                        std::vector<cv::Point2f> dst_points;
+                        src_points.push_back(cv::Point2f(x_position_in_crop, y_position_in_crop));
+
+                        cv::perspectiveTransform(src_points, dst_points, reverse3x3);
+
+                        float x = dst_points[0].x + minX;
+                        float y = dst_points[0].y + minY;
+
                         if (*handedness_ptr > 0.5)
                         {
                             cv::line(out, cv::Point(x, y), cv::Point(x + 2, y + 2), cv::Scalar(200, 200, 0, 255), 20, 4);
@@ -515,28 +508,6 @@ public:
                 }
             }
         }
-
-        // for (auto i : interpreter->outputs())
-        // {
-        //     const TfLiteTensor *tensor = interpreter->tensor(i);
-        //     if (!strcmp(tensor->name, "Identity") == 0)
-        //     {
-        //         int num = tensor->bytes / 4;
-        //     }else if(!strcmp(tensor->name, "Identity_1"){
-
-        //     }else{
-
-        //     }
-
-        //     printf("[wasm]: OUTPUT1:%s %zu\n", tensor->name, tensor->bytes);
-        //     printf("[wasm]: OUTPUT2:%d, %d, %d, %d, %d, %d\n", tensor->dims->data[0], tensor->dims->data[1], tensor->dims->data[2], tensor->dims->data[3], tensor->dims->data[4], tensor->dims->data[5]);
-        //     printf("[wasm]: OUTPUT3:%d %zu\n", tensor->type, tensor->bytes);
-        //     float *output = interpreter->typed_output_tensor<float>(0);
-        //     for (int j = 0; j < 4; j++)
-        //     {
-        //         printf("[wasm]: OUTPUT4:%lf\n", output[j]);
-        //     }
-        // }
     }
 };
 #endif //__OPENCV_BARCODE_BARDETECT_HPP__

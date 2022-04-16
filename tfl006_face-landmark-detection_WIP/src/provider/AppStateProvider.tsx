@@ -5,14 +5,14 @@ import { BackendTypes, HandposeConfig, HandposeOperationParams } from "../const"
 import { loadURLAsDataURL } from "../utils/urlReader";
 
 // @ts-ignore
-// import tflite_float32 from "../../resources/tflite/palm/palm_detection_lite.bin";
-import tflite_float32 from "../../resources/tflite/palm/palm_detection_full.bin";
+import tflite_float32 from "../../resources/tflite/palm/palm_detection_lite.bin";
+// import tflite_float32 from "../../resources/tflite/palm/palm_detection_full.bin";
 // import tflite_float32 from "../../resources/tflite/palm/palm_detection_old.bin";
 
 
 // @ts-ignore
-// import tflite_model_landmark from "../../resources/tflite/landmark/hand_landmark_lite.bin";
-import tflite_model_landmark from "../../resources/tflite/landmark/hand_landmark_full.bin";
+import tflite_model_landmark from "../../resources/tflite/landmark/hand_landmark_lite.bin";
+// import tflite_model_landmark from "../../resources/tflite/landmark/hand_landmark_full.bin";
 // import tflite_model_landmark from "../../resources/tflite/landmark/landmark_old.bin";
 
 
@@ -44,16 +44,16 @@ export const generateHandposeDefaultConfig = (): HandposeConfig => {
         useSimd: true,
         wasmBase64: wasm.split(",")[1],
         wasmSimdBase64: wasmSimd.split(",")[1],
-        maxProcessWidth: 1024 /2,
-        maxProcessHeight: 1024 /2
+        maxProcessWidth: 1024 ,
+        maxProcessHeight: 1024 
     };
     return defaultConf;
 };
 
 export const generateDefaultHandposeParams = () => {
     const defaultParams: HandposeOperationParams = {
-        processWidth: 1024 /2,
-        processHeight: 1024 /2,
+        processWidth: 1024 ,
+        processHeight: 1024 ,
     };
     return defaultParams;
 };
