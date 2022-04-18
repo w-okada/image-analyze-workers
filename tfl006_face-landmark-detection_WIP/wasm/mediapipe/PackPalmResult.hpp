@@ -4,6 +4,6 @@
 #include <list>
 #include "../handpose.hpp"
 
-void pack_palm_result(palm_detection_result_t *palm_result, std::list<palm_t> &palm_list);
+void pack_palm_result(palm_detection_result_t *palm_result, std::list<palm_t> &palm_list, int max_palm_num);
 
 #endif //__MEDIAPIPE_PACK_PALM_RESULT_HPP__

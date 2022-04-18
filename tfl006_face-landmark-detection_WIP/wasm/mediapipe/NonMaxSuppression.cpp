@@ -47,7 +47,7 @@ calc_intersection_over_union(rect_t &rect0, rect_t &rect1)
     return intersect_area / (area0 + area1 - intersect_area);
 }
 
-int non_max_suppression(std::list<palm_t> &face_list, std::list<palm_t> &face_sel_list, float iou_thresh)
+int non_max_suppression(std::list<palm_t> &face_list, std::list<palm_t> &face_sel_list, float iou_thresh, int max_palm_num)
 {
     face_list.sort(compare);
 
@@ -71,7 +71,7 @@ int non_max_suppression(std::list<palm_t> &face_list, std::list<palm_t> &face_se
         if (!ignore_candidate)
         {
             face_sel_list.push_back(face_candidate);
-            if (face_sel_list.size() >= MAX_PALM_NUM)
+            if (face_sel_list.size() >= max_palm_num)
                 break;
         }
     }

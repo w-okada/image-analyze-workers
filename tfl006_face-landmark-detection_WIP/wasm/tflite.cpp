@@ -1,15 +1,20 @@
 #include <iostream>
 #include <memory>
-#include "test.hpp"
+#include "tflite.hpp"
 #include <emscripten.h>
 
-// MemoryUtil<unsigned char> *m = new MemoryUtil<unsigned char>();
+namespace
+{
+}
 
-MemoryUtil<unsigned char, float> *m = new MemoryUtil<unsigned char, float>();
+using std::chrono::high_resolution_clock;
+
+auto start_time = high_resolution_clock::now();
+auto count = 0;
+MemoryUtil *m = new MemoryUtil();
 
 extern "C"
 {
-
     EMSCRIPTEN_KEEPALIVE
     int initModelBuffer(int size)
     {
@@ -72,9 +77,9 @@ extern "C"
     // }
 
     EMSCRIPTEN_KEEPALIVE
-    int exec2(int width, int height)
+    int exec2(int width, int height, int max_palm_num)
     {
-        m->exec2(width, height);
+        m->exec2(width, height, max_palm_num);
         return 0;
     }
 }

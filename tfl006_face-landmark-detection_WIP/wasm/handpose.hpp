@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-#define MAX_PALM_NUM 2
+#define SYSTEM_MAX_PALM_NUM 20
 #define HAND_JOINT_NUM 21
 
     typedef struct fvec2
@@ -45,7 +45,7 @@ extern "C"
     typedef struct _palm_detection_result_t
     {
         int num;
-        palm_t palms[MAX_PALM_NUM];
+        palm_t palms[SYSTEM_MAX_PALM_NUM];
     } palm_detection_result_t;
 
     typedef struct _hand_landmark_result_t

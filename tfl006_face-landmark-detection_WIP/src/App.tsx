@@ -164,34 +164,6 @@ return (
 
 const App = () => {
     const { tflite, inputSource, config, params  } = useAppState();
-    // const managerRef = useRef<BlazefaceWorkerManager>();
-    // const [manager, setManager] = useState<BlazefaceWorkerManager | undefined>(managerRef.current);
-    // useEffect(() => {
-    //     const loadModel = async () => {
-    //         const m = manager ? manager : new BlazefaceWorkerManager();
-    //         await m.init(config);
-    //         managerRef.current = m;
-    //         setManager(managerRef.current);
-    //     };
-    //     loadModel();
-    // }, [config]);
-
-    // const drawer = useMemo(() => {
-    //     return new BlazefaceDrawer();
-    // }, []);
-
-    // useEffect(() => {
-    //     const output = document.getElementById("output") as HTMLCanvasElement;
-    //     drawer.setOutputCanvas(output);
-    // }, []);
-
-    // const faceswapDrawer = useMemo(() => {
-    //     return new BlazefaceDrawer();
-    // }, []);
-    // useEffect(() => {
-    //     const output = document.getElementById("output") as HTMLCanvasElement;
-    //     faceswapDrawer.setOutputCanvas(output);
-    // }, []);
 
     const inputSourceElement = useMemo(() => {
         let elem: HTMLVideoElement | HTMLImageElement;

@@ -91,7 +91,7 @@ compute_hand_rect(palm_t &palm)
     }
 }
 
-void pack_palm_result(palm_detection_result_t *palm_result, std::list<palm_t> &palm_list)
+void pack_palm_result(palm_detection_result_t *palm_result, std::list<palm_t> &palm_list, int max_palm_num)
 {
     int num_palms = 0;
     palm_result->num = 0;
@@ -106,7 +106,7 @@ void pack_palm_result(palm_detection_result_t *palm_result, std::list<palm_t> &p
         num_palms++;
         palm_result->num = num_palms;
 
-        if (num_palms >= MAX_PALM_NUM)
+        if (num_palms >= max_palm_num)
             break;
     }
 }

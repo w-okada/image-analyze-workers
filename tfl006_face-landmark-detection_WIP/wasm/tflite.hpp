@@ -26,7 +26,6 @@ static std::vector<Anchor> s_anchors;
         printf("[WASM] Error at %s:%d\n", __FILE__, __LINE__); \
     }
 
-template <typename T, typename U>
 class MemoryUtil
 {
 private:
@@ -255,7 +254,7 @@ public:
     unsigned char *inputBuffer;
     void initInputBuffer(int width, int height, int channel)
     {
-        inputBuffer = new T[width * height * channel];
+        inputBuffer = new unsigned char[width * height * channel];
         initOutputBuffer();
     }
     unsigned char *getInputBufferAddress()
@@ -273,46 +272,7 @@ public:
         return outputBuffer;
     }
 
-    // T *landmarkInputBuffer;
-    // void initLandmarkInputBuffer(int width, int height, int channel)
-    // {
-    //     landmarkInputBuffer = new T[width * height * channel];
-    // }
-    // T *getLandmarkInputBufferAddress()
-    // {
-    //     return landmarkInputBuffer;
-    // }
-
-    // U *landmarkOutputBuffer;
-    // void initLandmarkOutputBuffer(int width, int height, int channel)
-    // {
-    //     landmarkOutputBuffer = new T[width * height * channel];
-    // }
-    // U getLandmarkOutputBufferAddress()
-    // {
-    //     return landmarkOutputBuffer;
-    // }
-
-    // void copySrc2Dst(int width, int height, int channel)
-    // {
-    //     if (outputBuffer == nullptr)
-    //     {
-    //         initOutputBuffer(width, height, channel);
-    //     }
-    //     for (int i = 0; i < width * height * channel; i++)
-    //     {
-    //         if (i % 4 == 0)
-    //         {
-    //             outputBuffer[i] = 10;
-    //         }
-    //         else
-    //         {
-    //             outputBuffer[i] = inputBuffer[i];
-    //         }
-    //     }
-    // }
-
-    void exec2(int width, int height)
+    void exec2(int width, int height, int max_palm_num)
     {
         float *input = interpreter->typed_input_tensor<float>(0);
 
@@ -349,15 +309,15 @@ public:
         //// NMS
         float iou_thresh = 0.03f;
         std::list<palm_t> palm_nms_list;
-        non_max_suppression(palm_list, palm_nms_list, iou_thresh);
+        non_max_suppression(palm_list, palm_nms_list, iou_thresh, max_palm_num);
         // std::for_each(
         //     palm_nms_list.cbegin(), palm_nms_list.cend(), [](palm_t x)
         //     { std::cout << x.score << " " << x.rect.topleft.x << " " << x.rect.topleft.y << " " << x.rect.btmright.x << " " << x.rect.btmright.y << " \n"; });
 
         //// Pack
         palm_detection_result_t *palm_result = new palm_detection_result_t;
-        pack_palm_result(palm_result, palm_nms_list);
-        printf("palm num::: %d\n", palm_result->num);
+        pack_palm_result(palm_result, palm_nms_list, max_palm_num);
+        // printf("palm num::: %d\n", palm_result->num);
         if (palm_result->num > 0)
         {
 
@@ -388,22 +348,6 @@ public:
                 {
                     int pos_x = palm_result->palms[i].hand_pos[j].x * width;
                     int pos_y = palm_result->palms[i].hand_pos[j].y * height;
-                    // if (j == 0)
-                    // {
-                    //     cv::line(out, cv::Point(pos_x, pos_y), cv::Point(pos_x + 2, pos_y + 2), cv::Scalar(200, 0, 0, 255), 20, 4);
-                    // }
-                    // else if (j == 1)
-                    // {
-                    //     cv::line(out, cv::Point(pos_x, pos_y), cv::Point(pos_x + 2, pos_y + 2), cv::Scalar(0, 200, 0, 255), 20, 4);
-                    // }
-                    // else if (j == 2)
-                    // {
-                    //     cv::line(out, cv::Point(pos_x, pos_y), cv::Point(pos_x + 2, pos_y + 2), cv::Scalar(0, 0, 200, 255), 20, 4);
-                    // }
-                    // else if (j == 3)
-                    // {
-                    //     cv::line(out, cv::Point(pos_x, pos_y), cv::Point(pos_x + 2, pos_y + 2), cv::Scalar(200, 200, 0, 255), 20, 4);
-                    // }
 
                     if (pos_x < minX)
                     {
@@ -445,13 +389,13 @@ public:
                 int crop_width = maxX - minX;
                 int crop_height = maxY - minY;
 
-                printf("crop::%d, %d, %d, %d\n", minX, minY, crop_width, crop_height);
+                // printf("crop::%d, %d, %d, %d\n", minX, minY, crop_width, crop_height);
                 cv::Mat hand(inputImage, cv::Rect(minX, minY, crop_width, crop_height));
                 float centerX = crop_width / 2;
                 float centerY = crop_height / 2;
 
                 cv::Point2f center = cv::Point2f(centerX, centerY);
-                printf("rotation: %f, center:[%f, %f(%d,%d)]\n", palm_result->palms[i].rotation, centerX, centerY, crop_width, crop_height);
+                // printf("rotation: %f, center:[%f, %f(%d,%d)]\n", palm_result->palms[i].rotation, centerX, centerY, crop_width, crop_height);
                 cv::Mat change = cv::getRotationMatrix2D(center, palm_result->palms[i].rotation * 90, 1);
                 cv::Mat reverse;
                 cv::warpAffine(hand, hand, change, hand.size(), cv::INTER_CUBIC, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));

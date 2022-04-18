@@ -46,13 +46,12 @@ export class TFLiteWrapper {
 
         this.tflite!.HEAPU8.set(imageData.data, this.imageInputAddress);
         // this.tflite!._copySrc2Dst(this.width, this.height, 4);
-        this.tflite!._exec2(params.processWidth, params.processHeight);
+        this.tflite!._exec2(params.processWidth, params.processHeight, 4);
 
         const e = this.tflite!._getOutputBufferAddress()
         // const outImage = new ImageData(new Uint8ClampedArray(this.tflite!.HEAPU8.slice(e, e + params.processWidth * params.processHeight * 4)), params.processWidth, params.processHeight)
         // return outImage
         const handNum = this.tflite!.HEAPF32[e / 4];
-        console.log("handnum !!", handNum);
         const hands: Hand[] = []
         for (let i = 0; i < handNum; i++) {
             // 11: score and rects

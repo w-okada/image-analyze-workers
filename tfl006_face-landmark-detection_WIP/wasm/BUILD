@@ -7,9 +7,8 @@ cc_binary(
   name = "tflite",
   srcs = [
     "const.hpp",
-    "tflite.cc", 
-    "test.cpp", 
-    "test.hpp",
+    "tflite.cpp", 
+    "tflite.hpp", 
     "handpose.hpp", 
     "custom_ops/transpose_conv_bias.cc", 
     "custom_ops/transpose_conv_bias.h",
@@ -42,9 +41,8 @@ cc_binary(
   name = "tflite-simd",
   srcs = [
     "const.hpp",
-    "tflite.cc", 
-    "test.cpp", 
-    "test.hpp",
+    "tflite.cpp", 
+    "tflite.hpp", 
     "handpose.hpp", 
     "custom_ops/transpose_conv_bias.cc", 
     "custom_ops/transpose_conv_bias.h",

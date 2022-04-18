@@ -46,7 +46,7 @@ export interface TFLite extends EmscriptenModule {
 
     _loadModel(bufferSize: number): number;
     _loadLandmarkModel(bufferSize: number): number;
-    _exec2(widht: number, height: number): number;
+    _exec2(widht: number, height: number, max_palm_num: number): number;
     _copySrc2Dst(width: number, height: number, channel: number): void
 }
 
