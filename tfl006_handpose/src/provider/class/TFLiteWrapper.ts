@@ -54,27 +54,28 @@ export class TFLiteWrapper {
         const handNum = this.tflite!.HEAPF32[e / 4];
         const hands: TFLiteHand[] = []
         for (let i = 0; i < handNum; i++) {
-            // 11: score and rects
+            // 12: score and rects
             //  8: ratated hand
             // 14: palm keypoints
             // 42: landmark keypoints
-            // -> 11 + 8 + 14 + 42 = 75
-            const offset = e / 4 + 1 + i * (11 + 8 + 14 + 42)
+            // -> 12 + 8 + 14 + 42 = 76
+            const offset = e / 4 + 1 + i * (12 + 8 + 14 + 42)
             const hand: TFLiteHand = {
                 score: this.tflite!.HEAPF32[offset + 0],
                 landmarkScore: this.tflite!.HEAPF32[offset + 1],
-                rotation: this.tflite!.HEAPF32[offset + 2],
+                handedness: this.tflite!.HEAPF32[offset + 2],
+                rotation: this.tflite!.HEAPF32[offset + 3],
                 palm: {
-                    minX: this.tflite!.HEAPF32[offset + 3],
-                    minY: this.tflite!.HEAPF32[offset + 4],
-                    maxX: this.tflite!.HEAPF32[offset + 5],
-                    maxY: this.tflite!.HEAPF32[offset + 6],
+                    minX: this.tflite!.HEAPF32[offset + 4],
+                    minY: this.tflite!.HEAPF32[offset + 5],
+                    maxX: this.tflite!.HEAPF32[offset + 6],
+                    maxY: this.tflite!.HEAPF32[offset + 7],
                 },
                 hand: {
-                    minX: this.tflite!.HEAPF32[offset + 7],
-                    minY: this.tflite!.HEAPF32[offset + 8],
-                    maxX: this.tflite!.HEAPF32[offset + 9],
-                    maxY: this.tflite!.HEAPF32[offset + 10],
+                    minX: this.tflite!.HEAPF32[offset + 8],
+                    minY: this.tflite!.HEAPF32[offset + 9],
+                    maxX: this.tflite!.HEAPF32[offset + 10],
+                    maxY: this.tflite!.HEAPF32[offset + 11],
                 },
                 rotatedHand: {
                     positions: [
@@ -86,21 +87,21 @@ export class TFLiteWrapper {
                 ],
             }
             for (let j = 0; j < 4; j++) {
-                let rotatedOffset = (e / 4 + 1) + (i * 75) + (11) + (j * 2)
+                let rotatedOffset = (e / 4 + 1) + (i * 76) + (12) + (j * 2)
                 hand.rotatedHand.positions.push({
                     x: this.tflite!.HEAPF32[rotatedOffset + 0],
                     y: this.tflite!.HEAPF32[rotatedOffset + 1],
                 })
             }
             for (let j = 0; j < 7; j++) {
-                let palmKeypointOffset = (e / 4 + 1) + (i * 75) + (11 + 8) + (j * 2)
+                let palmKeypointOffset = (e / 4 + 1) + (i * 76) + (12 + 8) + (j * 2)
                 hand.palmKeypoints.push({
                     x: this.tflite!.HEAPF32[palmKeypointOffset + 0],
                     y: this.tflite!.HEAPF32[palmKeypointOffset + 1],
                 })
             }
             for (let j = 0; j < 21; j++) {
-                let landmarkKeypointOffset = (e / 4 + 1) + (i * 75) + (11 + 8 + 14) + (j * 2)
+                let landmarkKeypointOffset = (e / 4 + 1) + (i * 76) + (12 + 8 + 14) + (j * 2)
                 hand.landmarkKeypoints.push({
                     x: this.tflite!.HEAPF32[landmarkKeypointOffset + 0],
                     y: this.tflite!.HEAPF32[landmarkKeypointOffset + 1],

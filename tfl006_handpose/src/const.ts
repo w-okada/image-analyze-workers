@@ -51,6 +51,7 @@ export const INPUT_HEIGHT = 256
 export type TFLiteHand = {
     score: number,
     landmarkScore: number,
+    handedness: number,
     rotation: number,
     palm: {
         minX: number,

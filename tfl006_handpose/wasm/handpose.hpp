@@ -40,6 +40,7 @@ extern "C"
 
         fvec3 landmark_keys[21];
         float landmark_score;
+        float handedness;
     } palm_t;
 
     typedef struct _palm_detection_result_t

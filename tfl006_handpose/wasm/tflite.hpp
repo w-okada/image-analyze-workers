@@ -456,6 +456,7 @@ public:
                         palm_result->palms[i].landmark_keys[j].y = (dst_points[0].y + minY) / height;
                         palm_result->palms[i].landmark_keys[j].z = landmark_ptr[j * 3 + 2];
                         palm_result->palms[i].score = *handflag_ptr;
+                        palm_result->palms[i].handedness = *handedness_ptr;
                     }
                 }
             }
@@ -474,6 +475,8 @@ public:
                 *currentOutputPosition = palm_result->palms[i].score;
                 currentOutputPosition++;
                 *currentOutputPosition = palm_result->palms[i].landmark_score;
+                currentOutputPosition++;
+                *currentOutputPosition = palm_result->palms[i].handedness;
                 currentOutputPosition++;
                 *currentOutputPosition = palm_result->palms[i].rotation;
                 currentOutputPosition++;
