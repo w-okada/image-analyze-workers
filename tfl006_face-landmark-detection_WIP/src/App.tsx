@@ -265,38 +265,37 @@ const App = () => {
                     const res = tflite.exec(config, params, snap)
 
                     const dstCtx = dst.getContext("2d")!
-                    dstCtx.putImageData(res, 0, 0)
-                    // dstCtx.fillStyle="#ff0000aa"
-                    // dstCtx.fillRect(108,98,116-108,185-98)
+                    dstCtx.drawImage(snap, 0, 0, dst.width, dst.height)
+                    res.forEach(hand=>{
+                        dstCtx.fillStyle="#ff0000aa";
+                        dstCtx.fillRect(                        
+                        (hand.palm.minX)*dst.width, 
+                        (hand.palm.minY)*dst.height, 
+                        (hand.palm.maxX - hand.palm.minX)*dst.width, (hand.palm.maxY - hand.palm.minY) *dst.height)
 
-                         
+                        dstCtx.fillStyle="#00ff00aa";
+                        dstCtx.fillRect(                        
+                            (hand.hand.minX)*dst.width, 
+                            (hand.hand.minY)*dst.height, 
+                            (hand.hand.maxX - hand.hand.minX)*dst.width, 
+                            (hand.hand.maxY - hand.hand.minY) *dst.height
+                        )
+                        dstCtx.fillStyle="#0000ffaa";
+                        hand.rotatedHand.positions.forEach(p=>{
+                            dstCtx.fillRect(p.x*dst.width, p.y*dst.height, 10,10)
+                        })
 
-                    // // old 255
-                    // const minX = 0.0940507*INPUT_WIDTH
-                    // const minY = 0.462365*INPUT_HEIGHT
-                    // const maxX = 0.438625*INPUT_WIDTH
-                    // const maxY = 0.806948*INPUT_HEIGHT
+                        dstCtx.fillStyle="#00ffffaa";
+                        hand.palmKeypoints.forEach(p=>{
+                            dstCtx.fillRect(p.x*dst.width, p.y*dst.height, 10,10)
+                        })
 
-                    // new 
-                    // const minX = 0.144223*INPUT_WIDTH
-                    // const minY =0.509382*INPUT_HEIGHT
-                    // const maxX = 0.366676*INPUT_WIDTH
-                    // const maxY =0.7318*INPUT_HEIGHT
+                        dstCtx.fillStyle="#ffffffaa";
+                        hand.landmarkKeypoints.forEach(p=>{
+                            dstCtx.fillRect(p.x*dst.width, p.y*dst.height, 10,10)
+                        })
 
-                    // const minX = 0.353351*INPUT_WIDTH
-                    // const minY =0.349766*INPUT_HEIGHT
-                    // const maxX = 0.519861*INPUT_WIDTH
-                    // const maxY =0.516098*INPUT_HEIGHT
-
-                    // const minX =  0.472038*INPUT_WIDTH
-                    // const minY =0.231114*INPUT_HEIGHT
-                    // const maxX = 0.654068*INPUT_WIDTH
-                    // const maxY =0.412961 *INPUT_HEIGHT
-
-
-                      
-                    // dstCtx.fillRect(minX, minY, maxX-minX, maxY-minY)
-
+                    })
                 }
             } catch (error) {
                 console.log("ERROR drawing", error);

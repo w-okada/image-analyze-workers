@@ -53,3 +53,35 @@ export interface TFLite extends EmscriptenModule {
 export const INPUT_WIDTH = 256
 export const INPUT_HEIGHT = 256
 
+export type Hand = {
+    score: number,
+    landmarkScore: number,
+    rotation: number,
+    palm: {
+        minX: number,
+        minY: number,
+        maxX: number,
+        maxY: number,
+    },
+    hand: {
+        minX: number,
+        minY: number,
+        maxX: number,
+        maxY: number,
+    },
+    rotatedHand: {
+        positions: {
+            x: number,
+            y: number
+        }[]
+    }
+    palmKeypoints: {
+        x: number,
+        y: number
+    }[],
+    landmarkKeypoints: {
+        x: number,
+        y: number
+    }[],
+}
+

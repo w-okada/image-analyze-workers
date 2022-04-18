@@ -5,7 +5,7 @@
 
 // MemoryUtil<unsigned char> *m = new MemoryUtil<unsigned char>();
 
-MemoryUtil<unsigned char, unsigned char> *m = new MemoryUtil<unsigned char, unsigned char>();
+MemoryUtil<unsigned char, float> *m = new MemoryUtil<unsigned char, float>();
 
 extern "C"
 {
@@ -59,17 +59,17 @@ extern "C"
     }
 
     EMSCRIPTEN_KEEPALIVE
-    unsigned char *getOutputBufferAddress()
+    float *getOutputBufferAddress()
     {
         return m->outputBuffer;
     }
 
-    EMSCRIPTEN_KEEPALIVE
-    int copySrc2Dst(int width, int height, int channel)
-    {
-        m->copySrc2Dst(width, height, channel);
-        return 0;
-    }
+    // EMSCRIPTEN_KEEPALIVE
+    // int copySrc2Dst(int width, int height, int channel)
+    // {
+    //     m->copySrc2Dst(width, height, channel);
+    //     return 0;
+    // }
 
     EMSCRIPTEN_KEEPALIVE
     int exec2(int width, int height)

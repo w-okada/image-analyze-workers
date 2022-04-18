@@ -37,6 +37,9 @@ extern "C"
         float hand_w;
         float hand_h;
         fvec2 hand_pos[4];
+
+        fvec3 landmark_keys[21];
+        float landmark_score;
     } palm_t;
 
     typedef struct _palm_detection_result_t

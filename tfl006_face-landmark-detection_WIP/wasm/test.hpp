@@ -45,6 +45,9 @@ private:
     int palmType = PALM_192;
 
 public:
+    ////////////////////////////////////
+    // Palm
+    ////////////////////////////////////
     char *modelBuffer;
     void initModelBuffer(int size)
     {
@@ -54,7 +57,6 @@ public:
     {
         return modelBuffer;
     }
-
     int loadModel(int size)
     {
         printf("[WASM] --------------------------------------------------------\n");
@@ -147,27 +149,6 @@ public:
 
         generate_ssd_anchors(&s_anchors, palmType);
         return 0;
-    }
-
-    T *inputBuffer;
-    void initInputBuffer(int width, int height, int channel)
-    {
-        inputBuffer = new T[width * height * channel];
-        initOutputBuffer(width, height, channel);
-    }
-    T *getInputBufferAddress()
-    {
-        return inputBuffer;
-    }
-
-    U *outputBuffer;
-    void initOutputBuffer(int width, int height, int channel)
-    {
-        outputBuffer = new T[width * height * channel];
-    }
-    U getOutputBufferAddress()
-    {
-        return outputBuffer;
     }
 
     ////////////////////////////////////
@@ -271,44 +252,65 @@ public:
         return 0;
     }
 
-    T *landmarkInputBuffer;
-    void initLandmarkInputBuffer(int width, int height, int channel)
+    unsigned char *inputBuffer;
+    void initInputBuffer(int width, int height, int channel)
     {
-        landmarkInputBuffer = new T[width * height * channel];
+        inputBuffer = new T[width * height * channel];
+        initOutputBuffer();
     }
-    T *getLandmarkInputBufferAddress()
+    unsigned char *getInputBufferAddress()
     {
-        return landmarkInputBuffer;
-    }
-
-    U *landmarkOutputBuffer;
-    void initLandmarkOutputBuffer(int width, int height, int channel)
-    {
-        landmarkOutputBuffer = new T[width * height * channel];
-    }
-    U getLandmarkOutputBufferAddress()
-    {
-        return landmarkOutputBuffer;
+        return inputBuffer;
     }
 
-    void copySrc2Dst(int width, int height, int channel)
+    float *outputBuffer;
+    void initOutputBuffer()
     {
-        if (outputBuffer == nullptr)
-        {
-            initOutputBuffer(width, height, channel);
-        }
-        for (int i = 0; i < width * height * channel; i++)
-        {
-            if (i % 4 == 0)
-            {
-                outputBuffer[i] = 10;
-            }
-            else
-            {
-                outputBuffer[i] = inputBuffer[i];
-            }
-        }
+        outputBuffer = new float[1024 * 4];
     }
+    float *getOutputBufferAddress()
+    {
+        return outputBuffer;
+    }
+
+    // T *landmarkInputBuffer;
+    // void initLandmarkInputBuffer(int width, int height, int channel)
+    // {
+    //     landmarkInputBuffer = new T[width * height * channel];
+    // }
+    // T *getLandmarkInputBufferAddress()
+    // {
+    //     return landmarkInputBuffer;
+    // }
+
+    // U *landmarkOutputBuffer;
+    // void initLandmarkOutputBuffer(int width, int height, int channel)
+    // {
+    //     landmarkOutputBuffer = new T[width * height * channel];
+    // }
+    // U getLandmarkOutputBufferAddress()
+    // {
+    //     return landmarkOutputBuffer;
+    // }
+
+    // void copySrc2Dst(int width, int height, int channel)
+    // {
+    //     if (outputBuffer == nullptr)
+    //     {
+    //         initOutputBuffer(width, height, channel);
+    //     }
+    //     for (int i = 0; i < width * height * channel; i++)
+    //     {
+    //         if (i % 4 == 0)
+    //         {
+    //             outputBuffer[i] = 10;
+    //         }
+    //         else
+    //         {
+    //             outputBuffer[i] = inputBuffer[i];
+    //         }
+    //     }
+    // }
 
     void exec2(int width, int height)
     {
@@ -366,8 +368,8 @@ public:
             // }
         }
 
-        cv::Mat out(height, width, CV_8UC4, outputBuffer);
-        inputImage.copyTo(out);
+        // cv::Mat out(height, width, CV_8UC4, outputBuffer);
+        // inputImage.copyTo(out);
 
         if (palm_result->num > 0)
         {
@@ -477,7 +479,7 @@ public:
                 CHECK_TFLITE_ERROR(landmarkInterpreter->Invoke() == kTfLiteOk);
 
                 float score = *handflag_ptr;
-                if (score > 0.04)
+                if (score > 0.1)
                 {
                     for (int j = 0; j < 21; j++)
                     {
@@ -491,20 +493,89 @@ public:
 
                         cv::perspectiveTransform(src_points, dst_points, reverse3x3);
 
-                        float x = dst_points[0].x + minX;
-                        float y = dst_points[0].y + minY;
+                        // float x = dst_points[0].x + minX;
+                        // float y = dst_points[0].y + minY;
+                        // float z = landmark_ptr[j * 3 + 2];
 
-                        if (*handedness_ptr > 0.5)
-                        {
-                            cv::line(out, cv::Point(x, y), cv::Point(x + 2, y + 2), cv::Scalar(200, 200, 0, 255), 20, 4);
-                        }
-                        else
-                        {
-                            cv::line(out, cv::Point(x, y), cv::Point(x + 2, y + 2), cv::Scalar(0, 200, 200, 255), 20, 4);
-                        }
+                        // if (*handedness_ptr > 0.5)
+                        // {
+                        //     cv::line(out, cv::Point(x, y), cv::Point(x + 2, y + 2), cv::Scalar(200, 200, 0, 255), 20, 4);
+                        // }
+                        // else
+                        // {
+                        //     cv::line(out, cv::Point(x, y), cv::Point(x + 2, y + 2), cv::Scalar(0, 200, 200, 255), 20, 4);
+                        // }
 
-                        printf("handflag::::%f(%f,%d, %d), %f(%f,%d, %d), %f %f\n", x, x_ratio, width, crop_width, y, y_ratio, height, crop_height, *handflag_ptr, *handedness_ptr);
+                        // printf("handflag::::%f(%f,%d, %d), %f(%f,%d, %d), %f %f\n", x, x_ratio, width, crop_width, y, y_ratio, height, crop_height, *handflag_ptr, *handedness_ptr);
+
+                        palm_result->palms[i].landmark_keys[j].x = (dst_points[0].x + minX) / width;
+                        palm_result->palms[i].landmark_keys[j].y = (dst_points[0].y + minY) / height;
+                        palm_result->palms[i].landmark_keys[j].z = landmark_ptr[j * 3 + 2];
+                        palm_result->palms[i].score = *handflag_ptr;
                     }
+                }
+            }
+        }
+
+        //// output
+        *outputBuffer = 0.0; // 検出した手の数を初期化
+        float *currentOutputPosition = outputBuffer + 1;
+        if (palm_result->num > 0)
+        {
+            for (int i = 0; i < palm_result->num; i++)
+            {
+
+                (*outputBuffer)++; // 検出した手の数をインクリメント
+                // score, rotateion
+                *currentOutputPosition = palm_result->palms[i].score;
+                currentOutputPosition++;
+                *currentOutputPosition = palm_result->palms[i].landmark_score;
+                currentOutputPosition++;
+                *currentOutputPosition = palm_result->palms[i].rotation;
+                currentOutputPosition++;
+
+                // palm minX, minY, maxX, maxY
+                *currentOutputPosition = palm_result->palms[i].rect.topleft.x;
+                currentOutputPosition++;
+                *currentOutputPosition = palm_result->palms[i].rect.topleft.y;
+                currentOutputPosition++;
+                *currentOutputPosition = palm_result->palms[i].rect.btmright.x;
+                currentOutputPosition++;
+                *currentOutputPosition = palm_result->palms[i].rect.btmright.y;
+                currentOutputPosition++;
+                // hand center, w,h
+                *currentOutputPosition = palm_result->palms[i].hand_cx - (palm_result->palms[i].hand_w / 2);
+                currentOutputPosition++;
+                *currentOutputPosition = palm_result->palms[i].hand_cy - (palm_result->palms[i].hand_h / 2);
+                currentOutputPosition++;
+                *currentOutputPosition = palm_result->palms[i].hand_cx + (palm_result->palms[i].hand_w / 2);
+                currentOutputPosition++;
+                *currentOutputPosition = palm_result->palms[i].hand_cy + (palm_result->palms[i].hand_h / 2);
+                currentOutputPosition++;
+                // rotated hand position
+                for (int j = 0; j < 4; j++)
+                {
+                    *currentOutputPosition = palm_result->palms[i].hand_pos[j].x;
+                    currentOutputPosition++;
+                    *currentOutputPosition = palm_result->palms[i].hand_pos[j].y;
+                    currentOutputPosition++;
+                }
+                // palm keypoint
+                for (int j = 0; j < 7; j++)
+                {
+                    *currentOutputPosition = palm_result->palms[i].keys[j].x;
+                    currentOutputPosition++;
+                    *currentOutputPosition = palm_result->palms[i].keys[j].y;
+                    currentOutputPosition++;
+                }
+
+                // landmark keypoint
+                for (int j = 0; j < 21; j++)
+                {
+                    *currentOutputPosition = palm_result->palms[i].landmark_keys[j].x;
+                    currentOutputPosition++;
+                    *currentOutputPosition = palm_result->palms[i].landmark_keys[j].y;
+                    currentOutputPosition++;
                 }
             }
         }
