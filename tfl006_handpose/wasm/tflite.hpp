@@ -272,7 +272,7 @@ public:
         return outputBuffer;
     }
 
-    void exec2(int width, int height, int max_palm_num)
+    void exec(int width, int height, int max_palm_num)
     {
         float *input = interpreter->typed_input_tensor<float>(0);
 

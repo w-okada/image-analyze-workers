@@ -31,14 +31,11 @@ export interface HandposeOperationParams {
 }
 
 export interface TFLite extends EmscriptenModule {
-    _getModelBufferAddress(): number;
     _getInputBufferAddress(): number;
     _getOutputBufferAddress(): number;
 
+    _getModelBufferAddress(): number;
     _getLandmarkModelBufferAddress(): number;
-    _getLandmarkInputBufferAddress(): number;
-    _getLandmarkOutputBufferAddress(): number;
-
 
     _initModelBuffer(size: number): void;
     _initLandmarkModelBuffer(size: number): void;
@@ -46,14 +43,12 @@ export interface TFLite extends EmscriptenModule {
 
     _loadModel(bufferSize: number): number;
     _loadLandmarkModel(bufferSize: number): number;
-    _exec2(widht: number, height: number, max_palm_num: number): number;
-    _copySrc2Dst(width: number, height: number, channel: number): void
+    _exec(widht: number, height: number, max_palm_num: number): number;
 }
-
 export const INPUT_WIDTH = 256
 export const INPUT_HEIGHT = 256
 
-export type Hand = {
+export type TFLiteHand = {
     score: number,
     landmarkScore: number,
     rotation: number,

@@ -77,9 +77,9 @@ extern "C"
     // }
 
     EMSCRIPTEN_KEEPALIVE
-    int exec2(int width, int height, int max_palm_num)
+    int exec(int width, int height, int max_palm_num)
     {
-        m->exec2(width, height, max_palm_num);
+        m->exec(width, height, max_palm_num);
         return 0;
     }
 }
