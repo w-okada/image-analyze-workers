@@ -88,11 +88,19 @@ export class LocalFM extends LocalWorker {
 
         if (config.modelType === ModelTypes.old) {
             this.model = await faceLandmarksDetection.load(faceLandmarksDetection.SupportedPackages.mediapipeFacemesh, config);
-            this.model2?.dispose();
+            try {
+                this.model2?.dispose();
+            } catch (error) {
+                console.log("this error is ignored", error)
+            }
             this.model2 = null;
         } else if (config.modelType === ModelTypes.mediapipe) {
             this.model = null;
-            this.model2?.dispose();
+            try {
+                this.model2?.dispose();
+            } catch (error) {
+                console.log("this error is ignored", error)
+            }
             this.model2 = await faceLandmarksDetectionCurrent.createDetector(faceLandmarksDetectionCurrent.SupportedModels.MediaPipeFaceMesh, {
                 runtime: "mediapipe",
                 refineLandmarks: config.model.refineLandmarks,
@@ -101,7 +109,11 @@ export class LocalFM extends LocalWorker {
             });
         } else {
             this.model = null;
-            this.model2?.dispose();
+            try {
+                this.model2?.dispose();
+            } catch (error) {
+                console.log("this error is ignored", error)
+            }
             this.model2 = await faceLandmarksDetectionCurrent.createDetector(faceLandmarksDetectionCurrent.SupportedModels.MediaPipeFaceMesh, {
                 runtime: "tfjs",
                 refineLandmarks: config.model.refineLandmarks,
