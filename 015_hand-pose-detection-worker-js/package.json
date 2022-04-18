@@ -1,0 +1,45 @@
+{
+    "name": "@dannadori/hand-pose-detection-worker-js",
+    "version": "1.0.2",
+    "description": "",
+    "main": "dist/hand-pose-detection-worker.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "webpack": "npx webpack --config webpack.config.js",
+        "clean": "rimraf dist/*",
+        "build": "npm-run-all clean webpack"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/w-okada/image-analyze-workers.git"
+    },
+    "keywords": [
+        "webworker",
+        "image processing",
+        "tensorflowjs"
+    ],
+    "author": "wataru.okada@flect.co.jp",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/w-okada/image-analyze-workers/issues"
+    },
+    "homepage": "https://github.com/w-okada/image-analyze-workers#readme",
+    "devDependencies": {
+        "npm-run-all": "^4.1.5",
+        "rimraf": "^3.0.2",
+        "ts-loader": "^9.2.8",
+        "tsconfig-paths": "^3.14.1",
+        "typescript": "^4.6.3",
+        "webpack": "^5.72.0",
+        "webpack-cli": "^4.9.2",
+        "worker-loader": "^3.0.8",
+        "worker-plugin": "^5.0.1"
+    },
+    "dependencies": {
+        "@dannadori/000_WorkerBase": "file:../000_WorkerBase",
+        "@tensorflow-models/hand-pose-detection": "^2.0.0",
+        "@tensorflow/tfjs": "^3.15.0",
+        "buffer": "^6.0.3",
+        "@tensorflow/tfjs-backend-wasm": "^3.15.0"
+    }
+}
