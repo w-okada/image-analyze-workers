@@ -319,13 +319,13 @@ public:
         CHECK_TFLITE_ERROR(interpreter->Invoke() == kTfLiteOk);
 
         //// decode keyoiints
-        float score_thresh = 0.7f;
+        float score_thresh = 0.2f;
         std::list<palm_t> palm_list;
 
         decode_keypoints(palm_list, score_thresh, points_ptr, scores_ptr, &s_anchors, palmType);
 
         //// NMS
-        float iou_thresh = 0.03f;
+        float iou_thresh = 0.005f;
         std::list<palm_t> palm_nms_list;
         non_max_suppression(palm_list, palm_nms_list, iou_thresh, max_palm_num);
         // std::for_each(
@@ -418,22 +418,22 @@ public:
 
                 int crop_width = maxX - minX;
                 int crop_height = maxY - minY;
-                // float org_aspect = (float)height / (float)width;
-                // float crop_aspect = (float)height / (float)width;
-                // if (org_aspect < crop_aspect)
-                // {
-                //     // cropの縦が大きい -> 縦を基準に横幅を算出
-                //     crop_width = crop_height * ((float)width / (float)height);
-                // }
-                // else
-                // {
-                //     // cropの横が大きい -> 横を基準に縦を算出
-                //     crop_height = crop_width * ((float)height / (float)width);
-                // }
-                // if (crop_height + minY > height)
-                // {
-                //     crop_height = height - minY;
-                // }
+                float org_aspect = (float)height / (float)width;
+                float crop_aspect = (float)height / (float)width;
+                if (org_aspect < crop_aspect)
+                {
+                    // cropの縦が大きい -> 縦を基準に横幅を算出
+                    crop_width = crop_height * ((float)width / (float)height);
+                }
+                else
+                {
+                    // cropの横が大きい -> 横を基準に縦を算出
+                    crop_height = crop_width * ((float)height / (float)width);
+                }
+                if (crop_height + minY > height)
+                {
+                    crop_height = height - minY;
+                }
 
                 cv::Mat hand(inputImage, cv::Rect(minX, minY, crop_width, crop_height));
                 // cv::Mat hand(squaredImage, cv::Rect(minX, minY, crop_width, crop_height));
