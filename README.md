@@ -60,24 +60,27 @@ Note. some module is not provided as webworker for safari because of it's restri
   - [Blazeface](#blazeface)
     - [installation and usage](#installation-and-usage-13)
     - [demo](#demo-13)
+  - [MediaPipe Hands](#mediapipe-hands)
+    - [installation and usage](#installation-and-usage-14)
+    - [demo](#demo-14)
 - [TFLite Wasm](#tflite-wasm)
   - [Google meet person segmentation(TFLite wasm)](#google-meet-person-segmentationtflite-wasm)
-    - [demo](#demo-14)
-  - [White-Box-Cartoon(TFLite wasm)](#white-box-cartoontflite-wasm)
     - [demo](#demo-15)
+  - [White-Box-Cartoon(TFLite wasm)](#white-box-cartoontflite-wasm)
+    - [demo](#demo-16)
     - [License](#license-1)
   - [ESPCN (TFLite wasm)](#espcn-tflite-wasm)
-    - [demo](#demo-16)
+    - [demo](#demo-17)
 - [Libs](#libs)
   - [FaceSwap](#faceswap)
-    - [demo](#demo-17)
+    - [demo](#demo-18)
 - [Experiments](#experiments)
   - [Exp.1 Multi-version based tfjs model](#exp1-multi-version-based-tfjs-model)
-    - [demo](#demo-18)
+    - [demo](#demo-19)
     - [src](#src)
     - [Citation](#citation-1)
   - [Exp.2 Performance improvement](#exp2-performance-improvement)
-    - [demo](#demo-19)
+    - [demo](#demo-20)
     - [src](#src-1)
     - [Citation](#citation-2)
 - [Reference](#reference-1)
@@ -297,6 +300,16 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t13_super-resolution
 ### demo
 
 https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t14_blazeface/index.html
+
+## MediaPipe Hands
+
+### installation and usage
+
+[See here](/image-analyze-workers)
+
+### demo
+
+https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/index.html
 
 # TFLite Wasm
 

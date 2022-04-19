@@ -64,7 +64,11 @@ onmessage = async (event) => {
         if (config.modelType === ModelTypes.old) {
             model = await faceLandmarksDetection.load(faceLandmarksDetection.SupportedPackages.mediapipeFacemesh, config);
             ctx.postMessage({ message: WorkerResponse.INITIALIZED });
-            model2?.dispose();
+            try {
+                model2?.dispose();
+            } catch (error) {
+                console.log("this error is ignored", error)
+            }
             model2 = null;
         } else if (config.modelType === ModelTypes.mediapipe) {
             // Maybe this module is not work.....(20220408)
@@ -81,7 +85,11 @@ onmessage = async (event) => {
                 console.log("error", error);
             }
             ctx.postMessage({ message: WorkerResponse.INITIALIZED });
-            prevModel2?.dispose();
+            try {
+                prevModel2?.dispose();
+            } catch (error) {
+                console.log("this error is ignored", error)
+            }
         } else {
             model = null;
             const prevModel2 = model2;

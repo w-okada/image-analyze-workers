@@ -150,7 +150,7 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
             console.log(event.target.files[0]);
             const reader = new FileReader();
             reader.onload = () => {
-                console.log("read image", reader.result);
+                // console.log("read image", reader.result);
                 props.onInputSourceChanged(reader.result as string);
             };
             reader.readAsDataURL(event.target.files[0]);
