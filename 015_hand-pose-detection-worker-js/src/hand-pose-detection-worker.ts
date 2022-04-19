@@ -73,12 +73,6 @@ export const generateDefaultHandPoseDetectionParams = () => {
     };
     return defaultParams;
 };
-declare interface AnchorsConfig {
-    w: number;
-    h: number;
-    x_center: number;
-    y_center: number;
-}
 export class LocalHP extends LocalWorker {
     model: HandDetector | null = null;
 
@@ -173,7 +167,7 @@ export class LocalHP extends LocalWorker {
             this.tflite!.HEAPU8.set(new Uint8Array(landmarkModel), landmarkModelBufferOffset);
             this.tflite!._loadLandmarkModel(landmarkModel.byteLength);
 
-            this.tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, 4)
+            this.tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, config.maxHands)
             this.tfliteInputAddress = this.tflite!._getInputBufferAddress()
             this.tfliteOutputAddress = this.tflite!._getOutputBufferAddress()
         }

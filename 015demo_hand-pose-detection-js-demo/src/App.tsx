@@ -153,28 +153,48 @@ const Controller = () => {
         integer: true,
     };
 
-    const movingAverageWindowSliderProps: CommonSliderProps = {
-        id: "moving-average-window-slider",
-        title: "moving average window",
-        currentValue: params.movingAverageWindow,
-        max: 100,
-        min: 1,
-        step: 1,
-        width: "30%",
-        onChange: (value: number) => {
-            params.movingAverageWindow = value;
-            setParams({ ...params });
-        },
-        integer: true,
-    };
+    const availableConfigTable = useMemo(() => {
+        return (
+            <table className="table table-compact w-full">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>type</th>
+                        <th>backend</th>
+                        <th>webworker</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>1</th>
+                        <td>mediapipe</td>
+                        <td>any(no difference)</td>
+                        <td>no</td>
+                    </tr>
+                    <tr>
+                        <th>2</th>
+                        <td>tfjs</td>
+                        <td>webgl,cpu</td>
+                        <td>yes</td>
+                    </tr>
+                    <tr>
+                        <th>3</th>
+                        <td>tflite</td>
+                        <td>wasm</td>
+                        <td>yes</td>
+                    </tr>
+                </tbody>
+            </table>
+        );
+    }, []);
 
     return (
         <div style={{ display: "flex", flexDirection: "column" }}>
             <Credit></Credit>
-            currently not work on webworker...
-            <div>mediapipe: local only(wasm, cpu is n/a</div>
-            <div>tfjs:local/remote(wasm is n/a)</div>
-            <div>tfjs_hb:</div>
+            <div>
+                <div>available config</div>
+                <div>{availableConfigTable}</div>
+            </div>
             <VideoInputSelector {...videoInputSelectorProps}></VideoInputSelector>
             <CommonSwitch {...onLocalSwitchProps}></CommonSwitch>
             <CommonSelector {...modelTypeSelectorProps}></CommonSelector>
@@ -186,7 +206,6 @@ const Controller = () => {
             <CommonSlider {...scoreThresholdSliderProps}></CommonSlider>
             <CommonSlider {...processWidthSliderProps}></CommonSlider>
             <CommonSlider {...processHeightSliderProps}></CommonSlider>
-            <CommonSlider {...movingAverageWindowSliderProps}></CommonSlider>
         </div>
     );
 };

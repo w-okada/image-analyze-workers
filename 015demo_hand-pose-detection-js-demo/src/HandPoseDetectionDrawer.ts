@@ -13,11 +13,11 @@ export class HandPoseDetectionDrawer {
             console.log("not ready:::", this.outputCanvas);
             return;
         }
-        console.log("Prediction", prediction)
-        const radius = 10
+        // console.log("Prediction", prediction)
+        const radius = 16
         const outputCtx = this.outputCanvas.getContext("2d")!;
         outputCtx.drawImage(snap, 0, 0, this.outputCanvas.width, this.outputCanvas.height);
-        outputCtx.fillStyle = "#00ff0066";
+        outputCtx.fillStyle = "#4169e1aa";
         prediction.forEach(hand => {
             if (config.modelType === "tflite") {
                 hand.keypoints.forEach(key => {
@@ -31,13 +31,14 @@ export class HandPoseDetectionDrawer {
                 fingers.forEach((x) => {
                     const points = FingerLookupIndices[x].map((idx: number) => { return hand.keypoints[idx] });
 
+                    outputCtx.lineWidth = 5;
+                    outputCtx.strokeStyle = "#c71585aa"
                     outputCtx.beginPath();
                     outputCtx.moveTo(points[0].x * this.outputCanvas!.width, points[0].y * this.outputCanvas!.height);
                     for (let i = 1; i < points.length; i++) {
                         const point = points[i];
                         outputCtx.lineTo(point.x * this.outputCanvas!.width, point.y * this.outputCanvas!.height);
                     }
-                    outputCtx.lineWidth = 3;
                     outputCtx.stroke();
                     outputCtx.closePath();
                 });

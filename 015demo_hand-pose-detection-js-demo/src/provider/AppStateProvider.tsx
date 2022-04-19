@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
 import { loadURLAsDataURL } from "../utils/urlReader";
-import { HandPoseDetectionConfig, HandPoseDetectionOperationParams, generateHandPoseDetectionDefaultConfig, generateDefaultHandPoseDetectionParams } from "@dannadori/hand-pose-detection-worker-js";
+import { HandPoseDetectionConfig, HandPoseDetectionOperationParams, generateHandPoseDetectionDefaultConfig, generateDefaultHandPoseDetectionParams, ModelTypes, BackendTypes } from "@dannadori/hand-pose-detection-worker-js";
 type Props = {
     children: ReactNode;
 };
@@ -38,6 +38,9 @@ export const useAppState = (): AppStateValue => {
 const initialInputSourcePath = "img/yuka_kawamura.jpg";
 
 const initialConfig = generateHandPoseDetectionDefaultConfig();
+initialConfig.modelType = ModelTypes.tflite;
+initialConfig.backendType = BackendTypes.wasm;
+initialConfig.processOnLocal = false;
 const initialParams = generateDefaultHandPoseDetectionParams();
 
 export const AppStateProvider = ({ children }: Props) => {
