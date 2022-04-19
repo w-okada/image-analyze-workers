@@ -1,6 +1,6 @@
 # MediaPipe Hands
 
-![image](https://user-images.githubusercontent.com/48346627/128611056-978ee70c-b893-4ee6-96dd-650dec002eba.png)
+![image](https://user-images.githubusercontent.com/48346627/164013853-e05547f6-f0a3-4477-9b29-06f19b23c88f.png)
 
 ## API
 
