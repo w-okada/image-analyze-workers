@@ -63,8 +63,8 @@ compute_hand_rect(palm_t &palm)
     height = long_side;
     float hand_w = width * 2.6f;
     float hand_h = height * 2.6f;
-    // float hand_w = width * 2.0f;
-    // float hand_h = height * 2.0f;
+    // float hand_w = width * 2.2f;
+    // float hand_h = height * 2.2f;
 
     palm.hand_cx = hand_cx;
     palm.hand_cy = hand_cy;

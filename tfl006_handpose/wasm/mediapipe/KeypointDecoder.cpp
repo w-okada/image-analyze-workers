@@ -41,7 +41,7 @@ int decode_keypoints(std::list<palm_t> &palm_list, float score_thresh, float *po
             float sy = p[1];
             float w = p[2];
             float h = p[3];
-            // printf("pos!!!!! %f %f %f %f\n", sx, sy, w, h);
+            // printf("pos!!!!! %f %f %f %f, %d, %d\n", sx, sy, w, h, img_w, img_h);
 
             float cx = sx + anchor.x_center * img_w;
             float cy = sy + anchor.y_center * img_h;

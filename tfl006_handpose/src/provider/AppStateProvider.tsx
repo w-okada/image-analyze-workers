@@ -54,6 +54,8 @@ export const generateDefaultHandposeParams = () => {
     const defaultParams: HandposeOperationParams = {
         processWidth: 1024 ,
         processHeight: 1024 ,
+        // processWidth: 840 ,
+        // processHeight: 360 ,
     };
     return defaultParams;
 };

@@ -256,6 +256,7 @@ public:
     {
         inputBuffer = new unsigned char[width * height * channel];
         initOutputBuffer();
+        initTemporaryBuffer();
     }
     unsigned char *getInputBufferAddress()
     {
@@ -272,15 +273,34 @@ public:
         return outputBuffer;
     }
 
+    unsigned char *temporaryBuffer;
+    void initTemporaryBuffer()
+    {
+        temporaryBuffer = new unsigned char[1024 * 1024 * 4];
+    }
+    unsigned char *getTemporaryBufferAddress()
+    {
+        return temporaryBuffer;
+    }
+
     void exec(int width, int height, int max_palm_num)
     {
         float *input = interpreter->typed_input_tensor<float>(0);
 
         // printf("[WASM] %lf , type:%d, input[w:%d, h:%d]  palm_input[%d, %d] landmark_input[%d, %d]\n", *input, palmType, width, height, palm_input_width, palm_input_height, landmark_input_width, landmark_input_height);
         cv::Mat inputImage(height, width, CV_8UC4, inputBuffer);
+        // int squaredSize = std::max(height, width);
+        // cv::Mat squaredImage(squaredSize, squaredSize, CV_8UC4, temporaryBuffer);
+        // cv::Mat roi1(squaredImage, cv::Rect(0, 0, squaredSize, squaredSize));
+        // roi1 = cv::Scalar(0, 255, 0, 255);
+        // cv::Mat roi2(squaredImage, cv::Rect(0, 0, width, height));
+        // inputImage.copyTo(roi2);
+
         cv::Mat inputImageRGB(height, width, CV_8UC3);
+        // cv::Mat inputImageRGB(squaredSize, squaredSize, CV_8UC3);
         int fromTo[] = {0, 0, 1, 1, 2, 2}; // split alpha channel
         cv::mixChannels(&inputImage, 1, &inputImageRGB, 1, fromTo, 3);
+        // cv::mixChannels(&squaredImage, 1, &inputImageRGB, 1, fromTo, 3);
         cv::Mat resizedInputImageRGB(palm_input_height, palm_input_width, CV_8UC3);
         cv::resize(inputImageRGB, resizedInputImageRGB, resizedInputImageRGB.size());
         cv::Mat inputImage32F(palm_input_height, palm_input_width, CV_32FC3, input);
@@ -341,11 +361,15 @@ public:
                 // }
                 int minX = width;
                 int minY = height;
+                // int minX = squaredSize;
+                // int minY = squaredSize;
                 int maxX = 0;
                 int maxY = 0;
 
                 for (int j = 0; j < 4; j++)
                 {
+                    // int pos_x = palm_result->palms[i].hand_pos[j].x * squaredSize;
+                    // int pos_y = palm_result->palms[i].hand_pos[j].y * squaredSize;
                     int pos_x = palm_result->palms[i].hand_pos[j].x * width;
                     int pos_y = palm_result->palms[i].hand_pos[j].y * height;
 
@@ -375,6 +399,10 @@ public:
                 {
                     maxX = width;
                 }
+                // if (maxX > squaredSize)
+                // {
+                //     maxX = squaredSize;
+                // }
                 if (minY < 0)
                 {
                     minY = 0;
@@ -383,22 +411,43 @@ public:
                 {
                     maxY = height;
                 }
+                // if (maxY > squaredSize)
+                // {
+                //     maxY = squaredSize;
+                // }
 
                 float *landmarkInput = landmarkInterpreter->typed_input_tensor<float>(0);
 
                 int crop_width = maxX - minX;
                 int crop_height = maxY - minY;
+                // float org_aspect = (float)height / (float)width;
+                // float crop_aspect = (float)height / (float)width;
+                // if (org_aspect < crop_aspect)
+                // {
+                //     // cropの縦が大きい -> 縦を基準に横幅を算出
+                //     crop_width = crop_height * ((float)width / (float)height);
+                // }
+                // else
+                // {
+                //     // cropの横が大きい -> 横を基準に縦を算出
+                //     crop_height = crop_width * ((float)height / (float)width);
+                // }
+                // if (crop_height + minY > height)
+                // {
+                //     crop_height = height - minY;
+                // }
 
-                // printf("crop::%d, %d, %d, %d\n", minX, minY, crop_width, crop_height);
                 cv::Mat hand(inputImage, cv::Rect(minX, minY, crop_width, crop_height));
+                // cv::Mat hand(squaredImage, cv::Rect(minX, minY, crop_width, crop_height));
+
                 float centerX = crop_width / 2;
                 float centerY = crop_height / 2;
 
                 cv::Point2f center = cv::Point2f(centerX, centerY);
-                // printf("rotation: %f, center:[%f, %f(%d,%d)]\n", palm_result->palms[i].rotation, centerX, centerY, crop_width, crop_height);
                 cv::Mat change = cv::getRotationMatrix2D(center, palm_result->palms[i].rotation * 90, 1);
                 cv::Mat reverse;
-                cv::warpAffine(hand, hand, change, hand.size(), cv::INTER_CUBIC, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+                cv::Mat rotated_hand(hand.size(), CV_8UC4);
+                cv::warpAffine(hand, rotated_hand, change, rotated_hand.size(), cv::INTER_CUBIC, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
                 cv::invertAffineTransform(change, reverse);
                 cv::Mat reverse3x3;
                 reverse3x3.push_back(reverse.row(0));
@@ -408,7 +457,7 @@ public:
 
                 // cv::Mat resized(height, width, CV_8UC4, outputBuffer);
                 cv::Mat resized(landmark_input_height, landmark_input_width, CV_8UC4);
-                cv::resize(hand, resized, resized.size(), 0, 0, cv::INTER_LINEAR);
+                cv::resize(rotated_hand, resized, resized.size(), 0, 0, cv::INTER_LINEAR);
 
                 cv::Mat inputImageRGB(landmark_input_height, landmark_input_width, CV_8UC3);
                 int fromTo[] = {0, 0, 1, 1, 2, 2}; // split alpha channel
@@ -416,14 +465,21 @@ public:
                 cv::Mat inputImage32F(landmark_input_height, landmark_input_width, CV_32FC3, landmarkInput);
                 inputImageRGB.convertTo(inputImage32F, CV_32FC3);
 
-                float mean = 128.0f;
-                float std = 128.0f;
-                inputImage32F = (inputImage32F - mean) / std;
+                if (palmType == PALM_256)
+                {
+                    float mean = 128.0f;
+                    float std = 128.0f;
+                    inputImage32F = (inputImage32F - mean) / std;
+                }
+                else
+                {
+                    inputImage32F = inputImage32F / 255.0;
+                }
 
                 CHECK_TFLITE_ERROR(landmarkInterpreter->Invoke() == kTfLiteOk);
 
                 float score = *handflag_ptr;
-                if (score > 0.1)
+                if (score > 0.0000001)
                 {
                     for (int j = 0; j < 21; j++)
                     {
@@ -454,6 +510,8 @@ public:
 
                         palm_result->palms[i].landmark_keys[j].x = (dst_points[0].x + minX) / width;
                         palm_result->palms[i].landmark_keys[j].y = (dst_points[0].y + minY) / height;
+                        // palm_result->palms[i].landmark_keys[j].x = (dst_points[0].x + minX) / squaredSize;
+                        // palm_result->palms[i].landmark_keys[j].y = (dst_points[0].y + minY) / squaredSize;
                         palm_result->palms[i].landmark_keys[j].z = landmark_ptr[j * 3 + 2];
                         palm_result->palms[i].score = *handflag_ptr;
                         palm_result->palms[i].handedness = *handedness_ptr;
@@ -463,6 +521,12 @@ public:
         }
 
         //// output
+        /////
+        float shiftRatioX = 1;
+        float shiftRatioY = 1;
+        // float shiftRatioX = squaredSize / width;
+        // float shiftRatioY = squaredSize / height;
+        ////
         *outputBuffer = 0.0; // 検出した手の数を初期化
         float *currentOutputPosition = outputBuffer + 1;
         if (palm_result->num > 0)
@@ -482,46 +546,46 @@ public:
                 currentOutputPosition++;
 
                 // palm minX, minY, maxX, maxY
-                *currentOutputPosition = palm_result->palms[i].rect.topleft.x;
+                *currentOutputPosition = palm_result->palms[i].rect.topleft.x * shiftRatioX;
                 currentOutputPosition++;
-                *currentOutputPosition = palm_result->palms[i].rect.topleft.y;
+                *currentOutputPosition = palm_result->palms[i].rect.topleft.y * shiftRatioY;
                 currentOutputPosition++;
-                *currentOutputPosition = palm_result->palms[i].rect.btmright.x;
+                *currentOutputPosition = palm_result->palms[i].rect.btmright.x * shiftRatioX;
                 currentOutputPosition++;
-                *currentOutputPosition = palm_result->palms[i].rect.btmright.y;
+                *currentOutputPosition = palm_result->palms[i].rect.btmright.y * shiftRatioY;
                 currentOutputPosition++;
                 // hand center, w,h
-                *currentOutputPosition = palm_result->palms[i].hand_cx - (palm_result->palms[i].hand_w / 2);
+                *currentOutputPosition = (palm_result->palms[i].hand_cx - (palm_result->palms[i].hand_w / 2)) * shiftRatioX;
                 currentOutputPosition++;
-                *currentOutputPosition = palm_result->palms[i].hand_cy - (palm_result->palms[i].hand_h / 2);
+                *currentOutputPosition = (palm_result->palms[i].hand_cy - (palm_result->palms[i].hand_h / 2)) * shiftRatioY;
                 currentOutputPosition++;
-                *currentOutputPosition = palm_result->palms[i].hand_cx + (palm_result->palms[i].hand_w / 2);
+                *currentOutputPosition = (palm_result->palms[i].hand_cx + (palm_result->palms[i].hand_w / 2)) * shiftRatioX;
                 currentOutputPosition++;
-                *currentOutputPosition = palm_result->palms[i].hand_cy + (palm_result->palms[i].hand_h / 2);
+                *currentOutputPosition = (palm_result->palms[i].hand_cy + (palm_result->palms[i].hand_h / 2)) * shiftRatioY;
                 currentOutputPosition++;
                 // rotated hand position
                 for (int j = 0; j < 4; j++)
                 {
-                    *currentOutputPosition = palm_result->palms[i].hand_pos[j].x;
+                    *currentOutputPosition = palm_result->palms[i].hand_pos[j].x * shiftRatioX;
                     currentOutputPosition++;
-                    *currentOutputPosition = palm_result->palms[i].hand_pos[j].y;
+                    *currentOutputPosition = palm_result->palms[i].hand_pos[j].y * shiftRatioY;
                     currentOutputPosition++;
                 }
                 // palm keypoint
                 for (int j = 0; j < 7; j++)
                 {
-                    *currentOutputPosition = palm_result->palms[i].keys[j].x;
+                    *currentOutputPosition = palm_result->palms[i].keys[j].x * shiftRatioX;
                     currentOutputPosition++;
-                    *currentOutputPosition = palm_result->palms[i].keys[j].y;
+                    *currentOutputPosition = palm_result->palms[i].keys[j].y * shiftRatioY;
                     currentOutputPosition++;
                 }
 
                 // landmark keypoint
                 for (int j = 0; j < 21; j++)
                 {
-                    *currentOutputPosition = palm_result->palms[i].landmark_keys[j].x;
+                    *currentOutputPosition = palm_result->palms[i].landmark_keys[j].x * shiftRatioX;
                     currentOutputPosition++;
-                    *currentOutputPosition = palm_result->palms[i].landmark_keys[j].y;
+                    *currentOutputPosition = palm_result->palms[i].landmark_keys[j].y * shiftRatioY;
                     currentOutputPosition++;
                 }
             }

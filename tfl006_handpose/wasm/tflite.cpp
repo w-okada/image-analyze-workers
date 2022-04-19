@@ -69,6 +69,12 @@ extern "C"
         return m->outputBuffer;
     }
 
+    EMSCRIPTEN_KEEPALIVE
+    unsigned char *getTemporaryBufferAddress()
+    {
+        return m->temporaryBuffer;
+    }
+
     // EMSCRIPTEN_KEEPALIVE
     // int copySrc2Dst(int width, int height, int channel)
     // {

@@ -33,6 +33,7 @@ export interface HandposeOperationParams {
 export interface TFLite extends EmscriptenModule {
     _getInputBufferAddress(): number;
     _getOutputBufferAddress(): number;
+    _getTemporaryBufferAddress(): number
 
     _getModelBufferAddress(): number;
     _getLandmarkModelBufferAddress(): number;
