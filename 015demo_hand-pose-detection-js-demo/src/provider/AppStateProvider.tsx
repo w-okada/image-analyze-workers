@@ -35,7 +35,7 @@ export const useAppState = (): AppStateValue => {
     return state;
 };
 
-const initialInputSourcePath = "mov/Pay.mp4";
+const initialInputSourcePath = "mov/Hands.mp4";
 
 const initialConfig = generateHandPoseDetectionDefaultConfig();
 initialConfig.modelType = ModelTypes.tflite;

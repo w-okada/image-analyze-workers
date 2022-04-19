@@ -303,9 +303,11 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t14_blazeface/index.
 
 ## MediaPipe Hands
 
+![image](https://user-images.githubusercontent.com/48346627/164013853-e05547f6-f0a3-4477-9b29-06f19b23c88f.png)
+
 ### installation and usage
 
-[See here](/image-analyze-workers)
+[See here](/015_hand-pose-detection-worker-js)
 
 ### demo
 
