@@ -35,7 +35,7 @@ export const useAppState = (): AppStateValue => {
     return state;
 };
 
-const initialInputSourcePath = "img/yuka_kawamura.jpg";
+const initialInputSourcePath = "mov/Pay.mp4";
 
 const initialConfig = generateHandPoseDetectionDefaultConfig();
 initialConfig.modelType = ModelTypes.tflite;
