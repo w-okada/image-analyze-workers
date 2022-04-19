@@ -52,19 +52,19 @@ export class TFLiteWrapper {
         // this.tflite!._copySrc2Dst(this.width, this.height, 4);
         this.tflite!._exec(params.processWidth, params.processHeight, 4);
 
-        // ////////////////////////
-        // // for debug
-        // /////////////////////////
-        // const tempoaryAddress = this.tflite!._getTemporaryBufferAddress()
-        // const tmpRes = new Uint8ClampedArray(this.tflite!.HEAPU8.slice(tempoaryAddress, tempoaryAddress + params.processWidth * params.processWidth * 4));
-        // console.log("tempRES", tmpRes)
-        // console.log("params width", params.processWidth, params.processWidth)
-        // try {
-        //     // this.tempImage = new ImageData(tmpRes, params.processWidth, params.processHeight);
-        //     this.tempImage = new ImageData(tmpRes, 840, 840);
-        // } catch (err) {
-        //     console.log(err)
-        // }
+        ////////////////////////
+        // for debug
+        /////////////////////////
+        const tempoaryAddress = this.tflite!._getTemporaryBufferAddress()
+        const tmpRes = new Uint8ClampedArray(this.tflite!.HEAPU8.slice(tempoaryAddress, tempoaryAddress + params.processWidth * params.processWidth * 4));
+        console.log("tempRES", tmpRes)
+        console.log("params width", params.processWidth, params.processWidth)
+        try {
+            this.tempImage = new ImageData(tmpRes, params.processWidth, params.processHeight);
+            // this.tempImage = new ImageData(tmpRes, 840, 840);
+        } catch (err) {
+            console.log(err)
+        }
 
         const e = this.tflite!._getOutputBufferAddress()
         // const outImage = new ImageData(new Uint8ClampedArray(this.tflite!.HEAPU8.slice(e, e + params.processWidth * params.processHeight * 4)), params.processWidth, params.processHeight)

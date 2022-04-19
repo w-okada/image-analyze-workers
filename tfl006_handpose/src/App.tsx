@@ -234,15 +234,15 @@ const App = () => {
             try {
                 if (snap.width > 0 && snap.height > 0) {
                     const res = tflite.exec(config, params, snap)
-                    // const tempImage = tflite.getTemporaryImage()
-                    // if(tempImage){
-                    //     const testCanvas = document.getElementById("test") as HTMLCanvasElement
-                    //     if(testCanvas.width!=tempImage.width ||testCanvas.height!=tempImage.height){
-                    //         testCanvas.width=tempImage.width
-                    //         testCanvas.height=tempImage.height
-                    //     }
-                    //     testCanvas.getContext("2d")!.putImageData(tempImage,0,0);
-                    // }
+                    const tempImage = tflite.getTemporaryImage()
+                    if(tempImage){
+                        const testCanvas = document.getElementById("test") as HTMLCanvasElement
+                        if(testCanvas.width!=tempImage.width ||testCanvas.height!=tempImage.height){
+                            testCanvas.width=tempImage.width
+                            testCanvas.height=tempImage.height
+                        }
+                        testCanvas.getContext("2d")!.putImageData(tempImage,0,0);
+                    }
 
                     const dstCtx = dst.getContext("2d")!
                     dstCtx.drawImage(snap, 0, 0, dst.width, dst.height)

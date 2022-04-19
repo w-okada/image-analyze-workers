@@ -290,11 +290,9 @@ public:
         // printf("[WASM] %lf , type:%d, input[w:%d, h:%d]  palm_input[%d, %d] landmark_input[%d, %d]\n", *input, palmType, width, height, palm_input_width, palm_input_height, landmark_input_width, landmark_input_height);
         cv::Mat inputImage(height, width, CV_8UC4, inputBuffer);
         // int squaredSize = std::max(height, width);
-        // cv::Mat squaredImage(squaredSize, squaredSize, CV_8UC4, temporaryBuffer);
-        // cv::Mat roi1(squaredImage, cv::Rect(0, 0, squaredSize, squaredSize));
+        cv::Mat temporaryImage(1024, 1024, CV_8UC4, temporaryBuffer);
+        // cv::Mat roi1(temporaryImage, cv::Rect(0, 0, squaredSize, squaredSize));
         // roi1 = cv::Scalar(0, 255, 0, 255);
-        // cv::Mat roi2(squaredImage, cv::Rect(0, 0, width, height));
-        // inputImage.copyTo(roi2);
 
         cv::Mat inputImageRGB(height, width, CV_8UC3);
         // cv::Mat inputImageRGB(squaredSize, squaredSize, CV_8UC3);
@@ -444,7 +442,7 @@ public:
                 float centerY = crop_height / 2;
 
                 cv::Point2f center = cv::Point2f(centerX, centerY);
-                cv::Mat change = cv::getRotationMatrix2D(center, palm_result->palms[i].rotation * 90, 1);
+                cv::Mat change = cv::getRotationMatrix2D(center, palm_result->palms[i].rotation * 60, 1);
                 cv::Mat reverse;
                 cv::Mat rotated_hand(hand.size(), CV_8UC4);
                 cv::warpAffine(hand, rotated_hand, change, rotated_hand.size(), cv::INTER_CUBIC, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
@@ -454,6 +452,10 @@ public:
                 reverse3x3.push_back(reverse.row(1));
                 cv::Mat none = (cv::Mat_<double>(1, 3) << 0.0, 0.0, 1.0);
                 reverse3x3.push_back(none.row(0));
+
+                cv::Mat roi2(temporaryImage, cv::Rect(0, 0, crop_width, crop_height));
+                rotated_hand.copyTo(roi2);
+                // printf("Rotation: %f\n", palm_result->palms[i].rotation);
 
                 // cv::Mat resized(height, width, CV_8UC4, outputBuffer);
                 cv::Mat resized(landmark_input_height, landmark_input_width, CV_8UC4);
