@@ -1,0 +1,45 @@
+{
+    "name": "@dannadori/face-landmark-detection-worker-js",
+    "description": "",
+    "main": "dist/face-landmark-detection-worker.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "webpack": "npx webpack --config webpack.config.js",
+        "clean": "rimraf dist/*",
+        "build": "npm-run-all clean webpack"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/w-okada/image-analyze-workers"
+    },
+    "keywords": [
+        "webworker",
+        "image processing",
+        "tensorflowjs"
+    ],
+    "author": "wataru.okada@flect.co.jp",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/w-okada/image-analyze-workers"
+    },
+    "homepage": "https://github.com/w-okada/image-analyze-workers",
+    "devDependencies": {
+        "@types/node": "^17.0.25",
+        "npm-run-all": "^4.1.5",
+        "rimraf": "^3.0.2",
+        "ts-loader": "^9.2.8",
+        "tsconfig-paths": "^3.14.1",
+        "typescript": "^4.6.3",
+        "webpack": "^5.72.0",
+        "webpack-cli": "^4.9.2",
+        "worker-loader": "^3.0.8"
+    },
+    "dependencies": {
+        "@dannadori/000_WorkerBase": "file:../000_WorkerBase",
+        "@mediapipe/face_mesh": "^0.4.1633559619",
+        "@tensorflow-models/face-landmarks-detection": "^1.0.1",
+        "@tensorflow/tfjs": "^3.15.0",
+        "@tensorflow/tfjs-backend-wasm": "^3.15.0"
+    },
+    "version": "0.0.3"
+}
