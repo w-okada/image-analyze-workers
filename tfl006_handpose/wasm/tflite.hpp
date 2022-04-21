@@ -585,6 +585,8 @@ public:
                     currentOutputPosition++;
                     *currentOutputPosition = palm_result->palms[i].landmark_keys[j].y * shiftRatioY;
                     currentOutputPosition++;
+                    *currentOutputPosition = palm_result->palms[i].landmark_keys[j].z;
+                    currentOutputPosition++;
                 }
             }
         }

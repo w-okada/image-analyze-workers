@@ -75,9 +75,9 @@ export class TFLiteWrapper {
             // 12: score and rects
             //  8: ratated hand
             // 14: palm keypoints
-            // 42: landmark keypoints
-            // -> 12 + 8 + 14 + 42 = 76
-            const offset = e / 4 + 1 + i * (12 + 8 + 14 + 42)
+            // 63: landmark keypoints
+            // -> 12 + 8 + 14 + 63 = 97
+            const offset = e / 4 + 1 + i * (97)
             const hand: TFLiteHand = {
                 score: this.tflite!.HEAPF32[offset + 0],
                 landmarkScore: this.tflite!.HEAPF32[offset + 1],
@@ -105,24 +105,25 @@ export class TFLiteWrapper {
                 ],
             }
             for (let j = 0; j < 4; j++) {
-                let rotatedOffset = (e / 4 + 1) + (i * 76) + (12) + (j * 2)
+                let rotatedOffset = (e / 4 + 1) + (i * 97) + (12) + (j * 2)
                 hand.rotatedHand.positions.push({
                     x: this.tflite!.HEAPF32[rotatedOffset + 0],
                     y: this.tflite!.HEAPF32[rotatedOffset + 1],
                 })
             }
             for (let j = 0; j < 7; j++) {
-                let palmKeypointOffset = (e / 4 + 1) + (i * 76) + (12 + 8) + (j * 2)
+                let palmKeypointOffset = (e / 4 + 1) + (i * 97) + (12 + 8) + (j * 2)
                 hand.palmKeypoints.push({
                     x: this.tflite!.HEAPF32[palmKeypointOffset + 0],
                     y: this.tflite!.HEAPF32[palmKeypointOffset + 1],
                 })
             }
             for (let j = 0; j < 21; j++) {
-                let landmarkKeypointOffset = (e / 4 + 1) + (i * 76) + (12 + 8 + 14) + (j * 2)
+                let landmarkKeypointOffset = (e / 4 + 1) + (i * 97) + (12 + 8 + 14) + (j * 3)
                 hand.landmarkKeypoints.push({
                     x: this.tflite!.HEAPF32[landmarkKeypointOffset + 0],
                     y: this.tflite!.HEAPF32[landmarkKeypointOffset + 1],
+                    z: this.tflite!.HEAPF32[landmarkKeypointOffset + 2],
                 })
             }
             hands.push(hand)

@@ -78,7 +78,8 @@ export type TFLiteHand = {
     }[],
     landmarkKeypoints: {
         x: number,
-        y: number
+        y: number,
+        z: number
     }[],
 }
 
