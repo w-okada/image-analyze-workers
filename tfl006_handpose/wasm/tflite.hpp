@@ -16,10 +16,6 @@ std::unique_ptr<tflite::Interpreter> interpreter;
 std::unique_ptr<tflite::Interpreter> landmarkInterpreter;
 static std::vector<Anchor> s_anchors;
 
-/* -------------------------------------------------- *
- *  Decode palm detection result
- * -------------------------------------------------- */
-
 #define CHECK_TFLITE_ERROR(x)                                  \
     if (!(x))                                                  \
     {                                                          \
