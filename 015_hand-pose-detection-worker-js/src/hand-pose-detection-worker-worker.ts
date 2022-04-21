@@ -51,9 +51,9 @@ const predict = async (config: HandPoseDetectionConfig, params: HandPoseDetectio
             // 12: score and rects
             //  8: ratated hand
             // 14: palm keypoints
-            // 42: landmark keypoints
-            // -> 12 + 8 + 14 + 42 = 76
-            const offset = tfliteOutputAddress / 4 + 1 + i * (12 + 8 + 14 + 42)
+            // 63: landmark keypoints
+            // -> 12 + 8 + 14 + 63 = 97
+            const offset = tfliteOutputAddress / 4 + 1 + i * (97)
             const hand: TFLiteHand = {
                 score: tflite!.HEAPF32[offset + 0],
                 landmarkScore: tflite!.HEAPF32[offset + 1],
@@ -80,24 +80,25 @@ const predict = async (config: HandPoseDetectionConfig, params: HandPoseDetectio
                 ],
             }
             for (let j = 0; j < 4; j++) {
-                let rotatedOffset = (tfliteOutputAddress / 4 + 1) + (i * 76) + (12) + (j * 2)
+                let rotatedOffset = (tfliteOutputAddress / 4 + 1) + (i * 97) + (12) + (j * 2)
                 hand.rotatedHand.positions.push({
                     x: tflite!.HEAPF32[rotatedOffset + 0],
                     y: tflite!.HEAPF32[rotatedOffset + 1],
                 })
             }
             for (let j = 0; j < 7; j++) {
-                let palmKeypointOffset = (tfliteOutputAddress / 4 + 1) + (i * 76) + (12 + 8) + (j * 2)
+                let palmKeypointOffset = (tfliteOutputAddress / 4 + 1) + (i * 97) + (12 + 8) + (j * 2)
                 hand.palmKeypoints.push({
                     x: tflite!.HEAPF32[palmKeypointOffset + 0],
                     y: tflite!.HEAPF32[palmKeypointOffset + 1],
                 })
             }
             for (let j = 0; j < 21; j++) {
-                let landmarkKeypointOffset = (tfliteOutputAddress / 4 + 1) + (i * 76) + (12 + 8 + 14) + (j * 2)
+                let landmarkKeypointOffset = (tfliteOutputAddress / 4 + 1) + (i * 97) + (12 + 8 + 14) + (j * 3)
                 hand.landmarkKeypoints.push({
                     x: tflite!.HEAPF32[landmarkKeypointOffset + 0],
                     y: tflite!.HEAPF32[landmarkKeypointOffset + 1],
+                    z: tflite!.HEAPF32[landmarkKeypointOffset + 2],
                 })
             }
             tfliteHands.push(hand)
