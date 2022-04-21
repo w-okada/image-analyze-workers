@@ -248,6 +248,15 @@ const App = () => {
 
 
                     res.forEach(face=>{
+                        if(face.score < 0.01 || face.landmarkScore < 0.01){
+                            return
+                        }
+                        const score =face.score.toFixed(2)
+                        const lscore = face.landmarkScore.toFixed(2)
+                        dstCtx.fillStyle="#000000";
+                        dstCtx.font = 'bold 48pt sans-serif';
+                        dstCtx.fillText(`${score}/${lscore}`, (face.face.minX)*dst.width, (face.face.minY)*dst.height)
+
                         dstCtx.fillStyle="#ff0000aa";
                         dstCtx.fillRect(                        
                         (face.face.minX)*dst.width, 

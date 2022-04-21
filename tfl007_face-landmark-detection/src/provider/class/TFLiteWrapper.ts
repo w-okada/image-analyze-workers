@@ -50,7 +50,7 @@ export class TFLiteWrapper {
 
         this.tflite!.HEAPU8.set(imageData.data, this.imageInputAddress);
         // this.tflite!._copySrc2Dst(this.width, this.height, 4);
-        this.tflite!._exec(params.processWidth, params.processHeight, 4);
+        this.tflite!._exec(params.processWidth, params.processHeight, 1);
 
         ////////////////////////
         // for debug

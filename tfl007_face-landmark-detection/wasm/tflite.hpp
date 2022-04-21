@@ -489,7 +489,103 @@ public:
                 float score = *faceflag_ptr;
                 if (score > 0.0000001)
                 {
-                    face_result->faces[i].score = *faceflag_ptr;
+                    face_result->faces[i].landmark_score = *faceflag_ptr;
+                    ////////
+                    // pattern1. apply affin at one time -> no improvment for processing time
+                    ////////
+                    // std::vector<cv::Point2f> src_points;
+                    // std::vector<cv::Point2f> dst_points;
+                    // // landmark
+                    // for (int j = 0; j < 468; j++)
+                    // {
+                    //     src_points.push_back(cv::Point2f(landmark_ptr[j * 3 + 0], landmark_ptr[j * 3 + 1]));
+                    // }
+                    // // lip
+                    // for (int j = 0; j < 80; j++)
+                    // {
+                    //     src_points.push_back(cv::Point2f(output_lips_ptr[j * 2 + 0], output_lips_ptr[j * 2 + 1]));
+                    // }
+                    // // left eye
+                    // for (int j = 0; j < 71; j++)
+                    // {
+                    //     src_points.push_back(cv::Point2f(output_left_eye_ptr[j * 2 + 0], output_left_eye_ptr[j * 2 + 1]));
+                    // }
+                    // // right eye
+                    // for (int j = 0; j < 71; j++)
+                    // {
+                    //     src_points.push_back(cv::Point2f(output_right_eye_ptr[j * 2 + 0], output_right_eye_ptr[j * 2 + 1]));
+                    // }
+                    // // left iris
+                    // for (int j = 0; j < 5; j++)
+                    // {
+                    //     src_points.push_back(cv::Point2f(output_left_iris_ptr[j * 2 + 0], output_left_iris_ptr[j * 2 + 1]));
+                    // }
+                    // // right iris
+                    // for (int j = 0; j < 5; j++)
+                    // {
+                    //     src_points.push_back(cv::Point2f(output_right_iris_ptr[j * 2 + 0], output_right_iris_ptr[j * 2 + 1]));
+                    // }
+
+                    // for (int j = 0; j < src_points.size(); j++)
+                    // {
+                    //     src_points[j].x = src_points[j].x / landmark_input_width * crop_width;
+                    //     src_points[j].y = src_points[j].y / landmark_input_height * crop_height;
+                    // }
+                    // cv::perspectiveTransform(src_points, dst_points, reverse3x3);
+                    // for (int j = 0; j < dst_points.size(); j++)
+                    // {
+                    //     dst_points[j].x = (dst_points[j].x + minX) / width;
+                    //     dst_points[j].y = (dst_points[j].y + minY) / height;
+                    // }
+
+                    // // landmark
+                    // for (int j = 0; j < 468; j++)
+                    // {
+                    //     face_result->faces[i].landmark_keys[j].x = dst_points[j].x;
+                    //     face_result->faces[i].landmark_keys[j].y = dst_points[j].y;
+                    //     face_result->faces[i].landmark_keys[j].z = landmark_ptr[j * 3 + 2];
+                    // }
+                    // // lip
+                    // for (int j = 0; j < 80; j++)
+                    // {
+                    //     int offset = (468);
+                    //     face_result->faces[i].landmark_lips[j].x = dst_points[offset + j].x;
+                    //     face_result->faces[i].landmark_lips[j].y = dst_points[offset + j].y;
+                    // }
+                    // // left eye
+                    // for (int j = 0; j < 71; j++)
+                    // {
+                    //     int offset = (468) + (80);
+                    //     face_result->faces[i].landmark_left_eye[j].x = dst_points[offset + j].x;
+                    //     face_result->faces[i].landmark_left_eye[j].y = dst_points[offset + j].y;
+                    // }
+                    // // right eye
+                    // for (int j = 0; j < 71; j++)
+                    // {
+                    //     int offset = (468) + (80) + (71);
+                    //     face_result->faces[i].landmark_right_eye[j].x = dst_points[offset + j].x;
+                    //     face_result->faces[i].landmark_right_eye[j].y = dst_points[offset + j].y;
+                    // }
+
+                    // // left iris
+                    // for (int j = 0; j < 5; j++)
+                    // {
+                    //     int offset = (468) + (80) + (71) + (71);
+                    //     face_result->faces[i].landmark_left_iris[j].x = dst_points[offset + j].x;
+                    //     face_result->faces[i].landmark_left_iris[j].y = dst_points[offset + j].y;
+                    // }
+                    // // right iris
+                    // for (int j = 0; j < 5; j++)
+                    // {
+                    //     int offset = (468) + (80) + (71) + (71) + (5);
+                    //     face_result->faces[i].landmark_right_iris[j].x = dst_points[offset + j].x;
+                    //     face_result->faces[i].landmark_right_iris[j].y = dst_points[offset + j].y;
+                    // }
+
+                    ////////
+                    // pattern2. apply affin at each time. I took this because of ease of maintenance.
+                    ////////
+
                     // landmark
                     for (int j = 0; j < 468; j++)
                     {
