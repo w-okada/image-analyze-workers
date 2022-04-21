@@ -128,6 +128,7 @@ export class TFLiteWrapper {
             }
             hands.push(hand)
         }
+        console.log(hands);
         return hands
 
     }

@@ -346,26 +346,30 @@ public:
         //         std::cout << "NMS::" << x.score << " " << x.rect.topleft.x << " " << x.rect.topleft.y << " " << x.rect.btmright.x << " " << x.rect.btmright.y << " \n";
         //         printf("dstCtx.fillRect(%f*dst.width, %f*dst.height, (%f - %f)*dst.width, (%f  - %f) *dst.height)\n", x.rect.topleft.x,x.rect.topleft.y,x.rect.btmright.x,x.rect.topleft.x,x.rect.btmright.y,x.rect.topleft.y); });
 
+        ////////////////////////////////////////////////
         //// Pack
-        face_detection_result_t *face_result = new face_detection_result_t;
-        pack_face_result(face_result, face_nms_list, max_face_num);
+        // face_detection_result_t *face_result = new face_detection_result_t;
+        face_detection_result_t face_result;
+        pack_face_result(&face_result, face_nms_list, max_face_num);
         // printf("palm num::: %d\n", palm_result->num);
-        if (face_result->num > 0)
+        // if (face_result->num > 0)
+        // {
+
+        //     // for (int i = 0; i < palm_result->num; i++)
+        //     // {
+        //     //     std::cout << "result::::" << palm_result->palms[i].score << " " << palm_result->palms[i].rect.topleft.x << " " << palm_result->palms[i].rect.topleft.y << " " << palm_result->palms[i].rect.btmright.x << " " << palm_result->palms[i].rect.btmright.y << " "
+        //     //               << " \n";
+        //     // }
+        // }
+
+        /////////////////////////////////////////////////////////////////////////////////////
+
+        // cv::Mat out(height, width, CV_8UC4, outputBuffer);
+        // inputImage.copyTo(out);
+
+        if (face_result.num > 0)
         {
-
-            // for (int i = 0; i < palm_result->num; i++)
-            // {
-            //     std::cout << "result::::" << palm_result->palms[i].score << " " << palm_result->palms[i].rect.topleft.x << " " << palm_result->palms[i].rect.topleft.y << " " << palm_result->palms[i].rect.btmright.x << " " << palm_result->palms[i].rect.btmright.y << " "
-            //               << " \n";
-            // }
-        }
-
-        // // cv::Mat out(height, width, CV_8UC4, outputBuffer);
-        // // inputImage.copyTo(out);
-
-        if (face_result->num > 0)
-        {
-            for (int i = 0; i < face_result->num; i++)
+            for (int i = 0; i < face_result.num; i++)
             {
                 // if (i != 0)
                 // {
@@ -382,8 +386,8 @@ public:
                 {
                     // int pos_x = palm_result->palms[i].hand_pos[j].x * squaredSize;
                     // int pos_y = palm_result->palms[i].hand_pos[j].y * squaredSize;
-                    int pos_x = face_result->faces[i].face_pos[j].x * width;
-                    int pos_y = face_result->faces[i].face_pos[j].y * height;
+                    int pos_x = face_result.faces[i].face_pos[j].x * width;
+                    int pos_y = face_result.faces[i].face_pos[j].y * height;
 
                     if (pos_x < minX)
                     {
@@ -455,7 +459,7 @@ public:
                 float centerY = crop_height / 2;
 
                 cv::Point2f center = cv::Point2f(centerX, centerY);
-                cv::Mat change = cv::getRotationMatrix2D(center, (face_result->faces[i].rotation * 60) - 90, 1);
+                cv::Mat change = cv::getRotationMatrix2D(center, (face_result.faces[i].rotation * 60) - 90, 1);
                 // printf("ROTATE %f, %f\n", face_result->faces[i].rotation, face_result->faces[i].rotation * 60);
                 cv::Mat reverse;
                 cv::Mat rotated_hand(hand.size(), CV_8UC4);
@@ -489,7 +493,7 @@ public:
                 float score = *faceflag_ptr;
                 if (score > 0.0000001)
                 {
-                    face_result->faces[i].landmark_score = *faceflag_ptr;
+                    face_result.faces[i].landmark_score = *faceflag_ptr;
                     ////////
                     // pattern1. apply affin at one time -> no improvment for processing time
                     ////////
@@ -599,9 +603,9 @@ public:
 
                         cv::perspectiveTransform(src_points, dst_points, reverse3x3);
 
-                        face_result->faces[i].landmark_keys[j].x = (dst_points[0].x + minX) / width;
-                        face_result->faces[i].landmark_keys[j].y = (dst_points[0].y + minY) / height;
-                        face_result->faces[i].landmark_keys[j].z = landmark_ptr[j * 3 + 2];
+                        face_result.faces[i].landmark_keys[j].x = (dst_points[0].x + minX) / width;
+                        face_result.faces[i].landmark_keys[j].y = (dst_points[0].y + minY) / height;
+                        face_result.faces[i].landmark_keys[j].z = landmark_ptr[j * 3 + 2];
                     }
                     // lip
                     for (int j = 0; j < 80; j++)
@@ -616,8 +620,8 @@ public:
 
                         cv::perspectiveTransform(src_points, dst_points, reverse3x3);
 
-                        face_result->faces[i].landmark_lips[j].x = (dst_points[0].x + minX) / width;
-                        face_result->faces[i].landmark_lips[j].y = (dst_points[0].y + minY) / height;
+                        face_result.faces[i].landmark_lips[j].x = (dst_points[0].x + minX) / width;
+                        face_result.faces[i].landmark_lips[j].y = (dst_points[0].y + minY) / height;
                     }
                     // left eye
                     for (int j = 0; j < 71; j++)
@@ -632,8 +636,8 @@ public:
 
                         cv::perspectiveTransform(src_points, dst_points, reverse3x3);
 
-                        face_result->faces[i].landmark_left_eye[j].x = (dst_points[0].x + minX) / width;
-                        face_result->faces[i].landmark_left_eye[j].y = (dst_points[0].y + minY) / height;
+                        face_result.faces[i].landmark_left_eye[j].x = (dst_points[0].x + minX) / width;
+                        face_result.faces[i].landmark_left_eye[j].y = (dst_points[0].y + minY) / height;
                     }
                     // right eye
                     for (int j = 0; j < 71; j++)
@@ -648,8 +652,8 @@ public:
 
                         cv::perspectiveTransform(src_points, dst_points, reverse3x3);
 
-                        face_result->faces[i].landmark_right_eye[j].x = (dst_points[0].x + minX) / width;
-                        face_result->faces[i].landmark_right_eye[j].y = (dst_points[0].y + minY) / height;
+                        face_result.faces[i].landmark_right_eye[j].x = (dst_points[0].x + minX) / width;
+                        face_result.faces[i].landmark_right_eye[j].y = (dst_points[0].y + minY) / height;
                     }
 
                     // left iris
@@ -665,8 +669,8 @@ public:
 
                         cv::perspectiveTransform(src_points, dst_points, reverse3x3);
 
-                        face_result->faces[i].landmark_left_iris[j].x = (dst_points[0].x + minX) / width;
-                        face_result->faces[i].landmark_left_iris[j].y = (dst_points[0].y + minY) / height;
+                        face_result.faces[i].landmark_left_iris[j].x = (dst_points[0].x + minX) / width;
+                        face_result.faces[i].landmark_left_iris[j].y = (dst_points[0].y + minY) / height;
                     }
                     // right iris
                     for (int j = 0; j < 5; j++)
@@ -681,8 +685,8 @@ public:
 
                         cv::perspectiveTransform(src_points, dst_points, reverse3x3);
 
-                        face_result->faces[i].landmark_right_iris[j].x = (dst_points[0].x + minX) / width;
-                        face_result->faces[i].landmark_right_iris[j].y = (dst_points[0].y + minY) / height;
+                        face_result.faces[i].landmark_right_iris[j].x = (dst_points[0].x + minX) / width;
+                        face_result.faces[i].landmark_right_iris[j].y = (dst_points[0].y + minY) / height;
                     }
                 }
             }
@@ -691,107 +695,107 @@ public:
         //// output
         *outputBuffer = 0.0; // 検出した顔の数を初期化
         float *currentOutputPosition = outputBuffer + 1;
-        if (face_result->num > 0)
+        if (face_result.num > 0)
         {
-            for (int i = 0; i < face_result->num; i++)
+            for (int i = 0; i < face_result.num; i++)
             {
 
                 (*outputBuffer)++; // 検出した手の数をインクリメント
                 // score, rotateion
-                *currentOutputPosition = face_result->faces[i].score;
+                *currentOutputPosition = face_result.faces[i].score;
                 currentOutputPosition++;
-                *currentOutputPosition = face_result->faces[i].landmark_score;
+                *currentOutputPosition = face_result.faces[i].landmark_score;
                 currentOutputPosition++;
-                *currentOutputPosition = face_result->faces[i].rotation;
+                *currentOutputPosition = face_result.faces[i].rotation;
                 currentOutputPosition++;
 
                 // palm minX, minY, maxX, maxY
-                *currentOutputPosition = face_result->faces[i].rect.topleft.x;
+                *currentOutputPosition = face_result.faces[i].rect.topleft.x;
                 currentOutputPosition++;
-                *currentOutputPosition = face_result->faces[i].rect.topleft.y;
+                *currentOutputPosition = face_result.faces[i].rect.topleft.y;
                 currentOutputPosition++;
-                *currentOutputPosition = face_result->faces[i].rect.btmright.x;
+                *currentOutputPosition = face_result.faces[i].rect.btmright.x;
                 currentOutputPosition++;
-                *currentOutputPosition = face_result->faces[i].rect.btmright.y;
+                *currentOutputPosition = face_result.faces[i].rect.btmright.y;
                 currentOutputPosition++;
                 // hand center, w,h
-                *currentOutputPosition = (face_result->faces[i].face_cx - (face_result->faces[i].face_w / 2));
+                *currentOutputPosition = (face_result.faces[i].face_cx - (face_result.faces[i].face_w / 2));
                 currentOutputPosition++;
-                *currentOutputPosition = (face_result->faces[i].face_cy - (face_result->faces[i].face_h / 2));
+                *currentOutputPosition = (face_result.faces[i].face_cy - (face_result.faces[i].face_h / 2));
                 currentOutputPosition++;
-                *currentOutputPosition = (face_result->faces[i].face_cx + (face_result->faces[i].face_w / 2));
+                *currentOutputPosition = (face_result.faces[i].face_cx + (face_result.faces[i].face_w / 2));
                 currentOutputPosition++;
-                *currentOutputPosition = (face_result->faces[i].face_cy + (face_result->faces[i].face_h / 2));
+                *currentOutputPosition = (face_result.faces[i].face_cy + (face_result.faces[i].face_h / 2));
                 currentOutputPosition++;
                 // rotated hand position
                 for (int j = 0; j < 4; j++)
                 {
-                    *currentOutputPosition = face_result->faces[i].face_pos[j].x;
+                    *currentOutputPosition = face_result.faces[i].face_pos[j].x;
                     currentOutputPosition++;
-                    *currentOutputPosition = face_result->faces[i].face_pos[j].y;
+                    *currentOutputPosition = face_result.faces[i].face_pos[j].y;
                     currentOutputPosition++;
                 }
                 // palm keypoint
                 for (int j = 0; j < 6; j++)
                 {
-                    *currentOutputPosition = face_result->faces[i].keys[j].x;
+                    *currentOutputPosition = face_result.faces[i].keys[j].x;
                     currentOutputPosition++;
-                    *currentOutputPosition = face_result->faces[i].keys[j].y;
+                    *currentOutputPosition = face_result.faces[i].keys[j].y;
                     currentOutputPosition++;
                 }
 
                 // landmark keypoint
                 for (int j = 0; j < 468; j++)
                 {
-                    *currentOutputPosition = face_result->faces[i].landmark_keys[j].x;
+                    *currentOutputPosition = face_result.faces[i].landmark_keys[j].x;
                     currentOutputPosition++;
-                    *currentOutputPosition = face_result->faces[i].landmark_keys[j].y;
+                    *currentOutputPosition = face_result.faces[i].landmark_keys[j].y;
                     currentOutputPosition++;
-                    *currentOutputPosition = face_result->faces[i].landmark_keys[j].z;
+                    *currentOutputPosition = face_result.faces[i].landmark_keys[j].z;
                     currentOutputPosition++;
                 }
 
                 // landmark lips
                 for (int j = 0; j < 80; j++)
                 {
-                    *currentOutputPosition = face_result->faces[i].landmark_lips[j].x;
+                    *currentOutputPosition = face_result.faces[i].landmark_lips[j].x;
                     currentOutputPosition++;
-                    *currentOutputPosition = face_result->faces[i].landmark_lips[j].y;
+                    *currentOutputPosition = face_result.faces[i].landmark_lips[j].y;
                     currentOutputPosition++;
                 }
 
                 // landmark left_eye
                 for (int j = 0; j < 71; j++)
                 {
-                    *currentOutputPosition = face_result->faces[i].landmark_left_eye[j].x;
+                    *currentOutputPosition = face_result.faces[i].landmark_left_eye[j].x;
                     currentOutputPosition++;
-                    *currentOutputPosition = face_result->faces[i].landmark_left_eye[j].y;
+                    *currentOutputPosition = face_result.faces[i].landmark_left_eye[j].y;
                     currentOutputPosition++;
                 }
 
                 // landmark right_eye
                 for (int j = 0; j < 71; j++)
                 {
-                    *currentOutputPosition = face_result->faces[i].landmark_right_eye[j].x;
+                    *currentOutputPosition = face_result.faces[i].landmark_right_eye[j].x;
                     currentOutputPosition++;
-                    *currentOutputPosition = face_result->faces[i].landmark_right_eye[j].y;
+                    *currentOutputPosition = face_result.faces[i].landmark_right_eye[j].y;
                     currentOutputPosition++;
                 }
 
                 // landmark left_iris
                 for (int j = 0; j < 5; j++)
                 {
-                    *currentOutputPosition = face_result->faces[i].landmark_left_iris[j].x;
+                    *currentOutputPosition = face_result.faces[i].landmark_left_iris[j].x;
                     currentOutputPosition++;
-                    *currentOutputPosition = face_result->faces[i].landmark_left_iris[j].y;
+                    *currentOutputPosition = face_result.faces[i].landmark_left_iris[j].y;
                     currentOutputPosition++;
                 }
                 // landmark right_iris
                 for (int j = 0; j < 5; j++)
                 {
-                    *currentOutputPosition = face_result->faces[i].landmark_right_iris[j].x;
+                    *currentOutputPosition = face_result.faces[i].landmark_right_iris[j].x;
                     currentOutputPosition++;
-                    *currentOutputPosition = face_result->faces[i].landmark_right_iris[j].y;
+                    *currentOutputPosition = face_result.faces[i].landmark_right_iris[j].y;
                     currentOutputPosition++;
                 }
             }

@@ -329,10 +329,11 @@ public:
         //     { std::cout << x.score << " " << x.rect.topleft.x << " " << x.rect.topleft.y << " " << x.rect.btmright.x << " " << x.rect.btmright.y << " \n"; });
 
         //// Pack
-        palm_detection_result_t *palm_result = new palm_detection_result_t;
-        pack_palm_result(palm_result, palm_nms_list, max_palm_num);
+        // palm_detection_result_t *palm_result = new palm_detection_result_t;
+        palm_detection_result_t palm_result;
+        pack_palm_result(&palm_result, palm_nms_list, max_palm_num);
         // printf("palm num::: %d\n", palm_result->num);
-        if (palm_result->num > 0)
+        if (palm_result.num > 0)
         {
 
             // for (int i = 0; i < palm_result->num; i++)
@@ -345,9 +346,9 @@ public:
         // cv::Mat out(height, width, CV_8UC4, outputBuffer);
         // inputImage.copyTo(out);
 
-        if (palm_result->num > 0)
+        if (palm_result.num > 0)
         {
-            for (int i = 0; i < palm_result->num; i++)
+            for (int i = 0; i < palm_result.num; i++)
             {
                 // if (i != 0)
                 // {
@@ -364,8 +365,8 @@ public:
                 {
                     // int pos_x = palm_result->palms[i].hand_pos[j].x * squaredSize;
                     // int pos_y = palm_result->palms[i].hand_pos[j].y * squaredSize;
-                    int pos_x = palm_result->palms[i].hand_pos[j].x * width;
-                    int pos_y = palm_result->palms[i].hand_pos[j].y * height;
+                    int pos_x = palm_result.palms[i].hand_pos[j].x * width;
+                    int pos_y = palm_result.palms[i].hand_pos[j].y * height;
 
                     if (pos_x < minX)
                     {
@@ -438,7 +439,7 @@ public:
                 float centerY = crop_height / 2;
 
                 cv::Point2f center = cv::Point2f(centerX, centerY);
-                cv::Mat change = cv::getRotationMatrix2D(center, palm_result->palms[i].rotation * 60, 1);
+                cv::Mat change = cv::getRotationMatrix2D(center, palm_result.palms[i].rotation * 60, 1);
                 cv::Mat reverse;
                 cv::Mat rotated_hand(hand.size(), CV_8UC4);
                 cv::warpAffine(hand, rotated_hand, change, rotated_hand.size(), cv::INTER_CUBIC, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
@@ -506,13 +507,13 @@ public:
 
                         // printf("handflag::::%f(%f,%d, %d), %f(%f,%d, %d), %f %f\n", x, x_ratio, width, crop_width, y, y_ratio, height, crop_height, *handflag_ptr, *handedness_ptr);
 
-                        palm_result->palms[i].landmark_keys[j].x = (dst_points[0].x + minX) / width;
-                        palm_result->palms[i].landmark_keys[j].y = (dst_points[0].y + minY) / height;
+                        palm_result.palms[i].landmark_keys[j].x = (dst_points[0].x + minX) / width;
+                        palm_result.palms[i].landmark_keys[j].y = (dst_points[0].y + minY) / height;
                         // palm_result->palms[i].landmark_keys[j].x = (dst_points[0].x + minX) / squaredSize;
                         // palm_result->palms[i].landmark_keys[j].y = (dst_points[0].y + minY) / squaredSize;
-                        palm_result->palms[i].landmark_keys[j].z = landmark_ptr[j * 3 + 2];
-                        palm_result->palms[i].score = *handflag_ptr;
-                        palm_result->palms[i].handedness = *handedness_ptr;
+                        palm_result.palms[i].landmark_keys[j].z = landmark_ptr[j * 3 + 2];
+                        palm_result.palms[i].score = *handflag_ptr;
+                        palm_result.palms[i].handedness = *handedness_ptr;
                     }
                 }
             }
@@ -527,65 +528,65 @@ public:
         ////
         *outputBuffer = 0.0; // 検出した手の数を初期化
         float *currentOutputPosition = outputBuffer + 1;
-        if (palm_result->num > 0)
+        if (palm_result.num > 0)
         {
-            for (int i = 0; i < palm_result->num; i++)
+            for (int i = 0; i < palm_result.num; i++)
             {
 
                 (*outputBuffer)++; // 検出した手の数をインクリメント
                 // score, rotateion
-                *currentOutputPosition = palm_result->palms[i].score;
+                *currentOutputPosition = palm_result.palms[i].score;
                 currentOutputPosition++;
-                *currentOutputPosition = palm_result->palms[i].landmark_score;
+                *currentOutputPosition = palm_result.palms[i].landmark_score;
                 currentOutputPosition++;
-                *currentOutputPosition = palm_result->palms[i].handedness;
+                *currentOutputPosition = palm_result.palms[i].handedness;
                 currentOutputPosition++;
-                *currentOutputPosition = palm_result->palms[i].rotation;
+                *currentOutputPosition = palm_result.palms[i].rotation;
                 currentOutputPosition++;
 
                 // palm minX, minY, maxX, maxY
-                *currentOutputPosition = palm_result->palms[i].rect.topleft.x * shiftRatioX;
+                *currentOutputPosition = palm_result.palms[i].rect.topleft.x * shiftRatioX;
                 currentOutputPosition++;
-                *currentOutputPosition = palm_result->palms[i].rect.topleft.y * shiftRatioY;
+                *currentOutputPosition = palm_result.palms[i].rect.topleft.y * shiftRatioY;
                 currentOutputPosition++;
-                *currentOutputPosition = palm_result->palms[i].rect.btmright.x * shiftRatioX;
+                *currentOutputPosition = palm_result.palms[i].rect.btmright.x * shiftRatioX;
                 currentOutputPosition++;
-                *currentOutputPosition = palm_result->palms[i].rect.btmright.y * shiftRatioY;
+                *currentOutputPosition = palm_result.palms[i].rect.btmright.y * shiftRatioY;
                 currentOutputPosition++;
                 // hand center, w,h
-                *currentOutputPosition = (palm_result->palms[i].hand_cx - (palm_result->palms[i].hand_w / 2)) * shiftRatioX;
+                *currentOutputPosition = (palm_result.palms[i].hand_cx - (palm_result.palms[i].hand_w / 2)) * shiftRatioX;
                 currentOutputPosition++;
-                *currentOutputPosition = (palm_result->palms[i].hand_cy - (palm_result->palms[i].hand_h / 2)) * shiftRatioY;
+                *currentOutputPosition = (palm_result.palms[i].hand_cy - (palm_result.palms[i].hand_h / 2)) * shiftRatioY;
                 currentOutputPosition++;
-                *currentOutputPosition = (palm_result->palms[i].hand_cx + (palm_result->palms[i].hand_w / 2)) * shiftRatioX;
+                *currentOutputPosition = (palm_result.palms[i].hand_cx + (palm_result.palms[i].hand_w / 2)) * shiftRatioX;
                 currentOutputPosition++;
-                *currentOutputPosition = (palm_result->palms[i].hand_cy + (palm_result->palms[i].hand_h / 2)) * shiftRatioY;
+                *currentOutputPosition = (palm_result.palms[i].hand_cy + (palm_result.palms[i].hand_h / 2)) * shiftRatioY;
                 currentOutputPosition++;
                 // rotated hand position
                 for (int j = 0; j < 4; j++)
                 {
-                    *currentOutputPosition = palm_result->palms[i].hand_pos[j].x * shiftRatioX;
+                    *currentOutputPosition = palm_result.palms[i].hand_pos[j].x * shiftRatioX;
                     currentOutputPosition++;
-                    *currentOutputPosition = palm_result->palms[i].hand_pos[j].y * shiftRatioY;
+                    *currentOutputPosition = palm_result.palms[i].hand_pos[j].y * shiftRatioY;
                     currentOutputPosition++;
                 }
                 // palm keypoint
                 for (int j = 0; j < 7; j++)
                 {
-                    *currentOutputPosition = palm_result->palms[i].keys[j].x * shiftRatioX;
+                    *currentOutputPosition = palm_result.palms[i].keys[j].x * shiftRatioX;
                     currentOutputPosition++;
-                    *currentOutputPosition = palm_result->palms[i].keys[j].y * shiftRatioY;
+                    *currentOutputPosition = palm_result.palms[i].keys[j].y * shiftRatioY;
                     currentOutputPosition++;
                 }
 
                 // landmark keypoint
                 for (int j = 0; j < 21; j++)
                 {
-                    *currentOutputPosition = palm_result->palms[i].landmark_keys[j].x * shiftRatioX;
+                    *currentOutputPosition = palm_result.palms[i].landmark_keys[j].x * shiftRatioX;
                     currentOutputPosition++;
-                    *currentOutputPosition = palm_result->palms[i].landmark_keys[j].y * shiftRatioY;
+                    *currentOutputPosition = palm_result.palms[i].landmark_keys[j].y * shiftRatioY;
                     currentOutputPosition++;
-                    *currentOutputPosition = palm_result->palms[i].landmark_keys[j].z;
+                    *currentOutputPosition = palm_result.palms[i].landmark_keys[j].z;
                     currentOutputPosition++;
                 }
             }
