@@ -5,7 +5,7 @@ import { FacemeshDrawer } from "./FacemeshDrawer";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
 import { FaceswapDrawer } from "./FaceswapDrawer";
-import { BackendTypes, ModelTypes, FaceLandmarkDetectionWorkerManager } from "@dannadori/face-landmark-detection-worker-js";
+import { BackendTypes, ModelTypes, FaceLandmarkDetectionWorkerManager, DetectorTypes, LandmarkTypes } from "@dannadori/face-landmark-detection-worker-js";
 let GlobalLoopID = 0;
 
 type ControllerProps = {
@@ -59,7 +59,34 @@ const Controller = (props: ControllerProps) => {
         },
         onChange: (value: ModelTypes) => {
             config.modelType = value;
-            console.log("load mod00001");
+            setConfig({ ...config });
+        },
+    };
+
+    const detectorModelTypeSelectorProps: CommonSelectorProps<DetectorTypes> = {
+        id: "detector-model-type-selector",
+        title: "detector model type",
+        currentValue: config.detectorModelKey,
+        options: {
+            short: DetectorTypes.short,
+            full: DetectorTypes.full,
+            full_sparse: DetectorTypes.full_sparse,
+        },
+        onChange: (value: DetectorTypes) => {
+            config.detectorModelKey = value;
+            setConfig({ ...config });
+        },
+    };
+    const landmarkModelTypeSelectorProps: CommonSelectorProps<LandmarkTypes> = {
+        id: "landmark-model-type-selector",
+        title: "landmark model type",
+        currentValue: config.landmarkModelKey,
+        options: {
+            with_attention: LandmarkTypes.with_attention,
+            landmark: LandmarkTypes.landmark,
+        },
+        onChange: (value: LandmarkTypes) => {
+            config.landmarkModelKey = value;
             setConfig({ ...config });
         },
     };
@@ -172,6 +199,8 @@ const Controller = (props: ControllerProps) => {
             <CommonSwitch {...onLocalSwitchProps}></CommonSwitch>
             <CommonSelector {...backendSelectorProps}></CommonSelector>
             <CommonSelector {...modelTypeSelectorProps}></CommonSelector>
+            <CommonSelector {...detectorModelTypeSelectorProps}></CommonSelector>
+            <CommonSelector {...landmarkModelTypeSelectorProps}></CommonSelector>
 
             <CommonSelector {...applicationModeSelectorProps}></CommonSelector>
             {applicationMode === ApplicationModes.faceswap ? (
@@ -371,20 +400,32 @@ const App = () => {
             try {
                 if (snap.width > 0 && snap.height > 0) {
                     const prediction = await managerRef.current!.predict(params, snap);
-                    const trackingArea = managerRef.current?.fitCroppedArea(prediction, snap.width, snap.height, params.processWidth, params.processHeight, dst.width, dst.height, 0, 0, 0, 0);
+                    let trackingArea = undefined;
+                    if (config.modelType === ModelTypes.tflite) {
+                        trackingArea = managerRef.current?.fitCroppedArea(prediction, snap.width, snap.height, 1, 1, dst.width, dst.height, 0, 0, 0, 0);
+                    } else {
+                        trackingArea = managerRef.current?.fitCroppedArea(prediction, snap.width, snap.height, params.processWidth, params.processHeight, dst.width, dst.height, 0, 0, 0, 0);
+                    }
+
                     // console.log("prediction1", prediction);
                     // console.log("prediction2", trackingArea);
 
                     if (applicationMode === ApplicationModes.facemesh) {
                         if (prediction.singlePersonKeypointsMovingAverage) {
-                            drawer.draw(snap, params, prediction.singlePersonKeypointsMovingAverage);
+                            drawer.draw(snap, config, params, prediction.singlePersonKeypointsMovingAverage);
                             drawer.drawTrackingArea(trackingArea!.xmin, trackingArea!.ymin, trackingArea!.width, trackingArea!.height);
                         }
                     } else if (applicationMode === ApplicationModes.faceswap) {
                         if (prediction.singlePersonKeypointsMovingAverage) {
-                            const scaleX = snap.width / params.processWidth;
-                            const scaleY = snap.height / params.processHeight;
-                            faceswapDrawer.swapFace(snap, prediction.singlePersonKeypointsMovingAverage, scaleX, scaleY);
+                            if (config.modelType === ModelTypes.tflite) {
+                                const scaleX = snap.width / 1;
+                                const scaleY = snap.height / 1;
+                                faceswapDrawer.swapFace(snap, prediction.singlePersonKeypointsMovingAverage, scaleX, scaleY);
+                            } else {
+                                const scaleX = snap.width / params.processWidth;
+                                const scaleY = snap.height / params.processHeight;
+                                faceswapDrawer.swapFace(snap, prediction.singlePersonKeypointsMovingAverage, scaleX, scaleY);
+                            }
                         }
                     } else {
                         if (trackingArea!.width > 0 && trackingArea!.height > 0) {
@@ -419,7 +460,11 @@ const App = () => {
         if (!maskCanvas || !maskPrediction) {
             return;
         }
-        faceswapDrawer.setMask(maskCanvas, maskPrediction.singlePersonKeypointsMovingAverage!, params);
+        if (config.modelType === ModelTypes.tflite) {
+            faceswapDrawer.setMask(maskCanvas, maskPrediction.singlePersonKeypointsMovingAverage!, 1, 1);
+        } else {
+            faceswapDrawer.setMask(maskCanvas, maskPrediction.singlePersonKeypointsMovingAverage!, 1 / params.processWidth, 1 / params.processHeight);
+        }
     }, [maskCanvas, maskPrediction]);
 
     return (

@@ -1,4 +1,4 @@
-import { FaceLandmarkDetectionOperationParams, Keypoint, TRIANGULATION, NUM_KEYPOINTS } from "@dannadori/face-landmark-detection-worker-js";
+import { FaceLandmarkDetectionOperationParams, Keypoint, TRIANGULATION, NUM_KEYPOINTS, FaceLandmarkDetectionConfig, ModelTypes } from "@dannadori/face-landmark-detection-worker-js";
 
 export class FacemeshDrawer {
     private outputCanvas: HTMLCanvasElement | null = null;
@@ -8,16 +8,19 @@ export class FacemeshDrawer {
         console.log(this.outputCanvas);
     };
 
-    draw = (snap: HTMLCanvasElement, params: FaceLandmarkDetectionOperationParams, keypoints: Keypoint[]) => {
+    draw = (snap: HTMLCanvasElement, config: FaceLandmarkDetectionConfig, params: FaceLandmarkDetectionOperationParams, keypoints: Keypoint[]) => {
         if (!this.outputCanvas) {
             console.log("not ready:::", this.outputCanvas);
             return;
         }
         const outputCtx = this.outputCanvas.getContext("2d")!;
         outputCtx.drawImage(snap, 0, 0, this.outputCanvas.width, this.outputCanvas.height);
+
+        const scaleW = (config.modelType === ModelTypes.tflite) ? 1 : params.processWidth
+        const scaleH = (config.modelType === ModelTypes.tflite) ? 1 : params.processHeight
         outputCtx.strokeStyle = "#000000";
         for (let i = 0; i < TRIANGULATION.length / 3; i++) {
-            const points = [TRIANGULATION[i * 3 + 0], TRIANGULATION[i * 3 + 1], TRIANGULATION[i * 3 + 2]].map((index) => [(keypoints[index].x / params.processWidth) * this.outputCanvas!.width, (keypoints[index].y / params.processHeight) * this.outputCanvas!.height]);
+            const points = [TRIANGULATION[i * 3 + 0], TRIANGULATION[i * 3 + 1], TRIANGULATION[i * 3 + 2]].map((index) => [(keypoints[index].x / scaleW) * this.outputCanvas!.width, (keypoints[index].y / scaleH) * this.outputCanvas!.height]);
             const region = new Path2D();
             region.moveTo(points[0][0], points[0][1]);
             for (let j = 1; j < points.length; j++) {
@@ -31,7 +34,7 @@ export class FacemeshDrawer {
             const offset = NUM_KEYPOINTS;
             outputCtx.strokeStyle = "#FF2C35";
             outputCtx.lineWidth = 1;
-            const irisIndex = [offset, offset + 1, offset + 2, offset + 3, offset + 4, offset + 5, offset + 6, offset + 7, offset + 8, offset + 9].map((index) => [(keypoints[index].x / params.processWidth) * this.outputCanvas!.width, (keypoints[index].y / params.processHeight) * this.outputCanvas!.height]);
+            const irisIndex = [offset, offset + 1, offset + 2, offset + 3, offset + 4, offset + 5, offset + 6, offset + 7, offset + 8, offset + 9].map((index) => [(keypoints[index].x / scaleW) * this.outputCanvas!.width, (keypoints[index].y / scaleH) * this.outputCanvas!.height]);
             const irisTriangle = [0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1, 5, 6, 7, 5, 7, 8, 5, 8, 9, 5, 9, 6];
             for (let i = 0; i < irisTriangle.length / 3; i++) {
                 const region = new Path2D();
@@ -52,6 +55,7 @@ export class FacemeshDrawer {
             console.log("not ready:::", this.outputCanvas);
             return;
         }
+
         const outputCtx = this.outputCanvas.getContext("2d")!;
         outputCtx.fillStyle = "#00ff0066";
         outputCtx.fillRect(xmin, ymin, width, height);

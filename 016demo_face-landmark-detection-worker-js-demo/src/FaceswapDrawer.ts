@@ -18,7 +18,22 @@ export class FaceswapDrawer {
         this.outputCanvas = outputCanvas;
         console.log(this.outputCanvas);
     };
-    setMask(maskImage: HTMLCanvasElement, maskKeypoints: Keypoint[], params: FaceLandmarkDetectionOperationParams) {
+    setMask(maskImage: HTMLCanvasElement, maskKeypoints: Keypoint[], normalizerX: number, normalizerY: number) {
+        if (!this.outputCanvas) {
+            console.warn("set mask: not initialized");
+            return;
+        }
+
+        this.webGLCanvas.width = this.outputCanvas.width;
+        this.webGLCanvas.height = this.outputCanvas.height;
+        this.facemeshRenderer = new FacemeshRenderer(this.webGLCanvas.getContext("webgl")!, this.webGLCanvas.width, this.webGLCanvas.height);
+
+        this.maskImage = maskImage;
+        this.maskKeypoints = maskKeypoints;
+        this.facemeshRenderer.setMask(this.webGLCanvas.getContext("webgl")!, this.maskImage, this.maskKeypoints, normalizerX, normalizerY);
+    }
+
+    setMask_old(maskImage: HTMLCanvasElement, maskKeypoints: Keypoint[], params: FaceLandmarkDetectionOperationParams) {
         if (!this.outputCanvas) {
             console.warn("set mask: not initialized");
             return;

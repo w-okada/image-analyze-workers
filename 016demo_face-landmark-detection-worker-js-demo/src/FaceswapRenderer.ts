@@ -57,8 +57,8 @@ export class FacemeshRenderer {
     // private masktexImage?: HTMLCanvasElement;
     // private maskPrediction?: AnnotatedPrediction[];
     private maskKeypoints?: Keypoint[];
-    private maskProcessedWidth = 300;
-    private maskProcessedHeight = 300;
+    private maskNormalizerX = 300;
+    private maskNormalizerY = 300;
 
     face_countour_alpha = 1.0;
     mask_color_brightness = 1.0;
@@ -140,7 +140,7 @@ export class FacemeshRenderer {
     };
 
     /////
-    setMask = (gl: WebGLRenderingContext, maskImage: HTMLCanvasElement, maskKeypoints: Keypoint[], maskProcessedWidth: number, maskProcessedHeight: number) => {
+    setMask = (gl: WebGLRenderingContext, maskImage: HTMLCanvasElement, maskKeypoints: Keypoint[], normalizerX: number, normalizerY: number) => {
         const masktexId = gl.createTexture()!;
 
         gl.bindTexture(gl.TEXTURE_2D, masktexId);
@@ -156,8 +156,8 @@ export class FacemeshRenderer {
         // this.maskPrediction = maskPrediction;
         this.maskKeypoints = maskKeypoints;
 
-        this.maskProcessedWidth = maskProcessedWidth;
-        this.maskProcessedHeight = maskProcessedHeight;
+        this.maskNormalizerX = normalizerX;
+        this.maskNormalizerY = normalizerY;
     };
 
     // drawFacemesh = (gl: WebGLRenderingContext, videoFrameCanvas: HTMLCanvasElement, videoFramePrediction: AnnotatedPrediction[], scaleX: number, scaleY: number) => {
@@ -201,8 +201,8 @@ export class FacemeshRenderer {
             face_vtx[3 * i + 2] = p.z;
 
             const q = mask_keypoints[i];
-            face_uv[2 * i + 0] = q.x / this.maskProcessedWidth; // this.masktexImage!.width;
-            face_uv[2 * i + 1] = q.y / this.maskProcessedHeight; // this.masktexImage!.height;
+            face_uv[2 * i + 0] = q.x * this.maskNormalizerX; // this.masktexImage!.width;
+            face_uv[2 * i + 1] = q.y * this.maskNormalizerY; // this.masktexImage!.height;
         }
         this.draw_facemesh_tri_tex(gl, this.masktexId, face_vtx, face_uv, mask_color);
     }
