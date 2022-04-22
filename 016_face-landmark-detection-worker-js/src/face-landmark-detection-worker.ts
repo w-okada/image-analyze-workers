@@ -1,15 +1,38 @@
-import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
 import * as faceLandmarksDetection from "@tensorflow-models/face-landmarks-detection"
 import * as tf from "@tensorflow/tfjs";
 import * as faceMesh from "@mediapipe/face_mesh";
-import { BackendTypes, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, FaceMeshPredictionEx, FacemeshPredictionMediapipe, ModelTypes } from "./const";
+import { BackendTypes, DetectorTypes, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, FaceMeshPredictionEx, FacemeshPredictionMediapipe, LandmarkTypes, ModelTypes, TFLite, TFLiteFaceLandmarkDetection, RefinedPoints } from "./const";
 import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 import { Face, Keypoint } from "@tensorflow-models/face-landmarks-detection";
-export { FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, NUM_KEYPOINTS, TRIANGULATION, BackendTypes, ModelTypes, FaceMeshPredictionEx } from "./const";
+export { FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, NUM_KEYPOINTS, TRIANGULATION, BackendTypes, ModelTypes, FaceMeshPredictionEx, DetectorTypes, LandmarkTypes, RefinedPoints } from "./const";
 export { Face, Keypoint, BoundingBox }
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./face-landmark-detection-worker-worker.ts";
 import { BoundingBox } from "@tensorflow-models/face-landmarks-detection/dist/shared/calculators/interfaces/shape_interfaces";
+
+
+
+// @ts-ignore
+import face_short from "../resources/tflite/detector/face_detection_short_range.bin";
+// @ts-ignore
+import face_full from "../resources/tflite/detector/face_detection_full_range.bin";
+// @ts-ignore
+import face_full_sparse from "../resources/tflite/detector/face_detection_full_range_sparse.bin";
+
+
+// @ts-ignore
+import landmark from "../resources/tflite/landmark/face_landmark.bin";
+// @ts-ignore
+// import landmark_with_attention from "../resources/tflite/landmark/model_float16_quant.bin";
+import landmark_with_attention from "../resources/tflite/landmark/model_float32.bin";
+
+
+// @ts-ignore
+import wasm from "../resources/wasm/tflite.wasm";
+// @ts-ignore
+import wasmSimd from "../resources/wasm/tflite-simd.wasm";
+
 
 
 export const generateFaceLandmarkDetectionDefaultConfig = (): FaceLandmarkDetectionConfig => {
@@ -32,6 +55,24 @@ export const generateFaceLandmarkDetectionDefaultConfig = (): FaceLandmarkDetect
         },
         pageUrl: window.location.href,
         modelType: ModelTypes.mediapipe,
+
+        wasmBase64: wasm.split(",")[1],
+        wasmSimdBase64: wasmSimd.split(",")[1],
+
+        detectorModelTFLite: {
+            "short": face_short.split(",")[1],
+            "full": face_full.split(",")[1],
+            "full_sparse": face_full_sparse.split(",")[1],
+        },
+        landmarkModelTFLite: {
+            "landmark": landmark.split(",")[1],
+            "with_attention": landmark_with_attention.split(",")[1],
+        },
+        useSimd: true,
+        maxProcessWidth: 1024,
+        maxProcessHeight: 1024,
+        detectorModelKey: DetectorTypes.short,
+        landmarkModelKey: LandmarkTypes.with_attention
     };
     return defaultConf;
 };
@@ -49,6 +90,10 @@ export const generateDefaultFaceLandmarkDetectionParams = () => {
 };
 
 export class LocalFL extends LocalWorker {
+    tflite: TFLite | null = null;
+    tfliteInputAddress: number = 0
+    tfliteOutputAddress: number = 0
+
     model: faceLandmarksDetection.FaceLandmarksDetector | null = null;
     load_module = async (config: FaceLandmarkDetectionConfig) => {
         if (config.backendType === BackendTypes.wasm) {
@@ -93,6 +138,36 @@ export class LocalFL extends LocalWorker {
                 maxFaces: config.model.maxFaces,
             });
         } else {
+            const browserType = getBrowserType();
+            if (config.useSimd && browserType !== BrowserTypes.SAFARI) {
+                // SIMD
+                const modSimd = require("../resources/wasm/tflite-simd.js");
+                const b = Buffer.from(config.wasmSimdBase64!, "base64");
+
+                this.tflite = await modSimd({ wasmBinary: b });
+
+            } else {
+                // Not-SIMD
+                const mod = require("../resources/wasm/tflite.js");
+                const b = Buffer.from(config.wasmBase64!, "base64");
+                this.tflite = await mod({ wasmBinary: b });
+            }
+
+            const detectorModel = Buffer.from(config.detectorModelTFLite[config.detectorModelKey], "base64");
+            this.tflite!._initDetectorModelBuffer(detectorModel.byteLength);
+            const detectorModelBufferOffset = this.tflite!._getDetectorModelBufferAddress();
+            this.tflite!.HEAPU8.set(new Uint8Array(detectorModel), detectorModelBufferOffset);
+            this.tflite!._loadDetectorModel(detectorModel.byteLength);
+
+            const landmarkModel = Buffer.from(config.landmarkModelTFLite[config.landmarkModelKey], "base64");
+            this.tflite!._initLandmarkModelBuffer(landmarkModel.byteLength);
+            const landmarkModelBufferOffset = this.tflite!._getLandmarkModelBufferAddress();
+            this.tflite!.HEAPU8.set(new Uint8Array(landmarkModel), landmarkModelBufferOffset);
+            this.tflite!._loadLandmarkModel(landmarkModel.byteLength);
+
+            this.tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, config.model.maxFaces)
+            this.tfliteInputAddress = this.tflite!._getInputBufferAddress()
+            this.tfliteOutputAddress = this.tflite!._getOutputBufferAddress()
         }
 
         console.log("facemesh loaded locally", config);
@@ -108,7 +183,156 @@ export class LocalFL extends LocalWorker {
             const prediction = await this.model.estimateFaces(newImg, { flipHorizontal: false });
             return prediction;
         } else if (config.modelType === ModelTypes.tflite) {
-            return null;
+            const imageData = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height)
+            this.tflite!.HEAPU8.set(imageData.data, this.tfliteInputAddress);
+            this.tflite!._exec(params.processWidth, params.processHeight, 4);
+            const faceNum = this.tflite!.HEAPF32[this.tfliteOutputAddress / 4];
+            const tfliteFaces: TFLiteFaceLandmarkDetection[] = []
+            console.log("DETECTED FACENUM::", faceNum, this.tfliteOutputAddress)
+            for (let i = 0; i < faceNum; i++) {
+                //   11: score and rects
+                //    8: ratated face (4x2D)
+                //   12: palm keypoints(6x2D)
+                // 1404: landmark keypoints(468x3D)
+                //  160: landmark Lip keypoints(80x2D)
+                //  142: landmark left eye keypoints(71x2D)
+                //  142: landmark right eye keypoints(71x2D)
+                //   10: landmark left iris keypoint(5x2D)
+                //   10: landmark right iris keypoint(5x2D)
+                // -> 11 + 8 + 12 + 1404 + 160 + 142 + 142 + 10 + 10 = 1899
+                const offset = this.tfliteOutputAddress / 4 + 1 + i * (1899)
+                const face: TFLiteFaceLandmarkDetection = {
+                    score: this.tflite!.HEAPF32[offset + 0],
+                    landmarkScore: this.tflite!.HEAPF32[offset + 1],
+                    rotation: this.tflite!.HEAPF32[offset + 2],
+                    face: {
+                        minX: this.tflite!.HEAPF32[offset + 3],
+                        minY: this.tflite!.HEAPF32[offset + 4],
+                        maxX: this.tflite!.HEAPF32[offset + 5],
+                        maxY: this.tflite!.HEAPF32[offset + 6],
+                    },
+                    faceWithMargin: {
+                        minX: this.tflite!.HEAPF32[offset + 7],
+                        minY: this.tflite!.HEAPF32[offset + 8],
+                        maxX: this.tflite!.HEAPF32[offset + 9],
+                        maxY: this.tflite!.HEAPF32[offset + 10],
+                    },
+                    rotatedFace: {
+                        positions: [
+                        ]
+                    },
+                    faceKeypoints: [
+                    ],
+                    landmarkKeypoints: [
+                    ],
+                    landmarkLipsKeypoints: [
+                    ],
+                    landmarkLeftEyeKeypoints: [
+                    ],
+                    landmarkRightEyeKeypoints: [
+                    ],
+                    landmarkLeftIrisKeypoints: [
+                    ],
+                    landmarkRightIrisKeypoints: [
+                    ],
+                }
+                for (let j = 0; j < 4; j++) {
+                    let offset = (this.tfliteOutputAddress / 4 + 1) + (i * 1899) + (11) + (j * 2)
+                    face.rotatedFace.positions.push({
+                        x: this.tflite!.HEAPF32[offset + 0],
+                        y: this.tflite!.HEAPF32[offset + 1],
+                    })
+                }
+                for (let j = 0; j < 6; j++) {
+                    let offset = (this.tfliteOutputAddress / 4 + 1) + (i * 1899) + (11 + 8) + (j * 2)
+                    face.faceKeypoints.push({
+                        x: this.tflite!.HEAPF32[offset + 0],
+                        y: this.tflite!.HEAPF32[offset + 1],
+                    })
+                }
+                for (let j = 0; j < 468; j++) {
+                    let offset = (this.tfliteOutputAddress / 4 + 1) + (i * 1899) + (11 + 8 + 12) + (j * 3)
+                    face.landmarkKeypoints.push({
+                        x: this.tflite!.HEAPF32[offset + 0],
+                        y: this.tflite!.HEAPF32[offset + 1],
+                        z: this.tflite!.HEAPF32[offset + 2],
+                    })
+                }
+                for (let j = 0; j < 80; j++) {
+                    let offset = (this.tfliteOutputAddress / 4 + 1) + (i * 1899) + (11 + 8 + 12 + 1404) + (j * 2)
+                    face.landmarkLipsKeypoints.push({
+                        x: this.tflite!.HEAPF32[offset + 0],
+                        y: this.tflite!.HEAPF32[offset + 1],
+                    })
+                }
+                for (let j = 0; j < 71; j++) {
+                    let offset = (this.tfliteOutputAddress / 4 + 1) + (i * 1899) + (11 + 8 + 12 + 1404 + 160) + (j * 2)
+                    face.landmarkLeftEyeKeypoints.push({
+                        x: this.tflite!.HEAPF32[offset + 0],
+                        y: this.tflite!.HEAPF32[offset + 1],
+                    })
+                }
+                for (let j = 0; j < 71; j++) {
+                    let offset = (this.tfliteOutputAddress / 4 + 1) + (i * 1899) + (11 + 8 + 12 + 1404 + 160 + 142) + (j * 2)
+                    face.landmarkRightEyeKeypoints.push({
+                        x: this.tflite!.HEAPF32[offset + 0],
+                        y: this.tflite!.HEAPF32[offset + 1],
+                    })
+                }
+                for (let j = 0; j < 5; j++) {
+                    let offset = (this.tfliteOutputAddress / 4 + 1) + (i * 1899) + (11 + 8 + 12 + 1404 + 160 + 142 + 142) + (j * 2)
+                    face.landmarkLeftIrisKeypoints.push({
+                        x: this.tflite!.HEAPF32[offset + 0],
+                        y: this.tflite!.HEAPF32[offset + 1],
+                    })
+                }
+                for (let j = 0; j < 5; j++) {
+                    let offset = (this.tfliteOutputAddress / 4 + 1) + (i * 1899) + (11 + 8 + 12 + 1404 + 160 + 142 + 142 + 10) + (j * 2)
+                    face.landmarkRightIrisKeypoints.push({
+                        x: this.tflite!.HEAPF32[offset + 0],
+                        y: this.tflite!.HEAPF32[offset + 1],
+                    })
+                }
+
+                if (face.score > 0.5 && face.landmarkScore > 0.5) {
+                    tfliteFaces.push(face)
+
+                }
+            }
+            const faces: Face[] = tfliteFaces.map(x => {
+                const face: Face = {
+                    keypoints: [...x.landmarkKeypoints],
+                    box: {
+                        xMin: x.face.minX,
+                        yMin: x.face.minY,
+                        xMax: x.face.maxX,
+                        yMax: x.face.maxY,
+                        width: x.face.maxX - x.face.minX,
+                        height: x.face.maxY - x.face.maxY
+                    }
+                }
+
+                if (config.landmarkModelKey === LandmarkTypes.with_attention) {
+                    RefinedPoints.lips.forEach((dst, src) => {
+                        face.keypoints[dst] = x.landmarkLipsKeypoints[src];
+                    })
+                    RefinedPoints.leftEye.forEach((dst, src) => {
+                        face.keypoints[dst] = x.landmarkLeftEyeKeypoints[src];
+                    })
+                    RefinedPoints.rightEye.forEach((dst, src) => {
+                        face.keypoints[dst] = x.landmarkRightEyeKeypoints[src];
+                    })
+                    RefinedPoints.leftIris.forEach((dst, src) => {
+                        face.keypoints[dst] = x.landmarkLeftIrisKeypoints[src];
+                    })
+                    RefinedPoints.rightIris.forEach((dst, src) => {
+                        face.keypoints[dst] = x.landmarkRightIrisKeypoints[src];
+                    })
+                }
+
+                return face
+            })
+            return faces
         } else {
             return null;
         }
@@ -154,7 +378,7 @@ export class FaceLandmarkDetectionWorkerManager extends WorkerManagerBase {
             modelType: config.modelType,
             rowPrediction: faces,
         };
-        if (params.movingAverageWindow > 0 && faces && faces.length > 0) {
+        if (params.movingAverageWindow > 0) {
             /// (1)蓄積データ 更新
             if (faces) {
                 while (this.facesMV.length > params.movingAverageWindow) {

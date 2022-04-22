@@ -48,3 +48,7 @@ Sample code is here.
 ```
 
 ```
+
+# Acknowledgments
+
+[PINTO_model_zoo](https://github.com/PINTO0309/PINTO_model_zoo): this module uses landmark model from this zoo.

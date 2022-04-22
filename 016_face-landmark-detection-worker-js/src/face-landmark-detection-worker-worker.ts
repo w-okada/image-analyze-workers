@@ -4,12 +4,16 @@ import * as faceLandmarksDetection from "@tensorflow-models/face-landmarks-detec
 import * as tf from "@tensorflow/tfjs";
 import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 import * as faceMesh from "@mediapipe/face_mesh";
-import { BackendTypes, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, ModelTypes, WorkerCommand, WorkerResponse } from "./const";
+import { BackendTypes, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, LandmarkTypes, ModelTypes, RefinedPoints, TFLite, TFLiteFaceLandmarkDetection, WorkerCommand, WorkerResponse } from "./const";
 import { Face } from "@tensorflow-models/face-landmarks-detection";
+import { BrowserTypes, getBrowserType } from "@dannadori/000_WorkerBase";
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
 //let model: facemesh.FaceMesh | null
 let model: faceLandmarksDetection.FaceLandmarksDetector | null = null;
+let tflite: TFLite | null = null;
+let tfliteInputAddress: number = 0
+let tfliteOutputAddress: number = 0
 
 const load_module = async (config: FaceLandmarkDetectionConfig) => {
     if (config.backendType === BackendTypes.wasm) {
@@ -37,8 +41,155 @@ const predict = async (config: FaceLandmarkDetectionConfig, params: FaceLandmark
         const prediction = await model!.estimateFaces(newImg, { flipHorizontal: false });
         return prediction;
     } else {
-        console.log("model not initialized!");
-        return [];
+        const imageData = newImg
+        tflite!.HEAPU8.set(imageData.data, tfliteInputAddress);
+        tflite!._exec(params.processWidth, params.processHeight, 4);
+        const faceNum = tflite!.HEAPF32[tfliteOutputAddress / 4];
+        const tfliteFaces: TFLiteFaceLandmarkDetection[] = []
+        for (let i = 0; i < faceNum; i++) {
+            //   11: score and rects
+            //    8: ratated face (4x2D)
+            //   12: palm keypoints(6x2D)
+            // 1404: landmark keypoints(468x3D)
+            //  160: landmark Lip keypoints(80x2D)
+            //  142: landmark left eye keypoints(71x2D)
+            //  142: landmark right eye keypoints(71x2D)
+            //   10: landmark left iris keypoint(5x2D)
+            //   10: landmark right iris keypoint(5x2D)
+            // -> 11 + 8 + 12 + 1404 + 160 + 142 + 142 + 10 + 10 = 1899
+            const offset = tfliteOutputAddress / 4 + 1 + i * (1899)
+            const face: TFLiteFaceLandmarkDetection = {
+                score: tflite!.HEAPF32[offset + 0],
+                landmarkScore: tflite!.HEAPF32[offset + 1],
+                rotation: tflite!.HEAPF32[offset + 2],
+                face: {
+                    minX: tflite!.HEAPF32[offset + 3],
+                    minY: tflite!.HEAPF32[offset + 4],
+                    maxX: tflite!.HEAPF32[offset + 5],
+                    maxY: tflite!.HEAPF32[offset + 6],
+                },
+                faceWithMargin: {
+                    minX: tflite!.HEAPF32[offset + 7],
+                    minY: tflite!.HEAPF32[offset + 8],
+                    maxX: tflite!.HEAPF32[offset + 9],
+                    maxY: tflite!.HEAPF32[offset + 10],
+                },
+                rotatedFace: {
+                    positions: [
+                    ]
+                },
+                faceKeypoints: [
+                ],
+                landmarkKeypoints: [
+                ],
+                landmarkLipsKeypoints: [
+                ],
+                landmarkLeftEyeKeypoints: [
+                ],
+                landmarkRightEyeKeypoints: [
+                ],
+                landmarkLeftIrisKeypoints: [
+                ],
+                landmarkRightIrisKeypoints: [
+                ],
+            }
+            for (let j = 0; j < 4; j++) {
+                let offset = (tfliteOutputAddress / 4 + 1) + (i * 1899) + (11) + (j * 2)
+                face.rotatedFace.positions.push({
+                    x: tflite!.HEAPF32[offset + 0],
+                    y: tflite!.HEAPF32[offset + 1],
+                })
+            }
+            for (let j = 0; j < 6; j++) {
+                let offset = (tfliteOutputAddress / 4 + 1) + (i * 1899) + (11 + 8) + (j * 2)
+                face.faceKeypoints.push({
+                    x: tflite!.HEAPF32[offset + 0],
+                    y: tflite!.HEAPF32[offset + 1],
+                })
+            }
+            for (let j = 0; j < 468; j++) {
+                let offset = (tfliteOutputAddress / 4 + 1) + (i * 1899) + (11 + 8 + 12) + (j * 3)
+                face.landmarkKeypoints.push({
+                    x: tflite!.HEAPF32[offset + 0],
+                    y: tflite!.HEAPF32[offset + 1],
+                    z: tflite!.HEAPF32[offset + 2],
+                })
+            }
+            for (let j = 0; j < 80; j++) {
+                let offset = (tfliteOutputAddress / 4 + 1) + (i * 1899) + (11 + 8 + 12 + 1404) + (j * 2)
+                face.landmarkLipsKeypoints.push({
+                    x: tflite!.HEAPF32[offset + 0],
+                    y: tflite!.HEAPF32[offset + 1],
+                })
+            }
+            for (let j = 0; j < 71; j++) {
+                let offset = (tfliteOutputAddress / 4 + 1) + (i * 1899) + (11 + 8 + 12 + 1404 + 160) + (j * 2)
+                face.landmarkLeftEyeKeypoints.push({
+                    x: tflite!.HEAPF32[offset + 0],
+                    y: tflite!.HEAPF32[offset + 1],
+                })
+            }
+            for (let j = 0; j < 71; j++) {
+                let offset = (tfliteOutputAddress / 4 + 1) + (i * 1899) + (11 + 8 + 12 + 1404 + 160 + 142) + (j * 2)
+                face.landmarkRightEyeKeypoints.push({
+                    x: tflite!.HEAPF32[offset + 0],
+                    y: tflite!.HEAPF32[offset + 1],
+                })
+            }
+            for (let j = 0; j < 5; j++) {
+                let offset = (tfliteOutputAddress / 4 + 1) + (i * 1899) + (11 + 8 + 12 + 1404 + 160 + 142 + 142) + (j * 2)
+                face.landmarkLeftIrisKeypoints.push({
+                    x: tflite!.HEAPF32[offset + 0],
+                    y: tflite!.HEAPF32[offset + 1],
+                })
+            }
+            for (let j = 0; j < 5; j++) {
+                let offset = (tfliteOutputAddress / 4 + 1) + (i * 1899) + (11 + 8 + 12 + 1404 + 160 + 142 + 142 + 10) + (j * 2)
+                face.landmarkRightIrisKeypoints.push({
+                    x: tflite!.HEAPF32[offset + 0],
+                    y: tflite!.HEAPF32[offset + 1],
+                })
+            }
+
+            if (face.score > 0.5 && face.landmarkScore > 0.5) {
+                tfliteFaces.push(face)
+
+            }
+        }
+        const faces: Face[] = tfliteFaces.map(x => {
+            const face: Face = {
+                keypoints: [...x.landmarkKeypoints],
+                box: {
+                    xMin: x.face.minX,
+                    yMin: x.face.minY,
+                    xMax: x.face.maxX,
+                    yMax: x.face.maxY,
+                    width: x.face.maxX - x.face.minX,
+                    height: x.face.maxY - x.face.maxY
+                }
+            }
+
+            if (config.landmarkModelKey === LandmarkTypes.with_attention) {
+                RefinedPoints.lips.forEach((dst, src) => {
+                    face.keypoints[dst] = x.landmarkLipsKeypoints[src];
+                })
+                RefinedPoints.leftEye.forEach((dst, src) => {
+                    face.keypoints[dst] = x.landmarkLeftEyeKeypoints[src];
+                })
+                RefinedPoints.rightEye.forEach((dst, src) => {
+                    face.keypoints[dst] = x.landmarkRightEyeKeypoints[src];
+                })
+                RefinedPoints.leftIris.forEach((dst, src) => {
+                    face.keypoints[dst] = x.landmarkLeftIrisKeypoints[src];
+                })
+                RefinedPoints.rightIris.forEach((dst, src) => {
+                    face.keypoints[dst] = x.landmarkRightIrisKeypoints[src];
+                })
+            }
+
+            return face
+        })
+        return faces
     }
 };
 
@@ -72,6 +223,38 @@ onmessage = async (event) => {
                 maxFaces: config.model.maxFaces,
             });
             ctx.postMessage({ message: WorkerResponse.INITIALIZED });
+        } else {
+            const browserType = getBrowserType();
+            if (config.useSimd && browserType !== BrowserTypes.SAFARI) {
+                // SIMD
+                const modSimd = require("../resources/wasm/tflite-simd.js");
+                const b = Buffer.from(config.wasmSimdBase64!, "base64");
+
+                tflite = await modSimd({ wasmBinary: b });
+
+            } else {
+                // Not-SIMD
+                const mod = require("../resources/wasm/tflite.js");
+                const b = Buffer.from(config.wasmBase64!, "base64");
+                tflite = await mod({ wasmBinary: b });
+            }
+
+            const detectorModel = Buffer.from(config.detectorModelTFLite[config.detectorModelKey], "base64");
+            tflite!._initDetectorModelBuffer(detectorModel.byteLength);
+            const detectorModelBufferOffset = tflite!._getDetectorModelBufferAddress();
+            tflite!.HEAPU8.set(new Uint8Array(detectorModel), detectorModelBufferOffset);
+            tflite!._loadDetectorModel(detectorModel.byteLength);
+
+            const landmarkModel = Buffer.from(config.landmarkModelTFLite[config.landmarkModelKey], "base64");
+            tflite!._initLandmarkModelBuffer(landmarkModel.byteLength);
+            const landmarkModelBufferOffset = tflite!._getLandmarkModelBufferAddress();
+            tflite!.HEAPU8.set(new Uint8Array(landmarkModel), landmarkModelBufferOffset);
+            tflite!._loadLandmarkModel(landmarkModel.byteLength);
+
+            tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, config.model.maxFaces)
+            tfliteInputAddress = tflite!._getInputBufferAddress()
+            tfliteOutputAddress = tflite!._getOutputBufferAddress()
+
         }
     } else if (event.data.message === WorkerCommand.PREDICT) {
         const config = event.data.config as FaceLandmarkDetectionConfig;

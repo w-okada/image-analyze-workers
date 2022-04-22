@@ -38,8 +38,9 @@
         "@dannadori/000_WorkerBase": "file:../000_WorkerBase",
         "@mediapipe/face_mesh": "^0.4.1633559619",
         "@tensorflow-models/face-landmarks-detection": "^1.0.1",
-        "@tensorflow/tfjs": "^3.15.0",
-        "@tensorflow/tfjs-backend-wasm": "^3.15.0"
+        "@tensorflow/tfjs": "^3.16.0",
+        "@tensorflow/tfjs-backend-wasm": "^3.16.0",
+        "buffer": "^6.0.3"
     },
-    "version": "0.0.3"
+    "version": "0.0.4"
 }

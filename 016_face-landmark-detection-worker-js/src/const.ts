@@ -55,6 +55,105 @@ export const TRIANGULATION = [
     357, 453, 465, 343, 357, 412, 437, 343, 399, 344, 360, 440, 420, 437, 456, 360, 420, 363, 361, 401, 288, 265, 372, 353, 390, 339, 249, 339, 448, 255,
 ];
 
+export const RefinedLipPoints = [
+    // Lower outer.
+    61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291,
+    // Upper outer(excluding corners).
+    185, 40, 39, 37, 0, 267, 269, 270, 409,
+    // Lower inner.
+    78, 95, 88, 178, 87, 14, 317, 402, 318, 324, 308,
+    // Upper inner(excluding corners).
+    191, 80, 81, 82, 13, 312, 311, 310, 415,
+    // Lower semi - outer.
+    76, 77, 90, 180, 85, 16, 315, 404, 320, 307, 306,
+    // Upper semi - outer(excluding corners).
+    184, 74, 73, 72, 11, 302, 303, 304, 408,
+    // Lower semi - inner.
+    62, 96, 89, 179, 86, 15, 316, 403, 319, 325, 292,
+    // Upper semi - inner(excluding corners).
+    183, 42, 41, 38, 12, 268, 271, 272, 407
+]
+
+export const RefinedLeftEyePoints = [
+    // Lower contour.
+    33, 7, 163, 144, 145, 153, 154, 155, 133,
+    // upper contour (excluding corners).
+    246, 161, 160, 159, 158, 157, 173,
+    // Halo x2 lower contour.
+    130, 25, 110, 24, 23, 22, 26, 112, 243,
+    // Halo x2 upper contour (excluding corners).
+    247, 30, 29, 27, 28, 56, 190,
+    // Halo x3 lower contour.
+    226, 31, 228, 229, 230, 231, 232, 233, 244,
+    // Halo x3 upper contour (excluding corners).
+    113, 225, 224, 223, 222, 221, 189,
+    // Halo x4 upper contour (no lower because of mesh structure) or eyebrow inner contour.
+    35, 124, 46, 53, 52, 65,
+    // Halo x5 lower contour.
+    143, 111, 117, 118, 119, 120, 121, 128, 245,
+    // Halo x5 upper contour (excluding corners) or eyebrow outer contour.
+    156, 70, 63, 105, 66, 107, 55, 193
+]
+
+
+export const RefinedRightEyePoints = [
+    // Lower contour.
+    263, 249, 390, 373, 374, 380, 381, 382, 362,
+    // Upper contour (excluding corners).
+    466, 388, 387, 386, 385, 384, 398,
+    // Halo x2 lower contour.
+    359, 255, 339, 254, 253, 252, 256, 341, 463,
+    // Halo x2 upper contour (excluding corners).
+    467, 260, 259, 257, 258, 286, 414,
+    // Halo x3 lower contour.
+    446, 261, 448, 449, 450, 451, 452, 453, 464,
+    // Halo x3 upper contour (excluding corners).
+    342, 445, 444, 443, 442, 441, 413,
+    // Halo x4 upper contour (no lower because of mesh structure) or eyebrow inner contour.
+    265, 353, 276, 283, 282, 295,
+    // Halo x5 lower contour.
+    372, 340, 346, 347, 348, 349, 350, 357, 465,
+    // Halo x5 upper contour (excluding corners) or eyebrow outer contour.
+    383, 300, 293, 334, 296, 336, 285, 417
+]
+
+
+export const RefinedLeftIrisPoints = [
+    // Center.
+    468,
+    // Iris right edge.
+    469,
+    // Iris top edge.
+    470,
+    // Iris left edge.
+    471,
+    // Iris bottom edge.
+    472
+]
+
+export const RefinedRightIrisPoints = [
+    // Center.
+    473,
+    // Iris right edge.
+    474,
+    // Iris top edge.
+    475,
+    // Iris left edge.
+    476,
+    // Iris bottom edge.
+    477
+]
+
+export const RefinedPoints = {
+    "lips": RefinedLipPoints,
+    "leftEye": RefinedLeftEyePoints,
+    "rightEye": RefinedRightEyePoints,
+    "leftIris": RefinedLeftIrisPoints,
+    "rightIris": RefinedRightIrisPoints
+} as const
+
+
+
 export const BackendTypes = {
     WebGL: "WebGL",
     wasm: "wasm",
@@ -69,6 +168,21 @@ export const ModelTypes = {
 
 } as const;
 export type ModelTypes = typeof ModelTypes[keyof typeof ModelTypes];
+
+export const DetectorTypes = {
+    short: "short",
+    full: "full",
+    full_sparse: "full_sparse"
+}
+export type DetectorTypes = typeof DetectorTypes[keyof typeof DetectorTypes];
+
+export const LandmarkTypes = {
+    landmark: "landmark",
+    with_attention: "with_attention",
+}
+export type LandmarkTypes = typeof LandmarkTypes[keyof typeof LandmarkTypes]
+
+
 
 export interface ModelConfig {
     // maxContinuousChecks: number;
@@ -87,6 +201,17 @@ export interface FaceLandmarkDetectionConfig {
     processOnLocal: boolean;
     pageUrl: string;
     modelType: ModelTypes;
+
+    wasmBase64: string;
+    wasmSimdBase64: string;
+    detectorModelTFLite: { [key: string]: string };
+    landmarkModelTFLite: { [key: string]: string };
+    useSimd: boolean;
+    maxProcessWidth: number
+    maxProcessHeight: number
+
+    detectorModelKey: DetectorTypes
+    landmarkModelKey: LandmarkTypes
 }
 
 export interface FaceLandmarkDetectionOperationParams {
@@ -118,3 +243,79 @@ export type FacemeshPredictionMediapipe = {
 };
 
 export type FaceMeshPredictionEx = FacemeshPredictionMediapipe;
+
+
+
+
+export interface TFLite extends EmscriptenModule {
+    _getInputBufferAddress(): number;
+    _getOutputBufferAddress(): number;
+    _getTemporaryBufferAddress(): number
+
+    _getDetectorModelBufferAddress(): number;
+    _getLandmarkModelBufferAddress(): number;
+
+    _initDetectorModelBuffer(size: number): void;
+    _initLandmarkModelBuffer(size: number): void;
+    _initInputBuffer(width: number, height: number, channel: number): void
+
+    _loadDetectorModel(bufferSize: number): number;
+    _loadLandmarkModel(bufferSize: number): number;
+    _exec(widht: number, height: number, max_palm_num: number): number;
+}
+export const INPUT_WIDTH = 256
+export const INPUT_HEIGHT = 256
+
+export type TFLiteFaceLandmarkDetection = {
+    score: number,
+    landmarkScore: number,
+    rotation: number,
+    face: {
+        minX: number,
+        minY: number,
+        maxX: number,
+        maxY: number,
+    },
+    faceWithMargin: {
+        minX: number,
+        minY: number,
+        maxX: number,
+        maxY: number,
+    },
+    rotatedFace: {
+        positions: {
+            x: number,
+            y: number
+        }[]
+    }
+    faceKeypoints: {
+        x: number,
+        y: number
+    }[],
+    landmarkKeypoints: {
+        x: number,
+        y: number,
+        z: number
+    }[],
+    landmarkLipsKeypoints: {
+        x: number,
+        y: number
+    }[],
+    landmarkLeftEyeKeypoints: {
+        x: number,
+        y: number
+    }[],
+    landmarkRightEyeKeypoints: {
+        x: number,
+        y: number
+    }[],
+    landmarkLeftIrisKeypoints: {
+        x: number,
+        y: number
+    }[],
+    landmarkRightIrisKeypoints: {
+        x: number,
+        y: number
+    }[],
+}
+
