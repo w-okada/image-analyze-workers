@@ -42,7 +42,7 @@ export const generateFaceLandmarkDetectionDefaultConfig = (): FaceLandmarkDetect
         model: {
             // maxContinuousChecks: 5,
             detectionConfidence: 0.9,
-            maxFaces: 10,
+            maxFaces: 1,
             // iouThreshold: 0.3,
             // scoreThreshold: 0.75,
             refineLandmarks: false,
@@ -185,10 +185,9 @@ export class LocalFL extends LocalWorker {
         } else if (config.modelType === ModelTypes.tflite) {
             const imageData = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height)
             this.tflite!.HEAPU8.set(imageData.data, this.tfliteInputAddress);
-            this.tflite!._exec(params.processWidth, params.processHeight, 4);
+            this.tflite!._exec(params.processWidth, params.processHeight, config.model.maxFaces);
             const faceNum = this.tflite!.HEAPF32[this.tfliteOutputAddress / 4];
             const tfliteFaces: TFLiteFaceLandmarkDetection[] = []
-            console.log("DETECTED FACENUM::", faceNum, this.tfliteOutputAddress)
             for (let i = 0; i < faceNum; i++) {
                 //   11: score and rects
                 //    8: ratated face (4x2D)
@@ -355,6 +354,8 @@ export class FaceLandmarkDetectionWorkerManager extends WorkerManagerBase {
             },
             config
         );
+        console.log("tflite worker initilizied. at manager")
+
         return;
     };
 
@@ -365,6 +366,7 @@ export class FaceLandmarkDetectionWorkerManager extends WorkerManagerBase {
             const prediction = await this.localWorker.predict(this.config, currentParams, resizedCanvas);
             return this.generatePredictionEx(this.config, params, prediction);
         }
+
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
         const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as Face[];
         return this.generatePredictionEx(this.config, params, prediction);

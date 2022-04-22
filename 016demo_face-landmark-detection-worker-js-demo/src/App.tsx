@@ -157,6 +157,23 @@ const Controller = (props: ControllerProps) => {
         },
         integer: true,
     };
+
+    // moving averageを使うので複数検出はしない
+    // const maxFaceSliderProps: CommonSliderProps = {
+    //     id: "max-faces-slider",
+    //     title: "Max faces",
+    //     currentValue: config.model.maxFaces,
+    //     max: 4,
+    //     min: 1,
+    //     step: 1,
+    //     width: "30%",
+    //     onChange: (value: number) => {
+    //         config.model.maxFaces = value;
+    //         setParams({ ...params });
+    //     },
+    //     integer: true,
+    // };
+
     // //// (2) Mask
     // const managerForMaskRef = useRef<FacemeshWorkerManager>();
     // const [manager, setManager] = useState<FacemeshWorkerManager | undefined>(managerForMaskRef.current);
@@ -236,6 +253,7 @@ const Controller = (props: ControllerProps) => {
             <CommonSlider {...processWidthSliderProps}></CommonSlider>
             <CommonSlider {...processHeightSliderProps}></CommonSlider>
             <CommonSlider {...movingAverageWindowSliderProps}></CommonSlider>
+            {/* <CommonSlider {...maxFaceSliderProps}></CommonSlider> moving averageを使うので複数検出はしない*/}
         </div>
     );
 };

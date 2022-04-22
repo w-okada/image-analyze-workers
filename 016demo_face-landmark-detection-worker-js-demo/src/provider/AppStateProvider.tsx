@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
 import { loadURLAsDataURL } from "../utils/urlReader";
-import { FaceMeshPredictionEx, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, generateFaceLandmarkDetectionDefaultConfig, generateDefaultFaceLandmarkDetectionParams } from "@dannadori/face-landmark-detection-worker-js";
+import { FaceMeshPredictionEx, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, generateFaceLandmarkDetectionDefaultConfig, generateDefaultFaceLandmarkDetectionParams, ModelTypes, BackendTypes } from "@dannadori/face-landmark-detection-worker-js";
 
 type Props = {
     children: ReactNode;
@@ -42,14 +42,15 @@ export const useAppState = (): AppStateValue => {
     return state;
 };
 
-// const initialInputSourcePath = "img/yuka_kawamura.jpg";
-const initialInputSourcePath = "mov/Model.mp4";
-//const initialInputSourcePath = "mov/Couple.mp4";
-// const initialBackgroundSourcePath = "img/yuka_kawamura.jpg";
+const initialInputSourcePath = "mov/Happy.mp4";
 const initialMaskSourcePath = "img/ai_face.jpg";
 
 const initialConfig = generateFaceLandmarkDetectionDefaultConfig();
 const initialParams = generateDefaultFaceLandmarkDetectionParams();
+initialParams.movingAverageWindow = 3;
+initialConfig.modelType = ModelTypes.tflite;
+initialConfig.backendType = BackendTypes.wasm;
+initialConfig.processOnLocal = false;
 
 export const AppStateProvider = ({ children }: Props) => {
     const [applicationMode, setApplicationMode] = useState<ApplicationModes>(ApplicationModes.facemesh);

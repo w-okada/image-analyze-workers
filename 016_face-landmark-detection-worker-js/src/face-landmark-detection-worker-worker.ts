@@ -43,7 +43,7 @@ const predict = async (config: FaceLandmarkDetectionConfig, params: FaceLandmark
     } else {
         const imageData = newImg
         tflite!.HEAPU8.set(imageData.data, tfliteInputAddress);
-        tflite!._exec(params.processWidth, params.processHeight, 4);
+        tflite!._exec(params.processWidth, params.processHeight, config.model.maxFaces);
         const faceNum = tflite!.HEAPF32[tfliteOutputAddress / 4];
         const tfliteFaces: TFLiteFaceLandmarkDetection[] = []
         for (let i = 0; i < faceNum; i++) {
@@ -206,7 +206,6 @@ onmessage = async (event) => {
             console.log("this error is ignored", error)
         }
         model = null;
-
         if (config.modelType === (ModelTypes.mediapipe)) {
             // Maybe this module is not work.....(20220408)
             model = await faceLandmarksDetection.createDetector(faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh, {
@@ -217,6 +216,7 @@ onmessage = async (event) => {
             });
             ctx.postMessage({ message: WorkerResponse.INITIALIZED });
         } else if (config.modelType === (ModelTypes.tfjs)) {
+
             model = await faceLandmarksDetection.createDetector(faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh, {
                 runtime: "tfjs",
                 refineLandmarks: config.model.refineLandmarks,
@@ -224,14 +224,14 @@ onmessage = async (event) => {
             });
             ctx.postMessage({ message: WorkerResponse.INITIALIZED });
         } else {
-            const browserType = getBrowserType();
+            // const browserType = getBrowserType();
+            const browserType = config.browserType
             if (config.useSimd && browserType !== BrowserTypes.SAFARI) {
                 // SIMD
                 const modSimd = require("../resources/wasm/tflite-simd.js");
                 const b = Buffer.from(config.wasmSimdBase64!, "base64");
 
                 tflite = await modSimd({ wasmBinary: b });
-
             } else {
                 // Not-SIMD
                 const mod = require("../resources/wasm/tflite.js");
@@ -254,7 +254,8 @@ onmessage = async (event) => {
             tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, config.model.maxFaces)
             tfliteInputAddress = tflite!._getInputBufferAddress()
             tfliteOutputAddress = tflite!._getOutputBufferAddress()
-
+            console.log("tflite worker initilizied")
+            ctx.postMessage({ message: WorkerResponse.INITIALIZED });
         }
     } else if (event.data.message === WorkerCommand.PREDICT) {
         const config = event.data.config as FaceLandmarkDetectionConfig;
