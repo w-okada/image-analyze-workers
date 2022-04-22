@@ -2,7 +2,7 @@ This is webworker module for [Face landmarks detection](https://github.com/tenso
 
 ## Face landmark detection
 
-![image](https://user-images.githubusercontent.com/48346627/98291984-534afc00-1fef-11eb-9e89-33b5f267b28c.png)
+![image](https://user-images.githubusercontent.com/48346627/164592156-dd230139-d3a2-4b51-aa99-150545f3adc4.png)
 
 ## Install
 

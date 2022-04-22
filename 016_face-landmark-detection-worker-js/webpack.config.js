@@ -1,8 +1,8 @@
 const path = require("path");
 const webpack = require("webpack");
 const manager = {
-    mode: "development",
-    // mode: "production",
+    // mode: "development",
+    mode: "production",
     entry: "./src/face-landmark-detection-worker.ts",
     resolve: {
         extensions: [".ts", ".js"],

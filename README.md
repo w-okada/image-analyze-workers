@@ -322,7 +322,7 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detect
 
 ### installation and usage
 
-[See here](/016demo_face-landmark-detection-worker-js-demo)
+[See here](/016_face-landmark-detection-worker-js)
 
 ### demo
 

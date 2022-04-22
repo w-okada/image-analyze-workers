@@ -55,7 +55,7 @@
         "webpack-dev-server": "^4.8.1"
     },
     "dependencies": {
-        "@dannadori/face-landmark-detection-worker-js": "^0.0.4",
+        "@dannadori/face-landmark-detection-worker-js": "^0.0.5",
         "demo-base": "file:../000_DemoBase",
         "react": "^18.0.0",
         "react-dom": "^18.0.0"

@@ -158,60 +158,48 @@ const Controller = (props: ControllerProps) => {
         integer: true,
     };
 
-    // moving averageを使うので複数検出はしない
-    // const maxFaceSliderProps: CommonSliderProps = {
-    //     id: "max-faces-slider",
-    //     title: "Max faces",
-    //     currentValue: config.model.maxFaces,
-    //     max: 4,
-    //     min: 1,
-    //     step: 1,
-    //     width: "30%",
-    //     onChange: (value: number) => {
-    //         config.model.maxFaces = value;
-    //         setParams({ ...params });
-    //     },
-    //     integer: true,
-    // };
-
-    // //// (2) Mask
-    // const managerForMaskRef = useRef<FacemeshWorkerManager>();
-    // const [manager, setManager] = useState<FacemeshWorkerManager | undefined>(managerForMaskRef.current);
-    // useEffect(() => {
-    //     if (applicationMode === "faceswap") {
-    //         const loadModel = async () => {
-    //             const m = manager ? manager : new FacemeshWorkerManager();
-    //             await m.init(config);
-    //             managerForMaskRef.current = m;
-    //             setManager(managerForMaskRef.current);
-    //         };
-    //         setTimeout(() => {
-    //             loadModel();
-    //         }, 1000 * 5);
-    //     }
-    // }, [config, applicationMode]);
-    // useEffect(() => {
-    //     if (!managerForMaskRef.current || !maskCanvas) {
-    //         console.log("mask prediction initialize not");
-    //         return;
-    //     }
-    //     console.log("Mask Prediction...");
-    //     const maskPrediction = async () => {
-    //         await managerForMaskRef.current!.predict(params, maskCanvas);
-    //         await managerForMaskRef.current!.predict(params, maskCanvas);
-    //         await managerForMaskRef.current!.predict(params, maskCanvas);
-    //         await managerForMaskRef.current!.predict(params, maskCanvas);
-    //         const prediction = await managerForMaskRef.current!.predict(params, maskCanvas);
-    //         setMaskPrediction(prediction);
-    //         console.log("mask image", maskCanvas.width, maskCanvas.height);
-    //     };
-    //     maskPrediction();
-    // }, [managerForMaskRef.current, maskCanvas, config, params]);
+    const availableConfigTable = useMemo(() => {
+        return (
+            <table className="table table-compact w-full">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>type</th>
+                        <th>backend</th>
+                        <th>webworker</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>1</th>
+                        <td>mediapipe</td>
+                        <td>any(no difference)</td>
+                        <td>no</td>
+                    </tr>
+                    <tr>
+                        <th>2</th>
+                        <td>tfjs</td>
+                        <td>webgl,cpu</td>
+                        <td>yes</td>
+                    </tr>
+                    <tr>
+                        <th>3</th>
+                        <td>tflite</td>
+                        <td>wasm</td>
+                        <td>yes</td>
+                    </tr>
+                </tbody>
+            </table>
+        );
+    }, []);
 
     return (
         <div style={{ display: "flex", flexDirection: "column" }}>
             <Credit></Credit>
-
+            <div>
+                <div>available config</div>
+                <div>{availableConfigTable}</div>
+            </div>
             <VideoInputSelector {...videoInputSelectorProps}></VideoInputSelector>
             <CommonSwitch {...onLocalSwitchProps}></CommonSwitch>
             <CommonSelector {...backendSelectorProps}></CommonSelector>
