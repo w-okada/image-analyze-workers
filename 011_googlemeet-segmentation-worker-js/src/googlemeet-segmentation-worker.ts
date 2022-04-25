@@ -1,29 +1,24 @@
-import * as tf from "@tensorflow/tfjs";
-import { BackendTypes, GoogleMeetSegmentationConfig, GoogleMeetSegmentationFunctionType, GoogleMeetSegmentationOperationParams, GoogleMeetSegmentationSmoothingType, InterpolationTypes, PostProcessTypes, TFLite, WorkerCommand, WorkerResponse } from "./const";
-import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
+import { GoogleMeetSegmentationConfig, GoogleMeetSegmentationFunctionType, GoogleMeetSegmentationOperationParams, InterpolationTypes, PostProcessTypes, TFLite } from "./const";
 import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
-export { GoogleMeetSegmentationSmoothingType, BackendTypes, PostProcessTypes, InterpolationTypes } from "./const";
+export { GoogleMeetSegmentationSmoothingType, PostProcessTypes, InterpolationTypes, GoogleMeetSegmentationConfig, GoogleMeetSegmentationOperationParams } from "./const";
 
+/// #if TFLITE_TARGET==="96x160"
 // @ts-ignore
-import workerJs from "worker-loader?inline=no-fallback!./googlemeet-segmentation-worker-worker.ts";
+import tflite_96x160 from "../resources/tflite_models/96x160/segm_lite_v681.tflite.bin";
 
+/// #elif TFLITE_TARGET==="128x128"
 // @ts-ignore
-import modelJson_96x160 from "../resources/tensorflowjs/96x160_32/model.json";
-// @ts-ignore
-import modelWeight_96x160 from "../resources/tensorflowjs/96x160_32/group1-shard1of1.bin";
-// @ts-ignore
-import modelJson_128x128 from "../resources/tensorflowjs/128x128_32/model.json";
-// @ts-ignore
-import modelWeight_128x128 from "../resources/tensorflowjs/128x128_32/group1-shard1of1.bin";
-// @ts-ignore
-import modelJson_144x256 from "../resources/tensorflowjs/144x256_32/model.json";
-// @ts-ignore
-import modelWeight_144x256 from "../resources/tensorflowjs/144x256_32/group1-shard1of1.bin";
-// @ts-ignore
-import modelJson_256x256 from "../resources/tensorflowjs/256x256_32/model.json";
-// @ts-ignore
-import modelWeight_256x256 from "../resources/tensorflowjs/256x256_32/group1-shard1of1.bin";
+import tflite_128x128 from "../resources/tflite_models/128x128/segm_lite_v509.tflite.bin";
 
+/// #elif TFLITE_TARGET==="144x256"
+// @ts-ignore
+import tflite_144x256 from "../resources/tflite_models/144x256/segm_full_v679.tflite.bin";
+
+/// #elif TFLITE_TARGET==="256x256"
+// @ts-ignore
+import tflite_256x256 from "../resources/tflite_models/256x256/segm_full_v1215.f16.tflite.bin";
+
+/// #else
 // @ts-ignore
 import tflite_96x160 from "../resources/tflite_models/96x160/segm_lite_v681.tflite.bin";
 // @ts-ignore
@@ -33,6 +28,10 @@ import tflite_144x256 from "../resources/tflite_models/144x256/segm_full_v679.tf
 // @ts-ignore
 import tflite_256x256 from "../resources/tflite_models/256x256/segm_full_v1215.f16.tflite.bin";
 
+/// #endif
+
+// @ts-ignore
+import workerJs from "worker-loader?inline=no-fallback!./googlemeet-segmentation-worker-worker.ts";
 // @ts-ignore
 import wasm from "../resources/wasm/tflite.wasm";
 // @ts-ignore
@@ -42,43 +41,71 @@ export const generateGoogleMeetSegmentationDefaultConfig = (): GoogleMeetSegment
     const defaultConf: GoogleMeetSegmentationConfig = {
         browserType: getBrowserType(),
         processOnLocal: false,
-        backendType: BackendTypes.WebGL,
         wasmPaths: {
             "tfjs-backend-wasm.wasm": "/tfjs-backend-wasm.wasm",
             "tfjs-backend-wasm-simd.wasm": "/tfjs-backend-wasm-simd.wasm",
             "tfjs-backend-wasm-threaded-simd.wasm": "/tfjs-backend-wasm-threaded-simd.wasm",
         },
-        pageUrl: window.location.href,
-        modelJsons: {
-            "160x96": modelJson_96x160,
-            "128x128": modelJson_128x128,
-            "256x144": modelJson_144x256,
-            "256x256": modelJson_256x256,
-        },
-        modelWeights: {
-            "160x96": modelWeight_96x160,
-            "128x128": modelWeight_128x128,
-            "256x144": modelWeight_144x256,
-            "256x256": modelWeight_256x256,
-        },
-        modelTFLites: {
-            "160x96": tflite_96x160.split(",")[1],
-            "128x128": tflite_128x128.split(",")[1],
-            "256x144": tflite_144x256.split(",")[1],
-            "256x256": tflite_256x256.split(",")[1],
-        },
-        modelInputs: {
-            "160x96": [160, 96],
-            "128x128": [128, 128],
-            "256x144": [256, 144],
-            "256x256": [256, 256],
-        },
+        modelTFLites: {},
+        modelInputs: {},
         modelKey: "160x96",
+
         wasmBase64: wasm.split(",")[1],
         wasmSimdBase64: wasmSimd.split(",")[1],
         useSimd: false,
-        useTFJS: true,
     };
+    /// #if TFLITE_TARGET==="96x160"
+    defaultConf.modelTFLites = {
+        "160x96": tflite_96x160.split(",")[1],
+    }
+    defaultConf.modelInputs = {
+        "160x96": [160, 96],
+    }
+    defaultConf.modelKey = "160x96"
+    defaultConf.useSimd = true
+    /// #elif TFLITE_TARGET==="128x128"
+    defaultConf.modelTFLites = {
+        "128x128": tflite_128x128.split(",")[1],
+    }
+    defaultConf.modelInputs = {
+        "128x128": [128, 128],
+    }
+    defaultConf.modelKey = "128x128"
+    defaultConf.useSimd = true
+    /// #elif TFLITE_TARGET==="144x256"
+    defaultConf.modelTFLites = {
+        "256x144": tflite_144x256.split(",")[1],
+    }
+    defaultConf.modelInputs = {
+        "256x144": [256, 144],
+    }
+    defaultConf.modelKey = "256x144"
+    defaultConf.useSimd = true
+    /// #elif TFLITE_TARGET==="256x256"
+    defaultConf.modelTFLites = {
+        "256x256": tflite_256x256.split(",")[1],
+    }
+    defaultConf.modelInputs = {
+        "256x256": [256, 256],
+    }
+    defaultConf.modelKey = "256x256"
+    defaultConf.useSimd = true
+    /// #else  
+    defaultConf.modelTFLites = {
+        "160x96": tflite_96x160.split(",")[1],
+        "128x128": tflite_128x128.split(",")[1],
+        "256x144": tflite_144x256.split(",")[1],
+        "256x256": tflite_256x256.split(",")[1],
+    }
+    defaultConf.modelInputs = {
+        "160x96": [160, 96],
+        "128x128": [128, 128],
+        "256x144": [256, 144],
+        "256x256": [256, 256],
+    }
+    defaultConf.modelKey = "160x96"
+    defaultConf.useSimd = true
+    /// #endif
     return defaultConf;
 };
 
@@ -99,48 +126,15 @@ export const generateDefaultGoogleMeetSegmentationParams = (): GoogleMeetSegment
 };
 
 export class LocalGM extends LocalWorker {
-    tfjsModel: tf.GraphModel | null = null;
     tfliteModel: TFLite | null = null;
 
     canvas = document.createElement("canvas");
     ready = false;
 
-    load_module = async (config: GoogleMeetSegmentationConfig) => {
-        if (config.backendType === BackendTypes.wasm) {
-            const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
-            const wasmPaths: { [key: string]: string } = {};
-            Object.keys(config.wasmPaths).forEach((key) => {
-                wasmPaths[key] = `${dirname}${config.wasmPaths[key]}`;
-            });
-            setWasmPaths(wasmPaths);
-            console.log("use wasm backend", wasmPaths);
-            await tf.setBackend("wasm");
-        } else if (config.backendType === BackendTypes.cpu) {
-            await tf.setBackend("cpu");
-        } else {
-            console.log("use webgl backend");
-            await tf.setBackend("webgl");
-        }
-    };
-
     init = async (config: GoogleMeetSegmentationConfig) => {
         this.ready = false;
-
-        this.tfjsModel = null;
         this.tfliteModel = null;
 
-        // TensorflowJS
-        if (config.useTFJS) {
-            await this.load_module(config);
-            await tf.ready();
-            await tf.env().set("WEBGL_CPU_FORWARD", false);
-            const modelJson = new File([config.modelJsons[config.modelKey]], "model.json", { type: "application/json" });
-            const weight = Buffer.from(config.modelWeights[config.modelKey].split(",")[1], "base64");
-            const modelWeights = new File([weight], "group1-shard1of1.bin");
-            this.tfjsModel = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
-        }
-
-        /// (x) TensorflowLite (always loaded for interpolutions.)
         const browserType = getBrowserType();
         if (config.useSimd && browserType !== BrowserTypes.SAFARI) {
             // SIMD
@@ -162,58 +156,19 @@ export class LocalGM extends LocalWorker {
     };
 
     predict = async (config: GoogleMeetSegmentationConfig, params: GoogleMeetSegmentationOperationParams, targetCanvas: HTMLCanvasElement) => {
-        if (!this.tfliteModel && !this.tfjsModel) {
+        if (!this.tfliteModel) {
             return null;
         }
         if (!this.ready) {
             return null;
         }
 
-        let res: Uint8ClampedArray | null = null;
-        if (config.useTFJS) {
-            tf.tidy(() => {
-                let tensor = tf.browser.fromPixels(targetCanvas);
-                const tensorWidth = this.tfjsModel!.inputs[0].shape![2];
-                const tensorHeight = this.tfjsModel!.inputs[0].shape![1];
-                tensor = tf.image.resizeBilinear(tensor, [tensorHeight, tensorWidth]);
-                tensor = tensor.expandDims(0);
-                tensor = tf.cast(tensor, "float32");
-                tensor = tensor.div(255.0);
-                let prediction = this.tfjsModel!.predict(tensor) as tf.Tensor;
-                prediction = prediction.softmax();
-                prediction = prediction.squeeze();
-                let segmentation: tf.Tensor<tf.Rank>;
-                if (prediction.shape.length === 2) {
-                    segmentation = prediction.reshape([-1]);
-                    const seg = segmentation.arraySync() as number[];
-                    res = new Uint8ClampedArray(seg);
-                } else {
-                    let [predTensor0, predTensor1] = tf.split(prediction, 2, 2) as tf.Tensor<tf.Rank>[];
-                    predTensor0 = predTensor0.squeeze().flatten();
-                    predTensor1 = predTensor1.squeeze().flatten();
-                    const seg0 = predTensor0.arraySync() as number[];
-                    const seg1 = predTensor1.arraySync() as number[];
-                    const jbfGuideImageBufferOffset = this.tfliteModel!._getJbfGuideImageBufferOffset();
-                    const jbfInputImageBufferOffset = this.tfliteModel!._getJbfInputImageBufferOffset();
-                    this.tfliteModel!.HEAPF32.set(new Float32Array(seg0), jbfGuideImageBufferOffset / 4);
-                    this.tfliteModel!.HEAPF32.set(new Float32Array(seg1), jbfInputImageBufferOffset / 4);
-                    this.tfliteModel!._jbf(tensorWidth, tensorHeight, targetCanvas.width, targetCanvas.height, params.jbfD, params.jbfSigmaC, params.jbfSigmaS, params.jbfPostProcess, params.interpolation, params.threshold);
-
-                    const outputImageBufferOffset = this.tfliteModel!._getOutputImageBufferOffset();
-                    res = new Uint8ClampedArray(this.tfliteModel!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + targetCanvas.width * targetCanvas.height * 4));
-                }
-            });
-        } else {
-            const imageData = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
-            const inputImageBufferOffset = this.tfliteModel!._getInputImageBufferOffset();
-            this.tfliteModel!.HEAPU8.set(imageData.data, inputImageBufferOffset);
-
-            this.tfliteModel!._exec_with_jbf(imageData.width, imageData.height, params.jbfD, params.jbfSigmaC, params.jbfSigmaS, params.jbfPostProcess, params.interpolation, params.threshold);
-
-            const outputImageBufferOffset = this.tfliteModel!._getOutputImageBufferOffset();
-            res = new Uint8ClampedArray(this.tfliteModel!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + imageData.width * imageData.height * 4));
-        }
-        // console.log("RES:::", res);
+        const imageData = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
+        const inputImageBufferOffset = this.tfliteModel!._getInputImageBufferOffset();
+        this.tfliteModel!.HEAPU8.set(imageData.data, inputImageBufferOffset);
+        this.tfliteModel!._exec_with_jbf(imageData.width, imageData.height, params.jbfD, params.jbfSigmaC, params.jbfSigmaS, params.jbfPostProcess, params.interpolation, params.threshold);
+        const outputImageBufferOffset = this.tfliteModel!._getOutputImageBufferOffset();
+        const res = new Uint8ClampedArray(this.tfliteModel!.HEAPU8.slice(outputImageBufferOffset, outputImageBufferOffset + imageData.width * imageData.height * 4));
         return res;
     };
 }

@@ -1,4 +1,4 @@
-import { GoogleMeetSegmentationOperationParams } from "@dannadori/googlemeet-segmentation-worker-js/dist/const";
+import { GoogleMeetSegmentationOperationParams } from "./provider/AppStateProvider";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 
 export class GoogleMeetDrawer {
@@ -30,7 +30,7 @@ export class GoogleMeetDrawer {
         this.outputCanvas = outputCanvas;
     };
 
-    draw = (snap: HTMLCanvasElement, params: GoogleMeetSegmentationOperationParams, lightWrapping: number, prediction: Uint8ClampedArray) => {
+    draw = (snap: HTMLImageElement | HTMLVideoElement, params: GoogleMeetSegmentationOperationParams, lightWrapping: number, prediction: Uint8ClampedArray) => {
         if (!this.background || !this.outputCanvas) {
             console.log("not ready:::", this.background, this.outputCanvas);
             return;
@@ -42,6 +42,8 @@ export class GoogleMeetDrawer {
         this.tmpCanvas.height = params.processHeight;
         this.tmpCanvas.getContext("2d")!.putImageData(mask, 0, 0);
 
+        this.frontCanvas.width = snap.width
+        this.frontCanvas.height = snap.height
         const frontCtx = this.frontCanvas.getContext("2d")!;
         frontCtx.clearRect(0, 0, this.frontCanvas.width, this.frontCanvas.height);
         frontCtx.drawImage(this.tmpCanvas, 0, 0, this.frontCanvas.width, this.frontCanvas.height);

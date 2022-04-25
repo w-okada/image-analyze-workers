@@ -2,12 +2,15 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
+const tflite_target = process.env.TFLITE || "";
+console.log("tflite_target::", tflite_target);
+
 module.exports = {
     // mode: "development",
     mode: "production",
     entry: path.resolve(__dirname, "src/index.tsx"),
     output: {
-        path: path.resolve(__dirname, "dist"),
+        path: path.resolve(__dirname, "dist", tflite_target),
         filename: "index.js",
     },
     resolve: {
@@ -24,6 +27,12 @@ module.exports = {
                         options: {
                             presets: ["@babel/preset-env", "@babel/preset-react", "@babel/preset-typescript"],
                             plugins: ["@babel/plugin-transform-runtime"],
+                        },
+                    },
+                    {
+                        loader: "ifdef-loader",
+                        options: {
+                            TFLITE_TARGET: tflite_target,
                         },
                     },
                 ],

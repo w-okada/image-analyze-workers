@@ -2,8 +2,35 @@ import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
 import { useWindowStateChangeListener, WindowSize } from "demo-base";
 import { loadURLAsDataURL } from "../utils/urlReader";
-import { GoogleMeetSegmentationConfig, GoogleMeetSegmentationOperationParams } from "@dannadori/googlemeet-segmentation-worker-js/dist/const";
-import { generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmentationDefaultConfig } from "@dannadori/googlemeet-segmentation-worker-js";
+// import { generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmentationDefaultConfig, GoogleMeetSegmentationConfig, GoogleMeetSegmentationOperationParams } from "@dannadori/googlemeet-segmentation-worker-js/dist/googlemeet-segmentation-worker";
+
+/// #if TFLITE_TARGET==="96x160"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { GoogleMeetSegmentationWorkerManager, InterpolationTypes, PostProcessTypes, generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmentationDefaultConfig, GoogleMeetSegmentationConfig, GoogleMeetSegmentationOperationParams } from "@dannadori/googlemeet-segmentation-worker-js/dist/googlemeet-segmentation-worker96x160";
+
+/// #elif TFLITE_TARGET==="128x128"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { GoogleMeetSegmentationWorkerManager, InterpolationTypes, PostProcessTypes, generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmentationDefaultConfig, GoogleMeetSegmentationConfig, GoogleMeetSegmentationOperationParams } from "@dannadori/googlemeet-segmentation-worker-js/dist/googlemeet-segmentation-worker128x128";
+
+/// #elif TFLITE_TARGET==="144x256"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { GoogleMeetSegmentationWorkerManager, InterpolationTypes, PostProcessTypes, generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmentationDefaultConfig, GoogleMeetSegmentationConfig, GoogleMeetSegmentationOperationParams } from "@dannadori/googlemeet-segmentation-worker-js/dist/googlemeet-segmentation-worker144x256";
+
+/// #elif TFLITE_TARGET==="256x256"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { GoogleMeetSegmentationWorkerManager, InterpolationTypes, PostProcessTypes, generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmentationDefaultConfig, GoogleMeetSegmentationConfig, GoogleMeetSegmentationOperationParams } from "@dannadori/googlemeet-segmentation-worker-js/dist/googlemeet-segmentation-worker256x256";
+
+/// #else
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { GoogleMeetSegmentationWorkerManager, InterpolationTypes, PostProcessTypes, generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmentationDefaultConfig, GoogleMeetSegmentationConfig, GoogleMeetSegmentationOperationParams } from "@dannadori/googlemeet-segmentation-worker-js";
+/// #endif
+export { generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmentationDefaultConfig, GoogleMeetSegmentationWorkerManager, InterpolationTypes, PostProcessTypes };
+export type { GoogleMeetSegmentationConfig, GoogleMeetSegmentationOperationParams };
 
 type Props = {
     children: ReactNode;

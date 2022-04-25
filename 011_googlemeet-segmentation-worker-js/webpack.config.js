@@ -1,6 +1,9 @@
 const path = require("path");
 const webpack = require("webpack");
 
+const tflite_target = process.env.TFLITE || "";
+console.log("tflite_target::", tflite_target);
+
 const manager = {
     // mode: "development",
     mode: "production",
@@ -16,15 +19,25 @@ const manager = {
     },
     module: {
         rules: [
-            { test: /\.ts$/, loader: "ts-loader" },
+            {
+                test: /\.ts$/,
+                use: [
+                    { loader: "ts-loader" },
+                    {
+                        loader: "ifdef-loader",
+                        options: {
+                            TFLITE_TARGET: tflite_target,
+                        },
+                    },
+                ],
+            },
             { test: /resources\/.*\.bin/, type: "asset/inline" },
             { test: /resources\/.*\.json/, type: "asset/source" },
-            // { test: /\.wasm$/, loader: "url-loader" },
             { test: /\.wasm$/, type: "asset/inline" },
         ],
     },
     output: {
-        filename: "googlemeet-segmentation-worker.js",
+        filename: `googlemeet-segmentation-worker${tflite_target}.js`,
         path: path.resolve(__dirname, "dist"),
         libraryTarget: "umd",
         globalObject: "typeof self !== 'undefined' ? self : this",

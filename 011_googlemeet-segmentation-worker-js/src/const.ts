@@ -12,13 +12,6 @@ export const WorkerResponse = {
 } as const;
 export type WorkerResponse = typeof WorkerResponse[keyof typeof WorkerResponse];
 
-export const BackendTypes = {
-    WebGL: "WebGL",
-    wasm: "wasm",
-    cpu: "cpu",
-} as const;
-export type BackendTypes = typeof BackendTypes[keyof typeof BackendTypes];
-
 export const PostProcessTypes = {
     none: 0,
     softmax: 1,
@@ -38,21 +31,15 @@ export type InterpolationTypes = typeof InterpolationTypes[keyof typeof Interpol
 export interface GoogleMeetSegmentationConfig {
     browserType: BrowserTypes;
     processOnLocal: boolean;
-    backendType: BackendTypes;
     wasmPaths: { [key: string]: string };
-    pageUrl: string;
 
-    modelJsons: { [key: string]: string };
-    modelWeights: { [key: string]: string };
-    modelTFLites: { [key: string]: string };
     modelKey: string;
-
     modelInputs: { [key: string]: number[] };
+    modelTFLites: { [key: string]: string };
 
     wasmBase64?: string;
     wasmSimdBase64?: string;
     useSimd: boolean;
-    useTFJS: boolean;
 }
 
 export interface GoogleMeetSegmentationOperationParams {
