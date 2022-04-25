@@ -277,7 +277,7 @@ export class SuperResolutionWorkerManager extends WorkerManagerBase {
         }
 
         const imageData = orgCanvasCtx.getImageData(0, 0, this.orgCanvas.width, this.orgCanvas.height);
-        const prediction = (await this.sendToWorker(this.config, params, imageData.data)) as Uint8ClampedArray;
+        const prediction = (await this.sendToWorker(params, imageData.data)) as Uint8ClampedArray;
         return prediction;
     };
 }

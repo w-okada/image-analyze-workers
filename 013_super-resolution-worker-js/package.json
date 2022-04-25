@@ -1,6 +1,6 @@
 {
     "name": "@dannadori/super-resolution-worker-js",
-    "version": "1.0.9",
+    "version": "1.0.10",
     "description": "",
     "main": "dist/super-resolution-worker.js",
     "scripts": {
@@ -37,8 +37,8 @@
         "worker-plugin": "^5.0.1"
     },
     "dependencies": {
-        "@tensorflow/tfjs": "^3.15.0",
-        "@tensorflow/tfjs-backend-wasm": "^3.15.0",
+        "@tensorflow/tfjs": "^3.16.0",
+        "@tensorflow/tfjs-backend-wasm": "^3.16.0",
         "buffer": "^6.0.3",
         "@dannadori/000_WorkerBase": "file:../000_WorkerBase"
     }

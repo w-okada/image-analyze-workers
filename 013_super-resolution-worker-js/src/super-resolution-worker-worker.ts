@@ -6,7 +6,7 @@ const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 let tflite: TFLite | null = null;
 let tfjsModel: tf.LayersModel | null = null;
 let ready: boolean = false;
-
+let config: SuperResolutionConfig | null = null
 const load_module = async (config: SuperResolutionConfig) => {
     if (config.backendType === BackendTypes.wasm) {
         const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
@@ -94,7 +94,7 @@ const predict = async (config: SuperResolutionConfig, params: SuperResolutionOpe
 onmessage = async (event) => {
     if (event.data.message === WorkerCommand.INITIALIZE) {
         ready = false;
-        const config = event.data.config as SuperResolutionConfig;
+        config = event.data.config as SuperResolutionConfig;
         tfjsModel = null;
         tflite = null;
         if (config.useTFJS) {
@@ -127,7 +127,6 @@ onmessage = async (event) => {
         ready = true;
         ctx.postMessage({ message: WorkerResponse.INITIALIZED });
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        const config: SuperResolutionConfig = event.data.config;
         const params: SuperResolutionOperationParams = event.data.params;
         const data: Uint8ClampedArray = event.data.data;
         if (ready === false) {
@@ -135,7 +134,7 @@ onmessage = async (event) => {
             ctx.postMessage({ message: WorkerResponse.NOT_READY });
         } else {
             console.log("READY!!");
-            const prediction = await predict(config, params, data);
+            const prediction = await predict(config!, params, data);
             ctx.postMessage({ message: WorkerResponse.PREDICTED, prediction: prediction }, [prediction!.buffer]);
         }
     }
