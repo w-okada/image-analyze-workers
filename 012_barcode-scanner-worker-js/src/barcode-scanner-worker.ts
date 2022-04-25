@@ -332,7 +332,7 @@ export class BarcodeScannerWorkerManager extends WorkerManagerBase {
             return prediction;
         }
         const imageData = this.orgCanvas.getContext("2d")!.getImageData(0, 0, this.orgCanvas.width, this.orgCanvas.height);
-        const prediction = (await this.sendToWorker(this.config, params, imageData.data)) as BarcodeInfo[];
+        const prediction = (await this.sendToWorker(params, imageData.data)) as BarcodeInfo[];
 
         return prediction;
     };

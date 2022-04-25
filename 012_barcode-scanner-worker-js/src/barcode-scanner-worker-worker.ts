@@ -4,7 +4,7 @@ import { BarcodeInfo, BarcodeScannerConfig, BarcodeScannerOperationParams, ScanM
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 let tflite: TFLite | null = null;
 let ready: boolean = false;
-
+let config: BarcodeScannerConfig | null = null
 const barcodeScan = (imageData: ImageData, config: BarcodeScannerConfig, params: BarcodeScannerOperationParams): BarcodeInfo[] => {
     //// (1) generate original canvas ctx
     const orgCanvas = new OffscreenCanvas(imageData.width, imageData.height);
@@ -203,7 +203,7 @@ const predict = async (config: BarcodeScannerConfig, params: BarcodeScannerOpera
 onmessage = async (event) => {
     if (event.data.message === WorkerCommand.INITIALIZE) {
         ready = false;
-        const config = event.data.config as BarcodeScannerConfig;
+        config = event.data.config as BarcodeScannerConfig;
         tflite = null;
         console.log("[WORKER] module initializing...");
         if (config.useSimd && config.browserType !== BrowserTypes.SAFARI) {
@@ -223,7 +223,6 @@ onmessage = async (event) => {
         ready = true;
         ctx.postMessage({ message: WorkerResponse.INITIALIZED });
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        const config: BarcodeScannerConfig = event.data.config;
         const params: BarcodeScannerOperationParams = event.data.params;
         const data: Uint8ClampedArray = event.data.data;
 
@@ -231,7 +230,7 @@ onmessage = async (event) => {
             console.log("NOTREADY!!", WorkerResponse.NOT_READY);
             ctx.postMessage({ message: WorkerResponse.NOT_READY });
         } else {
-            const prediction = await predict(config, params, data);
+            const prediction = await predict(config!, params, data);
             ctx.postMessage({ message: WorkerResponse.PREDICTED, prediction: prediction });
         }
     }
