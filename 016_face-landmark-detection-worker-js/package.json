@@ -42,5 +42,5 @@
         "@tensorflow/tfjs-backend-wasm": "^3.16.0",
         "buffer": "^6.0.3"
     },
-    "version": "0.0.5"
+    "version": "0.0.7"
 }

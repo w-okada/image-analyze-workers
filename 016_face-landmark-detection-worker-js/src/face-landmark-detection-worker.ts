@@ -312,14 +312,18 @@ export class LocalFL extends LocalWorker {
                 }
 
                 if (config.landmarkModelKey === LandmarkTypes.with_attention) {
+
                     RefinedPoints.lips.forEach((dst, src) => {
-                        face.keypoints[dst] = x.landmarkLipsKeypoints[src];
+                        face.keypoints[dst].x = x.landmarkLipsKeypoints[src].x;
+                        face.keypoints[dst].y = x.landmarkLipsKeypoints[src].y;
                     })
                     RefinedPoints.leftEye.forEach((dst, src) => {
-                        face.keypoints[dst] = x.landmarkLeftEyeKeypoints[src];
+                        face.keypoints[dst].x = x.landmarkLeftEyeKeypoints[src].x;
+                        face.keypoints[dst].y = x.landmarkLeftEyeKeypoints[src].y;
                     })
                     RefinedPoints.rightEye.forEach((dst, src) => {
-                        face.keypoints[dst] = x.landmarkRightEyeKeypoints[src];
+                        face.keypoints[dst].x = x.landmarkRightEyeKeypoints[src].x;
+                        face.keypoints[dst].y = x.landmarkRightEyeKeypoints[src].y;
                     })
                     RefinedPoints.leftIris.forEach((dst, src) => {
                         face.keypoints[dst] = x.landmarkLeftIrisKeypoints[src];
