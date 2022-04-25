@@ -27,7 +27,6 @@ export type ModelTypes = typeof ModelTypes[keyof typeof ModelTypes];
 export const ModelTypes2 = {
     full: "full",
     lite: "lite",
-    old: "old",
 } as const;
 export type ModelTypes2 = typeof ModelTypes2[keyof typeof ModelTypes2];
 
@@ -43,14 +42,6 @@ export interface HandPoseDetectionConfig {
     scoreThreshold: number;
     modelType: ModelTypes;
     modelType2: ModelTypes2;
-
-
-    // palmModelJson: string;
-    // palmModelWeight1: string;
-    // palmModelWeight2: string;
-    // landmarkModelJson: string;
-    // landmarkModelWeight1: string;
-    // landmarkModelWeight2: string;
 
     wasmBase64: string;
     wasmSimdBase64: string;

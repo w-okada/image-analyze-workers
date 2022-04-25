@@ -8,19 +8,28 @@ export { BackendTypes, HandPoseDetectionConfig, HandPoseDetectionOperationParams
 import workerJs from "worker-loader?inline=no-fallback!./hand-pose-detection-worker-worker.ts";
 import { createDetector, Hand, HandDetector, SupportedModels } from "@tensorflow-models/hand-pose-detection";
 
+/// #if TFLITE_TARGET==="full"
+// @ts-ignore
+import palm_full from "../resources/tflite/palm/palm_detection_full.bin";
+// @ts-ignore
+import landmark_full from "../resources/tflite/landmark/hand_landmark_full.bin";
 
+/// #elif TFLITE_TARGET==="lite"
+// @ts-ignore
+import palm_lite from "../resources/tflite/palm/palm_detection_lite.bin";
+// @ts-ignore
+import landmark_lite from "../resources/tflite/landmark/hand_landmark_lite.bin";
+
+/// #else
 // @ts-ignore
 import palm_lite from "../resources/tflite/palm/palm_detection_lite.bin";
 // @ts-ignore
 import palm_full from "../resources/tflite/palm/palm_detection_full.bin";
 // @ts-ignore
-import palm_old from "../resources/tflite/palm/palm_detection_old.bin";
-// @ts-ignore
 import landmark_lite from "../resources/tflite/landmark/hand_landmark_lite.bin";
 // @ts-ignore
 import landmark_full from "../resources/tflite/landmark/hand_landmark_full.bin";
-// @ts-ignore
-import landmark_old from "../resources/tflite/landmark/landmark_old.bin";
+/// #endif
 
 // @ts-ignore
 import wasm from "../resources/wasm/tflite.wasm";
@@ -46,21 +55,40 @@ export const generateHandPoseDetectionDefaultConfig = (): HandPoseDetectionConfi
 
         wasmBase64: wasm.split(",")[1],
         wasmSimdBase64: wasmSimd.split(",")[1],
-        palmModelTFLite: {
-            "lite": palm_lite.split(",")[1],
-            "full": palm_full.split(",")[1],
-            "old": palm_old.split(",")[1],
-        },
-        landmarkModelTFLite: {
-            "lite": landmark_lite.split(",")[1],
-            "full": landmark_full.split(",")[1],
-            "old": landmark_old.split(",")[1],
-        },
+        palmModelTFLite: {},
+        landmarkModelTFLite: {},
         useSimd: true,
         maxProcessWidth: 1024,
         maxProcessHeight: 1024
 
     };
+    /// #if TFLITE_TARGET==="full"
+    defaultConf.palmModelTFLite = {
+        "full": palm_full.split(",")[1],
+    }
+    defaultConf.landmarkModelTFLite = {
+        "full": landmark_full.split(",")[1],
+    }
+    defaultConf.modelType2 = ModelTypes2.full
+    /// #elif TFLITE_TARGET==="lite"
+    defaultConf.palmModelTFLite = {
+        "lite": palm_lite.split(",")[1],
+    }
+    defaultConf.landmarkModelTFLite = {
+        "lite": landmark_lite.split(",")[1],
+    }
+    defaultConf.modelType2 = ModelTypes2.lite
+    /// #else
+    defaultConf.palmModelTFLite = {
+        "lite": palm_lite.split(",")[1],
+        "full": palm_full.split(",")[1],
+    }
+    defaultConf.landmarkModelTFLite = {
+        "lite": landmark_lite.split(",")[1],
+        "full": landmark_full.split(",")[1],
+    }
+    defaultConf.modelType2 = ModelTypes2.lite
+    /// #endif
     return defaultConf;
 };
 
@@ -294,7 +322,7 @@ export class HandPoseDetectionWorkerManager extends WorkerManagerBase {
         }
         console.log("worker exec")
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
-        const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as Hand[] | null;
+        const prediction = (await this.sendToWorker(currentParams, imageData.data)) as Hand[] | null;
         return prediction;
         // return this.generatePredictionEx(this.config, params, prediction);
     };

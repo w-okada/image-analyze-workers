@@ -11,6 +11,8 @@ let tflite: TFLite | null = null;
 let tfliteInputAddress: number = 0
 let tfliteOutputAddress: number = 0
 
+let config: HandPoseDetectionConfig | null = null
+
 const load_module = async (config: HandPoseDetectionConfig) => {
     if (config.backendType === BackendTypes.wasm) {
         const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
@@ -121,7 +123,7 @@ const predict = async (config: HandPoseDetectionConfig, params: HandPoseDetectio
 onmessage = async (event) => {
     //  console.log("event", event)
     if (event.data.message === WorkerCommand.INITIALIZE) {
-        const config = event.data.config as HandPoseDetectionConfig;
+        config = event.data.config as HandPoseDetectionConfig;
         await load_module(config);
 
         await tf.ready();
@@ -191,11 +193,10 @@ onmessage = async (event) => {
 
         ctx.postMessage({ message: WorkerResponse.INITIALIZED });
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        const config = event.data.config as HandPoseDetectionConfig;
         const params = event.data.params as HandPoseDetectionOperationParams;
         const data: Uint8ClampedArray = event.data.data;
 
-        const prediction = await predict(config, params, data);
+        const prediction = await predict(config!, params, data);
         ctx.postMessage({
             message: WorkerResponse.PREDICTED,
             prediction: prediction,
