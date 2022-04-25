@@ -97,6 +97,12 @@ export const generateHandPoseDetectionDefaultConfig = (): HandPoseDetectionConfi
     }
     defaultConf.modelType2 = ModelTypes2.lite
     defaultConf.modelType = ModelTypes.tflite
+    /// #elif BUILD_TYPE==="mediapipe"
+    defaultConf.modelType = ModelTypes.mediapipe
+    defaultConf.backendType = BackendTypes.wasm
+    /// #elif BUILD_TYPE==="tfjs"
+    defaultConf.modelType = ModelTypes.tfjs
+    defaultConf.backendType = BackendTypes.WebGL
     /// #endif
     return defaultConf;
 };

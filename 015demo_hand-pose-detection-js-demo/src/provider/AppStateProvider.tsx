@@ -66,9 +66,6 @@ export const useAppState = (): AppStateValue => {
 const initialInputSourcePath = "mov/Hands.mp4";
 
 const initialConfig = generateHandPoseDetectionDefaultConfig();
-initialConfig.modelType = ModelTypes.tflite;
-initialConfig.backendType = BackendTypes.wasm;
-initialConfig.processOnLocal = false;
 const initialParams = generateDefaultHandPoseDetectionParams();
 
 export const AppStateProvider = ({ children }: Props) => {
