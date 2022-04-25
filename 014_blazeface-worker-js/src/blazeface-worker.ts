@@ -102,7 +102,7 @@ export class BlazefaceWorkerManager extends WorkerManagerBase {
             return this.generatePredictionEx(this.config, params, prediction);
         }
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
-        const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as BlazeFace.NormalizedFace[] | null;
+        const prediction = (await this.sendToWorker(currentParams, imageData.data)) as BlazeFace.NormalizedFace[] | null;
         return this.generatePredictionEx(this.config, params, prediction);
     };
 

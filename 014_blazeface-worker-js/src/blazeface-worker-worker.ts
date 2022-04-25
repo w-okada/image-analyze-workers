@@ -6,7 +6,7 @@ import { BackendTypes, BlazefaceConfig, BlazefaceOperationParams, WorkerCommand,
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
 let model: BlazeFace.BlazeFaceModel | null;
-
+let config: BlazefaceConfig | null = null
 const load_module = async (config: BlazefaceConfig) => {
     if (config.backendType === BackendTypes.wasm) {
         const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
@@ -37,7 +37,7 @@ const predict = async (config: BlazefaceConfig, params: BlazefaceOperationParams
 onmessage = async (event) => {
     //  console.log("event", event)
     if (event.data.message === WorkerCommand.INITIALIZE) {
-        const config = event.data.config as BlazefaceConfig;
+        config = event.data.config as BlazefaceConfig;
         await load_module(config);
 
         await tf.ready();
@@ -48,11 +48,10 @@ onmessage = async (event) => {
         });
         ctx.postMessage({ message: WorkerResponse.INITIALIZED });
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        const config = event.data.config as BlazefaceConfig;
         const params = event.data.params as BlazefaceOperationParams;
         const data: Uint8ClampedArray = event.data.data;
 
-        const prediction = await predict(config, params, data);
+        const prediction = await predict(config!, params, data);
         ctx.postMessage({
             message: WorkerResponse.PREDICTED,
             prediction: prediction,

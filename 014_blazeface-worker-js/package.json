@@ -1,6 +1,6 @@
 {
     "name": "@dannadori/blazeface-worker-js",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "description": "",
     "main": "dist/blazeface-worker.js",
     "scripts": {
@@ -38,7 +38,7 @@
     "dependencies": {
         "@dannadori/000_WorkerBase": "file:../000_WorkerBase",
         "@tensorflow-models/blazeface": "^0.0.7",
-        "@tensorflow/tfjs": "^3.15.0",
-        "@tensorflow/tfjs-backend-wasm": "^3.15.0"
+        "@tensorflow/tfjs": "^3.16.0",
+        "@tensorflow/tfjs-backend-wasm": "^3.16.0"
     }
 }
