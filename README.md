@@ -253,7 +253,11 @@ NOTE: The license will be changed to allow commercial use after this work is acc
 
 ### demo
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/index.html
+[all](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/index.html),
+[96x160](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/96x160/index.html)
+[128x128](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/128x128/index.html)
+[144x256](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/144x256/index.html)
+[256x256](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/256x256/index.html)
 
 ## Multi Barcode Scanner
 
