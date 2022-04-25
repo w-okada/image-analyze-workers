@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
-import { useAppState } from "./provider/AppStateProvider";
+import { BackendTypes, HandPoseDetectionWorkerManager, ModelTypes, ModelTypes2, useAppState } from "./provider/AppStateProvider";
 import { HandPoseDetectionDrawer } from "./HandPoseDetectionDrawer";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
-import { HandPoseDetectionWorkerManager, BackendTypes, ModelTypes, ModelTypes2 } from "@dannadori/hand-pose-detection-worker-js";
+
 let GlobalLoopID = 0;
 
 const Controller = () => {
@@ -47,7 +47,6 @@ const Controller = () => {
         options: {
             mediapipe_full: ModelTypes2.full,
             mediapipe_lite: ModelTypes2.lite,
-            mediapipe_old: ModelTypes2.old,
         },
         onChange: (value: ModelTypes2) => {
             config.modelType2 = value;

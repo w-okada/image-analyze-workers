@@ -1,18 +1,26 @@
-import { createDetector, Hand, HandDetector, SupportedModels } from "@tensorflow-models/hand-pose-detection";
-import * as tf from "@tensorflow/tfjs";
-import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
+import { Hand } from "@tensorflow-models/hand-pose-detection";
 import { BackendTypes, HandPoseDetectionConfig, HandPoseDetectionOperationParams, ModelTypes, TFLite, TFLiteHand, WorkerCommand, WorkerResponse } from "./const";
-import * as hands from "@mediapipe/hands";
-import { BrowserTypes, getBrowserType } from "@dannadori/000_WorkerBase";
-const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
+import { BrowserTypes } from "@dannadori/000_WorkerBase";
 
+/// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs"|| BUILD_TYPE==="" 
+import { createDetector, HandDetector, SupportedModels } from "@tensorflow-models/hand-pose-detection";
+import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
+import * as tf from "@tensorflow/tfjs";
+import * as hands from "@mediapipe/hands";
+/// #endif
+
+
+const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
+/// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs" || BUILD_TYPE==="" 
 let model: HandDetector | null;
+/// #endif
 let tflite: TFLite | null = null;
 let tfliteInputAddress: number = 0
 let tfliteOutputAddress: number = 0
 
 let config: HandPoseDetectionConfig | null = null
 
+/// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs" || BUILD_TYPE==="" 
 const load_module = async (config: HandPoseDetectionConfig) => {
     if (config.backendType === BackendTypes.wasm) {
         const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
@@ -30,8 +38,10 @@ const load_module = async (config: HandPoseDetectionConfig) => {
         await tf.setBackend("webgl");
     }
 };
+/// #endif
 
 const predict = async (config: HandPoseDetectionConfig, params: HandPoseDetectionOperationParams, data: Uint8ClampedArray) => {
+    /// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs"  || BUILD_TYPE===""     
     if (config.modelType === ModelTypes.mediapipe || config.modelType === ModelTypes.tfjs) {
         if (!model) {
             return null;
@@ -39,7 +49,10 @@ const predict = async (config: HandPoseDetectionConfig, params: HandPoseDetectio
         const imageData = new ImageData(data, params.processWidth, params.processHeight);
         const prediction = await model!.estimateHands(imageData);
         return prediction;
-    } else {
+    }
+    /// #endif
+    /// #if BUILD_TYPE==="full" || BUILD_TYPE==="lite"  || BUILD_TYPE==="" 
+    if (config.modelType === ModelTypes.tflite) {
         if (!tflite) {
             console.log("tflite!!!! predict not initialized")
             return null;
@@ -116,19 +129,19 @@ const predict = async (config: HandPoseDetectionConfig, params: HandPoseDetectio
         })
 
         return hands;
-
     }
+    /// #endif
+    return null;
 };
 
 onmessage = async (event) => {
     //  console.log("event", event)
     if (event.data.message === WorkerCommand.INITIALIZE) {
         config = event.data.config as HandPoseDetectionConfig;
-        await load_module(config);
 
-        await tf.ready();
-        await tf.env().set("WEBGL_CPU_FORWARD", false);
 
+
+        /// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs"  || BUILD_TYPE===""         
         if (config.modelType === ModelTypes.mediapipe) {
             try {
                 model?.dispose();
@@ -144,6 +157,9 @@ onmessage = async (event) => {
                 modelType: config.modelType2 as "full" | "lite",
             });
         } else if (config.modelType === ModelTypes.tfjs) {
+            await load_module(config);
+            await tf.ready();
+            await tf.env().set("WEBGL_CPU_FORWARD", false);
             try {
                 model?.dispose();
             } catch (error) {
@@ -155,12 +171,15 @@ onmessage = async (event) => {
                 maxHands: config.maxHands,
                 modelType: config.modelType2 as "full" | "lite",
             });
-        } else {
-            try {
-                model?.dispose();
-            } catch (error) {
-                console.log("this error is ignored", error)
-            }
+        }
+        /// #endif
+        /// #if BUILD_TYPE==="full" || BUILD_TYPE==="lite"  || BUILD_TYPE==="" 
+        if (config.modelType === ModelTypes.tflite) {
+            // try {
+            //     model?.dispose();
+            // } catch (error) {
+            //     console.log("this error is ignored", error)
+            // }
             if (config.useSimd && config.browserType !== BrowserTypes.SAFARI) {
                 // SIMD
                 const modSimd = require("../resources/wasm/tflite-simd.js");
@@ -190,7 +209,7 @@ onmessage = async (event) => {
             tfliteInputAddress = tflite!._getInputBufferAddress()
             tfliteOutputAddress = tflite!._getOutputBufferAddress()
         }
-
+        /// #endif
         ctx.postMessage({ message: WorkerResponse.INITIALIZED });
     } else if (event.data.message === WorkerCommand.PREDICT) {
         const params = event.data.params as HandPoseDetectionOperationParams;

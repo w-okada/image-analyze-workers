@@ -1,15 +1,17 @@
 {
     "name": "@dannadori/hand-pose-detection-worker-js",
-    "version": "1.0.7",
+    "version": "1.0.9",
     "description": "",
     "main": "dist/hand-pose-detection-worker.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "webpack": "npx webpack --config webpack.config.js",
-        "webpack_full": "TFLITE=full npx webpack --config webpack.config.js && cp dist/hand-pose-detection-worker.d.ts dist/hand-pose-detection-workerfull.d.ts",
-        "webpack_lite": "TFLITE=lite npx webpack --config webpack.config.js && cp dist/hand-pose-detection-worker.d.ts dist/hand-pose-detection-workerlite.d.ts",
+        "webpack_full": "BUILD_TYPE=full npx webpack --config webpack.config.js && cp dist/hand-pose-detection-worker.d.ts dist/hand-pose-detection-workerfull.d.ts",
+        "webpack_lite": "BUILD_TYPE=lite npx webpack --config webpack.config.js && cp dist/hand-pose-detection-worker.d.ts dist/hand-pose-detection-workerlite.d.ts",
+        "webpack_mediapipe": "BUILD_TYPE=mediapipe npx webpack --config webpack.config.js && cp dist/hand-pose-detection-worker.d.ts dist/hand-pose-detection-workermediapipe.d.ts",
+        "webpack_tfjs": "BUILD_TYPE=tfjs npx webpack --config webpack.config.js && cp dist/hand-pose-detection-worker.d.ts dist/hand-pose-detection-workertfjs.d.ts",
         "clean": "rimraf dist/*",
-        "build": "npm-run-all clean webpack webpack_full webpack_lite"
+        "build": "npm-run-all clean webpack_full webpack_lite webpack_mediapipe webpack_tfjs webpack"
     },
     "repository": {
         "type": "git",

@@ -1,8 +1,8 @@
 const path = require("path");
 const webpack = require("webpack");
 
-const tflite_target = process.env.TFLITE || "";
-console.log("tflite_target::", tflite_target);
+const build_type = process.env.BUILD_TYPE || "";
+console.log("build_type::", build_type);
 
 const manager = {
     // mode: "development",
@@ -26,7 +26,7 @@ const manager = {
                     {
                         loader: "ifdef-loader",
                         options: {
-                            TFLITE_TARGET: tflite_target,
+                            BUILD_TYPE: build_type,
                         },
                     },
                 ],
@@ -37,7 +37,7 @@ const manager = {
         ],
     },
     output: {
-        filename: `hand-pose-detection-worker${tflite_target}.js`,
+        filename: `hand-pose-detection-worker${build_type}.js`,
         path: path.resolve(__dirname, "dist"),
         libraryTarget: "umd",
         globalObject: "typeof self !== 'undefined' ? self : this",

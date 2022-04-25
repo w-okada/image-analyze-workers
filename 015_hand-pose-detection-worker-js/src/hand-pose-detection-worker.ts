@@ -1,26 +1,30 @@
 import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
-import * as tf from "@tensorflow/tfjs";
 import { BackendTypes, FingerLookupIndices, HandPoseDetectionConfig, HandPoseDetectionOperationParams, ModelTypes, ModelTypes2, TFLite, TFLiteHand } from "./const";
-import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
-import * as hands from "@mediapipe/hands";
+import { Hand } from "@tensorflow-models/hand-pose-detection";
 export { BackendTypes, HandPoseDetectionConfig, HandPoseDetectionOperationParams, Hand, ModelTypes, ModelTypes2, FingerLookupIndices };
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./hand-pose-detection-worker-worker.ts";
-import { createDetector, Hand, HandDetector, SupportedModels } from "@tensorflow-models/hand-pose-detection";
 
-/// #if TFLITE_TARGET==="full"
+/// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs"|| BUILD_TYPE==="" 
+import { createDetector, HandDetector, SupportedModels } from "@tensorflow-models/hand-pose-detection";
+import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
+import * as tf from "@tensorflow/tfjs";
+import * as hands from "@mediapipe/hands";
+/// #endif
+
+/// #if BUILD_TYPE==="full"
 // @ts-ignore
 import palm_full from "../resources/tflite/palm/palm_detection_full.bin";
 // @ts-ignore
 import landmark_full from "../resources/tflite/landmark/hand_landmark_full.bin";
 
-/// #elif TFLITE_TARGET==="lite"
+/// #elif BUILD_TYPE==="lite"
 // @ts-ignore
 import palm_lite from "../resources/tflite/palm/palm_detection_lite.bin";
 // @ts-ignore
 import landmark_lite from "../resources/tflite/landmark/hand_landmark_lite.bin";
 
-/// #else
+/// #elif BUILD_TYPE===""
 // @ts-ignore
 import palm_lite from "../resources/tflite/palm/palm_detection_lite.bin";
 // @ts-ignore
@@ -30,6 +34,8 @@ import landmark_lite from "../resources/tflite/landmark/hand_landmark_lite.bin";
 // @ts-ignore
 import landmark_full from "../resources/tflite/landmark/hand_landmark_full.bin";
 /// #endif
+
+
 
 // @ts-ignore
 import wasm from "../resources/wasm/tflite.wasm";
@@ -62,7 +68,7 @@ export const generateHandPoseDetectionDefaultConfig = (): HandPoseDetectionConfi
         maxProcessHeight: 1024
 
     };
-    /// #if TFLITE_TARGET==="full"
+    /// #if BUILD_TYPE==="full"
     defaultConf.palmModelTFLite = {
         "full": palm_full.split(",")[1],
     }
@@ -70,7 +76,8 @@ export const generateHandPoseDetectionDefaultConfig = (): HandPoseDetectionConfi
         "full": landmark_full.split(",")[1],
     }
     defaultConf.modelType2 = ModelTypes2.full
-    /// #elif TFLITE_TARGET==="lite"
+    defaultConf.modelType = ModelTypes.tflite
+    /// #elif BUILD_TYPE==="lite"
     defaultConf.palmModelTFLite = {
         "lite": palm_lite.split(",")[1],
     }
@@ -78,7 +85,8 @@ export const generateHandPoseDetectionDefaultConfig = (): HandPoseDetectionConfi
         "lite": landmark_lite.split(",")[1],
     }
     defaultConf.modelType2 = ModelTypes2.lite
-    /// #else
+    defaultConf.modelType = ModelTypes.tflite
+    /// #elif BUILD_TYPE===""
     defaultConf.palmModelTFLite = {
         "lite": palm_lite.split(",")[1],
         "full": palm_full.split(",")[1],
@@ -88,6 +96,7 @@ export const generateHandPoseDetectionDefaultConfig = (): HandPoseDetectionConfi
         "full": landmark_full.split(",")[1],
     }
     defaultConf.modelType2 = ModelTypes2.lite
+    defaultConf.modelType = ModelTypes.tflite
     /// #endif
     return defaultConf;
 };
@@ -102,8 +111,10 @@ export const generateDefaultHandPoseDetectionParams = () => {
     return defaultParams;
 };
 export class LocalHP extends LocalWorker {
-    model: HandDetector | null = null;
 
+    /// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs" || BUILD_TYPE==="" 
+    model: HandDetector | null = null;
+    /// #endif
     tflite: TFLite | null = null;
     tfliteInputAddress: number = 0
     tfliteOutputAddress: number = 0
@@ -114,6 +125,7 @@ export class LocalHP extends LocalWorker {
         return newCanvas;
     })();
 
+    /// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs" || BUILD_TYPE==="" 
     load_module = async (config: HandPoseDetectionConfig) => {
         if (config.backendType === BackendTypes.wasm) {
             const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
@@ -131,13 +143,12 @@ export class LocalHP extends LocalWorker {
             await tf.setBackend("webgl");
         }
     };
+    /// #endif
 
     init = async (config: HandPoseDetectionConfig) => {
         console.log("init worker")
-        await this.load_module(config);
-        await tf.ready();
-        await tf.env().set("WEBGL_CPU_FORWARD", false);
 
+        /// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs"  || BUILD_TYPE==="" 
         if (config.modelType === ModelTypes.mediapipe) {
             try {
                 this.model?.dispose();
@@ -153,6 +164,9 @@ export class LocalHP extends LocalWorker {
                 modelType: config.modelType2 as "full" | "lite",
             });
         } else if (config.modelType === ModelTypes.tfjs) {
+            await this.load_module(config);
+            await tf.ready();
+            await tf.env().set("WEBGL_CPU_FORWARD", false);
             try {
                 this.model?.dispose();
             } catch (error) {
@@ -163,12 +177,15 @@ export class LocalHP extends LocalWorker {
                 maxHands: config.maxHands,
                 modelType: config.modelType2 as "full" | "lite",
             });
-        } else {
-            try {
-                this.model?.dispose();
-            } catch (error) {
-                console.log("this error is ignored", error)
-            }
+        }
+        /// #endif
+        /// #if BUILD_TYPE==="full" || BUILD_TYPE==="lite"  || BUILD_TYPE==="" 
+        if (config.modelType === ModelTypes.tflite) {
+            // try {
+            //     this.model?.dispose();
+            // } catch (error) {
+            //     console.log("this error is ignored", error)
+            // }
             const browserType = getBrowserType();
             if (config.useSimd && browserType !== BrowserTypes.SAFARI) {
                 // SIMD
@@ -199,17 +216,22 @@ export class LocalHP extends LocalWorker {
             this.tfliteInputAddress = this.tflite!._getInputBufferAddress()
             this.tfliteOutputAddress = this.tflite!._getOutputBufferAddress()
         }
+        /// #endif
     };
 
 
     predict = async (config: HandPoseDetectionConfig, params: HandPoseDetectionOperationParams, targetCanvas: HTMLCanvasElement): Promise<Hand[] | null> => {
+        /// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs"  || BUILD_TYPE==="" 
         if (config.modelType === ModelTypes.mediapipe || config.modelType === ModelTypes.tfjs) {
             if (!this.model) {
                 return null;
             }
             const prediction = await this.model!.estimateHands(targetCanvas);
             return prediction;
-        } else {
+        }
+        /// #endif
+        /// #if BUILD_TYPE==="full" || BUILD_TYPE==="lite"  || BUILD_TYPE==="" 
+        if (config.modelType === ModelTypes.tflite) {
             if (!this.tflite) {
                 console.log("tflite!!!! predict not initialized")
                 return null;
@@ -287,8 +309,9 @@ export class LocalHP extends LocalWorker {
             })
 
             return hands;
-
         }
+        /// #endif
+        return null;
     };
 
 }

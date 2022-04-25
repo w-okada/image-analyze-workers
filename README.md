@@ -253,7 +253,7 @@ NOTE: The license will be changed to allow commercial use after this work is acc
 
 ### demo
 
-[all](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/index.html),
+[all](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/index.html)
 [96x160](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/96x160/index.html)
 [128x128](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/128x128/index.html)
 [144x256](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/144x256/index.html)
@@ -318,7 +318,11 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t14_blazeface/index.
 
 ### demo
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/index.html
+[all](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/index.html)
+[lite](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/lite/index.html)
+[full](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/full/index.html)
+[mediapipe](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/mediapipe/index.html)
+[tfjs](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/tfjs/index.html)
 
 ## MediaPipe Face landmark detection
 

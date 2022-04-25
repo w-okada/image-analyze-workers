@@ -1,4 +1,5 @@
-import { HandPoseDetectionOperationParams, Hand, HandPoseDetectionConfig, FingerLookupIndices } from "@dannadori/hand-pose-detection-worker-js";
+import { FingerLookupIndices, Hand, HandPoseDetectionConfig, HandPoseDetectionOperationParams } from "./provider/AppStateProvider";
+
 
 export class HandPoseDetectionDrawer {
     private outputCanvas: HTMLCanvasElement | null = null;
@@ -70,10 +71,6 @@ export class HandPoseDetectionDrawer {
                 });
 
             }
-
-
-
-
         })
 
     };

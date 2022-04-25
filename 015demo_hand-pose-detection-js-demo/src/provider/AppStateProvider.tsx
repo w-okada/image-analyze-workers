@@ -1,7 +1,35 @@
 import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
 import { loadURLAsDataURL } from "../utils/urlReader";
-import { HandPoseDetectionConfig, HandPoseDetectionOperationParams, generateHandPoseDetectionDefaultConfig, generateDefaultHandPoseDetectionParams, ModelTypes, BackendTypes } from "@dannadori/hand-pose-detection-worker-js";
+
+/// #if BUILD_TYPE==="lite"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { HandPoseDetectionWorkerManager, HandPoseDetectionConfig, HandPoseDetectionOperationParams, generateHandPoseDetectionDefaultConfig, generateDefaultHandPoseDetectionParams, ModelTypes, BackendTypes, ModelTypes2, Hand, FingerLookupIndice, FingerLookupIndices } from "@dannadori/hand-pose-detection-worker-js/dist/hand-pose-detection-workerlite";
+
+/// #elif BUILD_TYPE==="full"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { HandPoseDetectionWorkerManager, HandPoseDetectionConfig, HandPoseDetectionOperationParams, generateHandPoseDetectionDefaultConfig, generateDefaultHandPoseDetectionParams, ModelTypes, BackendTypes, ModelTypes2, Hand, FingerLookupIndice, FingerLookupIndices } from "@dannadori/hand-pose-detection-worker-js/dist/hand-pose-detection-workerfull";
+
+/// #elif BUILD_TYPE==="mediapipe"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { HandPoseDetectionWorkerManager, HandPoseDetectionConfig, HandPoseDetectionOperationParams, generateHandPoseDetectionDefaultConfig, generateDefaultHandPoseDetectionParams, ModelTypes, BackendTypes, ModelTypes2, Hand, FingerLookupIndice, FingerLookupIndices } from "@dannadori/hand-pose-detection-worker-js/dist/hand-pose-detection-workermediapipe";
+
+/// #elif BUILD_TYPE==="tfjs"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { HandPoseDetectionWorkerManager, HandPoseDetectionConfig, HandPoseDetectionOperationParams, generateHandPoseDetectionDefaultConfig, generateDefaultHandPoseDetectionParams, ModelTypes, BackendTypes, ModelTypes2, Hand, FingerLookupIndice, FingerLookupIndices } from "@dannadori/hand-pose-detection-worker-js/dist/hand-pose-detection-workertfjs";
+
+/// #else
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { HandPoseDetectionWorkerManager, HandPoseDetectionConfig, HandPoseDetectionOperationParams, generateHandPoseDetectionDefaultConfig, generateDefaultHandPoseDetectionParams, ModelTypes, BackendTypes, ModelTypes2, Hand, FingerLookupIndice, FingerLookupIndices } from "@dannadori/hand-pose-detection-worker-js/dist/hand-pose-detection-worker";
+/// #endif
+export { HandPoseDetectionWorkerManager, ModelTypes2, BackendTypes, ModelTypes, FingerLookupIndices };
+export type { Hand, HandPoseDetectionOperationParams, HandPoseDetectionConfig };
+
 type Props = {
     children: ReactNode;
 };
