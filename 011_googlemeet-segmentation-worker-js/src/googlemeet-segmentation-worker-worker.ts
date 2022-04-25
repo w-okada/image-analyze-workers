@@ -8,6 +8,7 @@ const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 let tfjsModel: tf.GraphModel | null;
 let tfliteModel: TFLite | null = null;
 let ready: boolean = false;
+let config: GoogleMeetSegmentationConfig | null = null
 
 const load_module = async (config: GoogleMeetSegmentationConfig) => {
     if (config.backendType === BackendTypes.wasm) {
@@ -88,7 +89,7 @@ const predict = async (config: GoogleMeetSegmentationConfig, params: GoogleMeetS
 onmessage = async (event) => {
     if (event.data.message === WorkerCommand.INITIALIZE) {
         ready = false;
-        const config = event.data.config as GoogleMeetSegmentationConfig;
+        config = event.data.config as GoogleMeetSegmentationConfig;
         tfjsModel = null;
         tfliteModel = null;
 
@@ -122,11 +123,10 @@ onmessage = async (event) => {
         ready = true;
         ctx.postMessage({ message: WorkerResponse.INITIALIZED });
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        const config: GoogleMeetSegmentationConfig = event.data.config;
         const params: GoogleMeetSegmentationOperationParams = event.data.params;
         const data: Uint8ClampedArray = event.data.data;
 
-        const prediction = await predict(config, params, data);
+        const prediction = await predict(config!, params, data);
         ctx.postMessage({ message: WorkerResponse.PREDICTED, prediction: prediction }, [prediction.buffer]);
     }
 };

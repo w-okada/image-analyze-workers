@@ -1,6 +1,6 @@
 {
     "name": "@dannadori/googlemeet-segmentation-worker-js",
-    "version": "1.0.27",
+    "version": "1.0.28",
     "description": "",
     "main": "dist/googlemeet-segmentation-worker.js",
     "scripts": {
@@ -36,10 +36,10 @@
         "worker-plugin": "^5.0.1"
     },
     "dependencies": {
-        "@tensorflow/tfjs": "^3.15.0",
-        "@tensorflow/tfjs-backend-wasm": "^3.15.0",
+        "@dannadori/000_WorkerBase": "file:../000_WorkerBase",
+        "@tensorflow/tfjs": "^3.16.0",
+        "@tensorflow/tfjs-backend-wasm": "^3.16.0",
         "@types/emscripten": "^1.39.6",
-        "buffer": "^6.0.3",
-        "@dannadori/000_WorkerBase": "file:../000_WorkerBase"
+        "buffer": "^6.0.3"
     }
 }
