@@ -35,8 +35,8 @@
         "@typescript-eslint/parser": "^5.20.0",
         "babel-loader": "^8.2.5",
         "css-loader": "^6.7.1",
-        "daisyui": "^2.14.1",
-        "eslint": "^8.13.0",
+        "daisyui": "^2.14.2",
+        "eslint": "^8.14.0",
         "eslint-config-prettier": "^8.5.0",
         "eslint-plugin-prettier": "^4.0.0",
         "eslint-plugin-react": "^7.29.4",
@@ -55,7 +55,7 @@
         "webpack-dev-server": "^4.8.1"
     },
     "dependencies": {
-        "@dannadori/face-landmark-detection-worker-js": "^0.0.5",
+        "@dannadori/face-landmark-detection-worker-js": "^0.0.7",
         "demo-base": "file:../000_DemoBase",
         "react": "^18.0.0",
         "react-dom": "^18.0.0"
