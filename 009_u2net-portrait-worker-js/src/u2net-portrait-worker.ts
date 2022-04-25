@@ -20,27 +20,27 @@ import workerJs from "worker-loader?inline=no-fallback!./u2net-portrait-worker-w
 import modelJson_p4_256_uint8 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/256/web_model_uint8/model.json";
 // @ts-ignore
 import modelWeight_p4_256_uint8 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/256/web_model_uint8/group1-shard1of1.bin";
-// @ts-ignore
-import modelJson_p4_256_float16 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/256/web_model_float16/model.json";
-// @ts-ignore
-import modelWeight_p4_256_float16 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/256/web_model_float16/group1-shard1of1.bin";
-// @ts-ignore
-import modelJson_p4_256_float32 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/256/web_model_float32/model.json";
-// @ts-ignore
-import modelWeight_p4_256_float32 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/256/web_model_float32/group1-shard1of1.bin";
+// // @ts-ignore
+// import modelJson_p4_256_float16 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/256/web_model_float16/model.json";
+// // @ts-ignore
+// import modelWeight_p4_256_float16 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/256/web_model_float16/group1-shard1of1.bin";
+// // @ts-ignore
+// import modelJson_p4_256_float32 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/256/web_model_float32/model.json";
+// // @ts-ignore
+// import modelWeight_p4_256_float32 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/256/web_model_float32/group1-shard1of1.bin";
 
 // @ts-ignore
 import modelJson_p4_320_uint8 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_uint8/model.json";
 // @ts-ignore
 import modelWeight_p4_320_uint8 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_uint8/group1-shard1of1.bin";
 // @ts-ignore
-import modelJson_p4_320_float16 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_float16/model.json";
-// @ts-ignore
-import modelWeight_p4_320_float16 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_float16/group1-shard1of1.bin";
-// @ts-ignore
-import modelJson_p4_320_float32 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_float32/model.json";
-// @ts-ignore
-import modelWeight_p4_320_float32 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_float32/group1-shard1of1.bin";
+// import modelJson_p4_320_float16 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_float16/model.json";
+// // @ts-ignore
+// import modelWeight_p4_320_float16 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_float16/group1-shard1of1.bin";
+// // @ts-ignore
+// import modelJson_p4_320_float32 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_float32/model.json";
+// // @ts-ignore
+// import modelWeight_p4_320_float32 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_float32/group1-shard1of1.bin";
 import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
 
 export const generateU2NetPortraitDefaultConfig = (): U2NetPortraitConfig => {
@@ -56,19 +56,19 @@ export const generateU2NetPortraitDefaultConfig = (): U2NetPortraitConfig => {
         pageUrl: window.location.href,
         modelJson: {
             "256_uint8": modelJson_p4_256_uint8,
-            "256_float16": modelJson_p4_256_float16,
-            "256_float32": modelJson_p4_256_float32,
+            // "256_float16": modelJson_p4_256_float16,
+            // "256_float32": modelJson_p4_256_float32,
             "320_uint8": modelJson_p4_320_uint8,
-            "320_float16": modelJson_p4_320_float16,
-            "320_float32": modelJson_p4_320_float32,
+            // "320_float16": modelJson_p4_320_float16,
+            // "320_float32": modelJson_p4_320_float32,
         },
         modelWeight: {
             "256_uint8": modelWeight_p4_256_uint8,
-            "256_float16": modelWeight_p4_256_float16,
-            "256_float32": modelWeight_p4_256_float32,
+            // "256_float16": modelWeight_p4_256_float16,
+            // "256_float32": modelWeight_p4_256_float32,
             "320_uint8": modelWeight_p4_320_uint8,
-            "320_float16": modelWeight_p4_320_float16,
-            "320_float32": modelWeight_p4_320_float32,
+            // "320_float16": modelWeight_p4_320_float16,
+            // "320_float32": modelWeight_p4_320_float32,
         },
         modelInputs: {
             "256_uint8": [256, 256],
@@ -180,7 +180,7 @@ export class U2NetPortraitWorkerManager extends WorkerManagerBase {
             return prediction;
         }
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
-        const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as number[][] | null;
+        const prediction = (await this.sendToWorker(currentParams, imageData.data)) as number[][] | null;
 
         return prediction;
     };

@@ -4,7 +4,7 @@ import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
 let model: tf.GraphModel | null;
-
+let config: MODNetConfig | null = null
 const load_module = async (config: MODNetConfig) => {
     if (config.backendType === BackendTypes.wasm) {
         const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
@@ -51,13 +51,13 @@ const predictWithData = async (config: MODNetConfig, params: MODNetOperationPara
 onmessage = async (event) => {
     //  console.log("event", event)
     if (event.data.message === WorkerCommand.INITIALIZE) {
-        const config = event.data.config as MODNetConfig;
+        config = event.data.config as MODNetConfig;
         await load_module(config);
         tf.ready().then(async () => {
             tf.env().set("WEBGL_CPU_FORWARD", false);
 
-            const modelJson_p3_1 = new File([config.modelJsons[config.modelKey]], "model.json", { type: "application/json" });
-            const weight_p3_1 = Buffer.from(config.modelWeights[config.modelKey].split(",")[1], "base64");
+            const modelJson_p3_1 = new File([config!.modelJsons[config!.modelKey]], "model.json", { type: "application/json" });
+            const weight_p3_1 = Buffer.from(config!.modelWeights[config!.modelKey].split(",")[1], "base64");
             const modelWeights_p3_1 = new File([weight_p3_1], "group1-shard1of1.bin");
             model = await tf.loadGraphModel(tf.io.browserFiles([modelJson_p3_1, modelWeights_p3_1]));
 
@@ -69,11 +69,10 @@ onmessage = async (event) => {
         });
     } else if (event.data.message === WorkerCommand.PREDICT) {
         //    console.log("requested predict bodypix.")
-        const config: MODNetConfig = event.data.config;
         const params: MODNetOperationParams = event.data.params;
         const data: Uint8ClampedArray = event.data.data;
 
-        const prediction = await predictWithData(config, params, data);
+        const prediction = await predictWithData(config!, params, data);
         ctx.postMessage({ message: WorkerResponse.PREDICTED, prediction: prediction });
     }
 };

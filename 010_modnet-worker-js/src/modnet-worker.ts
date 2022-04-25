@@ -3,7 +3,7 @@ import * as tf from "@tensorflow/tfjs";
 import { MODNetConfig, MODNetFunctionTypes, MODNetOperationParams, WorkerCommand, WorkerResponse, MODEL_INPUT_SIZES, BackendTypes } from "./const";
 import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
-export { MODNetConfig, MODNetOperationParams, MODEL_INPUT_SIZES, BackendTypes  };
+export { MODNetConfig, MODNetOperationParams, MODEL_INPUT_SIZES, BackendTypes };
 
 
 // @ts-ignore
@@ -67,10 +67,10 @@ export const generateDefaultMODNetParams = (): MODNetOperationParams => {
 };
 
 
-export class WorkerMD  extends LocalWorker{
+export class WorkerMD extends LocalWorker {
     model: tf.GraphModel | null = null;
     canvas = document.createElement("canvas");
-    load_module = async (config:  MODNetConfig) => {
+    load_module = async (config: MODNetConfig) => {
         if (config.backendType === BackendTypes.wasm) {
             const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
             const wasmPaths: { [key: string]: string } = {};
@@ -89,7 +89,7 @@ export class WorkerMD  extends LocalWorker{
     };
     init = async (config: MODNetConfig) => {
         await this.load_module(config)
-        await  tf.ready()
+        await tf.ready()
         tf.env().set("WEBGL_CPU_FORWARD", false);
         const modelJson = new File([config.modelJsons[config.modelKey]], "model.json", { type: "application/json" });
         const weight = Buffer.from(config.modelWeights[config.modelKey].split(",")[1], "base64");
@@ -97,7 +97,7 @@ export class WorkerMD  extends LocalWorker{
         this.model = await tf.loadGraphModel(tf.io.browserFiles([modelJson, modelWeights]));
     };
 
-    predict = async (config: MODNetConfig, params: MODNetOperationParams,targetCanvas: HTMLCanvasElement): Promise<number[][]> => {
+    predict = async (config: MODNetConfig, params: MODNetOperationParams, targetCanvas: HTMLCanvasElement): Promise<number[][]> => {
         let bm: number[][];
         tf.tidy(() => {
             let tensor = tf.browser.fromPixels(targetCanvas);
@@ -114,10 +114,10 @@ export class WorkerMD  extends LocalWorker{
 
 export class MODNetWorkerManager extends WorkerManagerBase {
     private config = generateMODNetDefaultConfig();
-    localWorker= new WorkerMD();
+    localWorker = new WorkerMD();
 
     init = async (config: MODNetConfig | null) => {
-        this.config = config ||generateMODNetDefaultConfig();
+        this.config = config || generateMODNetDefaultConfig();
         await this.initCommon(
             {
                 useWorkerForSafari: false,
@@ -141,7 +141,7 @@ export class MODNetWorkerManager extends WorkerManagerBase {
             return prediction;
         }
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
-        const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as number[][] | null;
+        const prediction = (await this.sendToWorker(currentParams, imageData.data)) as number[][] | null;
 
         return prediction;
     };
