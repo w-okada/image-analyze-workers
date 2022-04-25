@@ -4,7 +4,7 @@ import * as tf from "@tensorflow/tfjs";
 import { BrowserTypes } from "@dannadori/000_WorkerBase";
 
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
-
+let config: BodyPixConfig | null = null;
 let model: bodyPix.BodyPix | null;
 
 const load_module = async (config: BodyPixConfig) => {
@@ -74,7 +74,7 @@ const predict = async (config: BodyPixConfig, params: BodyPixOperationParams, da
 
 onmessage = async (event) => {
     if (event.data.message === WorkerCommand.INITIALIZE) {
-        const config = event.data.config as BodyPixConfig;
+        config = event.data.config as BodyPixConfig;
         await load_module(config);
         bodyPix.load(event.data.config.model).then((res) => {
             console.log("bodypix loaded default", event.data.config);
@@ -82,11 +82,10 @@ onmessage = async (event) => {
             ctx.postMessage({ message: WorkerResponse.INITIALIZED });
         });
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        const config: BodyPixConfig = event.data.config;
         const params: BodyPixOperationParams = event.data.params;
         const data: Uint8ClampedArray = event.data.data;
 
-        const prediction = await predict(config, params, data);
+        const prediction = await predict(config!, params, data);
         ctx.postMessage({
             message: WorkerResponse.PREDICTED,
             prediction: prediction,
