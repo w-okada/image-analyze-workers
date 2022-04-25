@@ -125,7 +125,7 @@ export class CartoonWorkerManager extends WorkerManagerBase {
             return prediction;
         }
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
-        const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as Uint8ClampedArray | null;
+        const prediction = (await this.sendToWorker(currentParams, imageData.data)) as Uint8ClampedArray | null;
         return prediction;
     };
 }

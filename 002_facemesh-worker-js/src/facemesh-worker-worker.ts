@@ -13,6 +13,8 @@ const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 let model: faceLandmarksDetection.FaceLandmarksDetector | null = null;
 let model2: faceLandmarksDetectionCurrent.FaceLandmarksDetector | null = null;
 
+let config: FacemeshConfig | null = null;
+
 const load_module = async (config: FacemeshConfig) => {
     if (config.backendType === BackendTypes.wasm) {
         const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
@@ -56,7 +58,7 @@ const predict = async (config: FacemeshConfig, params: FacemeshOperationParams, 
 onmessage = async (event) => {
     if (event.data.message === WorkerCommand.INITIALIZE) {
         console.log("Initialize model!.", event);
-        const config = event.data.config as FacemeshConfig;
+        config = event.data.config as FacemeshConfig;
         await load_module(config);
         await tf.ready();
         tf.env().set("WEBGL_CPU_FORWARD", false);
@@ -102,11 +104,10 @@ onmessage = async (event) => {
             prevModel2?.dispose();
         }
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        const config = event.data.config as FacemeshConfig;
         const params = event.data.params as FacemeshOperationParams;
         const data: Uint8ClampedArray = event.data.data;
 
-        const prediction = await predict(config, params, data);
+        const prediction = await predict(config!, params, data);
         ctx.postMessage({
             message: WorkerResponse.PREDICTED,
             prediction: prediction,

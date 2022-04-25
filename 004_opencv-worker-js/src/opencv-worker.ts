@@ -112,7 +112,7 @@ export class OpenCVWorkerManager extends WorkerManagerBase {
             const prediction = await this.localWorker.predict(this.config, currentParams, imageData.data);
             return prediction;
         }
-        const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as Uint8ClampedArray | null;
+        const prediction = (await this.sendToWorker(currentParams, imageData.data)) as Uint8ClampedArray | null;
         return prediction;
     };
 }

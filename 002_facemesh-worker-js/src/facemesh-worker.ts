@@ -175,7 +175,7 @@ export class FacemeshWorkerManager extends WorkerManagerBase {
             return this.generatePredictionEx(this.config, params, prediction);
         }
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
-        const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as AnnotatedPrediction[];
+        const prediction = (await this.sendToWorker(currentParams, imageData.data)) as AnnotatedPrediction[];
         return this.generatePredictionEx(this.config, params, prediction);
     };
 

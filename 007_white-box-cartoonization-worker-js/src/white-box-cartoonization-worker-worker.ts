@@ -9,7 +9,7 @@ import { Buffer } from "buffer";
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
 let model: tf.GraphModel | null;
-
+let config: CartoonConfig | null = null
 const load_module = async (config: CartoonConfig) => {
     if (config.backendType === BackendTypes.wasm) {
         const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
@@ -54,15 +54,15 @@ const predict = async (config: CartoonConfig, params: CartoonOperationParams, da
 onmessage = async (event) => {
     //  console.log("event", event)
     if (event.data.message === WorkerCommand.INITIALIZE) {
-        const config = event.data.config as CartoonConfig;
+        config = event.data.config as CartoonConfig;
         await load_module(config);
         tf.ready().then(async () => {
             tf.env().set("WEBGL_CPU_FORWARD", false);
 
-            const modelJson2 = new File([config.modelJson], "model.json", {
+            const modelJson2 = new File([config!.modelJson], "model.json", {
                 type: "application/json",
             });
-            const b = Buffer.from(config.modelWeight.split(",")[1], "base64");
+            const b = Buffer.from(config!.modelWeight.split(",")[1], "base64");
             // const modelJson2 = new File([modelJson], "model.json", {type: "application/json"})
             // const b = Buffer.from(modelWeight.split(',')[1], 'base64')
             const modelWeights = new File([b], "group1-shard1of1.bin");
@@ -75,11 +75,10 @@ onmessage = async (event) => {
             ctx.postMessage({ message: WorkerResponse.INITIALIZED });
         });
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        const config = event.data.config as CartoonConfig;
         const params = event.data.params as CartoonOperationParams;
         const data: Uint8ClampedArray = event.data.data;
 
-        const prediction = await predict(config, params, data);
+        const prediction = await predict(config!, params, data);
         ctx.postMessage({
             message: WorkerResponse.PREDICTED,
             prediction: prediction,

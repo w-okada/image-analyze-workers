@@ -1,6 +1,6 @@
 {
     "name": "@dannadori/white-box-cartoonization-worker-js",
-    "version": "1.0.25",
+    "version": "1.0.26",
     "description": "",
     "main": "dist/white-box-cartoonization-worker.js",
     "scripts": {
@@ -36,9 +36,9 @@
         "worker-loader": "^3.0.8"
     },
     "dependencies": {
-        "@tensorflow/tfjs": "^3.15.0",
-        "@tensorflow/tfjs-backend-wasm": "^3.15.0",
-        "@tensorflow/tfjs-backend-webgl": "^3.15.0",
+        "@tensorflow/tfjs": "^3.16.0",
+        "@tensorflow/tfjs-backend-wasm": "^3.16.0",
+        "@tensorflow/tfjs-backend-webgl": "^3.16.0",
         "buffer": "^6.0.3",
         "@dannadori/000_WorkerBase": "file:../000_WorkerBase"
     }

@@ -1,6 +1,6 @@
 {
     "name": "@dannadori/posenet-worker-js",
-    "version": "1.0.30",
+    "version": "1.0.31",
     "description": "",
     "main": "dist/posenet-worker.js",
     "scripts": {
@@ -36,11 +36,11 @@
     },
     "dependencies": {
         "@tensorflow-models/posenet": "^2.2.2",
-        "@tensorflow/tfjs": "^3.15.0",
-        "@tensorflow/tfjs-backend-wasm": "^3.15.0",
-        "@tensorflow/tfjs-backend-webgl": "^3.15.0",
-        "@tensorflow/tfjs-converter": "^3.15.0",
-        "@tensorflow/tfjs-core": "^3.15.0",
+        "@tensorflow/tfjs": "^3.16.0",
+        "@tensorflow/tfjs-backend-wasm": "^3.16.0",
+        "@tensorflow/tfjs-backend-webgl": "^3.16.0",
+        "@tensorflow/tfjs-converter": "^3.16.0",
+        "@tensorflow/tfjs-core": "^3.16.0",
         "@dannadori/000_WorkerBase": "file:../000_WorkerBase"
     }
 }

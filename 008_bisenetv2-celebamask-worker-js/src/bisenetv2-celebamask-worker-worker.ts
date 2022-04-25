@@ -6,7 +6,7 @@ import { Buffer } from "buffer";
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
 let model: tf.GraphModel | null;
-
+let config: BisenetV2CelebAMaskConfig | null = null
 const load_module = async (config: BisenetV2CelebAMaskConfig) => {
     if (config.backendType === BackendTypes.wasm) {
         const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
@@ -41,17 +41,17 @@ const predict = async (config: BisenetV2CelebAMaskConfig, params: BisenetV2Celeb
 onmessage = async (event) => {
     //  console.log("event", event)
     if (event.data.message === WorkerCommand.INITIALIZE) {
-        const config = event.data.config as BisenetV2CelebAMaskConfig;
+        config = event.data.config as BisenetV2CelebAMaskConfig;
         await load_module(config);
         tf.ready().then(async () => {
             tf.env().set("WEBGL_CPU_FORWARD", false);
 
-            const modelJson2 = new File([config.modelJson], "model.json", { type: "application/json" });
-            const b1 = Buffer.from(config.modelWeight1.split(",")[1], "base64");
+            const modelJson2 = new File([config!.modelJson], "model.json", { type: "application/json" });
+            const b1 = Buffer.from(config!.modelWeight1.split(",")[1], "base64");
             const modelWeights1 = new File([b1], "group1-shard1of3.bin");
-            const b2 = Buffer.from(config.modelWeight2.split(",")[1], "base64");
+            const b2 = Buffer.from(config!.modelWeight2.split(",")[1], "base64");
             const modelWeights2 = new File([b2], "group1-shard2of3.bin");
-            const b3 = Buffer.from(config.modelWeight3.split(",")[1], "base64");
+            const b3 = Buffer.from(config!.modelWeight3.split(",")[1], "base64");
             const modelWeights3 = new File([b3], "group1-shard3of3.bin");
             model = await tf.loadGraphModel(tf.io.browserFiles([modelJson2, modelWeights1, modelWeights2, modelWeights3]));
 
@@ -62,11 +62,10 @@ onmessage = async (event) => {
             ctx.postMessage({ message: WorkerResponse.INITIALIZED });
         });
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        const config: BisenetV2CelebAMaskConfig = event.data.config;
         const params: BisenetV2CelebAMaskOperationParams = event.data.params;
         const data: Uint8ClampedArray = event.data.data;
 
-        const prediction = await predict(config, params, data);
+        const prediction = await predict(config!, params, data);
         ctx.postMessage({ message: WorkerResponse.PREDICTED, prediction: prediction });
     }
 };

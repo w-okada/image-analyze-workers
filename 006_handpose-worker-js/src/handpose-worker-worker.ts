@@ -6,7 +6,7 @@ import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
 let model: handpose.HandPose | null;
-
+let config: HandPoseConfig | null = null
 const load_module = async (config: HandPoseConfig) => {
     if (config.backendType === BackendTypes.wasm) {
         const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
@@ -42,7 +42,8 @@ const predict = async (config: HandPoseConfig, params: HandPoseOperationParams, 
 onmessage = async (event) => {
     //  console.log("event", event)
     if (event.data.message === WorkerCommand.INITIALIZE) {
-        await load_module(event.data.config as HandPoseConfig);
+        config = event.data.config as HandPoseConfig
+        await load_module(config);
 
         tf.ready().then(() => {
             tf.env().set("WEBGL_CPU_FORWARD", false);
@@ -53,11 +54,10 @@ onmessage = async (event) => {
             });
         });
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        const config = event.data.config as HandPoseConfig;
         const params = event.data.params as HandPoseOperationParams;
         const data: Uint8ClampedArray = event.data.data;
 
-        const prediction = await predict(config, params, data);
+        const prediction = await predict(config!, params, data);
         ctx.postMessage({
             message: WorkerResponse.PREDICTED,
             prediction: prediction,

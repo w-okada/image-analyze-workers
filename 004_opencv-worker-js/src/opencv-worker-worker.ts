@@ -5,7 +5,7 @@ export let Module = {};
 
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 let wasm: Wasm | null = null;
-
+let config: OpenCVConfig | null = null;
 const predict = async (config: OpenCVConfig, params: OpenCVOperationParams, data: Uint8ClampedArray) => {
     const inputImageBufferOffset = wasm!._getInputImageBufferOffset();
     wasm!.HEAPU8.set(data, inputImageBufferOffset);
@@ -27,7 +27,7 @@ const predict = async (config: OpenCVConfig, params: OpenCVOperationParams, data
 onmessage = async (event) => {
     // console.log("event", event);
     if (event.data.message === WorkerCommand.INITIALIZE) {
-        const config = event.data.config as OpenCVConfig;
+        config = event.data.config as OpenCVConfig;
         if (config.useSimd) {
             const modSimd = require("../resources/custom_opencv-simd.js");
             const b = Buffer.from(config.wasmSimdBase64!, "base64");
@@ -41,11 +41,10 @@ onmessage = async (event) => {
         console.log("initialized opencv worker");
         ctx.postMessage({ message: WorkerResponse.INITIALIZED });
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        const config: OpenCVConfig = event.data.config;
         const params: OpenCVOperationParams = event.data.params;
 
         const data: Uint8ClampedArray = event.data.data;
-        const imageData = await predict(config, params, data);
+        const imageData = await predict(config!, params, data);
         ctx.postMessage(
             {
                 message: WorkerResponse.PREDICTED,

@@ -99,7 +99,7 @@ export abstract class WorkerManagerBase {
         return this.targetCanvas;
     };
 
-    sendToWorker = async (config: any, params: any, data: any, transferable = true) => {
+    sendToWorker = async (params: any, data: any, transferable = true) => {
         if (this.sem.length > 100) {
             throw new Error(`queue is fulled: ${this.sem.length}`);
         }
@@ -121,7 +121,7 @@ export abstract class WorkerManagerBase {
                     this.worker!.postMessage(
                         {
                             message: WorkerCommand.PREDICT,
-                            config: config,
+                            // config: config,
                             params: params,
                             data: data,
                         },
@@ -131,7 +131,7 @@ export abstract class WorkerManagerBase {
                     this.worker!.postMessage(
                         {
                             message: WorkerCommand.PREDICT,
-                            config: config,
+                            // config: config,
                             params: params,
                             data: data,
                         },
@@ -141,7 +141,7 @@ export abstract class WorkerManagerBase {
             } else {
                 this.worker!.postMessage({
                     message: WorkerCommand.PREDICT,
-                    config: config,
+                    // config: config,
                     params: params,
                     data: data,
                 });

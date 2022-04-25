@@ -30,7 +30,7 @@ class LocalAA extends LocalWorker {
     brightnessCanvas = document.createElement("canvas");
     drawingCanvas = document.createElement("canvas");
 
-    init = async (config: AsciiConfig) => {};
+    init = async (config: AsciiConfig) => { };
     predict = async (config: AsciiConfig, params: AsciiOperationParams, targetCanvas: HTMLCanvasElement) => {
         const asciiStr = params.asciiStr;
         const fontSize = params.fontSize;
@@ -102,7 +102,7 @@ export class AsciiArtWorkerManager extends WorkerManagerBase {
             return prediction;
         }
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
-        const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as string[];
+        const prediction = (await this.sendToWorker(currentParams, imageData.data)) as string[];
         return prediction;
     };
 }

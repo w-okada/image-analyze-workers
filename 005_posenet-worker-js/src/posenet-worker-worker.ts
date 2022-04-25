@@ -6,7 +6,7 @@ import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
 let model: poseNet.PoseNet | null;
-
+let config: PoseNetConfig | null = null
 const load_module = async (config: PoseNetConfig) => {
     if (config.backendType === BackendTypes.wasm) {
         const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
@@ -43,18 +43,17 @@ const predict = async (config: PoseNetConfig, params: PoseNetOperationParams, da
 onmessage = async (event) => {
     if (event.data.message === WorkerCommand.INITIALIZE) {
         console.log("Initialize model!.", event);
-        await load_module(event.data.config as PoseNetConfig);
+        config = event.data.config as PoseNetConfig
+        await load_module(config);
         await tf.ready();
         tf.env().set("WEBGL_CPU_FORWARD", false);
         model = await poseNet.load(event.data.config.model);
         ctx.postMessage({ message: WorkerResponse.INITIALIZED });
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        const config: PoseNetConfig = event.data.config;
         const params: PoseNetOperationParams = event.data.params;
-
         const data: Uint8ClampedArray = event.data.data;
 
-        const prediction = await predict(config, params, data);
+        const prediction = await predict(config!, params, data);
         ctx.postMessage({ message: WorkerResponse.PREDICTED, prediction: prediction });
     }
 };
