@@ -115,9 +115,6 @@ const initialMaskSourcePath = "img/ai_face.jpg";
 const initialConfig = generateFaceLandmarkDetectionDefaultConfig();
 const initialParams = generateDefaultFaceLandmarkDetectionParams();
 initialParams.movingAverageWindow = 3;
-initialConfig.modelType = ModelTypes.tflite;
-initialConfig.backendType = BackendTypes.wasm;
-initialConfig.processOnLocal = false;
 
 export const AppStateProvider = ({ children }: Props) => {
     const [applicationMode, setApplicationMode] = useState<ApplicationModes>(ApplicationModes.facemesh);
