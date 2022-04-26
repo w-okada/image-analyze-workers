@@ -5,8 +5,14 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "webpack": "npx webpack --config webpack.config.js",
+        "webpack_full": "BUILD_TYPE=full npx webpack --config webpack.config.js && cp dist/face-landmark-detection-worker.d.ts dist/face-landmark-detection-workerfull.d.ts",
+        "webpack_short": "BUILD_TYPE=short npx webpack --config webpack.config.js && cp dist/face-landmark-detection-worker.d.ts dist/face-landmark-detection-workershort.d.ts",
+        "webpack_full_with_attention": "BUILD_TYPE=full_with_attention npx webpack --config webpack.config.js && cp dist/face-landmark-detection-worker.d.ts dist/face-landmark-detection-workerfull_with_attention.d.ts",
+        "webpack_short_with_attention": "BUILD_TYPE=short_with_attention npx webpack --config webpack.config.js && cp dist/face-landmark-detection-worker.d.ts dist/face-landmark-detection-workershort_with_attention.d.ts",
+        "webpack_mediapipe": "BUILD_TYPE=mediapipe npx webpack --config webpack.config.js && cp dist/face-landmark-detection-worker.d.ts dist/face-landmark-detection-workermediapipe.d.ts",
+        "webpack_tfjs": "BUILD_TYPE=tfjs npx webpack --config webpack.config.js && cp dist/face-landmark-detection-worker.d.ts dist/face-landmark-detection-workertfjs.d.ts",
         "clean": "rimraf dist/*",
-        "build": "npm-run-all clean webpack"
+        "build": "npm-run-all clean webpack webpack_full webpack_short webpack_full_with_attention webpack_short_with_attention webpack_mediapipe webpack_tfjs"
     },
     "repository": {
         "type": "git",
@@ -25,6 +31,7 @@
     "homepage": "https://github.com/w-okada/image-analyze-workers",
     "devDependencies": {
         "@types/node": "^17.0.25",
+        "ifdef-loader": "^2.3.2",
         "npm-run-all": "^4.1.5",
         "rimraf": "^3.0.2",
         "ts-loader": "^9.2.8",
@@ -42,5 +49,5 @@
         "@tensorflow/tfjs-backend-wasm": "^3.16.0",
         "buffer": "^6.0.3"
     },
-    "version": "0.0.7"
+    "version": "0.0.9"
 }

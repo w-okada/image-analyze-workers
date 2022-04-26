@@ -1,4 +1,5 @@
-import { FaceLandmarkDetectionOperationParams, Keypoint, TRIANGULATION, NUM_KEYPOINTS, FaceLandmarkDetectionConfig, ModelTypes } from "@dannadori/face-landmark-detection-worker-js";
+import { FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, Keypoint, ModelTypes, NUM_KEYPOINTS, TRIANGULATION } from "./provider/AppStateProvider";
+
 
 export class FacemeshDrawer {
     private outputCanvas: HTMLCanvasElement | null = null;

@@ -1,20 +1,26 @@
-//import * as facemesh from '@tensorflow-models/facemesh'
-import * as faceLandmarksDetection from "@tensorflow-models/face-landmarks-detection";
+import { BackendTypes, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, LandmarkTypes, ModelTypes, RefinedPoints, TFLite, TFLiteFaceLandmarkDetection, WorkerCommand, WorkerResponse } from "./const";
+import { Face } from "@tensorflow-models/face-landmarks-detection";
+import { BrowserTypes } from "@dannadori/000_WorkerBase";
+const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
+
+/// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs"|| BUILD_TYPE==="" 
+import * as faceLandmarksDetection from "@tensorflow-models/face-landmarks-detection";
 import * as tf from "@tensorflow/tfjs";
 import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 import * as faceMesh from "@mediapipe/face_mesh";
-import { BackendTypes, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, LandmarkTypes, ModelTypes, RefinedPoints, TFLite, TFLiteFaceLandmarkDetection, WorkerCommand, WorkerResponse } from "./const";
-import { Face } from "@tensorflow-models/face-landmarks-detection";
-import { BrowserTypes, getBrowserType } from "@dannadori/000_WorkerBase";
-const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
+/// #endif
 
-//let model: facemesh.FaceMesh | null
+/// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs" || BUILD_TYPE==="" 
 let model: faceLandmarksDetection.FaceLandmarksDetector | null = null;
+/// #endif
 let tflite: TFLite | null = null;
 let tfliteInputAddress: number = 0
 let tfliteOutputAddress: number = 0
 
+let config: FaceLandmarkDetectionConfig | null = null;
+
+/// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs" || BUILD_TYPE==="" 
 const load_module = async (config: FaceLandmarkDetectionConfig) => {
     if (config.backendType === BackendTypes.wasm) {
         const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
@@ -33,14 +39,19 @@ const load_module = async (config: FaceLandmarkDetectionConfig) => {
         await tf.setBackend("webgl");
     }
 };
+/// #endif
 
-const predict = async (config: FaceLandmarkDetectionConfig, params: FaceLandmarkDetectionOperationParams, data: Uint8ClampedArray): Promise<Face[]> => {
+const predict = async (config: FaceLandmarkDetectionConfig, params: FaceLandmarkDetectionOperationParams, data: Uint8ClampedArray): Promise<Face[] | null> => {
     const newImg = new ImageData(data, params.processWidth, params.processHeight);
 
+    /// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs"  || BUILD_TYPE===""  
     if (config.modelType === ModelTypes.mediapipe || config.modelType === ModelTypes.tfjs) {
         const prediction = await model!.estimateFaces(newImg, { flipHorizontal: false });
         return prediction;
-    } else {
+    }
+    /// #endif
+    /// #if BUILD_TYPE==="full" || BUILD_TYPE==="short"  || BUILD_TYPE==="" ||BUILD_TYPE==="full_with_attention" || BUILD_TYPE==="short_with_attention"
+    if (config.modelType === ModelTypes.tflite) {
         const imageData = newImg
         tflite!.HEAPU8.set(imageData.data, tfliteInputAddress);
         tflite!._exec(params.processWidth, params.processHeight, config.model.maxFaces);
@@ -194,12 +205,16 @@ const predict = async (config: FaceLandmarkDetectionConfig, params: FaceLandmark
         })
         return faces
     }
+    /// #endif
+    return null;
 };
 
 onmessage = async (event) => {
     if (event.data.message === WorkerCommand.INITIALIZE) {
         console.log("Initialize model!.", event);
-        const config = event.data.config as FaceLandmarkDetectionConfig;
+        config = event.data.config as FaceLandmarkDetectionConfig;
+
+        /// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs"  || BUILD_TYPE===""         
         await load_module(config);
         await tf.ready();
         tf.env().set("WEBGL_CPU_FORWARD", false);
@@ -226,7 +241,10 @@ onmessage = async (event) => {
                 maxFaces: config.model.maxFaces,
             });
             ctx.postMessage({ message: WorkerResponse.INITIALIZED });
-        } else {
+        }
+        /// #endif
+        /// #if BUILD_TYPE==="full" || BUILD_TYPE==="short"  || BUILD_TYPE==="" ||BUILD_TYPE==="full_with_attention" || BUILD_TYPE==="short_with_attention"
+        if (config.modelType === ModelTypes.tflite) {
             // const browserType = getBrowserType();
             const browserType = config.browserType
             if (config.useSimd && browserType !== BrowserTypes.SAFARI) {
@@ -260,12 +278,13 @@ onmessage = async (event) => {
             console.log("tflite worker initilizied")
             ctx.postMessage({ message: WorkerResponse.INITIALIZED });
         }
+        /// #endif
     } else if (event.data.message === WorkerCommand.PREDICT) {
-        const config = event.data.config as FaceLandmarkDetectionConfig;
+        // const config = event.data.config as FaceLandmarkDetectionConfig;
         const params = event.data.params as FaceLandmarkDetectionOperationParams;
         const data: Uint8ClampedArray = event.data.data;
 
-        const prediction = await predict(config, params, data);
+        const prediction = await predict(config!, params, data);
         ctx.postMessage({
             message: WorkerResponse.PREDICTED,
             prediction: prediction,

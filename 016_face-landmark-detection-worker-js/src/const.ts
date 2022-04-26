@@ -179,6 +179,7 @@ export type DetectorTypes = typeof DetectorTypes[keyof typeof DetectorTypes];
 export const LandmarkTypes = {
     landmark: "landmark",
     with_attention: "with_attention",
+    with_attention32: "with_attention32",
 }
 export type LandmarkTypes = typeof LandmarkTypes[keyof typeof LandmarkTypes]
 

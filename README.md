@@ -334,7 +334,13 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t14_blazeface/index.
 
 ### demo
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/index.html
+[all](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/index.html)
+[short](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/short/index.html)
+[short_with_attention](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/short_with_attention/index.html)
+[full](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/full/index.html)
+[full_with_attention](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/full_with_attention/index.html)
+[mediapipe](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/mediapipe/index.html)
+[tfjs](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/tfjs/index.html)
 
 # TFLite Wasm
 

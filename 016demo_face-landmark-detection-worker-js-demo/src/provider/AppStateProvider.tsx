@@ -1,7 +1,74 @@
 import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
 import { loadURLAsDataURL } from "../utils/urlReader";
+
+/// #if BUILD_TYPE==="short"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { FaceMeshPredictionEx, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, generateFaceLandmarkDetectionDefaultConfig, generateDefaultFaceLandmarkDetectionParams, ModelTypes, BackendTypes } from "@dannadori/face-landmark-detection-worker-js/dist/face-landmark-detection-workershort";
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { FaceLandmarkDetectionWorkerManager, DetectorTypes, LandmarkTypes, Keypoint, TRIANGULATION, NUM_KEYPOINTS } from "@dannadori/face-landmark-detection-worker-js/dist/face-landmark-detection-workershort";
+
+/// #elif BUILD_TYPE==="full"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { FaceMeshPredictionEx, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, generateFaceLandmarkDetectionDefaultConfig, generateDefaultFaceLandmarkDetectionParams, ModelTypes, BackendTypes } from "@dannadori/face-landmark-detection-worker-js/dist/face-landmark-detection-workerfull";
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { FaceLandmarkDetectionWorkerManager, DetectorTypes, LandmarkTypes, Keypoint, TRIANGULATION, NUM_KEYPOINTS } from "@dannadori/face-landmark-detection-worker-js/dist/face-landmark-detection-workerfull";
+
+/// #elif BUILD_TYPE==="short_with_attention"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { FaceMeshPredictionEx, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, generateFaceLandmarkDetectionDefaultConfig, generateDefaultFaceLandmarkDetectionParams, ModelTypes, BackendTypes } from "@dannadori/face-landmark-detection-worker-js/dist/face-landmark-detection-workershort_with_attention";
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { FaceLandmarkDetectionWorkerManager, DetectorTypes, LandmarkTypes, Keypoint, TRIANGULATION, NUM_KEYPOINTS } from "@dannadori/face-landmark-detection-worker-js/dist/face-landmark-detection-workershort_with_attention";
+
+/// #elif BUILD_TYPE==="full_with_attention"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { FaceMeshPredictionEx, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, generateFaceLandmarkDetectionDefaultConfig, generateDefaultFaceLandmarkDetectionParams, ModelTypes, BackendTypes } from "@dannadori/face-landmark-detection-worker-js/dist/face-landmark-detection-workerfull_with_attention";
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { FaceLandmarkDetectionWorkerManager, DetectorTypes, LandmarkTypes, Keypoint, TRIANGULATION, NUM_KEYPOINTS } from "@dannadori/face-landmark-detection-worker-js/dist/face-landmark-detection-workerfull_with_attention";
+
+/// #elif BUILD_TYPE==="mediapipe"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { FaceMeshPredictionEx, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, generateFaceLandmarkDetectionDefaultConfig, generateDefaultFaceLandmarkDetectionParams, ModelTypes, BackendTypes } from "@dannadori/face-landmark-detection-worker-js/dist/face-landmark-detection-workermediapipe";
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { FaceLandmarkDetectionWorkerManager, DetectorTypes, LandmarkTypes, Keypoint, TRIANGULATION, NUM_KEYPOINTS } from "@dannadori/face-landmark-detection-worker-js/dist/face-landmark-detection-workermediapipe";
+
+/// #elif BUILD_TYPE==="tfjs"
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { FaceMeshPredictionEx, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, generateFaceLandmarkDetectionDefaultConfig, generateDefaultFaceLandmarkDetectionParams, ModelTypes, BackendTypes } from "@dannadori/face-landmark-detection-worker-js/dist/face-landmark-detection-workertfjs";
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { FaceLandmarkDetectionWorkerManager, DetectorTypes, LandmarkTypes, Keypoint, TRIANGULATION, NUM_KEYPOINTS } from "@dannadori/face-landmark-detection-worker-js/dist/face-landmark-detection-workertfjs";
+
+/// #else
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import { FaceMeshPredictionEx, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, generateFaceLandmarkDetectionDefaultConfig, generateDefaultFaceLandmarkDetectionParams, ModelTypes, BackendTypes } from "@dannadori/face-landmark-detection-worker-js";
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { FaceLandmarkDetectionWorkerManager, DetectorTypes, LandmarkTypes, Keypoint, TRIANGULATION, NUM_KEYPOINTS } from "@dannadori/face-landmark-detection-worker-js";
+
+/// #endif
+
+export { BackendTypes, ModelTypes, FaceLandmarkDetectionWorkerManager, DetectorTypes, LandmarkTypes, TRIANGULATION, NUM_KEYPOINTS };
+export type { FaceLandmarkDetectionOperationParams, Keypoint, FaceLandmarkDetectionConfig };
 
 type Props = {
     children: ReactNode;

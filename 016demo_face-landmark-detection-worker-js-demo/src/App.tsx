@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
-import { ApplicationModes, useAppState } from "./provider/AppStateProvider";
+import { ApplicationModes, BackendTypes, DetectorTypes, FaceLandmarkDetectionWorkerManager, LandmarkTypes, ModelTypes, useAppState } from "./provider/AppStateProvider";
 import { FacemeshDrawer } from "./FacemeshDrawer";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
 import { FaceswapDrawer } from "./FaceswapDrawer";
-import { BackendTypes, ModelTypes, FaceLandmarkDetectionWorkerManager, DetectorTypes, LandmarkTypes } from "@dannadori/face-landmark-detection-worker-js";
+
 let GlobalLoopID = 0;
 
 type ControllerProps = {
@@ -406,6 +406,7 @@ const App = () => {
             try {
                 if (snap.width > 0 && snap.height > 0) {
                     const prediction = await managerRef.current!.predict(params, snap);
+                    console.log("prediction", prediction);
                     let trackingArea = undefined;
                     if (config.modelType === ModelTypes.tflite) {
                         trackingArea = managerRef.current?.fitCroppedArea(prediction, snap.width, snap.height, 1, 1, dst.width, dst.height, 0, 0, 0, 0);

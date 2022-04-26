@@ -1,5 +1,9 @@
 const path = require("path");
 const webpack = require("webpack");
+
+const build_type = process.env.BUILD_TYPE || "";
+console.log("build_type::", build_type);
+
 const manager = {
     // mode: "development",
     mode: "production",
@@ -15,14 +19,25 @@ const manager = {
     },
     module: {
         rules: [
-            { test: /\.ts$/, loader: "ts-loader" },
+            {
+                test: /\.ts$/,
+                use: [
+                    { loader: "ts-loader" },
+                    {
+                        loader: "ifdef-loader",
+                        options: {
+                            BUILD_TYPE: build_type,
+                        },
+                    },
+                ],
+            },
             { test: /resources\/.*\.bin/, type: "asset/inline" },
             { test: /resources\/.*\.json/, type: "asset/source" },
             { test: /\.wasm$/, type: "asset/inline" },
         ],
     },
     output: {
-        filename: "face-landmark-detection-worker.js",
+        filename: `face-landmark-detection-worker${build_type}.js`,
         path: path.resolve(__dirname, "dist"),
         libraryTarget: "umd",
         globalObject: "typeof self !== 'undefined' ? self : this",

@@ -1,9 +1,5 @@
 import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
-import * as faceLandmarksDetection from "@tensorflow-models/face-landmarks-detection"
-import * as tf from "@tensorflow/tfjs";
-import * as faceMesh from "@mediapipe/face_mesh";
 import { BackendTypes, DetectorTypes, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, FaceMeshPredictionEx, FacemeshPredictionMediapipe, LandmarkTypes, ModelTypes, TFLite, TFLiteFaceLandmarkDetection, RefinedPoints } from "./const";
-import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 import { Face, Keypoint } from "@tensorflow-models/face-landmarks-detection";
 export { FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, NUM_KEYPOINTS, TRIANGULATION, BackendTypes, ModelTypes, FaceMeshPredictionEx, DetectorTypes, LandmarkTypes, RefinedPoints } from "./const";
 export { Face, Keypoint, BoundingBox }
@@ -11,22 +7,50 @@ export { Face, Keypoint, BoundingBox }
 import workerJs from "worker-loader?inline=no-fallback!./face-landmark-detection-worker-worker.ts";
 import { BoundingBox } from "@tensorflow-models/face-landmarks-detection/dist/shared/calculators/interfaces/shape_interfaces";
 
+/// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs"|| BUILD_TYPE==="" 
+import * as faceLandmarksDetection from "@tensorflow-models/face-landmarks-detection"
+import * as tf from "@tensorflow/tfjs";
+import * as faceMesh from "@mediapipe/face_mesh";
+import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
+/// #endif
 
+/// #if BUILD_TYPE==="full"
+// @ts-ignore
+import face_full_sparse from "../resources/tflite/detector/face_detection_full_range_sparse.bin";
+// @ts-ignore
+import landmark from "../resources/tflite/landmark/face_landmark.bin";
 
+/// #elif BUILD_TYPE==="short"
+// @ts-ignore
+import face_short from "../resources/tflite/detector/face_detection_short_range.bin";
+// @ts-ignore
+import landmark from "../resources/tflite/landmark/face_landmark.bin";
+
+/// #elif BUILD_TYPE==="full_with_attention"
+// @ts-ignore
+import face_full_sparse from "../resources/tflite/detector/face_detection_full_range_sparse.bin";
+// @ts-ignore
+import landmark_with_attention from "../resources/tflite/landmark/model_float16_quant.bin";
+
+/// #elif BUILD_TYPE==="short_with_attention"
+// @ts-ignore
+import face_short from "../resources/tflite/detector/face_detection_short_range.bin";
+// @ts-ignore
+import landmark_with_attention from "../resources/tflite/landmark/model_float16_quant.bin";
+
+/// #elif BUILD_TYPE===""
 // @ts-ignore
 import face_short from "../resources/tflite/detector/face_detection_short_range.bin";
 // @ts-ignore
 import face_full from "../resources/tflite/detector/face_detection_full_range.bin";
 // @ts-ignore
 import face_full_sparse from "../resources/tflite/detector/face_detection_full_range_sparse.bin";
-
-
 // @ts-ignore
 import landmark from "../resources/tflite/landmark/face_landmark.bin";
 // @ts-ignore
-// import landmark_with_attention from "../resources/tflite/landmark/model_float16_quant.bin";
-import landmark_with_attention from "../resources/tflite/landmark/model_float32.bin";
-
+import landmark_with_attention from "../resources/tflite/landmark/model_float16_quant.bin";
+// import landmark_with_attention32 from "../resources/tflite/landmark/model_float32.bin";
+/// #endif
 
 // @ts-ignore
 import wasm from "../resources/wasm/tflite.wasm";
@@ -59,21 +83,75 @@ export const generateFaceLandmarkDetectionDefaultConfig = (): FaceLandmarkDetect
         wasmBase64: wasm.split(",")[1],
         wasmSimdBase64: wasmSimd.split(",")[1],
 
-        detectorModelTFLite: {
-            "short": face_short.split(",")[1],
-            "full": face_full.split(",")[1],
-            "full_sparse": face_full_sparse.split(",")[1],
-        },
-        landmarkModelTFLite: {
-            "landmark": landmark.split(",")[1],
-            "with_attention": landmark_with_attention.split(",")[1],
-        },
+        detectorModelTFLite: {},
+        landmarkModelTFLite: {},
         useSimd: true,
         maxProcessWidth: 1024,
         maxProcessHeight: 1024,
         detectorModelKey: DetectorTypes.short,
         landmarkModelKey: LandmarkTypes.with_attention
     };
+    /// #if BUILD_TYPE==="full"
+    defaultConf.detectorModelTFLite = {
+        "full_sparse": face_full_sparse.split(",")[1],
+    }
+    defaultConf.landmarkModelTFLite = {
+        "landmark": landmark.split(",")[1],
+    }
+    defaultConf.detectorModelKey = DetectorTypes.full_sparse
+    defaultConf.landmarkModelKey = LandmarkTypes.landmark
+    defaultConf.modelType = ModelTypes.tflite
+    /// #elif BUILD_TYPE==="short"
+    defaultConf.detectorModelTFLite = {
+        "short": face_short.split(",")[1],
+    }
+    defaultConf.landmarkModelTFLite = {
+        "landmark": landmark.split(",")[1],
+    }
+    defaultConf.detectorModelKey = DetectorTypes.short
+    defaultConf.landmarkModelKey = LandmarkTypes.landmark
+    defaultConf.modelType = ModelTypes.tflite
+    /// #elif BUILD_TYPE==="full_with_attention"
+    defaultConf.detectorModelTFLite = {
+        "full_sparse": face_full_sparse.split(",")[1],
+    }
+    defaultConf.landmarkModelTFLite = {
+        "with_attention": landmark_with_attention.split(",")[1],
+    }
+    defaultConf.detectorModelKey = DetectorTypes.full_sparse
+    defaultConf.landmarkModelKey = LandmarkTypes.with_attention
+    defaultConf.modelType = ModelTypes.tflite
+    /// #elif BUILD_TYPE==="short_with_attention"
+    defaultConf.detectorModelTFLite = {
+        "short": face_short.split(",")[1],
+    }
+    defaultConf.landmarkModelTFLite = {
+        "with_attention": landmark_with_attention.split(",")[1],
+    }
+    defaultConf.detectorModelKey = DetectorTypes.short
+    defaultConf.landmarkModelKey = LandmarkTypes.with_attention
+    defaultConf.modelType = ModelTypes.tflite
+    /// #elif BUILD_TYPE===""
+    defaultConf.detectorModelTFLite = {
+        "short": face_short.split(",")[1],
+        "full": face_full.split(",")[1],
+        "full_sparse": face_full_sparse.split(",")[1],
+    }
+    defaultConf.landmarkModelTFLite = {
+        "landmark": landmark.split(",")[1],
+        "with_attention": landmark_with_attention.split(",")[1],
+        // "with_attention32": landmark_with_attention32.split(",")[1],
+    }
+    defaultConf.detectorModelKey = DetectorTypes.short
+    defaultConf.landmarkModelKey = LandmarkTypes.with_attention
+    defaultConf.modelType = ModelTypes.tflite
+    /// #elif BUILD_TYPE==="mediapipe"
+    defaultConf.modelType = ModelTypes.mediapipe
+    defaultConf.backendType = BackendTypes.wasm
+    /// #elif BUILD_TYPE==="tfjs"
+    defaultConf.modelType = ModelTypes.tfjs
+    defaultConf.backendType = BackendTypes.WebGL
+    /// #endif
     return defaultConf;
 };
 
@@ -90,11 +168,15 @@ export const generateDefaultFaceLandmarkDetectionParams = () => {
 };
 
 export class LocalFL extends LocalWorker {
+    /// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs" || BUILD_TYPE==="" 
+    model: faceLandmarksDetection.FaceLandmarksDetector | null = null;
+    /// #endif
+
     tflite: TFLite | null = null;
     tfliteInputAddress: number = 0
     tfliteOutputAddress: number = 0
 
-    model: faceLandmarksDetection.FaceLandmarksDetector | null = null;
+    /// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs" || BUILD_TYPE==="" 
     load_module = async (config: FaceLandmarkDetectionConfig) => {
         if (config.backendType === BackendTypes.wasm) {
             const dirname = config.pageUrl.substr(0, config.pageUrl.lastIndexOf("/"));
@@ -112,8 +194,11 @@ export class LocalFL extends LocalWorker {
             await tf.setBackend("webgl");
         }
     };
+    /// #endif
 
     init = async (config: FaceLandmarkDetectionConfig) => {
+
+        /// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs"  || BUILD_TYPE==="" 
         await this.load_module(config);
         await tf.ready();
 
@@ -137,7 +222,10 @@ export class LocalFL extends LocalWorker {
                 refineLandmarks: config.model.refineLandmarks,
                 maxFaces: config.model.maxFaces,
             });
-        } else {
+        }
+        /// #endif
+        /// #if BUILD_TYPE==="full" || BUILD_TYPE==="short"  || BUILD_TYPE==="" ||BUILD_TYPE==="full_with_attention" || BUILD_TYPE==="short_with_attention"
+        if (config.modelType === ModelTypes.tflite) {
             const browserType = getBrowserType();
             if (config.useSimd && browserType !== BrowserTypes.SAFARI) {
                 // SIMD
@@ -169,20 +257,24 @@ export class LocalFL extends LocalWorker {
             this.tfliteInputAddress = this.tflite!._getInputBufferAddress()
             this.tfliteOutputAddress = this.tflite!._getOutputBufferAddress()
         }
-
+        /// #endif
         console.log("facemesh loaded locally", config);
     };
 
     predict = async (config: FaceLandmarkDetectionConfig, params: FaceLandmarkDetectionOperationParams, targetCanvas: HTMLCanvasElement): Promise<Face[] | null> => {
         const ctx = targetCanvas.getContext("2d")!;
         const newImg = ctx.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
+        /// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs"  || BUILD_TYPE==="" 
         if (config.modelType === ModelTypes.mediapipe || config.modelType === ModelTypes.tfjs) {
             if (!this.model) {
                 return null
             }
             const prediction = await this.model.estimateFaces(newImg, { flipHorizontal: false });
             return prediction;
-        } else if (config.modelType === ModelTypes.tflite) {
+        }
+        /// #endif
+        /// #if BUILD_TYPE==="full" || BUILD_TYPE==="short"  || BUILD_TYPE==="" ||BUILD_TYPE==="full_with_attention" || BUILD_TYPE==="short_with_attention"
+        if (config.modelType === ModelTypes.tflite) {
             const imageData = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height)
             this.tflite!.HEAPU8.set(imageData.data, this.tfliteInputAddress);
             this.tflite!._exec(params.processWidth, params.processHeight, config.model.maxFaces);
@@ -336,9 +428,9 @@ export class LocalFL extends LocalWorker {
                 return face
             })
             return faces
-        } else {
-            return null;
         }
+        /// #endif
+        return null;
     };
 }
 
@@ -372,7 +464,7 @@ export class FaceLandmarkDetectionWorkerManager extends WorkerManagerBase {
         }
 
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
-        const prediction = (await this.sendToWorker(this.config, currentParams, imageData.data)) as Face[];
+        const prediction = (await this.sendToWorker(currentParams, imageData.data)) as Face[] | null;
         return this.generatePredictionEx(this.config, params, prediction);
     };
 

@@ -139,8 +139,6 @@ onmessage = async (event) => {
     if (event.data.message === WorkerCommand.INITIALIZE) {
         config = event.data.config as HandPoseDetectionConfig;
 
-
-
         /// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs"  || BUILD_TYPE===""         
         if (config.modelType === ModelTypes.mediapipe) {
             try {

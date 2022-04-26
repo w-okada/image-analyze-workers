@@ -1,5 +1,5 @@
-import { FaceLandmarkDetectionOperationParams, Keypoint } from "@dannadori/face-landmark-detection-worker-js";
 import { FacemeshRenderer } from "./FaceswapRenderer";
+import { FaceLandmarkDetectionOperationParams, Keypoint } from "./provider/AppStateProvider";
 
 export class FaceswapDrawer {
     private webGLCanvas: HTMLCanvasElement = document.createElement("canvas");

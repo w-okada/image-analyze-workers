@@ -1,6 +1,7 @@
 import { generateShader } from "./ShaderUtil";
 import { matrix_identity, matrix_mult } from "./MatrixUtil";
-import { Keypoint, TRIANGULATION } from "@dannadori/face-landmark-detection-worker-js";
+import { Keypoint, TRIANGULATION } from "./provider/AppStateProvider";
+
 
 export class FacemeshRenderer {
     private strVS = `
