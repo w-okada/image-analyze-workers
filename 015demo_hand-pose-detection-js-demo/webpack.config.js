@@ -29,7 +29,6 @@ module.exports = {
                             plugins: ["@babel/plugin-transform-runtime"],
                         },
                     },
-
                     {
                         loader: "ifdef-loader",
                         options: {
