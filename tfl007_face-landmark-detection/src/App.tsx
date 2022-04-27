@@ -306,6 +306,15 @@ const App = () => {
                             dstCtx.fillRect(p.x*dst.width, p.y*dst.height, 10,10)
                         })
 
+                        dstCtx.lineWidth = 20;
+                        dstCtx.strokeStyle="#ff0000"
+                        dstCtx.beginPath();
+                        const offset=0
+                        dstCtx.moveTo(face.faceKeypoints[0].x*dst.width,face.faceKeypoints[0].y*dst.height);
+                        dstCtx.lineTo(face.faceKeypoints[1].x*dst.width,face.faceKeypoints[1].y*dst.height);
+                        dstCtx.closePath();
+                        dstCtx.stroke();
+
                     })
                 }
             } catch (error) {

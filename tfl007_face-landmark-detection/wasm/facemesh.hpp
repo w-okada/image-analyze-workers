@@ -1,5 +1,5 @@
-#ifndef __TFLITE_HAND_POSE_H__
-#define __TFLITE_HAND_POSE_H__
+#ifndef __TFLITE_FACEMESH_H__
+#define __TFLITE_FACEMESH_H__
 
 #ifdef __cplusplus
 extern "C"
@@ -7,7 +7,6 @@ extern "C"
 #endif
 
 #define SYSTEM_MAX_FACE_NUM 20
-#define HAND_JOINT_NUM 21
 
     typedef struct fvec2
     {
@@ -53,28 +52,8 @@ extern "C"
         face_t faces[SYSTEM_MAX_FACE_NUM];
     } face_detection_result_t;
 
-    // typedef struct _hand_landmark_result_t
-    // {
-    //     float score;
-    //     fvec3 joint[HAND_JOINT_NUM];
-    // } hand_landmark_result_t;
-
-    // typedef struct _pose3d_config_t
-    // {
-    //     float score_thresh;
-    //     float iou_thresh;
-    // } pose3d_config_t;
-
-    // int init_tflite_hand_landmark(int use_quantized_tflite);
-
-    // void *get_palm_detection_input_buf(int *w, int *h);
-    // int invoke_palm_detection(palm_detection_result_t *palm_result, int flag);
-
-    // void *get_hand_landmark_input_buf(int *w, int *h);
-    // int invoke_hand_landmark(hand_landmark_result_t *hand_landmark_result);
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __TFLITE_HAND_POSE_H__ */
+#endif /* __TFLITE_FACEMESH_H__ */

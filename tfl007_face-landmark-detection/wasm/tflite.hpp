@@ -315,7 +315,6 @@ public:
         cv::Mat inputImageRGB(height, width, CV_8UC3);
         int fromTo[] = {0, 0, 1, 1, 2, 2}; // split alpha channel
         cv::mixChannels(&inputImage, 1, &inputImageRGB, 1, fromTo, 3);
-        // cv::mixChannels(&squaredImage, 1, &inputImageRGB, 1, fromTo, 3);
         cv::Mat resizedInputImageRGB(detector_input_height, detector_input_width, CV_8UC3);
         cv::resize(inputImageRGB, resizedInputImageRGB, resizedInputImageRGB.size());
         cv::Mat inputImage32F(detector_input_height, detector_input_width, CV_32FC3, input);
@@ -332,362 +331,229 @@ public:
         float score_thresh = 0.2f;
         std::list<face_t> face_list;
         decode_keypoints(face_list, score_thresh, points_ptr, scores_ptr, &s_anchors, detectorType);
-        // std::for_each(
-        //     face_list.cbegin(), face_list.cend(), [](face_t x)
-        //     { std::cout << "FACE LIST::" << x.score << " " << x.rect.topleft.x << " " << x.rect.topleft.y << " " << x.rect.btmright.x << " " << x.rect.btmright.y << " \n"; });
 
         //// NMS
         float iou_thresh = 0.005f;
         std::list<face_t> face_nms_list;
         non_max_suppression(face_list, face_nms_list, iou_thresh, max_face_num);
-        // std::for_each(
-        //     face_nms_list.cbegin(), face_nms_list.cend(), [](face_t x)
-        //     {
-        //         std::cout << "NMS::" << x.score << " " << x.rect.topleft.x << " " << x.rect.topleft.y << " " << x.rect.btmright.x << " " << x.rect.btmright.y << " \n";
-        //         printf("dstCtx.fillRect(%f*dst.width, %f*dst.height, (%f - %f)*dst.width, (%f  - %f) *dst.height)\n", x.rect.topleft.x,x.rect.topleft.y,x.rect.btmright.x,x.rect.topleft.x,x.rect.btmright.y,x.rect.topleft.y); });
-
-        ////////////////////////////////////////////////
         //// Pack
-        // face_detection_result_t *face_result = new face_detection_result_t;
         face_detection_result_t face_result;
         pack_face_result(&face_result, face_nms_list, max_face_num);
-        // printf("palm num::: %d\n", palm_result->num);
-        // if (face_result->num > 0)
-        // {
 
-        //     // for (int i = 0; i < palm_result->num; i++)
-        //     // {
-        //     //     std::cout << "result::::" << palm_result->palms[i].score << " " << palm_result->palms[i].rect.topleft.x << " " << palm_result->palms[i].rect.topleft.y << " " << palm_result->palms[i].rect.btmright.x << " " << palm_result->palms[i].rect.btmright.y << " "
-        //     //               << " \n";
-        //     // }
-        // }
-
-        /////////////////////////////////////////////////////////////////////////////////////
-
-        // cv::Mat out(height, width, CV_8UC4, outputBuffer);
-        // inputImage.copyTo(out);
-
-        if (face_result.num > 0)
+        for (int i = 0; i < face_result.num; i++)
         {
-            for (int i = 0; i < face_result.num; i++)
+            int minX = width;
+            int minY = height;
+            int maxX = 0;
+            int maxY = 0;
+
+            for (int j = 0; j < 4; j++)
             {
-                // if (i != 0)
-                // {
-                //     continue;
-                // }
-                int minX = width;
-                int minY = height;
-                // int minX = squaredSize;
-                // int minY = squaredSize;
-                int maxX = 0;
-                int maxY = 0;
+                int pos_x = face_result.faces[i].face_pos[j].x * width;
+                int pos_y = face_result.faces[i].face_pos[j].y * height;
 
-                for (int j = 0; j < 4; j++)
+                if (pos_x < minX)
                 {
-                    // int pos_x = palm_result->palms[i].hand_pos[j].x * squaredSize;
-                    // int pos_y = palm_result->palms[i].hand_pos[j].y * squaredSize;
-                    int pos_x = face_result.faces[i].face_pos[j].x * width;
-                    int pos_y = face_result.faces[i].face_pos[j].y * height;
-
-                    if (pos_x < minX)
-                    {
-                        minX = pos_x;
-                    }
-                    if (pos_x > maxX)
-                    {
-                        maxX = pos_x;
-                    }
-
-                    if (pos_y < minY)
-                    {
-                        minY = pos_y;
-                    }
-                    if (pos_y > maxY)
-                    {
-                        maxY = pos_y;
-                    }
+                    minX = pos_x;
                 }
-                if (minX < 0)
+                if (pos_x > maxX)
                 {
-                    minX = 0;
-                }
-                if (maxX > width)
-                {
-                    maxX = width;
-                }
-                // if (maxX > squaredSize)
-                // {
-                //     maxX = squaredSize;
-                // }
-                if (minY < 0)
-                {
-                    minY = 0;
-                }
-                if (maxY > height)
-                {
-                    maxY = height;
-                }
-                // if (maxY > squaredSize)
-                // {
-                //     maxY = squaredSize;
-                // }
-
-                float *landmarkInput = landmarkInterpreter->typed_input_tensor<float>(0);
-
-                int crop_width = maxX - minX;
-                int crop_height = maxY - minY;
-                float org_aspect = (float)height / (float)width;
-                float crop_aspect = (float)height / (float)width;
-                if (org_aspect < crop_aspect)
-                {
-                    // cropの縦が大きい -> 縦を基準に横幅を算出
-                    crop_width = crop_height * ((float)width / (float)height);
-                }
-                else
-                {
-                    // cropの横が大きい -> 横を基準に縦を算出
-                    crop_height = crop_width * ((float)height / (float)width);
-                }
-                if (crop_height + minY > height)
-                {
-                    crop_height = height - minY;
+                    maxX = pos_x;
                 }
 
-                cv::Mat hand(inputImage, cv::Rect(minX, minY, crop_width, crop_height));
-
-                float centerX = crop_width / 2;
-                float centerY = crop_height / 2;
-
-                cv::Point2f center = cv::Point2f(centerX, centerY);
-                cv::Mat change = cv::getRotationMatrix2D(center, (face_result.faces[i].rotation * 60) - 90, 1);
-                // printf("ROTATE %f, %f\n", face_result->faces[i].rotation, face_result->faces[i].rotation * 60);
-                cv::Mat reverse;
-                cv::Mat rotated_hand(hand.size(), CV_8UC4);
-                cv::warpAffine(hand, rotated_hand, change, rotated_hand.size(), cv::INTER_CUBIC, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
-                cv::invertAffineTransform(change, reverse);
-                cv::Mat reverse3x3;
-                reverse3x3.push_back(reverse.row(0));
-                reverse3x3.push_back(reverse.row(1));
-                cv::Mat none = (cv::Mat_<double>(1, 3) << 0.0, 0.0, 1.0);
-                reverse3x3.push_back(none.row(0));
-
-                cv::Mat roi2(temporaryImage, cv::Rect(0, 0, crop_width, crop_height));
-                rotated_hand.copyTo(roi2);
-                // printf("Rotation: %f\n", palm_result->palms[i].rotation);
-
-                // cv::Mat resized(height, width, CV_8UC4, outputBuffer);
-                cv::Mat resized(landmark_input_height, landmark_input_width, CV_8UC4);
-                cv::resize(rotated_hand, resized, resized.size(), 0, 0, cv::INTER_LINEAR);
-
-                cv::Mat inputImageRGB(landmark_input_height, landmark_input_width, CV_8UC3);
-                int fromTo[] = {0, 0, 1, 1, 2, 2}; // split alpha channel
-                cv::mixChannels(&resized, 1, &inputImageRGB, 1, fromTo, 3);
-
-                cv::Mat inputImage32F(landmark_input_height, landmark_input_width, CV_32FC3, landmarkInput);
-                inputImageRGB.convertTo(inputImage32F, CV_32FC3);
-
-                inputImage32F = inputImage32F / 255.0;
-
-                CHECK_TFLITE_ERROR(landmarkInterpreter->Invoke() == kTfLiteOk);
-
-                float score = *faceflag_ptr;
-                if (score > 0.0000001)
+                if (pos_y < minY)
                 {
-                    face_result.faces[i].landmark_score = *faceflag_ptr;
-                    ////////
-                    // pattern1. apply affin at one time -> no improvment for processing time
-                    ////////
-                    // std::vector<cv::Point2f> src_points;
-                    // std::vector<cv::Point2f> dst_points;
-                    // // landmark
-                    // for (int j = 0; j < 468; j++)
-                    // {
-                    //     src_points.push_back(cv::Point2f(landmark_ptr[j * 3 + 0], landmark_ptr[j * 3 + 1]));
-                    // }
-                    // // lip
-                    // for (int j = 0; j < 80; j++)
-                    // {
-                    //     src_points.push_back(cv::Point2f(output_lips_ptr[j * 2 + 0], output_lips_ptr[j * 2 + 1]));
-                    // }
-                    // // left eye
-                    // for (int j = 0; j < 71; j++)
-                    // {
-                    //     src_points.push_back(cv::Point2f(output_left_eye_ptr[j * 2 + 0], output_left_eye_ptr[j * 2 + 1]));
-                    // }
-                    // // right eye
-                    // for (int j = 0; j < 71; j++)
-                    // {
-                    //     src_points.push_back(cv::Point2f(output_right_eye_ptr[j * 2 + 0], output_right_eye_ptr[j * 2 + 1]));
-                    // }
-                    // // left iris
-                    // for (int j = 0; j < 5; j++)
-                    // {
-                    //     src_points.push_back(cv::Point2f(output_left_iris_ptr[j * 2 + 0], output_left_iris_ptr[j * 2 + 1]));
-                    // }
-                    // // right iris
-                    // for (int j = 0; j < 5; j++)
-                    // {
-                    //     src_points.push_back(cv::Point2f(output_right_iris_ptr[j * 2 + 0], output_right_iris_ptr[j * 2 + 1]));
-                    // }
+                    minY = pos_y;
+                }
+                if (pos_y > maxY)
+                {
+                    maxY = pos_y;
+                }
+            }
+            if (minX < 0)
+            {
+                minX = 0;
+            }
+            if (maxX > width)
+            {
+                maxX = width;
+            }
+            if (minY < 0)
+            {
+                minY = 0;
+            }
+            if (maxY > height)
+            {
+                maxY = height;
+            }
 
-                    // for (int j = 0; j < src_points.size(); j++)
-                    // {
-                    //     src_points[j].x = src_points[j].x / landmark_input_width * crop_width;
-                    //     src_points[j].y = src_points[j].y / landmark_input_height * crop_height;
-                    // }
-                    // cv::perspectiveTransform(src_points, dst_points, reverse3x3);
-                    // for (int j = 0; j < dst_points.size(); j++)
-                    // {
-                    //     dst_points[j].x = (dst_points[j].x + minX) / width;
-                    //     dst_points[j].y = (dst_points[j].y + minY) / height;
-                    // }
+            float *landmarkInput = landmarkInterpreter->typed_input_tensor<float>(0);
 
-                    // // landmark
-                    // for (int j = 0; j < 468; j++)
-                    // {
-                    //     face_result->faces[i].landmark_keys[j].x = dst_points[j].x;
-                    //     face_result->faces[i].landmark_keys[j].y = dst_points[j].y;
-                    //     face_result->faces[i].landmark_keys[j].z = landmark_ptr[j * 3 + 2];
-                    // }
-                    // // lip
-                    // for (int j = 0; j < 80; j++)
-                    // {
-                    //     int offset = (468);
-                    //     face_result->faces[i].landmark_lips[j].x = dst_points[offset + j].x;
-                    //     face_result->faces[i].landmark_lips[j].y = dst_points[offset + j].y;
-                    // }
-                    // // left eye
-                    // for (int j = 0; j < 71; j++)
-                    // {
-                    //     int offset = (468) + (80);
-                    //     face_result->faces[i].landmark_left_eye[j].x = dst_points[offset + j].x;
-                    //     face_result->faces[i].landmark_left_eye[j].y = dst_points[offset + j].y;
-                    // }
-                    // // right eye
-                    // for (int j = 0; j < 71; j++)
-                    // {
-                    //     int offset = (468) + (80) + (71);
-                    //     face_result->faces[i].landmark_right_eye[j].x = dst_points[offset + j].x;
-                    //     face_result->faces[i].landmark_right_eye[j].y = dst_points[offset + j].y;
-                    // }
+            // target Imageを切り抜き
+            int crop_width = maxX - minX;
+            int crop_height = maxY - minY;
+            cv::Mat cropped(inputImage, cv::Rect(minX, minY, crop_width, crop_height));
 
-                    // // left iris
-                    // for (int j = 0; j < 5; j++)
-                    // {
-                    //     int offset = (468) + (80) + (71) + (71);
-                    //     face_result->faces[i].landmark_left_iris[j].x = dst_points[offset + j].x;
-                    //     face_result->faces[i].landmark_left_iris[j].y = dst_points[offset + j].y;
-                    // }
-                    // // right iris
-                    // for (int j = 0; j < 5; j++)
-                    // {
-                    //     int offset = (468) + (80) + (71) + (71) + (5);
-                    //     face_result->faces[i].landmark_right_iris[j].x = dst_points[offset + j].x;
-                    //     face_result->faces[i].landmark_right_iris[j].y = dst_points[offset + j].y;
-                    // }
+            // Landmark用Input作成
+            int squared_size = std::max(crop_width, crop_height);
+            cv::Mat squared = cv::Mat::zeros(cv::Size(squared_size, squared_size), CV_8UC4);
 
-                    ////////
-                    // pattern2. apply affin at each time. I took this because of ease of maintenance.
-                    ////////
+            //// キャンバス内の貼り付け先の特定＋貼り付け
+            int squaredRoiMinX = squared_size / 2 - crop_width / 2;
+            int squaredRoiMinY = squared_size / 2 - crop_height / 2;
+            cv::Mat copyArea(squared, cv::Rect(squaredRoiMinX, squaredRoiMinY, crop_width, crop_height));
+            cropped.copyTo(copyArea);
 
-                    // landmark
-                    for (int j = 0; j < 468; j++)
-                    {
-                        float x_ratio = landmark_ptr[j * 3 + 0] / landmark_input_width;
-                        float y_ratio = landmark_ptr[j * 3 + 1] / landmark_input_height;
-                        float x_position_in_crop = x_ratio * crop_width;
-                        float y_position_in_crop = y_ratio * crop_height;
-                        std::vector<cv::Point2f> src_points;
-                        std::vector<cv::Point2f> dst_points;
-                        src_points.push_back(cv::Point2f(x_position_in_crop, y_position_in_crop));
+            // 回転
+            //// 回転軸（左目）
+            float rotationAxisX = (face_result.faces[i].keys[0].x * width) - minX + squaredRoiMinX;
+            float rotationAxisY = (face_result.faces[i].keys[0].y * height) - minY + squaredRoiMinY;
 
-                        cv::perspectiveTransform(src_points, dst_points, reverse3x3);
+            // cv::Point2f center = cv::Point2f(squared_size / 2, squared_size / 2);
+            cv::Point2f center = cv::Point2f(rotationAxisX, rotationAxisY);
+            cv::Mat change = cv::getRotationMatrix2D(center, (face_result.faces[i].rotation * 60) - 90, 1);
+            //// 回転
+            cv::Mat rotated_face(squared.size(), CV_8UC4);
+            cv::warpAffine(squared, rotated_face, change, rotated_face.size(), cv::INTER_CUBIC, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+            //// 逆行列生成
+            cv::Mat reverse;
+            cv::invertAffineTransform(change, reverse);
+            cv::Mat reverse3x3;
+            reverse3x3.push_back(reverse.row(0));
+            reverse3x3.push_back(reverse.row(1));
+            cv::Mat none = (cv::Mat_<double>(1, 3) << 0.0, 0.0, 1.0);
+            reverse3x3.push_back(none.row(0));
 
-                        face_result.faces[i].landmark_keys[j].x = (dst_points[0].x + minX) / width;
-                        face_result.faces[i].landmark_keys[j].y = (dst_points[0].y + minY) / height;
-                        face_result.faces[i].landmark_keys[j].z = landmark_ptr[j * 3 + 2];
-                    }
-                    // lip
-                    for (int j = 0; j < 80; j++)
-                    {
-                        float x_ratio = output_lips_ptr[j * 2 + 0] / landmark_input_width;
-                        float y_ratio = output_lips_ptr[j * 2 + 1] / landmark_input_height;
-                        float x_position_in_crop = x_ratio * crop_width;
-                        float y_position_in_crop = y_ratio * crop_height;
-                        std::vector<cv::Point2f> src_points;
-                        std::vector<cv::Point2f> dst_points;
-                        src_points.push_back(cv::Point2f(x_position_in_crop, y_position_in_crop));
+            // テンポラリイメージ(for debug)
+            if (i == 0)
+            {
+                // cv::Mat roi2(temporaryImage, cv::Rect(0, 0, crop_width, crop_height));
+                // rotated_face.copyTo(roi2);
+                cv::resize(rotated_face, temporaryImage, temporaryImage.size(), 0, 0, cv::INTER_LINEAR);
+            }
 
-                        cv::perspectiveTransform(src_points, dst_points, reverse3x3);
+            //// インプットShapeにリサイズ
+            cv::Mat resized(landmark_input_height, landmark_input_width, CV_8UC4);
+            cv::resize(rotated_face, resized, resized.size(), 0, 0, cv::INTER_LINEAR);
 
-                        face_result.faces[i].landmark_lips[j].x = (dst_points[0].x + minX) / width;
-                        face_result.faces[i].landmark_lips[j].y = (dst_points[0].y + minY) / height;
-                    }
-                    // left eye
-                    for (int j = 0; j < 71; j++)
-                    {
-                        float x_ratio = output_left_eye_ptr[j * 2 + 0] / landmark_input_width;
-                        float y_ratio = output_left_eye_ptr[j * 2 + 1] / landmark_input_height;
-                        float x_position_in_crop = x_ratio * crop_width;
-                        float y_position_in_crop = y_ratio * crop_height;
-                        std::vector<cv::Point2f> src_points;
-                        std::vector<cv::Point2f> dst_points;
-                        src_points.push_back(cv::Point2f(x_position_in_crop, y_position_in_crop));
+            //// 3チャンネル化
+            cv::Mat inputImageRGB(landmark_input_height, landmark_input_width, CV_8UC3);
+            int fromTo[] = {0, 0, 1, 1, 2, 2}; // split alpha channel
+            cv::mixChannels(&resized, 1, &inputImageRGB, 1, fromTo, 3);
 
-                        cv::perspectiveTransform(src_points, dst_points, reverse3x3);
+            //// 標準化
+            cv::Mat inputImage32F(landmark_input_height, landmark_input_width, CV_32FC3, landmarkInput);
+            inputImageRGB.convertTo(inputImage32F, CV_32FC3);
+            inputImage32F = inputImage32F / 255.0;
 
-                        face_result.faces[i].landmark_left_eye[j].x = (dst_points[0].x + minX) / width;
-                        face_result.faces[i].landmark_left_eye[j].y = (dst_points[0].y + minY) / height;
-                    }
-                    // right eye
-                    for (int j = 0; j < 71; j++)
-                    {
-                        float x_ratio = output_right_eye_ptr[j * 2 + 0] / landmark_input_width;
-                        float y_ratio = output_right_eye_ptr[j * 2 + 1] / landmark_input_height;
-                        float x_position_in_crop = x_ratio * crop_width;
-                        float y_position_in_crop = y_ratio * crop_height;
-                        std::vector<cv::Point2f> src_points;
-                        std::vector<cv::Point2f> dst_points;
-                        src_points.push_back(cv::Point2f(x_position_in_crop, y_position_in_crop));
+            //// Landmark検出
+            CHECK_TFLITE_ERROR(landmarkInterpreter->Invoke() == kTfLiteOk);
+            float score = *faceflag_ptr;
+            if (score > 0.0000001)
+            {
+                face_result.faces[i].landmark_score = *faceflag_ptr;
 
-                        cv::perspectiveTransform(src_points, dst_points, reverse3x3);
+                ////////
+                // pattern2. apply affin at each time. I took this because of ease of maintenance.
+                ////////
 
-                        face_result.faces[i].landmark_right_eye[j].x = (dst_points[0].x + minX) / width;
-                        face_result.faces[i].landmark_right_eye[j].y = (dst_points[0].y + minY) / height;
-                    }
+                // landmark
+                for (int j = 0; j < 468; j++)
+                {
+                    float x_ratio = landmark_ptr[j * 3 + 0] / landmark_input_width;
+                    float y_ratio = landmark_ptr[j * 3 + 1] / landmark_input_height;
+                    float x_position_in_crop = x_ratio * squared_size;
+                    float y_position_in_crop = y_ratio * squared_size;
+                    std::vector<cv::Point2f> src_points;
+                    std::vector<cv::Point2f> dst_points;
+                    src_points.push_back(cv::Point2f(x_position_in_crop, y_position_in_crop));
 
-                    // left iris
-                    for (int j = 0; j < 5; j++)
-                    {
-                        float x_ratio = output_left_iris_ptr[j * 2 + 0] / landmark_input_width;
-                        float y_ratio = output_left_iris_ptr[j * 2 + 1] / landmark_input_height;
-                        float x_position_in_crop = x_ratio * crop_width;
-                        float y_position_in_crop = y_ratio * crop_height;
-                        std::vector<cv::Point2f> src_points;
-                        std::vector<cv::Point2f> dst_points;
-                        src_points.push_back(cv::Point2f(x_position_in_crop, y_position_in_crop));
+                    cv::perspectiveTransform(src_points, dst_points, reverse3x3);
 
-                        cv::perspectiveTransform(src_points, dst_points, reverse3x3);
+                    face_result.faces[i].landmark_keys[j].x = (dst_points[0].x - squaredRoiMinX + minX) / width;
+                    face_result.faces[i].landmark_keys[j].y = (dst_points[0].y - squaredRoiMinY + minY) / height;
+                    face_result.faces[i].landmark_keys[j].z = landmark_ptr[j * 3 + 2];
+                }
+                // lip
+                for (int j = 0; j < 80; j++)
+                {
+                    float x_ratio = output_lips_ptr[j * 2 + 0] / landmark_input_width;
+                    float y_ratio = output_lips_ptr[j * 2 + 1] / landmark_input_height;
+                    float x_position_in_crop = x_ratio * squared_size;
+                    float y_position_in_crop = y_ratio * squared_size;
+                    std::vector<cv::Point2f> src_points;
+                    std::vector<cv::Point2f> dst_points;
+                    src_points.push_back(cv::Point2f(x_position_in_crop, y_position_in_crop));
 
-                        face_result.faces[i].landmark_left_iris[j].x = (dst_points[0].x + minX) / width;
-                        face_result.faces[i].landmark_left_iris[j].y = (dst_points[0].y + minY) / height;
-                    }
-                    // right iris
-                    for (int j = 0; j < 5; j++)
-                    {
-                        float x_ratio = output_right_iris_ptr[j * 2 + 0] / landmark_input_width;
-                        float y_ratio = output_right_iris_ptr[j * 2 + 1] / landmark_input_height;
-                        float x_position_in_crop = x_ratio * crop_width;
-                        float y_position_in_crop = y_ratio * crop_height;
-                        std::vector<cv::Point2f> src_points;
-                        std::vector<cv::Point2f> dst_points;
-                        src_points.push_back(cv::Point2f(x_position_in_crop, y_position_in_crop));
+                    cv::perspectiveTransform(src_points, dst_points, reverse3x3);
 
-                        cv::perspectiveTransform(src_points, dst_points, reverse3x3);
+                    face_result.faces[i].landmark_lips[j].x = (dst_points[0].x - squaredRoiMinX + minX) / width;
+                    face_result.faces[i].landmark_lips[j].y = (dst_points[0].y - squaredRoiMinY + minY) / height;
+                }
+                // left eye
+                for (int j = 0; j < 71; j++)
+                {
+                    float x_ratio = output_left_eye_ptr[j * 2 + 0] / landmark_input_width;
+                    float y_ratio = output_left_eye_ptr[j * 2 + 1] / landmark_input_height;
+                    float x_position_in_crop = x_ratio * squared_size;
+                    float y_position_in_crop = y_ratio * squared_size;
+                    std::vector<cv::Point2f> src_points;
+                    std::vector<cv::Point2f> dst_points;
+                    src_points.push_back(cv::Point2f(x_position_in_crop, y_position_in_crop));
 
-                        face_result.faces[i].landmark_right_iris[j].x = (dst_points[0].x + minX) / width;
-                        face_result.faces[i].landmark_right_iris[j].y = (dst_points[0].y + minY) / height;
-                    }
+                    cv::perspectiveTransform(src_points, dst_points, reverse3x3);
+
+                    face_result.faces[i].landmark_left_eye[j].x = (dst_points[0].x - squaredRoiMinX + minX) / width;
+                    face_result.faces[i].landmark_left_eye[j].y = (dst_points[0].y - squaredRoiMinY + minY) / height;
+                }
+                // right eye
+                for (int j = 0; j < 71; j++)
+                {
+                    float x_ratio = output_right_eye_ptr[j * 2 + 0] / landmark_input_width;
+                    float y_ratio = output_right_eye_ptr[j * 2 + 1] / landmark_input_height;
+                    float x_position_in_crop = x_ratio * squared_size;
+                    float y_position_in_crop = y_ratio * squared_size;
+                    std::vector<cv::Point2f> src_points;
+                    std::vector<cv::Point2f> dst_points;
+                    src_points.push_back(cv::Point2f(x_position_in_crop, y_position_in_crop));
+
+                    cv::perspectiveTransform(src_points, dst_points, reverse3x3);
+
+                    face_result.faces[i].landmark_right_eye[j].x = (dst_points[0].x - squaredRoiMinX + minX) / width;
+                    face_result.faces[i].landmark_right_eye[j].y = (dst_points[0].y - squaredRoiMinY + minY) / height;
+                }
+
+                // left iris
+                for (int j = 0; j < 5; j++)
+                {
+                    float x_ratio = output_left_iris_ptr[j * 2 + 0] / landmark_input_width;
+                    float y_ratio = output_left_iris_ptr[j * 2 + 1] / landmark_input_height;
+                    float x_position_in_crop = x_ratio * squared_size;
+                    float y_position_in_crop = y_ratio * squared_size;
+                    std::vector<cv::Point2f> src_points;
+                    std::vector<cv::Point2f> dst_points;
+                    src_points.push_back(cv::Point2f(x_position_in_crop, y_position_in_crop));
+
+                    cv::perspectiveTransform(src_points, dst_points, reverse3x3);
+
+                    face_result.faces[i].landmark_left_iris[j].x = (dst_points[0].x - squaredRoiMinX + minX) / width;
+                    face_result.faces[i].landmark_left_iris[j].y = (dst_points[0].y - squaredRoiMinY + minY) / height;
+                }
+                // right iris
+                for (int j = 0; j < 5; j++)
+                {
+                    float x_ratio = output_right_iris_ptr[j * 2 + 0] / landmark_input_width;
+                    float y_ratio = output_right_iris_ptr[j * 2 + 1] / landmark_input_height;
+                    float x_position_in_crop = x_ratio * squared_size;
+                    float y_position_in_crop = y_ratio * squared_size;
+                    std::vector<cv::Point2f> src_points;
+                    std::vector<cv::Point2f> dst_points;
+                    src_points.push_back(cv::Point2f(x_position_in_crop, y_position_in_crop));
+
+                    cv::perspectiveTransform(src_points, dst_points, reverse3x3);
+
+                    face_result.faces[i].landmark_right_iris[j].x = (dst_points[0].x - squaredRoiMinX + minX) / width;
+                    face_result.faces[i].landmark_right_iris[j].y = (dst_points[0].y - squaredRoiMinY + minY) / height;
                 }
             }
         }
@@ -709,7 +575,7 @@ public:
                 *currentOutputPosition = face_result.faces[i].rotation;
                 currentOutputPosition++;
 
-                // palm minX, minY, maxX, maxY
+                // face minX, minY, maxX, maxY
                 *currentOutputPosition = face_result.faces[i].rect.topleft.x;
                 currentOutputPosition++;
                 *currentOutputPosition = face_result.faces[i].rect.topleft.y;
@@ -718,7 +584,7 @@ public:
                 currentOutputPosition++;
                 *currentOutputPosition = face_result.faces[i].rect.btmright.y;
                 currentOutputPosition++;
-                // hand center, w,h
+                // face center, w,h
                 *currentOutputPosition = (face_result.faces[i].face_cx - (face_result.faces[i].face_w / 2));
                 currentOutputPosition++;
                 *currentOutputPosition = (face_result.faces[i].face_cy - (face_result.faces[i].face_h / 2));
@@ -727,7 +593,7 @@ public:
                 currentOutputPosition++;
                 *currentOutputPosition = (face_result.faces[i].face_cy + (face_result.faces[i].face_h / 2));
                 currentOutputPosition++;
-                // rotated hand position
+                // rotated face position
                 for (int j = 0; j < 4; j++)
                 {
                     *currentOutputPosition = face_result.faces[i].face_pos[j].x;
@@ -735,7 +601,7 @@ public:
                     *currentOutputPosition = face_result.faces[i].face_pos[j].y;
                     currentOutputPosition++;
                 }
-                // palm keypoint
+                // face keypoint
                 for (int j = 0; j < 6; j++)
                 {
                     *currentOutputPosition = face_result.faces[i].keys[j].x;
