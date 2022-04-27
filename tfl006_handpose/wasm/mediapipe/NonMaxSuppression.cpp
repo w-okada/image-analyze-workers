@@ -47,20 +47,20 @@ calc_intersection_over_union(rect_t &rect0, rect_t &rect1)
     return intersect_area / (area0 + area1 - intersect_area);
 }
 
-int non_max_suppression(std::list<palm_t> &face_list, std::list<palm_t> &face_sel_list, float iou_thresh, int max_palm_num)
+int non_max_suppression(std::list<palm_t> &hand_list, std::list<palm_t> &hand_sel_list, float iou_thresh, int max_palm_num)
 {
-    face_list.sort(compare);
+    hand_list.sort(compare);
 
-    for (auto itr = face_list.begin(); itr != face_list.end(); itr++)
+    for (auto itr = hand_list.begin(); itr != hand_list.end(); itr++)
     {
-        palm_t face_candidate = *itr;
+        palm_t hand_candidate = *itr;
 
         int ignore_candidate = false;
-        for (auto itr_sel = face_sel_list.rbegin(); itr_sel != face_sel_list.rend(); itr_sel++)
+        for (auto itr_sel = hand_sel_list.rbegin(); itr_sel != hand_sel_list.rend(); itr_sel++)
         {
-            palm_t face_sel = *itr_sel;
+            palm_t hand_sel = *itr_sel;
 
-            float iou = calc_intersection_over_union(face_candidate.rect, face_sel.rect);
+            float iou = calc_intersection_over_union(hand_candidate.rect, hand_sel.rect);
             if (iou >= iou_thresh)
             {
                 ignore_candidate = true;
@@ -70,8 +70,8 @@ int non_max_suppression(std::list<palm_t> &face_list, std::list<palm_t> &face_se
 
         if (!ignore_candidate)
         {
-            face_sel_list.push_back(face_candidate);
-            if (face_sel_list.size() >= max_palm_num)
+            hand_sel_list.push_back(hand_candidate);
+            if (hand_sel_list.size() >= max_palm_num)
                 break;
         }
     }
