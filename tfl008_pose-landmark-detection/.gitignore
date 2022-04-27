@@ -1,0 +1,12 @@
+*~
+*#
+node_modules
+dist
+demo
+tmp
+
+wasm/bazel-bin
+wasm/bazel-out
+wasm/bazel-testlogs
+wasm/bazel-wasm
+build_cache

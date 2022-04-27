@@ -1,0 +1,18 @@
+build:wasm --crosstool_top=@emsdk//emscripten_toolchain:everything
+
+build:wasm --cpu=wasm
+
+build:wasm --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+
+
+# Tensorflow needs remote repo
+common --experimental_repo_remote_exec
+
+# Unused function in Tensorflow Lite kernels
+common --copt="-Wno-error=unused-function"
+
+# Unused variables in Tensorflow Lite XNNPACK delegate
+common --copt="-Wno-error=unused-but-set-variable"
+
+# Deprecated SIMD functions in gemmlowp
+common --copt="-Wno-error=deprecated-declarations"
