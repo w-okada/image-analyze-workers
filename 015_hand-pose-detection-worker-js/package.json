@@ -1,6 +1,6 @@
 {
     "name": "@dannadori/hand-pose-detection-worker-js",
-    "version": "1.0.10",
+    "version": "1.0.12",
     "description": "",
     "main": "dist/hand-pose-detection-worker.js",
     "scripts": {

@@ -113,6 +113,7 @@ export const generateDefaultHandPoseDetectionParams = () => {
         processHeight: 300,
         annotateBox: false,
         movingAverageWindow: 10,
+        affineResizedFactor: 2,
     };
     return defaultParams;
 };
@@ -244,7 +245,7 @@ export class LocalHP extends LocalWorker {
             }
             const imageData = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height)
             this.tflite!.HEAPU8.set(imageData.data, this.tfliteInputAddress);
-            this.tflite!._exec(params.processWidth, params.processHeight, 4);
+            this.tflite!._exec(params.processWidth, params.processHeight, config.maxHands, params.affineResizedFactor);
             const handNum = this.tflite!.HEAPF32[this.tfliteOutputAddress / 4];
             const tfliteHands: TFLiteHand[] = []
 

@@ -57,6 +57,7 @@ export interface HandPoseDetectionOperationParams {
     processHeight: number;
     annotateBox: boolean;
     movingAverageWindow: number;
+    affineResizedFactor: number
 }
 
 
@@ -118,5 +119,5 @@ export interface TFLite extends EmscriptenModule {
 
     _loadModel(bufferSize: number): number;
     _loadLandmarkModel(bufferSize: number): number;
-    _exec(widht: number, height: number, max_palm_num: number): number;
+    _exec(widht: number, height: number, max_palm_num: number, affineResizedFactor: number): number;
 }
