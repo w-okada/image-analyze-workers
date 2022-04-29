@@ -356,7 +356,7 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t14_blazeface/index.
 ### demo
 
 [all](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/index.html)
-[short](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/lite/index.html)
+[lite](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/lite/index.html)
 [full](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/full/index.html)
 [heavy](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/heavy/index.html)
 [mediapipe](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/mediapipe/index.html)
