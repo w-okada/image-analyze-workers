@@ -91,7 +91,7 @@ export const generateBlazePoseDefaultConfig = (): BlazePoseConfig => {
     defaultConf.landmarkModelTFLite = {
         "full": landmarkFullTFLite.split(",")[1],
     }
-    defaultConf.landmarkModelKey = LandmarkTypes.lite
+    defaultConf.landmarkModelKey = LandmarkTypes.full
     defaultConf.modelType = ModelTypes.tflite
     /// #elif BUILD_TYPE==="heavy"
     defaultConf.detectorModelTFLite = {
@@ -100,7 +100,7 @@ export const generateBlazePoseDefaultConfig = (): BlazePoseConfig => {
     defaultConf.landmarkModelTFLite = {
         "heavy": landmarkHeavyTFLite.split(",")[1],
     }
-    defaultConf.landmarkModelKey = LandmarkTypes.lite
+    defaultConf.landmarkModelKey = LandmarkTypes.heavy
     defaultConf.modelType = ModelTypes.tflite
     /// #elif BUILD_TYPE===""
     defaultConf.detectorModelTFLite = {

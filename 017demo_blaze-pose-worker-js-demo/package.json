@@ -66,7 +66,7 @@
         "webpack-dev-server": "^4.8.1"
     },
     "dependencies": {
-        "@dannadori/blaze-pose-worker-js": "^0.0.5",
+        "@dannadori/blaze-pose-worker-js": "^0.0.6",
         "demo-base": "file:../000_DemoBase",
         "react": "^18.1.0",
         "react-dom": "^18.1.0"
