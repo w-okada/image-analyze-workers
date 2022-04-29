@@ -66,24 +66,27 @@ Note. some module is not provided as webworker for safari because of it's restri
   - [MediaPipe Face landmark detection](#mediapipe-face-landmark-detection)
     - [installation and usage](#installation-and-usage-15)
     - [demo](#demo-15)
+  - [MediaPipe BlazePose](#mediapipe-blazepose)
+    - [installation and usage](#installation-and-usage-16)
+    - [demo](#demo-16)
 - [TFLite Wasm](#tflite-wasm)
   - [Google meet person segmentation(TFLite wasm)](#google-meet-person-segmentationtflite-wasm)
-    - [demo](#demo-16)
-  - [White-Box-Cartoon(TFLite wasm)](#white-box-cartoontflite-wasm)
     - [demo](#demo-17)
+  - [White-Box-Cartoon(TFLite wasm)](#white-box-cartoontflite-wasm)
+    - [demo](#demo-18)
     - [License](#license-1)
   - [ESPCN (TFLite wasm)](#espcn-tflite-wasm)
-    - [demo](#demo-18)
+    - [demo](#demo-19)
 - [Libs](#libs)
   - [FaceSwap](#faceswap)
-    - [demo](#demo-19)
+    - [demo](#demo-20)
 - [Experiments](#experiments)
   - [Exp.1 Multi-version based tfjs model](#exp1-multi-version-based-tfjs-model)
-    - [demo](#demo-20)
+    - [demo](#demo-21)
     - [src](#src)
     - [Citation](#citation-1)
   - [Exp.2 Performance improvement](#exp2-performance-improvement)
-    - [demo](#demo-21)
+    - [demo](#demo-22)
     - [src](#src-1)
     - [Citation](#citation-2)
 - [Reference](#reference-1)
@@ -341,6 +344,23 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t14_blazeface/index.
 [full_with_attention](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/full_with_attention/index.html)
 [mediapipe](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/mediapipe/index.html)
 [tfjs](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/tfjs/index.html)
+
+## MediaPipe BlazePose
+
+![image](https://user-images.githubusercontent.com/48346627/164580815-992b8e7d-4a26-479b-a057-9e7988f04e8d.png)
+
+### installation and usage
+
+[See here](/017_blaze-pose-worker-js)
+
+### demo
+
+[all](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/index.html)
+[short](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/lite/index.html)
+[full](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/full/index.html)
+[heavy](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/heavy/index.html)
+[mediapipe](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/mediapipe/index.html)
+[tfjs](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/tfjs/index.html)
 
 # TFLite Wasm
 
