@@ -83,9 +83,9 @@ extern "C"
     // }
 
     EMSCRIPTEN_KEEPALIVE
-    int exec(int width, int height, int max_pose_num, int resizedFactor)
+    int exec(int width, int height, int max_pose_num, int resizedFactor, float cropExtention)
     {
-        m->exec(width, height, max_pose_num, resizedFactor);
+        m->exec(width, height, max_pose_num, resizedFactor, cropExtention);
         return 0;
     }
 }

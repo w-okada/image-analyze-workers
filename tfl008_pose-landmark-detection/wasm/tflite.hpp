@@ -272,7 +272,7 @@ public:
         return temporaryBuffer;
     }
 
-    void exec(int width, int height, int max_pose_num, int resizedFactor)
+    void exec(int width, int height, int max_pose_num, int resizedFactor, float cropExtention)
     {
         float *input = interpreter->typed_input_tensor<float>(0);
 
@@ -316,7 +316,7 @@ public:
             float hipX = pose_result.poses[i].keys[0].x;
             float hipY = pose_result.poses[i].keys[0].y;
             float radius = std::max(std::abs(pose_result.poses[i].keys[3].x - pose_result.poses[i].keys[0].x), std::abs(pose_result.poses[i].keys[3].y - pose_result.poses[i].keys[0].y));
-            radius = radius * 1.3;
+            radius = radius * cropExtention;
             float cropMinX = hipX - radius < 0 ? 0 : hipX - radius;
             float cropMinY = hipY - radius < 0 ? 0 : hipY - radius;
             float cropMaxX = hipX + radius > 1 ? 1 : hipX + radius;
