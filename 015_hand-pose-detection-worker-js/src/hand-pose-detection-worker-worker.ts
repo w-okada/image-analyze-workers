@@ -58,7 +58,7 @@ const predict = async (config: HandPoseDetectionConfig, params: HandPoseDetectio
             return null;
         }
         tflite!.HEAPU8.set(data, tfliteInputAddress);
-        tflite!._exec(params.processWidth, params.processHeight, config.maxHands);
+        tflite!._exec(params.processWidth, params.processHeight, config.maxHands, params.affineResizedFactor);
         const handNum = tflite!.HEAPF32[tfliteOutputAddress / 4];
         const tfliteHands: TFLiteHand[] = []
 
