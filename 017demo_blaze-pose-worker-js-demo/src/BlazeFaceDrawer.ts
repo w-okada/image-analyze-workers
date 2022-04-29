@@ -39,11 +39,11 @@ export class BlazePoseDrawer {
         poses.forEach(pose => {
             pose.keypoints.forEach((point) => {
                 outputCtx.fillStyle = "#ffffffaa";
-                outputCtx.fillRect(point.x * scaleW, point.y * scaleH, 20, 20)
+                outputCtx.fillRect(point.x * scaleW, point.y * scaleH, 10, 10)
             })
 
             const offset = (config.modelType === ModelTypes.tflite) ? 0 : 0;
-            outputCtx.lineWidth = 10
+            outputCtx.lineWidth = 5
             Object.keys(PartsLookupIndices).forEach(key => {
                 const indices = PartsLookupIndices[key]
                 outputCtx.strokeStyle = colors[key]

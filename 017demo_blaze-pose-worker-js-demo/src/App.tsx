@@ -128,6 +128,35 @@ const Controller = () => {
         integer: true,
     };
 
+    const affineResizedSliderProps: CommonSliderProps = {
+        id: "affine-resized-slider",
+        title: "affine resized ",
+        currentValue: params.affineResizedFactor,
+        max: 8,
+        min: 1,
+        step: 1,
+        width: "30%",
+        onChange: (value: number) => {
+            params.affineResizedFactor = value;
+            setParams({ ...params });
+        },
+        integer: true,
+    };
+    const cropExtentionSliderProps: CommonSliderProps = {
+        id: "crop-extention-slider",
+        title: "crop extention",
+        currentValue: params.cropExt,
+        max: 2,
+        min: 1,
+        step: 0.1,
+        width: "30%",
+        onChange: (value: number) => {
+            params.cropExt = value;
+            setParams({ ...params });
+        },
+        integer: false,
+    };
+
     const availableConfigTable = useMemo(() => {
         return (
             <table className="table table-compact w-full">
@@ -180,6 +209,8 @@ const Controller = () => {
             <CommonSlider {...processWidthSliderProps}></CommonSlider>
             <CommonSlider {...processHeightSliderProps}></CommonSlider>
             <CommonSlider {...movingAverageWindowSliderProps}></CommonSlider>
+            <CommonSlider {...affineResizedSliderProps}></CommonSlider>
+            <CommonSlider {...cropExtentionSliderProps}></CommonSlider>
             {/* <CommonSlider {...maxFaceSliderProps}></CommonSlider> moving averageを使うので複数検出はしない*/}
         </div>
     );

@@ -57,7 +57,7 @@ const predict = async (config: BlazePoseConfig, params: BlazePoseOperationParams
     if (config.modelType === ModelTypes.tflite) {
         const imageData = newImg
         tflite!.HEAPU8.set(imageData.data, tfliteInputAddress);
-        tflite!._exec(params.processWidth, params.processHeight, config.model.maxPoses, params.affineResizedFactor);
+        tflite!._exec(params.processWidth, params.processHeight, config.model.maxPoses, params.affineResizedFactor, params.cropExt);
         const poseNum = tflite!.HEAPF32[tfliteOutputAddress / 4];
         const tflitePoses: TFLitePoseLandmarkDetection[] = []
         for (let i = 0; i < poseNum; i++) {
