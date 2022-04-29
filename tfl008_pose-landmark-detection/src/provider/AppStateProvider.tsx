@@ -94,7 +94,7 @@ export const useAppState = (): AppStateValue => {
     return state;
 };
 
-const initialInputSourcePath = "mov/Model.mp4";
+const initialInputSourcePath = "mov/Yoga.mp4";
 // const initialInputSourcePath = "img/face.png";
 
 

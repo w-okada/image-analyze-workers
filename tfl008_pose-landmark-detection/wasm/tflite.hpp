@@ -315,20 +315,31 @@ public:
 
             float hipX = pose_result.poses[i].keys[0].x;
             float hipY = pose_result.poses[i].keys[0].y;
-            // printf("--- >  %f, %f \n", hipX, hipY);
+            float radius = std::max(std::abs(pose_result.poses[i].keys[3].x - pose_result.poses[i].keys[0].x), std::abs(pose_result.poses[i].keys[3].y - pose_result.poses[i].keys[0].y));
+            float cropMinX = hipX - radius < 0 ? 0 : hipX - radius;
+            float cropMinY = hipY - radius < 0 ? 0 : hipY - radius;
+            float cropMaxX = hipX + radius > 1 ? 1 : hipX + radius;
+            float cropMaxY = hipY + radius > 1 ? 1 : hipY + radius;
+
+            // Crop
+            cv::Mat cropped(inputImage, cv::Rect(cropMinX * width, cropMinY * height, (cropMaxX - cropMinX) * width, (cropMaxY - cropMinY) * height));
+            float croppedHipX = hipX - cropMinX;
+            float croppedHipY = hipY - cropMinY;
 
             // Landmark用Input作成
             //// 移動しても画像が切れないキャンバスを用意(hipが中心になるようにするためにhipの座標の2倍の大きさ)
-            int translationCanvasWidth = std::max(hipX * width, width - hipX * width) * 2;
-            int translationCanvasHeight = std::max(hipY * height, height - hipY * height) * 2;
+            int translationCanvasWidth = std::max(croppedHipX * width, (cropMaxX - cropMinX) * width - croppedHipX * width) * 2;
+            int translationCanvasHeight = std::max(croppedHipY * height, (cropMaxY - cropMinY) * height - croppedHipY * height) * 2;
             int translationCanvasSize = std::max(translationCanvasWidth, translationCanvasHeight);
             cv::Mat translationCanvas = cv::Mat::zeros(cv::Size(translationCanvasSize, translationCanvasSize), CV_8UC4);
+            // printf("(%f, %f, %f, %f), %d\n", cropMinX, cropMinY, cropMaxX, cropMaxY, translationCanvasSize);
 
             //// キャンバス内の貼り付け先の特定＋貼り付け
-            int translateRoiMinX = translationCanvasSize / 2 - hipX * width;
-            int translateRoiMinY = translationCanvasSize / 2 - hipY * height;
-            cv::Mat copyArea(translationCanvas, cv::Rect(translateRoiMinX, translateRoiMinY, width, height));
-            inputImage.copyTo(copyArea);
+            int translateRoiMinX = translationCanvasSize / 2 - croppedHipX * width;
+            int translateRoiMinY = translationCanvasSize / 2 - croppedHipY * height;
+            cv::Mat copyArea(translationCanvas, cv::Rect(translateRoiMinX, translateRoiMinY, (cropMaxX - cropMinX) * width, (cropMaxY - cropMinY) * height));
+            cropped.copyTo(copyArea);
+            // printf("%d,%d\n", translateRoiMinX, translateRoiMinY);
 
             //// Affine変換が重いので軽量化のために縮小
             cv::Mat resizedTranslationCanvas = cv::Mat::ones(cv::Size(translationCanvasSize / resizedFactor, translationCanvasSize / resizedFactor), CV_8UC4);
@@ -350,8 +361,9 @@ public:
             reverse3x3.push_back(none.row(0));
 
             // テンポラリイメージ(for debug)
-            // cv::resize(translationCanvas, temporaryImage, temporaryImage.size(), 0, 0, cv::INTER_LINEAR);
-            cv::resize(rotated_pose, temporaryImage, temporaryImage.size(), 0, 0, cv::INTER_LINEAR);
+            // cv::resize(cropped, temporaryImage, temporaryImage.size(), 0, 0, cv::INTER_LINEAR);
+            cv::resize(translationCanvas, temporaryImage, temporaryImage.size(), 0, 0, cv::INTER_LINEAR);
+            // cv::resize(rotated_pose, temporaryImage, temporaryImage.size(), 0, 0, cv::INTER_LINEAR);
 
             //// インプットShapeにリサイズ
             cv::Mat resized(landmark_input_height, landmark_input_width, CV_8UC4);
@@ -387,8 +399,8 @@ public:
 
                     cv::perspectiveTransform(src_points, dst_points, reverse3x3);
 
-                    pose_result.poses[i].landmark_keys[j].x = (dst_points[0].x - (translateRoiMinX / resizedFactor)) * resizedFactor / width; // *resizedFactorで元画像サイズに戻して、比率算出
-                    pose_result.poses[i].landmark_keys[j].y = (dst_points[0].y - (translateRoiMinY / resizedFactor)) * resizedFactor / height;
+                    pose_result.poses[i].landmark_keys[j].x = ((dst_points[0].x - (translateRoiMinX / resizedFactor)) * resizedFactor + cropMinX * width) / width; // *resizedFactorで元画像サイズに戻して、比率算出
+                    pose_result.poses[i].landmark_keys[j].y = ((dst_points[0].y - (translateRoiMinY / resizedFactor)) * resizedFactor + cropMinY * height) / height;
                     pose_result.poses[i].landmark_keys[j].z = landmark_ptr[j * 5 + 2];
                     pose_result.poses[i].visibility[j] = 1.0f / (1.0f + exp(-1 * landmark_ptr[j * 5 + 3]));
                     pose_result.poses[i].presence[j] = 1.0f / (1.0f + exp(-1 * landmark_ptr[j * 5 + 4]));
