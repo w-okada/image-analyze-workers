@@ -1,0 +1,51 @@
+{
+    "name": "@dannadori/blaze-pose-worker-js",
+    "description": "",
+    "main": "dist/blaze-pose-worker.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "webpack": "npx webpack --config webpack.config.js",
+        "webpack_full": "BUILD_TYPE=full npx webpack --config webpack.config.js && cp dist/blaze-pose-worker.d.ts dist/blaze-pose-workerfull.d.ts",
+        "webpack_lite": "BUILD_TYPE=lite npx webpack --config webpack.config.js && cp dist/blaze-pose-worker.d.ts dist/blaze-pose-workerlite.d.ts",
+        "webpack_heavy": "BUILD_TYPE=heavy npx webpack --config webpack.config.js && cp dist/blaze-pose-worker.d.ts dist/blaze-pose-workerheavy.d.ts",
+        "webpack_mediapipe": "BUILD_TYPE=mediapipe npx webpack --config webpack.config.js && cp dist/blaze-pose-worker.d.ts dist/blaze-pose-workermediapipe.d.ts",
+        "webpack_tfjs": "BUILD_TYPE=tfjs npx webpack --config webpack.config.js && cp dist/blaze-pose-worker.d.ts dist/blaze-pose-workertfjs.d.ts",
+        "clean": "rimraf dist/*",
+        "build": "npm-run-all clean webpack webpack_full webpack_lite webpack_heavy webpack_mediapipe webpack_tfjs"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/w-okada/image-analyze-workers"
+    },
+    "keywords": [
+        "webworker",
+        "image processing",
+        "tensorflowjs"
+    ],
+    "author": "wataru.okada@flect.co.jp",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/w-okada/image-analyze-workers"
+    },
+    "homepage": "https://github.com/w-okada/image-analyze-workers",
+    "devDependencies": {
+        "@types/node": "^17.0.29",
+        "ifdef-loader": "^2.3.2",
+        "npm-run-all": "^4.1.5",
+        "rimraf": "^3.0.2",
+        "ts-loader": "^9.2.9",
+        "tsconfig-paths": "^3.14.1",
+        "typescript": "^4.6.3",
+        "webpack": "^5.72.0",
+        "webpack-cli": "^4.9.2",
+        "worker-loader": "^3.0.8"
+    },
+    "dependencies": {
+        "@dannadori/000_WorkerBase": "file:../000_WorkerBase",
+        "@tensorflow-models/pose-detection": "2.0.0",
+        "@tensorflow/tfjs": "^3.16.0",
+        "@tensorflow/tfjs-backend-wasm": "^3.16.0",
+        "buffer": "^6.0.3"
+    },
+    "version": "0.0.6"
+}
