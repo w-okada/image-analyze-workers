@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
-import { useWindowStateChangeListener, WindowSize } from "demo-base";
+import { useWindowStateChangeListener, WindowSize } from "@dannadori/demo-base";
 import { BodyPixConfig, BodyPixOperationParams, generateBodyPixDefaultConfig, generateDefaultBodyPixParams } from "@dannadori/bodypix-worker-js";
 import { loadURLAsDataURL } from "../utils/urlReader";
 
