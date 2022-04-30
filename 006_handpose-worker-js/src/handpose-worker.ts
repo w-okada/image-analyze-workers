@@ -8,7 +8,7 @@ export { AnnotatedPrediction } from "@tensorflow-models/handpose";
 export { FingerLookupIndices, BackendTypes } from "./const";
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./handpose-worker-worker.ts";
-import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
 
 export const generateHandPoseDefaultConfig = (): HandPoseConfig => {
     const defaultConf: HandPoseConfig = {

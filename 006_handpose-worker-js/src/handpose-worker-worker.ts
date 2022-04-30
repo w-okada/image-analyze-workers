@@ -1,5 +1,5 @@
 import * as handpose from "@tensorflow-models/handpose";
-import { HandPoseConfig, HandPoseOperationParams, HandPoseFunctionType, WorkerCommand, WorkerResponse, BackendTypes } from "./const";
+import { HandPoseConfig, HandPoseOperationParams, WorkerCommand, WorkerResponse, BackendTypes } from "./const";
 import * as tf from "@tensorflow/tfjs";
 import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 
