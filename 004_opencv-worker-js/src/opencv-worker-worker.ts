@@ -1,4 +1,3 @@
-import { BrowserTypes } from "@dannadori/000_WorkerBase";
 import { WorkerCommand, WorkerResponse, OpenCVConfig, OpenCVOperationParams, Wasm } from "./const";
 
 export let Module = {};
