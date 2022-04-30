@@ -1,6 +1,5 @@
 import { GoogleMeetSegmentationConfig, GoogleMeetSegmentationOperationParams, TFLite, WorkerCommand, WorkerResponse } from "./const";
-import * as tf from "@tensorflow/tfjs";
-import { BrowserTypes } from "@dannadori/000_WorkerBase";
+import { BrowserTypes } from "@dannadori/worker-base";
 
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
