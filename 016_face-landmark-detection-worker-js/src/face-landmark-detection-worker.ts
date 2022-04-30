@@ -1,4 +1,4 @@
-import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
 import { BackendTypes, DetectorTypes, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, FaceMeshPredictionEx, FacemeshPredictionMediapipe, LandmarkTypes, ModelTypes, TFLite, TFLiteFaceLandmarkDetection, RefinedPoints } from "./const";
 import { Face, Keypoint } from "@tensorflow-models/face-landmarks-detection";
 export { FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, NUM_KEYPOINTS, TRIANGULATION, BackendTypes, ModelTypes, FaceMeshPredictionEx, DetectorTypes, LandmarkTypes, RefinedPoints } from "./const";

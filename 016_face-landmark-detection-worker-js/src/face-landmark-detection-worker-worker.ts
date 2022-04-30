@@ -1,6 +1,6 @@
 import { BackendTypes, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, LandmarkTypes, ModelTypes, RefinedPoints, TFLite, TFLiteFaceLandmarkDetection, WorkerCommand, WorkerResponse } from "./const";
 import { Face } from "@tensorflow-models/face-landmarks-detection";
-import { BrowserTypes } from "@dannadori/000_WorkerBase";
+import { BrowserTypes } from "@dannadori/worker-base";
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
 

@@ -69,7 +69,7 @@
     },
     "dependencies": {
         "@dannadori/face-landmark-detection-worker-js": "^0.0.11",
-        "demo-base": "file:../000_DemoBase",
+        "@dannadori/demo-base": "^1.0.1",
         "react": "^18.1.0",
         "react-dom": "^18.1.0"
     }
