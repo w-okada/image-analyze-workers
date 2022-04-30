@@ -1,6 +1,6 @@
 import { AsciiConfig, AsciiFunctionTypes, AsciiOperationParams } from "./const";
 export { AsciiConfig, AsciiOperationParams, AsciiFunctionTypes } from "./const";
-import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
 
 export const generateAsciiArtDefaultConfig = (): AsciiConfig => {
     const defaultConf: AsciiConfig = {
