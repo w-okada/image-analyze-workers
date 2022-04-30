@@ -3,7 +3,7 @@ import "./App.css";
 import { BlazePoseWorkerManager, useAppState, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes } from "./provider/AppStateProvider";
 import { BlazePoseDrawer } from "./BlazeFaceDrawer";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
-import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "@dannadori/demo-base";
 
 let GlobalLoopID = 0;
 

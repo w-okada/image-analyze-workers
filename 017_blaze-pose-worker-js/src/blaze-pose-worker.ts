@@ -1,4 +1,4 @@
-import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
 import { Pose } from "@tensorflow-models/pose-detection";
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./blaze-pose-worker-worker.ts";
@@ -129,7 +129,7 @@ export const generateDefaultBlazePoseParams = () => {
         processHeight: 300,
         movingAverageWindow: 10,
         affineResizedFactor: 2,
-        cropExt: 2.0
+        cropExt: 1.3
     };
     return defaultParams;
 };

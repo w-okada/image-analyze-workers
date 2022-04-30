@@ -1,4 +1,4 @@
-import { BrowserTypes } from "@dannadori/000_WorkerBase";
+import { BrowserTypes } from "@dannadori/worker-base";
 import { Pose } from "@tensorflow-models/pose-detection";
 import { BackendTypes, BlazePoseConfig, BlazePoseOperationParams, ModelTypes, TFLite, TFLitePoseLandmarkDetection, WorkerCommand, WorkerResponse } from "./const";
 
