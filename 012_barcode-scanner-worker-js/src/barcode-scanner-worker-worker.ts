@@ -1,4 +1,4 @@
-import { BrowserTypes } from "@dannadori/000_WorkerBase";
+import { BrowserTypes } from "@dannadori/worker-base";
 import { BarcodeInfo, BarcodeScannerConfig, BarcodeScannerOperationParams, ScanModes, TFLite, WorkerCommand, WorkerResponse } from "./const";
 
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals

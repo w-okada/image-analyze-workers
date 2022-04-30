@@ -1,6 +1,6 @@
 {
     "name": "@dannadori/barcode-scanner-worker-js",
-    "version": "1.0.14",
+    "version": "1.0.15",
     "description": "",
     "main": "dist/barcode-scanner-worker.js",
     "scripts": {
@@ -27,9 +27,9 @@
     "devDependencies": {
         "npm-run-all": "^4.1.5",
         "rimraf": "^3.0.2",
-        "ts-loader": "^9.2.8",
+        "ts-loader": "^9.2.9",
         "tsconfig-paths": "^3.14.1",
-        "typescript": "^4.6.3",
+        "typescript": "^4.6.4",
         "webpack": "^5.72.0",
         "webpack-cli": "^4.9.2",
         "worker-loader": "^3.0.8",
@@ -39,6 +39,6 @@
         "@types/emscripten": "^1.39.6",
         "@types/offscreencanvas": "^2019.6.4",
         "buffer": "^6.0.3",
-        "@dannadori/000_WorkerBase": "file:../000_WorkerBase"
+        "@dannadori/worker-base": "^1.0.1"
     }
 }

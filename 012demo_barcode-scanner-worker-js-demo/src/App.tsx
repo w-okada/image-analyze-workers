@@ -4,7 +4,7 @@ import { BarcodeScannerWorkerManager, ScanModes, ScanScales } from "@dannadori/b
 import { useAppState } from "./provider/AppStateProvider";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 import { BarcodeScannerDrawer } from "./BarcodeScannerDrawer";
-import { CommonSelector, CommonSelectorProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import { CommonSelector, CommonSelectorProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "@dannadori/demo-base";
 
 let GlobalLoopID = 0;
 

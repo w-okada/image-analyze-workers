@@ -12,7 +12,7 @@ import tfliteModel from "../resources/tflite_models/barcode172_light.tflite.bin"
 import barcodeWasm from "../resources/wasm/tflite.wasm";
 // @ts-ignore
 import barcodeWasmSimd from "../resources/wasm/tflite-simd.wasm";
-import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
 
 export const generateBarcodeScannerDefaultConfig = (): BarcodeScannerConfig => {
     const defaultConf: BarcodeScannerConfig = {
