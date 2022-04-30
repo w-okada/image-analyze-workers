@@ -347,7 +347,7 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t14_blazeface/index.
 
 ## MediaPipe BlazePose
 
-![image](https://user-images.githubusercontent.com/48346627/164580815-992b8e7d-4a26-479b-a057-9e7988f04e8d.png)
+![image](https://user-images.githubusercontent.com/48346627/166098876-21d18cd1-fb25-40fe-96af-82fe15ff2558.png)
 
 ### installation and usage
 

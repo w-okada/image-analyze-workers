@@ -2,7 +2,7 @@ This is webworker module for [Pose](https://google.github.io/mediapipe/solutions
 
 ## Blaze Pose landmark detection
 
-![image](https://user-images.githubusercontent.com/48346627/164592156-dd230139-d3a2-4b51-aa99-150545f3adc4.png)
+![image](https://user-images.githubusercontent.com/48346627/166098876-21d18cd1-fb25-40fe-96af-82fe15ff2558.png)
 
 ## Install
 
