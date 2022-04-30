@@ -1,7 +1,7 @@
 import { BackendTypes, InterpolationTypes, SuperResolutionConfig, SuperResolutionOperationParams, TFLite, WorkerCommand, WorkerResponse } from "./const";
 import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 import * as tf from "@tensorflow/tfjs";
-import { BrowserTypes } from "@dannadori/000_WorkerBase";
+import { BrowserTypes } from "@dannadori/worker-base";
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 let tflite: TFLite | null = null;
 let tfjsModel: tf.LayersModel | null = null;

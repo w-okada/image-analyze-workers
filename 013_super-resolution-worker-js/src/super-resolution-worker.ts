@@ -30,7 +30,7 @@ import tflite_x4 from "../resources/tflite_models/model_x4_nopadding.tflite.bin"
 import opencvWasm from "../resources/wasm/tflite.wasm";
 // @ts-ignore
 import opencvWasmSimd from "../resources/wasm/tflite-simd.wasm";
-import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
 
 export const generateSuperResolutionDefaultConfig = (): SuperResolutionConfig => {
     const defaultConf: SuperResolutionConfig = {
