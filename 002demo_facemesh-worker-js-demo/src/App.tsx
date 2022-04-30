@@ -4,7 +4,7 @@ import { FacemeshWorkerManager, BackendTypes, ModelTypes } from "@dannadori/face
 import { ApplicationModes, useAppState } from "./provider/AppStateProvider";
 import { FacemeshDrawer } from "./FacemeshDrawer";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
-import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "@dannadori/demo-base";
 import { FaceswapDrawer } from "./FaceswapDrawer";
 let GlobalLoopID = 0;
 
