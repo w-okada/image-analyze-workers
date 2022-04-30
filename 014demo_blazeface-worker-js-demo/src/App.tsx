@@ -3,7 +3,7 @@ import "./App.css";
 import { ApplicationModes, useAppState } from "./provider/AppStateProvider";
 import { BlazefaceDrawer } from "./BlazefaceDrawer";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
-import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "@dannadori/demo-base";
 import { BlazefaceWorkerManager, BackendTypes } from "@dannadori/blazeface-worker-js";
 let GlobalLoopID = 0;
 

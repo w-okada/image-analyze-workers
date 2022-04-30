@@ -1,4 +1,4 @@
-import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
 import * as BlazeFace from "@tensorflow-models/blazeface";
 import * as tf from "@tensorflow/tfjs";
 import { BackendTypes, BlazefaceConfig, BlazefaceOperationParams, BlazefacePredictionEx } from "./const";
