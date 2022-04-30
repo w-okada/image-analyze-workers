@@ -1,6 +1,6 @@
 import * as tf from "@tensorflow/tfjs";
 import { U2NetPortraitConfig, U2NetPortraitOperationParams, BackendTypes, U2NetPortraitFunctionTypes } from "./const";
-import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
+import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 export { U2NetPortraitConfig, U2NetPortraitOperationParams, BackendTypes };
 
 // @ts-ignore
@@ -41,7 +41,7 @@ import modelWeight_p4_320_uint8 from "../resources/used_model_2021_11_02/itr6400
 // import modelJson_p4_320_float32 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_float32/model.json";
 // // @ts-ignore
 // import modelWeight_p4_320_float32 from "../resources/used_model_2021_11_02/itr640000_acc0.085795_p4/320/web_model_float32/group1-shard1of1.bin";
-import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
 
 export const generateU2NetPortraitDefaultConfig = (): U2NetPortraitConfig => {
     const defaultConf: U2NetPortraitConfig = {

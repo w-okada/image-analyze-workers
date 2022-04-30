@@ -1,6 +1,6 @@
 {
     "name": "@dannadori/u2net-portrait-worker-js",
-    "version": "1.0.25",
+    "version": "1.0.26",
     "description": "",
     "main": "dist/u2net-portrait-worker.js",
     "scripts": {
@@ -39,6 +39,6 @@
         "@tensorflow/tfjs": "^3.16.0",
         "@tensorflow/tfjs-backend-wasm": "^3.16.0",
         "buffer": "^6.0.3",
-        "@dannadori/000_WorkerBase": "file:../000_WorkerBase"
+        "@dannadori/worker-base": "^1.0.1"
     }
 }
