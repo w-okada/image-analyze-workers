@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
-import { useWindowStateChangeListener, WindowSize } from "demo-base";
+import { useWindowStateChangeListener, WindowSize } from "@dannadori/demo-base";
 import { loadURLAsDataURL } from "../utils/urlReader";
 import { generateDefaultU2NetPortraitParams, generateU2NetPortraitDefaultConfig, U2NetPortraitConfig, U2NetPortraitOperationParams } from "@dannadori/u2net-portrait-worker-js";
 import { generateDefaultOpenCVParams, generateOpenCVDefaultConfig, OpenCVConfig, OpenCVOperationParams } from "@dannadori/opencv-worker-js";

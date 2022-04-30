@@ -23,16 +23,16 @@
     "author": "",
     "license": "ISC",
     "devDependencies": {
-        "@babel/core": "^7.17.9",
-        "@babel/plugin-transform-runtime": "^7.17.0",
-        "@babel/preset-env": "^7.16.11",
+        "@babel/core": "^7.17.10",
+        "@babel/plugin-transform-runtime": "^7.17.10",
+        "@babel/preset-env": "^7.17.10",
         "@babel/preset-react": "^7.16.7",
         "@babel/preset-typescript": "^7.16.7",
         "@babel/runtime": "^7.17.9",
-        "@types/react": "^18.0.6",
-        "@types/react-dom": "^18.0.2",
-        "@typescript-eslint/eslint-plugin": "^5.20.0",
-        "@typescript-eslint/parser": "^5.20.0",
+        "@types/react": "^18.0.8",
+        "@types/react-dom": "^18.0.3",
+        "@typescript-eslint/eslint-plugin": "^5.21.0",
+        "@typescript-eslint/parser": "^5.21.0",
         "babel-loader": "^8.2.5",
         "eslint": "^8.14.0",
         "eslint-config-prettier": "^8.5.0",
@@ -43,11 +43,11 @@
         "npm-run-all": "^4.1.5",
         "prettier": "^2.6.2",
         "rimraf": "^3.0.2",
-        "ts-loader": "^9.2.8",
-        "typescript": "^4.6.3",
+        "ts-loader": "^9.2.9",
+        "typescript": "^4.6.4",
         "webpack": "^5.72.0",
         "webpack-cli": "^4.9.2",
-        "daisyui": "^2.14.2",
+        "daisyui": "^2.14.3",
         "style-loader": "^3.3.1",
         "postcss-loader": "^6.2.1",
         "css-loader": "^6.7.1",
@@ -56,9 +56,9 @@
         "webpack-dev-server": "^4.8.1"
     },
     "dependencies": {
-        "@dannadori/bisenetv2-celebamask-worker-js": "^1.0.22",
-        "react": "^18.0.0",
-        "react-dom": "^18.0.0",
-        "demo-base": "file:../000_DemoBase"
+        "@dannadori/bisenetv2-celebamask-worker-js": "^1.0.23",
+        "react": "^18.1.0",
+        "react-dom": "^18.1.0",
+        "@dannadori/demo-base": "^1.0.1"
     }
 }

@@ -4,7 +4,7 @@ import { BisenetV2CelebAMaskWorkerManager, BackendTypes } from "@dannadori/bisen
 import { useAppState } from "./provider/AppStateProvider";
 import { BisenetV2CelebAMaskDrawer } from "./BisenetV2CelebAMaskDrawer";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
-import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "@dannadori/demo-base";
 
 let GlobalLoopID = 0;
 // const processSizes: { [name: string]: number[] } = {
