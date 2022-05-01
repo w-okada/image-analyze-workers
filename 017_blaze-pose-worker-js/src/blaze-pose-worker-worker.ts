@@ -64,9 +64,10 @@ const predict = async (config: BlazePoseConfig, params: BlazePoseOperationParams
             //   11: score and rects
             //    8: ratated pose (4x2D)
             //    8: pose keypoints(6x2D)
-            //  195: landmark keypoints(39x5) 33keypoint + 6 additional
-            // -> 11 + 8 + 12 + 195 = 226
-            const offset = tfliteOutputAddress / 4 + 1 + i * (226)
+            //  195: landmark keypoints(39x5D)
+            //  117: landmark keypoints(39x3D)
+            // -> 11 + 8 + 12 + 195 + 117 = 343
+            const offset = tfliteOutputAddress / 4 + 1 + i * (343)
             const pose: TFLitePoseLandmarkDetection = {
                 score: tflite!.HEAPF32[offset + 0],
                 landmarkScore: tflite!.HEAPF32[offset + 1],
@@ -91,23 +92,25 @@ const predict = async (config: BlazePoseConfig, params: BlazePoseOperationParams
                 ],
                 landmarkKeypoints: [
                 ],
+                landmarkKeypoints3D: [
+                ],
             }
             for (let j = 0; j < 4; j++) {
-                const offset = tfliteOutputAddress / 4 + 1 + i * (226) + (11) + (j * 2)
+                const offset = tfliteOutputAddress / 4 + 1 + i * (343) + (11) + (j * 2)
                 pose.rotatedPose.positions.push({
                     x: tflite!.HEAPF32[offset + 0],
                     y: tflite!.HEAPF32[offset + 1],
                 })
             }
             for (let j = 0; j < 4; j++) {
-                const offset = tfliteOutputAddress / 4 + 1 + i * (226) + (11 + 8) + (j * 2)
+                const offset = tfliteOutputAddress / 4 + 1 + i * (343) + (11 + 8) + (j * 2)
                 pose.poseKeypoints.push({
                     x: tflite!.HEAPF32[offset + 0],
                     y: tflite!.HEAPF32[offset + 1],
                 })
             }
             for (let j = 0; j < 33; j++) {
-                const offset = tfliteOutputAddress / 4 + 1 + i * (226) + (11 + 8 + 8) + (j * 5)
+                const offset = tfliteOutputAddress / 4 + 1 + i * (343) + (11 + 8 + 8) + (j * 5)
                 pose.landmarkKeypoints.push({
                     x: tflite!.HEAPF32[offset + 0],
                     y: tflite!.HEAPF32[offset + 1],
@@ -117,6 +120,14 @@ const predict = async (config: BlazePoseConfig, params: BlazePoseOperationParams
                     presence: tflite!.HEAPF32[offset + 4],
                 })
             }
+            for (let j = 0; j < 33; j++) {
+                const offset = tfliteOutputAddress / 4 + 1 + i * (343) + (11 + 8 + 8 + 195) + (j * 3)
+                pose.landmarkKeypoints3D.push({
+                    x: tflite!.HEAPF32[offset + 0],
+                    y: tflite!.HEAPF32[offset + 1],
+                    z: tflite!.HEAPF32[offset + 2],
+                })
+            }
             if (pose.score > 0.5 && pose.landmarkScore > 0.5) {
                 tflitePoses.push(pose)
             }
@@ -124,6 +135,7 @@ const predict = async (config: BlazePoseConfig, params: BlazePoseOperationParams
         const poses: Pose[] = tflitePoses.map(x => {
             const pose: Pose = {
                 keypoints: [...x.landmarkKeypoints],
+                keypoints3D: [...x.landmarkKeypoints3D],
                 box: {
                     xMin: x.pose.minX,
                     yMin: x.pose.minY,

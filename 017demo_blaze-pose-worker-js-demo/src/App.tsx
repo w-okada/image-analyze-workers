@@ -305,7 +305,7 @@ const App = () => {
             try {
                 if (snap.width > 0 && snap.height > 0) {
                     const prediction = await managerRef.current!.predict(params, snap);
-                    // console.log("prediction", prediction);
+                    console.log("prediction", prediction);
                     if (prediction) {
                         drawer.draw(snap, config, params, prediction);
                     }
