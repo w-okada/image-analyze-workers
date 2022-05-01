@@ -1,7 +1,7 @@
 import { WorkerCommand, WorkerResponse, BodyPixConfig, BodyPixOperationParams, BodypixFunctionTypes } from "./const";
 import * as bodyPix from "@tensorflow-models/body-pix";
 import * as tf from "@tensorflow/tfjs";
-import { BrowserTypes } from "@dannadori/000_WorkerBase";
+import { BrowserTypes } from "@dannadori/worker-base";
 
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 let config: BodyPixConfig | null = null;

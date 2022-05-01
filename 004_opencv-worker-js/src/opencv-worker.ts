@@ -8,7 +8,7 @@ import opencvWasmSimd from "../resources/custom_opencv-simd.wasm";
 
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./opencv-worker-worker.ts";
-import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
 
 export const generateOpenCVDefaultConfig = (): OpenCVConfig => {
     const defaultConf: OpenCVConfig = {

@@ -1,4 +1,4 @@
-import { BrowserTypes } from "@dannadori/000_WorkerBase";
+import { BrowserTypes } from "@dannadori/worker-base";
 import * as BlazeFace from "@tensorflow-models/blazeface";
 
 export const WorkerCommand = {

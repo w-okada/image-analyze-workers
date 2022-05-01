@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import { BackendTypes, HandPoseWorkerManager } from "@dannadori/handpose-worker-js";
 import { useAppState } from "./provider/AppStateProvider";
-import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "@dannadori/demo-base";
 import { HandPoseDrawer } from "./HandPoseDrawer";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 

@@ -1,8 +1,8 @@
 
 import * as tf from "@tensorflow/tfjs";
-import { MODNetConfig, MODNetFunctionTypes, MODNetOperationParams, WorkerCommand, WorkerResponse, MODEL_INPUT_SIZES, BackendTypes } from "./const";
-import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
-import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { MODNetConfig, MODNetFunctionTypes, MODNetOperationParams, MODEL_INPUT_SIZES, BackendTypes } from "./const";
+import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
+import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
 export { MODNetConfig, MODNetOperationParams, MODEL_INPUT_SIZES, BackendTypes };
 
 

@@ -1,6 +1,6 @@
 import { Hand } from "@tensorflow-models/hand-pose-detection";
 import { BackendTypes, HandPoseDetectionConfig, HandPoseDetectionOperationParams, ModelTypes, TFLite, TFLiteHand, WorkerCommand, WorkerResponse } from "./const";
-import { BrowserTypes } from "@dannadori/000_WorkerBase";
+import { BrowserTypes } from "@dannadori/worker-base";
 
 /// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs"|| BUILD_TYPE==="" 
 import { createDetector, HandDetector, SupportedModels } from "@tensorflow-models/hand-pose-detection";

@@ -1,4 +1,4 @@
-import { BrowserTypes } from "@dannadori/000_WorkerBase";
+import { BrowserTypes } from "@dannadori/worker-base";
 import * as faceLandmarksDetectionCurrent from "@tensorflow-models/face-landmarks-detection-current";
 import { Face, Keypoint } from "@tensorflow-models/face-landmarks-detection-current";
 import { BoundingBox } from "@tensorflow-models/face-landmarks-detection-current/dist/shared/calculators/interfaces/shape_interfaces";

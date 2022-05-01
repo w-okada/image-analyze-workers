@@ -5,7 +5,7 @@ import { useAppState } from "./provider/AppStateProvider";
 import { GoogleMeetDrawer } from "./GoogleMeetDrawer";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 import { GoogleMeetSegmentationWorkerManager, InterpolationTypes, PostProcessTypes } from "./provider/AppStateProvider";
-import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "@dannadori/demo-base";
 let GlobalLoopID = 0;
 
 const Controller = () => {

@@ -1,5 +1,5 @@
 import { PoseNetWorkerManager, PoseNetArchitecture, PoseNetFunctionTypes, PoseNetQuantBytes, MobileNetMultiplier, PoseNetOutputStride } from "@dannadori/posenet-worker-js";
-import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "@dannadori/demo-base";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import { PoseNetDrawer } from "./PoseNetDrawer";

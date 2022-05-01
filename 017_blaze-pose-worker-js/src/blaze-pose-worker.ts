@@ -1,4 +1,4 @@
-import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
 import { Pose } from "@tensorflow-models/pose-detection";
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./blaze-pose-worker-worker.ts";
@@ -128,7 +128,8 @@ export const generateDefaultBlazePoseParams = () => {
         processWidth: 300,
         processHeight: 300,
         movingAverageWindow: 10,
-        affineResizedFactor: 2
+        affineResizedFactor: 2,
+        cropExt: 1.3
     };
     return defaultParams;
 };
@@ -242,7 +243,8 @@ export class LocalBP extends LocalWorker {
 
             const imageData = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height)
             this.tflite!.HEAPU8.set(imageData.data, this.tfliteInputAddress);
-            this.tflite!._exec(params.processWidth, params.processHeight, config.model.maxPoses, params.affineResizedFactor);
+            this.tflite!._exec(params.processWidth, params.processHeight, config.model.maxPoses, params.affineResizedFactor, params.cropExt);
+            console.log("cropEXT::::", params.cropExt)
             const poseNum = this.tflite!.HEAPF32[this.tfliteOutputAddress / 4];
             const tflitePoses: TFLitePoseLandmarkDetection[] = []
             for (let i = 0; i < poseNum; i++) {

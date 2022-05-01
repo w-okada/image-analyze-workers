@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { ReactNode } from "react";
-import { useWindowStateChangeListener, WindowSize } from "demo-base";
+import { useWindowStateChangeListener, WindowSize } from "@dannadori/demo-base";
 import { loadURLAsDataURL } from "../utils/urlReader";
 import { BarcodeScannerConfig, BarcodeScannerOperationParams, generateBarcodeScannerDefaultConfig, generateDefaultBarcodeScannerParams } from "@dannadori/barcode-scanner-worker-js";
 

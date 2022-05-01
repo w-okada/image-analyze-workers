@@ -1,5 +1,5 @@
 import { ReactNode, useContext, useEffect, useState } from "react";
-import { useWindowStateChangeListener, WindowSize } from "demo-base";
+import { useWindowStateChangeListener, WindowSize } from "@dannadori/demo-base";
 import { generateDefaultPoseNetParams, generatePoseNetDefaultConfig, PoseNetConfig, PoseNetOperationParams } from "@dannadori/posenet-worker-js";
 import React from "react";
 import { loadURLAsDataURL } from "../utils/urlReader";

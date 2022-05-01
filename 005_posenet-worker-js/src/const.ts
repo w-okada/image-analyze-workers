@@ -1,4 +1,4 @@
-import { BrowserTypes } from "@dannadori/000_WorkerBase";
+import { BrowserTypes } from "@dannadori/worker-base";
 import { ModelConfig, MultiPersonInferenceConfig, SinglePersonInterfaceConfig } from "@tensorflow-models/posenet";
 export const WorkerCommand = {
     INITIALIZE: "initialize",

@@ -4,7 +4,7 @@ import { OpenCVWorkerManager } from "@dannadori/opencv-worker-js";
 import { useAppState } from "./provider/AppStateProvider";
 import { U2NetDrawer } from "./U2NetDrawer";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
-import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "demo-base";
+import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "@dannadori/demo-base";
 
 let GlobalLoopID = 0;
 

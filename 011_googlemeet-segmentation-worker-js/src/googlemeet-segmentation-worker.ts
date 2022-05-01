@@ -1,5 +1,5 @@
 import { GoogleMeetSegmentationConfig, GoogleMeetSegmentationFunctionType, GoogleMeetSegmentationOperationParams, InterpolationTypes, PostProcessTypes, TFLite } from "./const";
-import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
 export { GoogleMeetSegmentationSmoothingType, PostProcessTypes, InterpolationTypes, GoogleMeetSegmentationConfig, GoogleMeetSegmentationOperationParams } from "./const";
 
 /// #if TFLITE_TARGET==="96x160"

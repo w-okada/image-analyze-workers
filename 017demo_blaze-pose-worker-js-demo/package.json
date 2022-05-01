@@ -33,9 +33,9 @@
     "author": "",
     "license": "ISC",
     "devDependencies": {
-        "@babel/core": "^7.17.9",
-        "@babel/plugin-transform-runtime": "^7.17.0",
-        "@babel/preset-env": "^7.16.11",
+        "@babel/core": "^7.17.10",
+        "@babel/plugin-transform-runtime": "^7.17.10",
+        "@babel/preset-env": "^7.17.10",
         "@babel/preset-react": "^7.16.7",
         "@babel/preset-typescript": "^7.16.7",
         "@babel/runtime": "^7.17.9",
@@ -45,7 +45,7 @@
         "@typescript-eslint/parser": "^5.21.0",
         "babel-loader": "^8.2.5",
         "css-loader": "^6.7.1",
-        "daisyui": "^2.14.2",
+        "daisyui": "^2.14.3",
         "eslint": "^8.14.0",
         "eslint-config-prettier": "^8.5.0",
         "eslint-plugin-prettier": "^4.0.0",
@@ -66,8 +66,8 @@
         "webpack-dev-server": "^4.8.1"
     },
     "dependencies": {
-        "@dannadori/blaze-pose-worker-js": "^0.0.6",
-        "demo-base": "file:../000_DemoBase",
+        "@dannadori/blaze-pose-worker-js": "^0.0.11",
+        "@dannadori/demo-base": "^1.0.1",
         "react": "^18.1.0",
         "react-dom": "^18.1.0"
     }

@@ -1,6 +1,6 @@
 import * as tf from "@tensorflow/tfjs";
-import { BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperationParams, BisenetV2CelebAMaskFunctionTypes, WorkerCommand, WorkerResponse, BackendTypes } from "./const";
-import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
+import { BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperationParams, BisenetV2CelebAMaskFunctionTypes, BackendTypes } from "./const";
+import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 export { BisenetV2CelebAMaskConfig, BisenetV2CelebAMaskOperationParams, BackendTypes };
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./bisenetv2-celebamask-worker-worker.ts";
@@ -13,7 +13,7 @@ import modelWeight1 from "../resources/bisenetv2-celebamask/group1-shard1of3.bin
 import modelWeight2 from "../resources/bisenetv2-celebamask/group1-shard2of3.bin";
 // @ts-ignore
 import modelWeight3 from "../resources/bisenetv2-celebamask/group1-shard3of3.bin";
-import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
 
 export const generateBisenetV2CelebAMaskDefaultConfig = (): BisenetV2CelebAMaskConfig => {
     const defaultConf: BisenetV2CelebAMaskConfig = {

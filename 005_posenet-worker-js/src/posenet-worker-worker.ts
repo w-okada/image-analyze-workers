@@ -2,7 +2,7 @@ import { BackendTypes, WorkerCommand, WorkerResponse } from "./const";
 import { PoseNetConfig, PoseNetFunctionTypes, PoseNetOperationParams } from "./const";
 import * as poseNet from "@tensorflow-models/posenet";
 import * as tf from "@tensorflow/tfjs";
-import { setWasmPath, setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
+import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 
 let model: poseNet.PoseNet | null;

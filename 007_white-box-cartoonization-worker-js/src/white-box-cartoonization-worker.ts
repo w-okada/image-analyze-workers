@@ -11,7 +11,7 @@ import workerJs from "worker-loader?inline=no-fallback!./white-box-cartoonizatio
 import modelJson from "../resources/white-box-cartoonization/model.json";
 // @ts-ignore
 import modelWeight from "../resources/white-box-cartoonization/group1-shard1of1.bin";
-import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
 
 export const generateCartoonDefaultConfig = (): CartoonConfig => {
     const defaultConf: CartoonConfig = {

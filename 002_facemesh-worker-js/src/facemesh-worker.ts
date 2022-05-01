@@ -12,7 +12,7 @@ import * as faceLandmarksDetectionCurrent from "@tensorflow-models/face-landmark
 
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./facemesh-worker-worker.ts";
-import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
 import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
 
 import * as faceMesh from "@mediapipe/face_mesh";

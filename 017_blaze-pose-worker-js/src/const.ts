@@ -1,4 +1,4 @@
-import { BrowserTypes } from "@dannadori/000_WorkerBase";
+import { BrowserTypes } from "@dannadori/worker-base";
 
 export const WorkerCommand = {
     INITIALIZE: "initialize",
@@ -72,6 +72,7 @@ export interface BlazePoseOperationParams {
 
     movingAverageWindow: number;
     affineResizedFactor: number
+    cropExt: number
 }
 
 export interface TFLite extends EmscriptenModule {
@@ -88,7 +89,7 @@ export interface TFLite extends EmscriptenModule {
 
     _loadDetectorModel(bufferSize: number): number;
     _loadLandmarkModel(bufferSize: number): number;
-    _exec(widht: number, height: number, max_palm_num: number, affineResizedFactor: number): number;
+    _exec(widht: number, height: number, max_pose_num: number, resizedFactor: number, cropExt: number): number;
 }
 
 

@@ -1,4 +1,4 @@
-import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/000_WorkerBase";
+import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
 import { BackendTypes, FingerLookupIndices, HandPoseDetectionConfig, HandPoseDetectionOperationParams, ModelTypes, ModelTypes2, TFLite, TFLiteHand } from "./const";
 import { Hand } from "@tensorflow-models/hand-pose-detection";
 export { BackendTypes, HandPoseDetectionConfig, HandPoseDetectionOperationParams, Hand, ModelTypes, ModelTypes2, FingerLookupIndices };
