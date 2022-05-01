@@ -38,6 +38,7 @@ extern "C"
         fvec2 pose_pos[4];
 
         fvec3 landmark_keys[39];
+        fvec3 landmark3d_keys[39];
         float visibility[39];
         float presence[39];
         float landmark_score;

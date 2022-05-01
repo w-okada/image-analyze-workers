@@ -75,9 +75,10 @@ export class TFLiteWrapper {
             //   11: score and rects
             //    8: ratated pose (4x2D)
             //    8: pose keypoints(6x2D)
-            //  195: landmark keypoints(468x3D)
-            // -> 11 + 8 + 12 + 195 = 226
-            const offset = e / 4 + 1 + i * (226)
+            //  195: landmark keypoints(39x3D)
+            //  117: landmark keypoints(39x3D)
+            // -> 11 + 8 + 12 + 195 + 117 = 343
+            const offset = e / 4 + 1 + i * (343)
             const pose: TFLitePoseLandmarkDetection = {
                 score: this.tflite!.HEAPF32[offset + 0],
                 landmarkScore: this.tflite!.HEAPF32[offset + 1],
@@ -102,23 +103,25 @@ export class TFLiteWrapper {
                 ],
                 landmarkKeypoints: [
                 ],
+                landmarkKeypoints3D: [
+                ],
             }
             for (let j = 0; j < 4; j++) {
-                let offset = (e / 4 + 1) + (i * 226) + (11) + (j * 2)
+                let offset = (e / 4 + 1) + (i * 343) + (11) + (j * 2)
                 pose.rotatedPose.positions.push({
                     x: this.tflite!.HEAPF32[offset + 0],
                     y: this.tflite!.HEAPF32[offset + 1],
                 })
             }
             for (let j = 0; j < 4; j++) {
-                let offset = (e / 4 + 1) + (i * 226) + (11 + 8) + (j * 2)
+                let offset = (e / 4 + 1) + (i * 343) + (11 + 8) + (j * 2)
                 pose.poseKeypoints.push({
                     x: this.tflite!.HEAPF32[offset + 0],
                     y: this.tflite!.HEAPF32[offset + 1],
                 })
             }
             for (let j = 0; j < 39; j++) {
-                let offset = (e / 4 + 1) + (i * 226) + (11 + 8 + 8) + (j * 5)
+                let offset = (e / 4 + 1) + (i * 343) + (11 + 8 + 8) + (j * 5)
                 pose.landmarkKeypoints.push({
                     x: this.tflite!.HEAPF32[offset + 0],
                     y: this.tflite!.HEAPF32[offset + 1],
@@ -127,6 +130,15 @@ export class TFLiteWrapper {
                     presence: this.tflite!.HEAPF32[offset + 4],
                 })
             }
+            for (let j = 0; j < 39; j++) {
+                let offset = (e / 4 + 1) + (i * 343) + (11 + 8 + 8 + 195) + (j * 3)
+                pose.landmarkKeypoints3D.push({
+                    x: this.tflite!.HEAPF32[offset + 0],
+                    y: this.tflite!.HEAPF32[offset + 1],
+                    z: this.tflite!.HEAPF32[offset + 2],
+                })
+            }
+
             poses.push(pose)
         }
         return poses

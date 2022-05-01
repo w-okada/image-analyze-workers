@@ -408,6 +408,24 @@ public:
 
                     // printf("dstCtx.fillRect(%f*dst.width, %f*dst.height, 10, 10)\n", pose_result.poses[i].landmark_keys[j].x, pose_result.poses[i].landmark_keys[j].y);
                 }
+
+                // landmark3D
+                for (int j = 0; j < 39; j++)
+                {
+                    float x_ratio = output_world3d_ptr[j * 3 + 0] / landmark_input_width; // 比率
+                    float y_ratio = output_world3d_ptr[j * 3 + 1] / landmark_input_height;
+                    float x_position_in_crop = x_ratio * (translationCanvasSize / resizedFactor); // resized内座標
+                    float y_position_in_crop = y_ratio * (translationCanvasSize / resizedFactor);
+                    std::vector<cv::Point2f> src_points;
+                    std::vector<cv::Point2f> dst_points;
+                    src_points.push_back(cv::Point2f(x_position_in_crop, y_position_in_crop));
+
+                    cv::perspectiveTransform(src_points, dst_points, reverse3x3);
+
+                    pose_result.poses[i].landmark3d_keys[j].x = ((dst_points[0].x - (translateRoiMinX / resizedFactor)) * resizedFactor + cropMinX * width) / width; // *resizedFactorで元画像サイズに戻して、比率算出
+                    pose_result.poses[i].landmark3d_keys[j].y = ((dst_points[0].y - (translateRoiMinY / resizedFactor)) * resizedFactor + cropMinY * height) / height;
+                    pose_result.poses[i].landmark3d_keys[j].z = output_world3d_ptr[j * 3 + 2];
+                }
             }
         }
 
@@ -475,6 +493,17 @@ public:
                     *currentOutputPosition = pose_result.poses[i].visibility[j];
                     currentOutputPosition++;
                     *currentOutputPosition = pose_result.poses[i].presence[j];
+                    currentOutputPosition++;
+                }
+
+                // landmark3d keypoint
+                for (int j = 0; j < 39; j++)
+                {
+                    *currentOutputPosition = pose_result.poses[i].landmark3d_keys[j].x;
+                    currentOutputPosition++;
+                    *currentOutputPosition = pose_result.poses[i].landmark3d_keys[j].y;
+                    currentOutputPosition++;
+                    *currentOutputPosition = pose_result.poses[i].landmark3d_keys[j].z;
                     currentOutputPosition++;
                 }
             }

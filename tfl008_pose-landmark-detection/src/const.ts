@@ -82,5 +82,11 @@ export type TFLitePoseLandmarkDetection = {
         visibility: number,
         presence: number,
     }[],
+    landmarkKeypoints3D: {
+        x: number,
+        y: number,
+        z: number,
+    }[],
+
 }
 
