@@ -244,16 +244,16 @@ export class LocalBP extends LocalWorker {
             const imageData = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height)
             this.tflite!.HEAPU8.set(imageData.data, this.tfliteInputAddress);
             this.tflite!._exec(params.processWidth, params.processHeight, config.model.maxPoses, params.affineResizedFactor, params.cropExt);
-            console.log("cropEXT::::", params.cropExt)
             const poseNum = this.tflite!.HEAPF32[this.tfliteOutputAddress / 4];
             const tflitePoses: TFLitePoseLandmarkDetection[] = []
             for (let i = 0; i < poseNum; i++) {
                 //   11: score and rects
                 //    8: ratated pose (4x2D)
                 //    8: pose keypoints(6x2D)
-                //  195: landmark keypoints(39x5) 33keypoint + 6 additional
-                // -> 11 + 8 + 12 + 195 = 226
-                const offset = this.tfliteOutputAddress / 4 + 1 + i * (226)
+                //  195: landmark keypoints(39x5D)
+                //  117: landmark keypoints(39x3D)
+                // -> 11 + 8 + 12 + 195 + 117 = 343
+                const offset = this.tfliteOutputAddress / 4 + 1 + i * (343)
                 const pose: TFLitePoseLandmarkDetection = {
                     score: this.tflite!.HEAPF32[offset + 0],
                     landmarkScore: this.tflite!.HEAPF32[offset + 1],
@@ -278,23 +278,25 @@ export class LocalBP extends LocalWorker {
                     ],
                     landmarkKeypoints: [
                     ],
+                    landmarkKeypoints3D: [
+                    ],
                 }
                 for (let j = 0; j < 4; j++) {
-                    const offset = this.tfliteOutputAddress / 4 + 1 + i * (226) + (11) + (j * 2)
+                    const offset = this.tfliteOutputAddress / 4 + 1 + i * (343) + (11) + (j * 2)
                     pose.rotatedPose.positions.push({
                         x: this.tflite!.HEAPF32[offset + 0],
                         y: this.tflite!.HEAPF32[offset + 1],
                     })
                 }
                 for (let j = 0; j < 4; j++) {
-                    const offset = this.tfliteOutputAddress / 4 + 1 + i * (226) + (11 + 8) + (j * 2)
+                    const offset = this.tfliteOutputAddress / 4 + 1 + i * (343) + (11 + 8) + (j * 2)
                     pose.poseKeypoints.push({
                         x: this.tflite!.HEAPF32[offset + 0],
                         y: this.tflite!.HEAPF32[offset + 1],
                     })
                 }
                 for (let j = 0; j < 33; j++) {
-                    const offset = this.tfliteOutputAddress / 4 + 1 + i * (226) + (11 + 8 + 8) + (j * 5)
+                    const offset = this.tfliteOutputAddress / 4 + 1 + i * (343) + (11 + 8 + 8) + (j * 5)
                     pose.landmarkKeypoints.push({
                         x: this.tflite!.HEAPF32[offset + 0],
                         y: this.tflite!.HEAPF32[offset + 1],
@@ -302,6 +304,14 @@ export class LocalBP extends LocalWorker {
                         score: this.tflite!.HEAPF32[offset + 3],
                         visibility: this.tflite!.HEAPF32[offset + 3],
                         presence: this.tflite!.HEAPF32[offset + 4],
+                    })
+                }
+                for (let j = 0; j < 33; j++) {
+                    const offset = this.tfliteOutputAddress / 4 + 1 + i * (343) + (11 + 8 + 8 + 195) + (j * 3)
+                    pose.landmarkKeypoints3D.push({
+                        x: this.tflite!.HEAPF32[offset + 0],
+                        y: this.tflite!.HEAPF32[offset + 1],
+                        z: this.tflite!.HEAPF32[offset + 2],
                     })
                 }
                 if (pose.score > 0.1 && pose.landmarkScore > 0.0) {
@@ -312,6 +322,7 @@ export class LocalBP extends LocalWorker {
             const poses: Pose[] = tflitePoses.map(x => {
                 const pose: Pose = {
                     keypoints: [...x.landmarkKeypoints],
+                    keypoints3D: [...x.landmarkKeypoints3D],
                     box: {
                         xMin: x.pose.minX,
                         yMin: x.pose.minY,

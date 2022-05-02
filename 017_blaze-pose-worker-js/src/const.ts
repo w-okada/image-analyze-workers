@@ -127,6 +127,13 @@ export type TFLitePoseLandmarkDetection = {
         visibility: number,
         presence: number,
     }[],
+    landmarkKeypoints3D: {
+        x: number,
+        y: number,
+        z: number,
+        visibility?: number,
+        presence?: number,
+    }[],
 }
 
 export const PartsLookupIndices: { [key: string]: number[] } = {
