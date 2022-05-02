@@ -459,7 +459,7 @@ public:
 
                     palm_result.palms[i].landmark_keys[j].x = (dst_points[0].x - translateRoiMinX * resizedRatio + minX * resizedRatio) / resizedRatio / width;
                     palm_result.palms[i].landmark_keys[j].y = (dst_points[0].y - translateRoiMinY * resizedRatio + minY * resizedRatio) / resizedRatio / height;
-                    palm_result.palms[i].landmark_keys[j].z = landmark_ptr[j * 3 + 2];
+                    palm_result.palms[i].landmark_keys[j].z = landmark_ptr[j * 3 + 2] / resizedRatio / height;
                     palm_result.palms[i].score = *handflag_ptr;
                     palm_result.palms[i].handedness = *handedness_ptr;
                 }

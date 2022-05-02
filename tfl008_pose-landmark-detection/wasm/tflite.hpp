@@ -424,7 +424,7 @@ public:
 
                     pose_result.poses[i].landmark3d_keys[j].x = ((dst_points[0].x - (translateRoiMinX / resizedFactor)) * resizedFactor + cropMinX * width) / width; // *resizedFactorで元画像サイズに戻して、比率算出
                     pose_result.poses[i].landmark3d_keys[j].y = ((dst_points[0].y - (translateRoiMinY / resizedFactor)) * resizedFactor + cropMinY * height) / height;
-                    pose_result.poses[i].landmark3d_keys[j].z = output_world3d_ptr[j * 3 + 2];
+                    pose_result.poses[i].landmark3d_keys[j].z = output_world3d_ptr[j * 3 + 2] * resizedFactor / height;
                 }
             }
         }

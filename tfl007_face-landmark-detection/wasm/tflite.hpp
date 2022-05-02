@@ -472,7 +472,7 @@ public:
 
                     face_result.faces[i].landmark_keys[j].x = (dst_points[0].x - squaredRoiMinX + minX) / width;
                     face_result.faces[i].landmark_keys[j].y = (dst_points[0].y - squaredRoiMinY + minY) / height;
-                    face_result.faces[i].landmark_keys[j].z = landmark_ptr[j * 3 + 2];
+                    face_result.faces[i].landmark_keys[j].z = landmark_ptr[j * 3 + 2] / height;
                 }
                 // lip
                 for (int j = 0; j < 80; j++)
