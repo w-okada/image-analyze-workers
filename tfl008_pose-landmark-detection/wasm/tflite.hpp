@@ -422,11 +422,18 @@ public:
 
                     cv::perspectiveTransform(src_points, dst_points, reverse3x3);
 
+                    // ■ original
                     // pose_result.poses[i].landmark3d_keys[j].x = ((dst_points[0].x - (translateRoiMinX / resizedFactor)) * resizedFactor + cropMinX * width) / width; // *resizedFactorで元画像サイズに戻して、比率算出
                     // pose_result.poses[i].landmark3d_keys[j].y = ((dst_points[0].y - (translateRoiMinY / resizedFactor)) * resizedFactor + cropMinY * height) / height;
                     // pose_result.poses[i].landmark3d_keys[j].z = output_world3d_ptr[j * 3 + 2] * resizedFactor / height;
-                    pose_result.poses[i].landmark3d_keys[j].x = dst_points[0].x;
-                    pose_result.poses[i].landmark3d_keys[j].y = dst_points[0].y;
+
+                    // ■ 1
+                    // pose_result.poses[i].landmark3d_keys[j].x = dst_points[0].x;
+                    // pose_result.poses[i].landmark3d_keys[j].y = dst_points[0].y;
+                    // pose_result.poses[i].landmark3d_keys[j].z = output_world3d_ptr[j * 3 + 2];
+                    // ■ 2
+                    pose_result.poses[i].landmark3d_keys[j].x = output_world3d_ptr[j * 3 + 0];
+                    pose_result.poses[i].landmark3d_keys[j].y = output_world3d_ptr[j * 3 + 1];
                     pose_result.poses[i].landmark3d_keys[j].z = output_world3d_ptr[j * 3 + 2];
                 }
             }
