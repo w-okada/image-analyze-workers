@@ -16,11 +16,11 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
     const { getVideoInputDevices } = useDeviceManager();
     const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
 
+    const loadDevices = async () => {
+        const videoDevices = await getVideoInputDevices();
+        setVideoDevices(videoDevices);
+    };
     useEffect(() => {
-        const loadDevices = async () => {
-            const videoDevices = await getVideoInputDevices();
-            setVideoDevices(videoDevices);
-        };
         loadDevices();
     }, []);
 
@@ -165,47 +165,54 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
     };
 
     return (
-        <div>
-            <CommonSelector {...commonSelectorProps}></CommonSelector>
-            {props.currentValue === "File" ? (
-                <div style={{ display: "flex" }}>
-                    <button
-                        className="btn btn-sm btn-outline"
-                        onClick={() => {
-                            loadFileClicked();
-                        }}
-                    >
-                        Load File
-                    </button>
-                </div>
-            ) : (
-                <></>
-            )}
-            {props.currentValue === "Window" ? (
-                <div style={{ display: "flex" }}>
-                    <button
-                        className="btn btn-sm btn-outline"
-                        onClick={() => {
-                            chooseWindowClicked();
-                        }}
-                    >
-                        Choose Window
-                    </button>
-                </div>
-            ) : (
-                <></>
-            )}
+        <div style={{ display: "flex" }}>
+            <div>
+                <CommonSelector {...commonSelectorProps}></CommonSelector>
+                {props.currentValue === "File" ? (
+                    <div style={{ display: "flex" }}>
+                        <button
+                            className="btn btn-sm btn-outline"
+                            onClick={() => {
+                                loadFileClicked();
+                            }}
+                        >
+                            Load File
+                        </button>
+                    </div>
+                ) : (
+                    <></>
+                )}
+                {props.currentValue === "Window" ? (
+                    <div style={{ display: "flex" }}>
+                        <button
+                            className="btn btn-sm btn-outline"
+                            onClick={() => {
+                                chooseWindowClicked();
+                            }}
+                        >
+                            Choose Window
+                        </button>
+                    </div>
+                ) : (
+                    <></>
+                )}
 
-            {videoDevices.find((x) => {
-                return x.deviceId === props.currentValue;
-            }) && props.cameraResolutions ? (
-                <div style={{ display: "flex" }}>{cameraResolutionButtons}</div>
-            ) : (
-                <></>
-            )}
-            {props.currentValue === "Sample" ? <div style={{ display: "flex" }}>{sampleFileButtons}</div> : <></>}
+                {videoDevices.find((x) => {
+                    return x.deviceId === props.currentValue;
+                }) && props.cameraResolutions ? (
+                    <div style={{ display: "flex" }}>{cameraResolutionButtons}</div>
+                ) : (
+                    <></>
+                )}
+                {props.currentValue === "Sample" ? <div style={{ display: "flex" }}>{sampleFileButtons}</div> : <></>}
 
-            <input type="file" id={`${props.id}-file-input`} hidden></input>
+                <input type="file" id={`${props.id}-file-input`} hidden></input>
+            </div>
+            <div>
+                <div onClick={loadDevices} style={{ textDecorationLine: "underline", fontSize: "small" }}>
+                    reload
+                </div>
+            </div>
         </div>
     );
 };

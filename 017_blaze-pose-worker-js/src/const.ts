@@ -131,6 +131,7 @@ export type TFLitePoseLandmarkDetection = {
         x: number,
         y: number,
         z: number,
+        score: number,
         visibility?: number,
         presence?: number,
     }[],
