@@ -55,7 +55,6 @@ export interface HandPoseDetectionConfig {
 export interface HandPoseDetectionOperationParams {
     processWidth: number;
     processHeight: number;
-    annotateBox: boolean;
     movingAverageWindow: number;
     affineResizedFactor: number
 }

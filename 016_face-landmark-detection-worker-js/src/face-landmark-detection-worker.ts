@@ -2,7 +2,7 @@ import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@d
 import { BackendTypes, DetectorTypes, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, FaceMeshPredictionEx, FacemeshPredictionMediapipe, LandmarkTypes, ModelTypes, TFLite, TFLiteFaceLandmarkDetection, RefinedPoints } from "./const";
 import { Face, Keypoint } from "@tensorflow-models/face-landmarks-detection";
 export { FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, NUM_KEYPOINTS, TRIANGULATION, BackendTypes, ModelTypes, FaceMeshPredictionEx, DetectorTypes, LandmarkTypes, RefinedPoints } from "./const";
-export { Face, Keypoint, BoundingBox }
+export { Face, Keypoint, BoundingBox, FacemeshPredictionMediapipe }
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./face-landmark-detection-worker-worker.ts";
 import { BoundingBox } from "@tensorflow-models/face-landmarks-detection/dist/shared/calculators/interfaces/shape_interfaces";
@@ -253,7 +253,7 @@ export class LocalFL extends LocalWorker {
             this.tflite!.HEAPU8.set(new Uint8Array(landmarkModel), landmarkModelBufferOffset);
             this.tflite!._loadLandmarkModel(landmarkModel.byteLength);
 
-            this.tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, config.model.maxFaces)
+            this.tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, 4)
             this.tfliteInputAddress = this.tflite!._getInputBufferAddress()
             this.tfliteOutputAddress = this.tflite!._getOutputBufferAddress()
         }

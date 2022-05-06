@@ -111,7 +111,6 @@ export const generateDefaultHandPoseDetectionParams = () => {
     const defaultParams: HandPoseDetectionOperationParams = {
         processWidth: 300,
         processHeight: 300,
-        annotateBox: false,
         movingAverageWindow: 10,
         affineResizedFactor: 2,
     };
@@ -219,7 +218,7 @@ export class LocalHP extends LocalWorker {
             this.tflite!.HEAPU8.set(new Uint8Array(landmarkModel), landmarkModelBufferOffset);
             this.tflite!._loadLandmarkModel(landmarkModel.byteLength);
 
-            this.tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, config.maxHands)
+            this.tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, 4)
             this.tfliteInputAddress = this.tflite!._getInputBufferAddress()
             this.tfliteOutputAddress = this.tflite!._getOutputBufferAddress()
         }
@@ -347,13 +346,13 @@ export class HandPoseDetectionWorkerManager extends WorkerManagerBase {
         if (!this.worker) {
             // console.log("local exec")
             const prediction = await this.localWorker.predict(this.config, currentParams, resizedCanvas);
-            return prediction;
+            return prediction || [];
             // return this.generatePredictionEx(this.config, params, prediction);
         }
-        console.log("worker exec")
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
         const prediction = (await this.sendToWorker(currentParams, imageData.data)) as Hand[] | null;
-        return prediction;
+
+        return prediction || [];
         // return this.generatePredictionEx(this.config, params, prediction);
     };
 

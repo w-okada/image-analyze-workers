@@ -272,7 +272,7 @@ onmessage = async (event) => {
             tflite!.HEAPU8.set(new Uint8Array(landmarkModel), landmarkModelBufferOffset);
             tflite!._loadLandmarkModel(landmarkModel.byteLength);
 
-            tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, config.model.maxFaces)
+            tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, 4)
             tfliteInputAddress = tflite!._getInputBufferAddress()
             tfliteOutputAddress = tflite!._getOutputBufferAddress()
             console.log("tflite worker initilizied")
