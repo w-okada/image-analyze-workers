@@ -356,11 +356,11 @@ public:
             cv::Mat change;
             if (calculate_mode == 0 || calculate_mode == 1)
             {
-                cv::Mat change = cv::getRotationMatrix2D(center, (pose_result.poses[i].rotation * 60), 1);
+                change = cv::getRotationMatrix2D(center, (pose_result.poses[i].rotation * 60), 1);
             }
             else if (calculate_mode == 2)
             {
-                cv::Mat change = cv::getRotationMatrix2D(center, (pose_result.poses[i].rotation * 0), 1);
+                change = cv::getRotationMatrix2D(center, (pose_result.poses[i].rotation * 0), 1);
             }
             //// 回転
             cv::Mat rotated_pose(resizedTranslationCanvas.size(), CV_8UC4);
