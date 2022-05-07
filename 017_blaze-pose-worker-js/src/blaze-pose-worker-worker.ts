@@ -126,6 +126,9 @@ const predict = async (config: BlazePoseConfig, params: BlazePoseOperationParams
                     x: tflite!.HEAPF32[offset + 0],
                     y: tflite!.HEAPF32[offset + 1],
                     z: tflite!.HEAPF32[offset + 2],
+                    score: pose.landmarkKeypoints[j].score,
+                    visibility: pose.landmarkKeypoints[j].visibility,
+                    presence: pose.landmarkKeypoints[j].presence,
                 })
             }
             if (pose.score > 0.5 && pose.landmarkScore > 0.5) {
@@ -215,7 +218,7 @@ onmessage = async (event) => {
             tflite!.HEAPU8.set(new Uint8Array(landmarkModel), landmarkModelBufferOffset);
             tflite!._loadLandmarkModel(landmarkModel.byteLength);
 
-            tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, config.model.maxPoses)
+            tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, 4)
             tfliteInputAddress = tflite!._getInputBufferAddress()
             tfliteOutputAddress = tflite!._getOutputBufferAddress()
             console.log("tflite worker initilizied")

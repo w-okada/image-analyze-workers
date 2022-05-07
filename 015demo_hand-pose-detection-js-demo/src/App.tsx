@@ -68,16 +68,6 @@ const Controller = () => {
         },
     };
 
-    const annotateBoxSwitchProps: CommonSwitchProps = {
-        id: "annotate-box-switch",
-        title: "use annotate box",
-        currentValue: params.annotateBox,
-        onChange: (value: boolean) => {
-            params.annotateBox = value;
-            setParams({ ...params });
-        },
-    };
-
     const maxFacesSliderProps: CommonSliderProps = {
         id: "max-hands-slider",
         title: "max hands",
@@ -199,7 +189,6 @@ const Controller = () => {
             <CommonSelector {...modelTypeSelectorProps}></CommonSelector>
             <CommonSelector {...modelType2SelectorProps}></CommonSelector>
             <CommonSelector {...backendSelectorProps}></CommonSelector>
-            <CommonSwitch {...annotateBoxSwitchProps}></CommonSwitch>
             <CommonSlider {...maxFacesSliderProps}></CommonSlider>
             <CommonSlider {...iouThresholdSliderProps}></CommonSlider>
             <CommonSlider {...scoreThresholdSliderProps}></CommonSlider>

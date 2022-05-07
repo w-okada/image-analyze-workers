@@ -217,7 +217,7 @@ export class LocalBP extends LocalWorker {
             this.tflite!.HEAPU8.set(new Uint8Array(landmarkModel), landmarkModelBufferOffset);
             this.tflite!._loadLandmarkModel(landmarkModel.byteLength);
 
-            this.tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, config.model.maxPoses)
+            this.tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, 4)
             this.tfliteInputAddress = this.tflite!._getInputBufferAddress()
             this.tfliteOutputAddress = this.tflite!._getOutputBufferAddress()
         }
@@ -312,6 +312,9 @@ export class LocalBP extends LocalWorker {
                         x: this.tflite!.HEAPF32[offset + 0],
                         y: this.tflite!.HEAPF32[offset + 1],
                         z: this.tflite!.HEAPF32[offset + 2],
+                        score: pose.landmarkKeypoints[j].score,
+                        visibility: pose.landmarkKeypoints[j].visibility,
+                        presence: pose.landmarkKeypoints[j].presence,
                     })
                 }
                 if (pose.score > 0.1 && pose.landmarkScore > 0.0) {
@@ -363,17 +366,17 @@ export class BlazePoseWorkerManager extends WorkerManagerBase {
         return;
     };
 
-    predict = async (params: BlazePoseOperationParams, targetCanvas: HTMLCanvasElement | HTMLVideoElement): Promise<Pose[] | null> => {
+    predict = async (params: BlazePoseOperationParams, targetCanvas: HTMLCanvasElement | HTMLVideoElement): Promise<Pose[]> => {
         const currentParams = { ...params };
         const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
         if (!this.worker) {
 
             const prediction = await this.localWorker.predict(this.config, currentParams, resizedCanvas);
-            return prediction;
+            return prediction || [];
         }
 
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
         const prediction = (await this.sendToWorker(currentParams, imageData.data)) as Pose[] | null;
-        return prediction;
+        return prediction || [];
     };
 }

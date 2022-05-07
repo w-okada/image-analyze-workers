@@ -13,7 +13,7 @@ import linkedin from "../../resources/logos/linkedin.svg";
 import blog from "../../resources/logos/file-text.svg";
 
 export type CreditProps = {
-    title: string;
+    title?: string;
     homepage?: string;
     github?: string;
     twitter?: string;
@@ -46,8 +46,8 @@ const creditProps: CreditProps = {
     blog: "https://medium.com/@dannadori",
 };
 
-export const Credit = () => {
-    const props = creditProps;
+export const Credit = (props: CreditProps = creditProps) => {
+    // const props = creditProps;
     const homepageIcon = props.homepage ? (
         useMemo(() => {
             return <LinkIcon tooltip="homepage" icon={homepage} url={props.homepage!} />;
