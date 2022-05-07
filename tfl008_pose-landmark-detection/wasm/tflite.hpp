@@ -37,6 +37,8 @@ private:
     float *output_heatmap_ptr;
     float *output_world3d_ptr;
 
+    int calculate_mode = 0; // for debug
+
 public:
     ////////////////////////////////////
     // Detector
@@ -438,22 +440,34 @@ public:
                 // }
 
                 // landmark3D
-                for (int j = 0; j < 39; j++)
+                if (calculate_mode == 0)
                 {
-                    float x_ratio = (output_world3d_ptr[j * 3 + 0] + 1) / 2; // 比率
-                    float y_ratio = (output_world3d_ptr[j * 3 + 1] + 1) / 2;
-                    float x_position_in_crop = x_ratio * (translationCanvasSize / resizedFactor); // resized内座標
-                    float y_position_in_crop = y_ratio * (translationCanvasSize / resizedFactor);
-                    std::vector<cv::Point2f> src_points;
-                    std::vector<cv::Point2f> dst_points;
-                    src_points.push_back(cv::Point2f(x_position_in_crop, y_position_in_crop));
+                    for (int j = 0; j < 39; j++)
+                    {
+                        float x_ratio = (output_world3d_ptr[j * 3 + 0] + 1) / 2; // 比率
+                        float y_ratio = (output_world3d_ptr[j * 3 + 1] + 1) / 2;
+                        float x_position_in_crop = x_ratio * (translationCanvasSize / resizedFactor); // resized内座標
+                        float y_position_in_crop = y_ratio * (translationCanvasSize / resizedFactor);
+                        std::vector<cv::Point2f> src_points;
+                        std::vector<cv::Point2f> dst_points;
+                        src_points.push_back(cv::Point2f(x_position_in_crop, y_position_in_crop));
 
-                    cv::perspectiveTransform(src_points, dst_points, reverse3x3);
+                        cv::perspectiveTransform(src_points, dst_points, reverse3x3);
 
-                    // ■ original
-                    pose_result.poses[i].landmark3d_keys[j].x = (((dst_points[0].x - (translateRoiMinX / resizedFactor)) * resizedFactor + cropMinX * width) / (width / 2)) - 1; // *resizedFactorで元画像サイズに戻して、比率算出
-                    pose_result.poses[i].landmark3d_keys[j].y = (((dst_points[0].y - (translateRoiMinY / resizedFactor)) * resizedFactor + cropMinY * height) / (height / 2)) - 1;
-                    pose_result.poses[i].landmark3d_keys[j].z = output_world3d_ptr[j * 3 + 2];
+                        // ■ original
+                        pose_result.poses[i].landmark3d_keys[j].x = (((dst_points[0].x - (translateRoiMinX / resizedFactor)) * resizedFactor + cropMinX * width) / (width / 2)) - 1; // *resizedFactorで元画像サイズに戻して、比率算出
+                        pose_result.poses[i].landmark3d_keys[j].y = (((dst_points[0].y - (translateRoiMinY / resizedFactor)) * resizedFactor + cropMinY * height) / (height / 2)) - 1;
+                        pose_result.poses[i].landmark3d_keys[j].z = output_world3d_ptr[j * 3 + 2];
+                    }
+                }
+                else if (calculate_mode == 1)
+                {
+                    for (int j = 0; j < 39; j++)
+                    {
+                        pose_result.poses[i].landmark3d_keys[j].x = output_world3d_ptr[j * 3 + 0];
+                        pose_result.poses[i].landmark3d_keys[j].y = output_world3d_ptr[j * 3 + 1];
+                        pose_result.poses[i].landmark3d_keys[j].z = output_world3d_ptr[j * 3 + 2];
+                    }
                 }
             }
         }
@@ -537,6 +551,12 @@ public:
                 }
             }
         }
+    }
+
+    int set_calculate_mode(int mode)
+    {
+        calculate_mode = mode;
+        return 0;
     }
 };
 #endif //__OPENCV_BARCODE_BARDETECT_HPP__

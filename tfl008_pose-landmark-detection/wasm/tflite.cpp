@@ -88,4 +88,11 @@ extern "C"
         m->exec(width, height, max_pose_num, resizedFactor, cropExtention);
         return 0;
     }
+
+    EMSCRIPTEN_KEEPALIVE
+    int set_calculate_mode(int mode)
+    {
+        m->set_calculate_mode(mode);
+        return 0;
+    }
 }

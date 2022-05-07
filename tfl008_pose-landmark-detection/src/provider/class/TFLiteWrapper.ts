@@ -38,6 +38,8 @@ export class TFLiteWrapper {
 
         this.tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, 4)
         this.imageInputAddress = this.tflite!._getInputBufferAddress()
+
+        this.tflite!._set_calculate_mode(1)
     };
 
     exec = (config: PoseLandmarkDetectionConfig, params: PoseLandmarkDetectionOperationParams, targetCanvas: HTMLCanvasElement) => {
@@ -141,6 +143,7 @@ export class TFLiteWrapper {
 
             poses.push(pose)
         }
+        console.log(poses)
         return poses
 
     }

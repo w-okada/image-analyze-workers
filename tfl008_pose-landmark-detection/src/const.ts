@@ -45,6 +45,7 @@ export interface TFLite extends EmscriptenModule {
     _loadDetectorModel(bufferSize: number): number;
     _loadLandmarkModel(bufferSize: number): number;
     _exec(widht: number, height: number, max_pose_num: number, resizedFactor: number, cropExt: number): number;
+    _set_calculate_mode(mode: number): number
 }
 export const INPUT_WIDTH = 256
 export const INPUT_HEIGHT = 256
