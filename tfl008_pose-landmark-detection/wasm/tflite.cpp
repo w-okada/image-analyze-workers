@@ -10,7 +10,6 @@ namespace
 using std::chrono::high_resolution_clock;
 
 auto start_time = high_resolution_clock::now();
-auto count = 0;
 MemoryUtil *m = new MemoryUtil();
 
 extern "C"

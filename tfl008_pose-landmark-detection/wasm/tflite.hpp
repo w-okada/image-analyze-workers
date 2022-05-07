@@ -38,6 +38,9 @@ private:
     float *output_world3d_ptr;
 
     int calculate_mode = 0; // for debug
+    /// 0: rotation, 2d-reverse, 3d-reverse
+    /// 1: rotation, 2d-reverse, 3d-no-reverse
+    /// 2: no-rotation, (2d-no-reverse, 3d-no-reverse)　// mode==2は0度の回転として扱う。
 
 public:
     ////////////////////////////////////
@@ -350,7 +353,15 @@ public:
             // 回転
             //// 回転軸（hipが中心に張るはずなので中心で回転させればよい）
             cv::Point2f center = cv::Point2f(translationCanvasSize / (resizedFactor * 2), translationCanvasSize / (resizedFactor * 2));
-            cv::Mat change = cv::getRotationMatrix2D(center, (pose_result.poses[i].rotation * 60), 1);
+            cv::Mat change;
+            if (calculate_mode == 0 || calculate_mode == 1)
+            {
+                cv::Mat change = cv::getRotationMatrix2D(center, (pose_result.poses[i].rotation * 60), 1);
+            }
+            else if (calculate_mode == 2)
+            {
+                cv::Mat change = cv::getRotationMatrix2D(center, (pose_result.poses[i].rotation * 0), 1);
+            }
             //// 回転
             cv::Mat rotated_pose(resizedTranslationCanvas.size(), CV_8UC4);
             cv::warpAffine(resizedTranslationCanvas, rotated_pose, change, rotated_pose.size(), cv::INTER_CUBIC, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
@@ -440,7 +451,7 @@ public:
                 // }
 
                 // landmark3D
-                if (calculate_mode == 0)
+                if (calculate_mode == 0 || calculate_mode == 2) // mode==2は0度の回転として扱う。
                 {
                     for (int j = 0; j < 39; j++)
                     {
