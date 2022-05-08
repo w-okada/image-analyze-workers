@@ -78,7 +78,7 @@ export const generateU2NetPortraitDefaultConfig = (): U2NetPortraitConfig => {
             "320_float16": [320, 320],
             "320_float32": [320, 320],
         },
-        modelKey: "320_float16",
+        modelKey: "320_uint8",
     };
     return defaultConf;
 };

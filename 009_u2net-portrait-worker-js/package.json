@@ -1,6 +1,6 @@
 {
     "name": "@dannadori/u2net-portrait-worker-js",
-    "version": "1.0.26",
+    "version": "1.0.29",
     "description": "",
     "main": "dist/u2net-portrait-worker.js",
     "scripts": {
