@@ -103,7 +103,8 @@ Note. some module is not provided as webworker for safari because of it's restri
 
 ### demo
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t01_bodypix/index.html
+[demo](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t01_bodypix/index.html)
+[demo(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t01_bodypix/index.html)
 
 ## facemesh
 
@@ -117,7 +118,8 @@ https://user-images.githubusercontent.com/48346627/162351316-0b640df7-4b92-4bf7-
 
 ### demo
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t02_facemesh/index.html
+[demo](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t02_facemesh/index.html)
+[demo(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t02_facemesh/index.html)
 
 ## asciiart
 
@@ -129,7 +131,8 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t02_facemesh/index.h
 
 ### demo
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t03_asciiart/index.html
+[demo](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t03_asciiart/index.html)
+[demo(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t03_asciiart/index.html)
 
 ## opencv
 
@@ -141,7 +144,8 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t03_asciiart/index.h
 
 ### demo
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t04_opencv/index.html
+[demo](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t04_opencv/index.html)
+[demo(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t04_opencv/index.html)
 
 ## PoseNet
 
@@ -153,7 +157,8 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t04_opencv/index.htm
 
 ### demo
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t05_posenet/index.html
+[demo](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t05_posenet/index.html)
+[demo(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t05_posenet/index.html)
 
 ## HandPose
 
@@ -165,7 +170,8 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t05_posenet/index.ht
 
 ### demo
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t06_handpose/index.html
+[demo](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t06_handpose/index.html)
+[demo(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t06_handpose/index.html)
 
 ## White-Box-Cartoon
 
@@ -177,9 +183,9 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t06_handpose/index.h
 
 ### demo
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t07_white-box-cartoonization/index.html
-
 Note: very heavy process. It will take 40second or more to process one frame. be patient...
+[demo](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t07_white-box-cartoonization/index.html)
+[demo(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t07_white-box-cartoonization/index.html)
 
 ### License
 
@@ -206,7 +212,8 @@ Commercial application is prohibited, please remain this license if you clone th
 
 ### demo
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t08_bisenetv2-celebamask/index.html
+[demo](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t08_bisenetv2-celebamask/index.html)
+[demo(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t08_bisenetv2-celebamask/index.html)
 
 ### reference
 
@@ -224,7 +231,8 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t08_bisenetv2-celeba
 
 ### demo
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t09_u2net-portrait/index.html
+[demo](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t09_u2net-portrait/index.html)
+[demo(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t09_u2net-portrait/index.html)
 
 ## MODNet
 
@@ -238,7 +246,8 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t09_u2net-portrait/i
 
 Note: Very heavy processing to open.
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t10_modnet/index.html
+[demo](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t10_modnet/index.html)
+[demo(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t10_modnet/index.html)
 
 ### Licnece
 
@@ -256,11 +265,16 @@ NOTE: The license will be changed to allow commercial use after this work is acc
 
 ### demo
 
-[all](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/index.html)
-[96x160](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/96x160/index.html)
-[128x128](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/128x128/index.html)
-[144x256](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/144x256/index.html)
-[256x256](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/256x256/index.html)
+[all](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t11_googlemeet-segmentation/index.html)
+[all(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/index.html)
+[96x160](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t11_googlemeet-segmentation/96x160/index.html)
+[96x160(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/96x160/index.html)
+[128x128](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t11_googlemeet-segmentation/128x128/index.html)
+[128x128(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/128x128/index.html)
+[144x256](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t11_googlemeet-segmentation/144x256/index.html)
+[144x256(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/144x256/index.html)
+[256x256](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t11_googlemeet-segmentation/256x256/index.html)
+[256x256(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t11_googlemeet-segmentation/256x256/index.html)
 
 ## Multi Barcode Scanner
 
@@ -272,7 +286,8 @@ NOTE: The license will be changed to allow commercial use after this work is acc
 
 ### demo
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t12_barcode-scanner/index.html
+[demo](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t12_barcode-scanner/index.html)
+[demo(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t12_barcode-scanner/index.html)
 
 ### demo(movie)
 
@@ -296,7 +311,8 @@ This project (code, pre-trained models, demos, etc.) is released under the Creat
 
 ### demo
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t13_super-resolution/index.html
+[demo](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t13_super-resolution/index.html)
+[demo(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t13_super-resolution/index.html)
 
 ## Blazeface
 
@@ -309,7 +325,8 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t13_super-resolution
 
 ### demo
 
-https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t14_blazeface/index.html
+[demo](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t14_blazeface/index.html)
+[demo(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t14_blazeface/index.html)
 
 ## MediaPipe Hands
 
@@ -321,11 +338,16 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t14_blazeface/index.
 
 ### demo
 
-[all](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/index.html)
-[lite](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/lite/index.html)
-[full](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/full/index.html)
-[mediapipe](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/mediapipe/index.html)
-[tfjs](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/tfjs/index.html)
+[all](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t15_hand-pose-detection/index.html)
+[all(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/index.html)
+[lite](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t15_hand-pose-detection/lite/index.html)
+[lite(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/lite/index.html)
+[full](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t15_hand-pose-detection/full/index.html)
+[full(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/full/index.html)
+[mediapipe](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t15_hand-pose-detection/mediapipe/index.html)
+[mediapipe(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/mediapipe/index.html)
+[tfjs](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t15_hand-pose-detection/tfjs/index.html)
+[tfjs(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t15_hand-pose-detection/tfjs/index.html)
 
 ## MediaPipe Face landmark detection
 
@@ -337,13 +359,20 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t14_blazeface/index.
 
 ### demo
 
-[all](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/index.html)
-[short](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/short/index.html)
-[short_with_attention](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/short_with_attention/index.html)
-[full](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/full/index.html)
-[full_with_attention](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/full_with_attention/index.html)
-[mediapipe](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/mediapipe/index.html)
-[tfjs](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/tfjs/index.html)
+[all](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t16_face-landmark-detection/index.html)
+[all(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/index.html)
+[short](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t16_face-landmark-detection/short/index.html)
+[short(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/short/index.html)
+[short_with_attention](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t16_face-landmark-detection/short_with_attention/index.html)
+[short_with_attention(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/short_with_attention/index.html)
+[full](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t16_face-landmark-detection/full/index.html)
+[full(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/full/index.html)
+[full_with_attention](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t16_face-landmark-detection/full_with_attention/index.html)
+[full_with_attention(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/full_with_attention/index.html)
+[mediapipe](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t16_face-landmark-detection/mediapipe/index.html)
+[mediapipe(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/mediapipe/index.html)
+[tfjs](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t16_face-landmark-detection/tfjs/index.html)
+[tfjs(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t16_face-landmark-detection/tfjs/index.html)
 
 ## MediaPipe BlazePose
 
@@ -355,12 +384,18 @@ https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t14_blazeface/index.
 
 ### demo
 
-[all](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/index.html)
-[lite](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/lite/index.html)
-[full](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/full/index.html)
-[heavy](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/heavy/index.html)
-[mediapipe](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/mediapipe/index.html)
-[tfjs](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/tfjs/index.html)
+[all](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t17_blaze-pose/index.html)
+[all(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/index.html)
+[lite](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t17_blaze-pose/lite/index.html)
+[lite(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/lite/index.html)
+[full](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t17_blaze-pose/full/index.html)
+[full(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/full/index.html)
+[heavy](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t17_blaze-pose/heavy/index.html)
+[heavy(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/heavy/index.html)
+[mediapipe](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t17_blaze-pose/mediapipe/index.html)
+[mediapipe(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/mediapipe/index.html)
+[tfjs](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t17_blaze-pose/tfjs/index.html)
+[tfjs(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/tfjs/index.html)
 
 # TFLite Wasm
 
