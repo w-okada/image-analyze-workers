@@ -1,4 +1,5 @@
 import { BrowserTypes } from "@dannadori/worker-base";
+import { Hand } from "./hand-pose-detection-worker";
 
 export const WorkerCommand = {
     INITIALIZE: "initialize",
@@ -66,6 +67,12 @@ export const FingerLookupIndices: { [key: string]: number[] } = {
     middleFinger: [0, 9, 10, 11, 12],
     ringFinger: [0, 13, 14, 15, 16],
     pinky: [0, 17, 18, 19, 20],
+};
+
+export type HandPredictionEx = {
+    rowPrediction: Hand[] | null;
+    singlePersonKeypointsMovingAverage?: Hand[];
+    // trackingArea?: TrackingArea;
 };
 
 

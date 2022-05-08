@@ -5,37 +5,37 @@ import { loadURLAsDataURL } from "../utils/urlReader";
 /// #if BUILD_TYPE==="lite"
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { BlazePoseWorkerManager, generateBlazePoseDefaultConfig, generateDefaultBlazePoseParams, BlazePoseConfig, BlazePoseOperationParams, Pose, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes, PartsLookupIndices } from "@dannadori/blaze-pose-worker-js/dist/blaze-pose-workerlite";
+import { BlazePoseWorkerManager, generateBlazePoseDefaultConfig, generateDefaultBlazePoseParams, BlazePoseConfig, BlazePoseOperationParams, Pose, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes, PartsLookupIndices, PosePredictionEx } from "@dannadori/blaze-pose-worker-js/dist/blaze-pose-workerlite";
 
 /// #elif BUILD_TYPE==="full"
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { BlazePoseWorkerManager, generateBlazePoseDefaultConfig, generateDefaultBlazePoseParams, BlazePoseConfig, BlazePoseOperationParams, Pose, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes, PartsLookupIndices } from "@dannadori/blaze-pose-worker-js/dist/blaze-pose-workerfull";
+import { BlazePoseWorkerManager, generateBlazePoseDefaultConfig, generateDefaultBlazePoseParams, BlazePoseConfig, BlazePoseOperationParams, Pose, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes, PartsLookupIndices, PosePredictionEx } from "@dannadori/blaze-pose-worker-js/dist/blaze-pose-workerfull";
 
 /// #elif BUILD_TYPE==="heavy"
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { BlazePoseWorkerManager, generateBlazePoseDefaultConfig, generateDefaultBlazePoseParams, BlazePoseConfig, BlazePoseOperationParams, Pose, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes, PartsLookupIndices } from "@dannadori/blaze-pose-worker-js/dist/blaze-pose-workerheavy";
+import { BlazePoseWorkerManager, generateBlazePoseDefaultConfig, generateDefaultBlazePoseParams, BlazePoseConfig, BlazePoseOperationParams, Pose, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes, PartsLookupIndices, PosePredictionEx } from "@dannadori/blaze-pose-worker-js/dist/blaze-pose-workerheavy";
 
 /// #elif BUILD_TYPE==="mediapipe"
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { BlazePoseWorkerManager, generateBlazePoseDefaultConfig, generateDefaultBlazePoseParams, BlazePoseConfig, BlazePoseOperationParams, Pose, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes, PartsLookupIndices } from "@dannadori/blaze-pose-worker-js/dist/blaze-pose-workermediapipe";
+import { BlazePoseWorkerManager, generateBlazePoseDefaultConfig, generateDefaultBlazePoseParams, BlazePoseConfig, BlazePoseOperationParams, Pose, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes, PartsLookupIndices, PosePredictionEx } from "@dannadori/blaze-pose-worker-js/dist/blaze-pose-workermediapipe";
 
 /// #elif BUILD_TYPE==="tfjs"
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { BlazePoseWorkerManager, generateBlazePoseDefaultConfig, generateDefaultBlazePoseParams, BlazePoseConfig, BlazePoseOperationParams, Pose, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes, PartsLookupIndices } from "@dannadori/blaze-pose-worker-js/dist/blaze-pose-workertfjs";
+import { BlazePoseWorkerManager, generateBlazePoseDefaultConfig, generateDefaultBlazePoseParams, BlazePoseConfig, BlazePoseOperationParams, Pose, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes, PartsLookupIndices, PosePredictionEx } from "@dannadori/blaze-pose-worker-js/dist/blaze-pose-workertfjs";
 
 /// #else
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import { BlazePoseWorkerManager, generateBlazePoseDefaultConfig, generateDefaultBlazePoseParams, BlazePoseConfig, BlazePoseOperationParams, Pose, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes, PartsLookupIndices } from "@dannadori/blaze-pose-worker-js";
+import { BlazePoseWorkerManager, generateBlazePoseDefaultConfig, generateDefaultBlazePoseParams, BlazePoseConfig, BlazePoseOperationParams, Pose, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes, PartsLookupIndices, PosePredictionEx } from "@dannadori/blaze-pose-worker-js";
 
 /// #endif
 
 export { BlazePoseWorkerManager, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes, PartsLookupIndices };
-export type { BlazePoseConfig, BlazePoseOperationParams, Pose };
+export type { BlazePoseConfig, BlazePoseOperationParams, Pose, PosePredictionEx };
 type Props = {
     children: ReactNode;
 };

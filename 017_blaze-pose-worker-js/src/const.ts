@@ -1,4 +1,5 @@
 import { BrowserTypes } from "@dannadori/worker-base";
+import { Pose, Keypoint, BoundingBox } from "./blaze-pose-worker";
 
 export const WorkerCommand = {
     INITIALIZE: "initialize",
@@ -75,6 +76,14 @@ export interface BlazePoseOperationParams {
     cropExt: number
     calculate_mode: number // for debug
 }
+
+
+export type PosePredictionEx = {
+    rowPrediction: Pose[] | null;
+    singlePersonKeypointsMovingAverage?: Keypoint[];
+    singlePersonKeypoints3DMovingAverage?: Keypoint[];
+    singlePersonBoxMovingAverage?: BoundingBox;
+};
 
 export interface TFLite extends EmscriptenModule {
     _getInputBufferAddress(): number;

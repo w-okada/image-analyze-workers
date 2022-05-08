@@ -1,5 +1,5 @@
 import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
-import { Pose } from "@tensorflow-models/pose-detection";
+import { Keypoint, Pose } from "@tensorflow-models/pose-detection";
 // @ts-ignore
 import workerJs from "worker-loader?inline=no-fallback!./blaze-pose-worker-worker.ts";
 
@@ -43,9 +43,10 @@ import landmarkHeavyTFLite from "../resources/tflite/landmark/pose_landmark_heav
 import wasm from "../resources/wasm/tflite.wasm";
 // @ts-ignore
 import wasmSimd from "../resources/wasm/tflite-simd.wasm";
-import { BackendTypes, LandmarkTypes, ModelTypes, BlazePoseConfig, BlazePoseOperationParams, TFLite, TFLitePoseLandmarkDetection, DetectorTypes, PartsLookupIndices } from "./const";
+import { BackendTypes, LandmarkTypes, ModelTypes, BlazePoseConfig, BlazePoseOperationParams, TFLite, TFLitePoseLandmarkDetection, DetectorTypes, PartsLookupIndices, PosePredictionEx } from "./const";
+import { BoundingBox } from "@tensorflow-models/pose-detection/dist/shared/calculators/interfaces/shape_interfaces";
 
-export { BlazePoseConfig, BlazePoseOperationParams, Pose, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes, PartsLookupIndices }
+export { BlazePoseConfig, BlazePoseOperationParams, Pose, Keypoint, BoundingBox, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes, PartsLookupIndices, PosePredictionEx }
 
 export const generateBlazePoseDefaultConfig = (): BlazePoseConfig => {
     const defaultConf: BlazePoseConfig = {
@@ -368,17 +369,149 @@ export class BlazePoseWorkerManager extends WorkerManagerBase {
         return;
     };
 
-    predict = async (params: BlazePoseOperationParams, targetCanvas: HTMLCanvasElement | HTMLVideoElement): Promise<Pose[]> => {
+    predict = async (params: BlazePoseOperationParams, targetCanvas: HTMLCanvasElement | HTMLVideoElement): Promise<PosePredictionEx> => {
         const currentParams = { ...params };
         const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
         if (!this.worker) {
 
             const prediction = await this.localWorker.predict(this.config, currentParams, resizedCanvas);
-            return prediction || [];
+            // return prediction || [];
+            return this.generatePredictionEx(this.config, currentParams, prediction)
         }
 
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
         const prediction = (await this.sendToWorker(currentParams, imageData.data)) as Pose[] | null;
-        return prediction || [];
+        // return prediction || [];
+        return this.generatePredictionEx(this.config, currentParams, prediction)
     };
+
+    posesMV: Pose[][] = [];
+
+    generatePredictionEx = (config: BlazePoseConfig, params: BlazePoseOperationParams, prediction: Pose[] | null): PosePredictionEx => {
+        const poses = prediction
+        const predictionEx: PosePredictionEx = {
+            rowPrediction: poses,
+        };
+        if (params.movingAverageWindow > 0) {
+            /// (1)蓄積データ 更新
+            if (poses) {
+                while (this.posesMV.length > params.movingAverageWindow) {
+                    this.posesMV.shift();
+                }
+            }
+            if (poses && poses[0] && poses[0].keypoints) {
+                this.posesMV.push(poses);
+            }
+
+            /// (2) キーポイント移動平均算出
+            /// (2-1) ウィンドウ内の一人目のランドマークを抽出
+            const keypointsEach = this.posesMV.map((pred) => {
+                return pred[0].keypoints;
+            });
+            /// (2-2) 足し合わせ
+            const summedKeypoints = keypointsEach.reduce((prev, cur) => {
+                for (let i = 0; i < cur.length; i++) {
+                    if (prev[i]) {
+                        prev[i].x = prev[i].x + cur[i].x;
+                        prev[i].y = prev[i].y + cur[i].y;
+                        prev[i].z = (prev[i].z || 0) + (cur[i].z || 0);
+                    } else {
+                        prev.push({
+                            x: cur[i].x,
+                            y: cur[i].y,
+                            z: (cur[i].z || 0),
+                            score: cur[i].score || undefined,
+                            name: cur[i].name || undefined
+                        });
+                    }
+                }
+                return prev;
+            }, [] as Keypoint[]);
+            /// (2-3) 平均化
+            for (let i = 0; i < summedKeypoints.length; i++) {
+                summedKeypoints[i].x = summedKeypoints[i].x / this.posesMV.length;
+                summedKeypoints[i].y = summedKeypoints[i].y / this.posesMV.length;
+                summedKeypoints[i].z = (summedKeypoints[i].z || 0) / this.posesMV.length;
+            }
+            /// (2-4) 追加
+            predictionEx.singlePersonKeypointsMovingAverage = summedKeypoints;
+
+
+            /// (3) キーポイント3D移動平均算出
+            /// (3-1) ウィンドウ内の一人目のランドマークを抽出
+            const keypoints3DEach = this.posesMV.map((pred) => {
+                return pred[0].keypoints3D!;
+            });
+            /// (2-2) 足し合わせ
+            const summedKeypoints3D = keypoints3DEach.reduce((prev, cur) => {
+                for (let i = 0; i < cur.length; i++) {
+                    if (prev[i]) {
+                        prev[i].x = prev[i].x + cur[i].x;
+                        prev[i].y = prev[i].y + cur[i].y;
+                        prev[i].z = (prev[i].z || 0) + (cur[i].z || 0);
+                    } else {
+                        prev.push({
+                            x: cur[i].x,
+                            y: cur[i].y,
+                            z: (cur[i].z || 0),
+                            score: cur[i].score || undefined,
+                            name: cur[i].name || undefined
+                        });
+                    }
+                }
+                return prev;
+            }, [] as Keypoint[]);
+            /// (2-3) 平均化
+            for (let i = 0; i < summedKeypoints3D.length; i++) {
+                summedKeypoints3D[i].x = summedKeypoints3D[i].x / this.posesMV.length;
+                summedKeypoints3D[i].y = summedKeypoints3D[i].y / this.posesMV.length;
+                summedKeypoints3D[i].z = (summedKeypoints3D[i].z || 0) / this.posesMV.length;
+            }
+            /// (2-4) 追加
+            predictionEx.singlePersonKeypoints3DMovingAverage = summedKeypoints3D;
+
+
+
+
+            /// (3) ボックス移動平均算出
+            /// (3-1) ウィンドウ内の一人目のランドマークを抽出
+            const boundingBoxEach = this.posesMV.map((pred) => {
+                return pred[0].box!;
+            });
+            /// (2-2) 足し合わせ
+            const summedBoundingBox = boundingBoxEach.reduce((prev, cur) => {
+                if (prev.width) {
+                    prev.width = prev.width + cur.width;
+                    prev.xMax = prev.xMax + cur.xMax;
+                    prev.xMin = prev.xMin + cur.xMin;
+                    prev.height = prev.height + cur.height;
+                    prev.yMax = prev.yMax + cur.yMax;
+                    prev.yMin = prev.yMin + cur.yMin;
+                } else {
+                    return {
+                        width: cur.width,
+                        xMax: cur.xMax,
+                        xMin: cur.xMin,
+                        height: cur.height,
+                        yMax: cur.yMax,
+                        yMin: cur.yMin,
+                    };
+                }
+                return prev;
+            }, {} as BoundingBox);
+            /// (2-3) 平均化
+            console.log();
+            summedBoundingBox.width /= this.posesMV.length;
+            summedBoundingBox.xMax /= this.posesMV.length;
+            summedBoundingBox.xMin /= this.posesMV.length;
+            summedBoundingBox.height /= this.posesMV.length;
+            summedBoundingBox.yMax /= this.posesMV.length;
+            summedBoundingBox.yMin /= this.posesMV.length;
+            /// (2-4) 追加
+            predictionEx.singlePersonBoxMovingAverage = summedBoundingBox;
+        }
+
+        return predictionEx;
+    }
+
 }
