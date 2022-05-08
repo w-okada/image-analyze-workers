@@ -1,5 +1,5 @@
 import { BrowserTypes, getBrowserType, LocalWorker, WorkerManagerBase } from "@dannadori/worker-base";
-import { BackendTypes, FingerLookupIndices, HandPoseDetectionConfig, HandPoseDetectionOperationParams, ModelTypes, ModelTypes2, TFLite, TFLiteHand } from "./const";
+import { BackendTypes, FingerLookupIndices, HandPoseDetectionConfig, HandPoseDetectionOperationParams, HandPredictionEx, ModelTypes, ModelTypes2, TFLite, TFLiteHand } from "./const";
 import { Hand } from "@tensorflow-models/hand-pose-detection";
 export { BackendTypes, HandPoseDetectionConfig, HandPoseDetectionOperationParams, Hand, ModelTypes, ModelTypes2, FingerLookupIndices };
 // @ts-ignore
@@ -347,7 +347,7 @@ export class HandPoseDetectionWorkerManager extends WorkerManagerBase {
             // console.log("local exec")
             const prediction = await this.localWorker.predict(this.config, currentParams, resizedCanvas);
             return prediction || [];
-            // return this.generatePredictionEx(this.config, params, prediction);
+            // return this.generatePredictionEx(this.config, params, prediction); // 両手を使う場合、平均化する手が特定できないのでomit.
         }
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
         const prediction = (await this.sendToWorker(currentParams, imageData.data)) as Hand[] | null;
@@ -356,9 +356,9 @@ export class HandPoseDetectionWorkerManager extends WorkerManagerBase {
         // return this.generatePredictionEx(this.config, params, prediction);
     };
 
-    // facesMV: BlazeFace.NormalizedFace[][] = [];
-    // generatePredictionEx = (config: BlazefaceConfig, params: BlazefaceOperationParams, prediction: BlazeFace.NormalizedFace[] | null): BlazefacePredictionEx => {
-    //     const predictionEx: BlazefacePredictionEx = {
+    // handsMV: Hand[][] = [];
+    // generatePredictionEx = (config:  HandPoseDetectionConfig, params: HandPoseDetectionOperationParams, prediction: Hand[] | null): HandPredictionEx => {
+    //     const predictionEx: HandPredictionEx = {
     //         rowPrediction: prediction,
     //     };
     //     if (!prediction) {
@@ -367,12 +367,12 @@ export class HandPoseDetectionWorkerManager extends WorkerManagerBase {
 
     //     if (params.movingAverageWindow > 0) {
     //         /// (1)蓄積データ 更新
-    //         while (this.facesMV.length > params.movingAverageWindow) {
-    //             this.facesMV.shift();
+    //         while (this.handsMV.length > params.movingAverageWindow) {
+    //             this.handsMV.shift();
     //         }
 
     //         if (prediction!.length > 0) {
-    //             this.facesMV.push(prediction!);
+    //             this.handsMV.push(prediction!);
     //         }
 
     //         /// (2) キーポイント移動平均算出
