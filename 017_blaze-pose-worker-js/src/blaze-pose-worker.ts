@@ -129,7 +129,8 @@ export const generateDefaultBlazePoseParams = () => {
         processHeight: 300,
         movingAverageWindow: 10,
         affineResizedFactor: 2,
-        cropExt: 1.3
+        cropExt: 1.3,
+        calculate_mode: 0
     };
     return defaultParams;
 };
@@ -243,6 +244,7 @@ export class LocalBP extends LocalWorker {
 
             const imageData = targetCanvas.getContext("2d")!.getImageData(0, 0, targetCanvas.width, targetCanvas.height)
             this.tflite!.HEAPU8.set(imageData.data, this.tfliteInputAddress);
+            this.tflite!._set_calculate_mode(params.calculate_mode) // for debug
             this.tflite!._exec(params.processWidth, params.processHeight, config.model.maxPoses, params.affineResizedFactor, params.cropExt);
             const poseNum = this.tflite!.HEAPF32[this.tfliteOutputAddress / 4];
             const tflitePoses: TFLitePoseLandmarkDetection[] = []

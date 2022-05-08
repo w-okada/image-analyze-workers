@@ -10,6 +10,7 @@ export type VideoInputSelectorProps = {
     onInputSourceChanged: (value: MediaStream | string) => void;
     cameraResolutions?: { [name: string]: number[] };
     filePaths?: { [name: string]: string };
+    onlyFile?: boolean;
 };
 
 export const VideoInputSelector = (props: VideoInputSelectorProps) => {
@@ -17,6 +18,11 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
     const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
 
     const loadDevices = async () => {
+        navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: true,
+        });
+
         const videoDevices = await getVideoInputDevices();
         setVideoDevices(videoDevices);
     };
@@ -46,23 +52,36 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
 
     /// create params
     const commonSelectorProps: CommonSelectorProps<string> = useMemo(() => {
-        const p: CommonSelectorProps<string> = {
-            id: props.id,
-            title: "Video Input",
-            currentValue: props.currentValue,
-            options: {
-                File: "File",
-                Window: "Window",
-            },
-            onChange: props.onInputSourceTypeChanged,
-        };
-        videoDevices.forEach((x) => {
-            p.options[x.label] = x.deviceId;
-        });
-        if (props.filePaths) {
-            p.options["Sample"] = "Sample";
+        if (props.onlyFile) {
+            const p: CommonSelectorProps<string> = {
+                id: props.id,
+                title: "Video Input",
+                currentValue: props.currentValue,
+                options: {
+                    File: "File",
+                },
+                onChange: props.onInputSourceTypeChanged,
+            };
+            return p;
+        } else {
+            const p: CommonSelectorProps<string> = {
+                id: props.id,
+                title: "Video Input",
+                currentValue: props.currentValue,
+                options: {
+                    File: "File",
+                    Window: "Window",
+                },
+                onChange: props.onInputSourceTypeChanged,
+            };
+            videoDevices.forEach((x) => {
+                p.options[x.label] = x.deviceId;
+            });
+            if (props.filePaths) {
+                p.options["Sample"] = "Sample";
+            }
+            return p;
         }
-        return p;
     }, [videoDevices, props.currentValue]);
 
     // create camera resolution button
@@ -208,11 +227,11 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
 
                 <input type="file" id={`${props.id}-file-input`} hidden></input>
             </div>
-            <div>
+            {/* <div>
                 <div onClick={loadDevices} style={{ textDecorationLine: "underline", fontSize: "small" }}>
                     reload
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 };
