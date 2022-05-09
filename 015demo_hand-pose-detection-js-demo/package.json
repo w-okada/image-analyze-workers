@@ -37,7 +37,7 @@
         "@babel/preset-react": "^7.16.7",
         "@babel/preset-typescript": "^7.16.7",
         "@babel/runtime": "^7.17.9",
-        "@types/react": "^18.0.8",
+        "@types/react": "^18.0.9",
         "@types/react-dom": "^18.0.3",
         "@typescript-eslint/eslint-plugin": "^5.22.0",
         "@typescript-eslint/parser": "^5.22.0",
@@ -45,7 +45,7 @@
         "babel-loader": "^8.2.5",
         "css-loader": "^6.7.1",
         "daisyui": "^2.14.3",
-        "eslint": "^8.14.0",
+        "eslint": "^8.15.0",
         "eslint-config-prettier": "^8.5.0",
         "eslint-plugin-prettier": "^4.0.0",
         "eslint-plugin-react": "^7.29.4",
@@ -65,8 +65,8 @@
         "webpack-dev-server": "^4.9.0"
     },
     "dependencies": {
-        "@dannadori/hand-pose-detection-worker-js": "^1.0.19",
-        "@dannadori/demo-base": "^1.0.8",
+        "@dannadori/hand-pose-detection-worker-js": "^1.0.21",
+        "@dannadori/demo-base": "^1.0.11",
         "react": "^18.1.0",
         "react-dom": "^18.1.0"
     }

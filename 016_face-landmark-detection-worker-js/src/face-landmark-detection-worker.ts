@@ -101,6 +101,7 @@ export const generateFaceLandmarkDetectionDefaultConfig = (): FaceLandmarkDetect
     defaultConf.detectorModelKey = DetectorTypes.full_sparse
     defaultConf.landmarkModelKey = LandmarkTypes.landmark
     defaultConf.modelType = ModelTypes.tflite
+    defaultConf.processOnLocal = false
     /// #elif BUILD_TYPE==="short"
     defaultConf.detectorModelTFLite = {
         "short": face_short.split(",")[1],
@@ -111,6 +112,7 @@ export const generateFaceLandmarkDetectionDefaultConfig = (): FaceLandmarkDetect
     defaultConf.detectorModelKey = DetectorTypes.short
     defaultConf.landmarkModelKey = LandmarkTypes.landmark
     defaultConf.modelType = ModelTypes.tflite
+    defaultConf.processOnLocal = false
     /// #elif BUILD_TYPE==="full_with_attention"
     defaultConf.detectorModelTFLite = {
         "full_sparse": face_full_sparse.split(",")[1],
@@ -121,6 +123,7 @@ export const generateFaceLandmarkDetectionDefaultConfig = (): FaceLandmarkDetect
     defaultConf.detectorModelKey = DetectorTypes.full_sparse
     defaultConf.landmarkModelKey = LandmarkTypes.with_attention
     defaultConf.modelType = ModelTypes.tflite
+    defaultConf.processOnLocal = false
     /// #elif BUILD_TYPE==="short_with_attention"
     defaultConf.detectorModelTFLite = {
         "short": face_short.split(",")[1],
@@ -131,6 +134,7 @@ export const generateFaceLandmarkDetectionDefaultConfig = (): FaceLandmarkDetect
     defaultConf.detectorModelKey = DetectorTypes.short
     defaultConf.landmarkModelKey = LandmarkTypes.with_attention
     defaultConf.modelType = ModelTypes.tflite
+    defaultConf.processOnLocal = false
     /// #elif BUILD_TYPE===""
     defaultConf.detectorModelTFLite = {
         "short": face_short.split(",")[1],
@@ -459,10 +463,12 @@ export class FaceLandmarkDetectionWorkerManager extends WorkerManagerBase {
         const currentParams = { ...params };
         const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
         if (!this.worker) {
+            // console.log("PREDICT ON LOCAL")
             const prediction = await this.localWorker.predict(this.config, currentParams, resizedCanvas);
             return this.generatePredictionEx(this.config, params, prediction);
         }
 
+        // console.log("PREDICT ON WEBWORKER")
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
         const prediction = (await this.sendToWorker(currentParams, imageData.data)) as Face[] | null;
         return this.generatePredictionEx(this.config, params, prediction);

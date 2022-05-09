@@ -1,4 +1,4 @@
-import { BackendTypes, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, LandmarkTypes, ModelTypes, RefinedPoints, TFLite, TFLiteFaceLandmarkDetection, WorkerCommand, WorkerResponse } from "./const";
+import { WorkerCommand, WorkerResponse, BackendTypes, FaceLandmarkDetectionConfig, FaceLandmarkDetectionOperationParams, ModelTypes, TFLite, LandmarkTypes, RefinedPoints, TFLiteFaceLandmarkDetection } from "./const";
 import { Face } from "@tensorflow-models/face-landmarks-detection";
 import { BrowserTypes } from "@dannadori/worker-base";
 const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
@@ -8,7 +8,7 @@ const ctx: Worker = self as any; // eslint-disable-line no-restricted-globals
 import * as faceLandmarksDetection from "@tensorflow-models/face-landmarks-detection";
 import * as tf from "@tensorflow/tfjs";
 import { setWasmPaths } from "@tensorflow/tfjs-backend-wasm";
-import * as faceMesh from "@mediapipe/face_mesh";
+// import * as faceMesh from "@mediapipe/face_mesh";
 /// #endif
 
 /// #if BUILD_TYPE==="mediapipe" || BUILD_TYPE==="tfjs" || BUILD_TYPE==="" 
@@ -226,21 +226,23 @@ onmessage = async (event) => {
         model = null;
         if (config.modelType === (ModelTypes.mediapipe)) {
             // Maybe this module is not work.....(20220408)
-            model = await faceLandmarksDetection.createDetector(faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh, {
-                runtime: "mediapipe",
-                refineLandmarks: config.model.refineLandmarks,
-                maxFaces: config.model.maxFaces,
-                solutionPath: `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@${faceMesh.VERSION}`,
-            });
+            // importがwebworkerで動かなくなる。undefinedのdocumentを参照してしまう。
+            // model = await faceLandmarksDetection.createDetector(faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh, {
+            //     runtime: "mediapipe",
+            //     refineLandmarks: config.model.refineLandmarks,
+            //     maxFaces: config.model.maxFaces,
+            //     // solutionPath: `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@${faceMesh.VERSION}`,
+            //     solutionPath: `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh`,
+            // });
             ctx.postMessage({ message: WorkerResponse.INITIALIZED });
         } else if (config.modelType === (ModelTypes.tfjs)) {
-
-            model = await faceLandmarksDetection.createDetector(faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh, {
-                runtime: "tfjs",
-                refineLandmarks: config.model.refineLandmarks,
-                maxFaces: config.model.maxFaces,
-            });
-            ctx.postMessage({ message: WorkerResponse.INITIALIZED });
+            // importがwebworkerで動かなくなる。undefinedのdocumentを参照してしまう。
+            // model = await faceLandmarksDetection.createDetector(faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh, {
+            //     runtime: "tfjs",
+            //     refineLandmarks: config.model.refineLandmarks,
+            //     maxFaces: config.model.maxFaces,
+            // });
+            // ctx.postMessage({ message: WorkerResponse.INITIALIZED });
         }
         /// #endif
         /// #if BUILD_TYPE==="full" || BUILD_TYPE==="short"  || BUILD_TYPE==="" ||BUILD_TYPE==="full_with_attention" || BUILD_TYPE==="short_with_attention"

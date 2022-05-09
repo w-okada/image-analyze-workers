@@ -77,6 +77,7 @@ export const generateHandPoseDetectionDefaultConfig = (): HandPoseDetectionConfi
     }
     defaultConf.modelType2 = ModelTypes2.full
     defaultConf.modelType = ModelTypes.tflite
+    defaultConf.processOnLocal = false
     /// #elif BUILD_TYPE==="lite"
     defaultConf.palmModelTFLite = {
         "lite": palm_lite.split(",")[1],
@@ -86,6 +87,7 @@ export const generateHandPoseDetectionDefaultConfig = (): HandPoseDetectionConfi
     }
     defaultConf.modelType2 = ModelTypes2.lite
     defaultConf.modelType = ModelTypes.tflite
+    defaultConf.processOnLocal = false
     /// #elif BUILD_TYPE===""
     defaultConf.palmModelTFLite = {
         "lite": palm_lite.split(",")[1],
@@ -344,11 +346,12 @@ export class HandPoseDetectionWorkerManager extends WorkerManagerBase {
 
         const resizedCanvas = this.generateTargetCanvas(targetCanvas, currentParams.processWidth, currentParams.processHeight);
         if (!this.worker) {
-            // console.log("local exec")
+            // console.log("PREDICT ON LOCAL")
             const prediction = await this.localWorker.predict(this.config, currentParams, resizedCanvas);
             return prediction || [];
             // return this.generatePredictionEx(this.config, params, prediction); // 両手を使う場合、平均化する手が特定できないのでomit.
         }
+        // console.log("PREDICT ON WEBWORKER")
         const imageData = resizedCanvas.getContext("2d")!.getImageData(0, 0, resizedCanvas.width, resizedCanvas.height);
         const prediction = (await this.sendToWorker(currentParams, imageData.data)) as Hand[] | null;
 

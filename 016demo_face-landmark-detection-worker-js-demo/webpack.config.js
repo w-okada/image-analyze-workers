@@ -6,8 +6,8 @@ const build_type = process.env.BUILD_TYPE || "";
 console.log("BUILD TYPE::", build_type);
 
 module.exports = {
-    // mode: "development",
-    mode: "production",
+    mode: "development",
+    // mode: "production",
     entry: path.resolve(__dirname, "src/index.tsx"),
     output: {
         path: path.resolve(__dirname, "dist", build_type),

@@ -406,7 +406,7 @@ const App = () => {
             try {
                 if (snap.width > 0 && snap.height > 0) {
                     const prediction = await managerRef.current!.predict(params, snap);
-                    console.log("prediction", prediction);
+                    // console.log("prediction", prediction);
                     let trackingArea = undefined;
                     if (config.modelType === ModelTypes.tflite) {
                         trackingArea = managerRef.current?.fitCroppedArea(prediction, snap.width, snap.height, 1, 1, dst.width, dst.height, 0, 0, 0, 0);
