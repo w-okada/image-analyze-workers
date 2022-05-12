@@ -145,8 +145,7 @@ export const useAppState = (): AppStateValue => {
     return state;
 };
 
-const initialInputSourcePath = "mov/Yoga.mp4";
-// const initialInputSourcePath = "img/face.png";
+const initialInputSourcePath = "mov/Model.mp4";
 
 
 
@@ -155,7 +154,7 @@ const initialParams = generateDefaultPoseLandmarkDetectionParams();
 
 export const AppStateProvider = ({ children }: Props) => {
     const TFLiteWrapperRef = useRef<TFLiteWrapper>();
-    const [tfliteWrapper, setTfliteWrapper] = useState<TFLiteWrapper|undefined>(TFLiteWrapperRef.current);
+    const [_tfliteWrapper, setTfliteWrapper] = useState<TFLiteWrapper|undefined>(TFLiteWrapperRef.current);
 
     const [applicationMode, setApplicationMode] = useState<ApplicationModes>(ApplicationModes.facemask);
 

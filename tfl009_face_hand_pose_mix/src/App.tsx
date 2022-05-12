@@ -5,11 +5,11 @@ import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 // import { useAppState } from "./provider/AppStateProvider";
 // import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 import { Credit, VideoInputSelector, VideoInputSelectorProps} from "demo-base";
-import { INPUT_HEIGHT, INPUT_WIDTH } from "./const";
 let GlobalLoopID = 0;
 
 const Controller = () => {
-const { inputSourceType, setInputSourceType, setInputSource, config, params, setConfig, setParams, applicationMode, setApplicationMode } = useAppState();
+    // const { inputSourceType, setInputSourceType, setInputSource, config, params, setConfig, setParams, applicationMode, setApplicationMode } = useAppState();
+    const { inputSourceType, setInputSourceType, setInputSource } = useAppState();
 const videoInputSelectorProps: VideoInputSelectorProps = {
     id: "video-input-selector",
     currentValue: inputSourceType || "File",
@@ -231,6 +231,10 @@ const App = () => {
             snap.height=params.processHeight
             dst.width=params.processWidth
             dst.height=params.processHeight
+            dst2.width=params.processWidth
+            dst2.height=params.processHeight
+            dst3.width=params.processWidth
+            dst3.height=params.processHeight
             const snapCtx = snap.getContext("2d")!;
             snapCtx.drawImage(inputSourceElement, 0, 0, snap.width, snap.height);
             try {
@@ -343,7 +347,6 @@ const App = () => {
                         dstCtx.lineWidth = 20;
                         dstCtx.strokeStyle="#ff0000"
                         dstCtx.beginPath();
-                        const offset=0
                         dstCtx.moveTo(face.faceKeypoints[0].x*dst.width,face.faceKeypoints[0].y*dst.height);
                         dstCtx.lineTo(face.faceKeypoints[1].x*dst.width,face.faceKeypoints[1].y*dst.height);
                         dstCtx.closePath();

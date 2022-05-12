@@ -86,7 +86,7 @@ export class TFLiteWrapper {
 
     };
 
-    execPose = (config: PoseLandmarkDetectionConfig, params: PoseLandmarkDetectionOperationParams, targetCanvas: HTMLCanvasElement) => {
+    execPose = (_config: PoseLandmarkDetectionConfig, params: PoseLandmarkDetectionOperationParams, targetCanvas: HTMLCanvasElement) => {
         const tmpCanvas = document.createElement("canvas")
         tmpCanvas.width = params.processWidth
         tmpCanvas.height = params.processHeight
@@ -194,7 +194,7 @@ export class TFLiteWrapper {
 
 
 
-    execHand = (config: PoseLandmarkDetectionConfig, params: PoseLandmarkDetectionOperationParams, targetCanvas: HTMLCanvasElement) => {
+    execHand = (_config: PoseLandmarkDetectionConfig, params: PoseLandmarkDetectionOperationParams, targetCanvas: HTMLCanvasElement) => {
         const tmpCanvas = document.createElement("canvas")
         tmpCanvas.width = params.processWidth
         tmpCanvas.height = params.processHeight
@@ -287,7 +287,7 @@ export class TFLiteWrapper {
 
     }
 
-    execFace = (config: PoseLandmarkDetectionConfig, params: PoseLandmarkDetectionOperationParams, targetCanvas: HTMLCanvasElement) => {
+    execFace = (_config: PoseLandmarkDetectionConfig, params: PoseLandmarkDetectionOperationParams, targetCanvas: HTMLCanvasElement) => {
         const tmpCanvas = document.createElement("canvas")
         tmpCanvas.width = params.processWidth
         tmpCanvas.height = params.processHeight
