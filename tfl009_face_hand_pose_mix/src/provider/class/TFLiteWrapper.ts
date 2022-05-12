@@ -23,18 +23,18 @@ export class TFLiteWrapper {
 
         // (3) Load Pose
         //// (3-1) load pose detector model
-        const tfliteModel = Buffer.from(config.modelTFLites[config.modelKey], "base64");
-        this.tflite!._initPoseDetectorModelBuffer(tfliteModel.byteLength);
-        const modelBufferOffset = this.tflite!._getPoseDetectorModelBufferAddress();
-        this.tflite!.HEAPU8.set(new Uint8Array(tfliteModel), modelBufferOffset);
-        this.tflite!._loadPoseDetectorModel(tfliteModel.byteLength);
+        const tflitePoseDetectorModel = Buffer.from(config.poseDetectorModelTFLites[config.poseModelKey], "base64");
+        this.tflite!._initPoseDetectorModelBuffer(tflitePoseDetectorModel.byteLength);
+        const poseModelBufferOffset = this.tflite!._getPoseDetectorModelBufferAddress();
+        this.tflite!.HEAPU8.set(new Uint8Array(tflitePoseDetectorModel), poseModelBufferOffset);
+        this.tflite!._loadPoseDetectorModel(tflitePoseDetectorModel.byteLength);
 
         //// (3-2) load pose landmark model
-        const tfliteLandmarkModel = Buffer.from(config.landmarkModelTFLites[config.modelKey], "base64");
-        this.tflite!._initPoseLandmarkModelBuffer(tfliteLandmarkModel.byteLength);
-        const landmarkModelBufferOffset = this.tflite!._getPoseLandmarkModelBufferAddress();
-        this.tflite!.HEAPU8.set(new Uint8Array(tfliteLandmarkModel), landmarkModelBufferOffset);
-        this.tflite!._loadPoseLandmarkModel(tfliteLandmarkModel.byteLength);
+        const tflitePoseLandmarkModel = Buffer.from(config.poseLandmarkModelTFLites[config.poseModelKey], "base64");
+        this.tflite!._initPoseLandmarkModelBuffer(tflitePoseLandmarkModel.byteLength);
+        const poseLandmarkModelBufferOffset = this.tflite!._getPoseLandmarkModelBufferAddress();
+        this.tflite!.HEAPU8.set(new Uint8Array(tflitePoseLandmarkModel), poseLandmarkModelBufferOffset);
+        this.tflite!._loadPoseLandmarkModel(tflitePoseLandmarkModel.byteLength);
 
         // (3-3) configure pose
         this.tflite!._initPoseInputBuffer(config.maxProcessWidth, config.maxProcessHeight, 4)

@@ -12,8 +12,8 @@
 #include "mediapipe_hand/NonMaxSuppression.hpp"
 #include "mediapipe_hand/PackPalmResult.hpp"
 #include "const.hpp"
-std::unique_ptr<tflite::Interpreter> interpreter;
-std::unique_ptr<tflite::Interpreter> landmarkInterpreter;
+std::unique_ptr<tflite::Interpreter> palmInterpreter;
+std::unique_ptr<tflite::Interpreter> handLandmarkInterpreter;
 static std::vector<Anchor> s_anchors;
 
 #define CHECK_TFLITE_ERROR(x)                                  \
@@ -22,7 +22,7 @@ static std::vector<Anchor> s_anchors;
         printf("[WASM] Error at %s:%d\n", __FILE__, __LINE__); \
     }
 
-class MemoryUtil
+class HandCore
 {
 private:
     int palm_input_width = 0;
@@ -70,16 +70,16 @@ public:
         resolver.AddCustom("Convolution2DTransposeBias",
                            mediapipe::tflite_operations::RegisterConvolution2DTransposeBias());
         tflite::InterpreterBuilder builder(*model, resolver);
-        builder(&interpreter);
-        CHECK_TFLITE_ERROR(interpreter != nullptr);
-        CHECK_TFLITE_ERROR(interpreter->AllocateTensors() == kTfLiteOk);
+        builder(&palmInterpreter);
+        CHECK_TFLITE_ERROR(palmInterpreter != nullptr);
+        CHECK_TFLITE_ERROR(palmInterpreter->AllocateTensors() == kTfLiteOk);
 
         printf("[WASM]: Model Info");
 
-        printf("[WASM]: INTPUT NUM: %lu\n", interpreter->inputs().size());
-        for (auto i : interpreter->inputs())
+        printf("[WASM]: INTPUT NUM: %lu\n", palmInterpreter->inputs().size());
+        for (auto i : palmInterpreter->inputs())
         {
-            const TfLiteTensor *tensor = interpreter->tensor(i);
+            const TfLiteTensor *tensor = palmInterpreter->tensor(i);
             printf("[WASM]: INTPUT[%d]: Name:%s Size:%zu\n", i, tensor->name, tensor->bytes);
             printf("[WASM]:    TYPE(1:float):%d\n", tensor->type);
             int num = tensor->dims->size;
@@ -107,10 +107,10 @@ public:
             palmType = PALM_DETECTOR_256;
         }
 
-        printf("[WASM]: OUTTPUT NUM: %lu\n", interpreter->outputs().size());
-        for (auto i : interpreter->outputs())
+        printf("[WASM]: OUTTPUT NUM: %lu\n", palmInterpreter->outputs().size());
+        for (auto i : palmInterpreter->outputs())
         {
-            const TfLiteTensor *tensor = interpreter->tensor(i);
+            const TfLiteTensor *tensor = palmInterpreter->tensor(i);
             printf("[WASM]: OUTTPUT[%d]: Name:%s Size:%zu\n", i, tensor->name, tensor->bytes);
             printf("[WASM]:    TYPE(1:float):%d\n", tensor->type);
             int num = tensor->dims->size;
@@ -122,19 +122,19 @@ public:
             printf("]\n");
         }
 
-        int output_num = interpreter->outputs().size();
+        int output_num = palmInterpreter->outputs().size();
         for (int i = 0; i < output_num; i++)
         {
-            int tensor_idx = interpreter->outputs()[i];
-            const char *tensor_name = interpreter->tensor(tensor_idx)->name;
+            int tensor_idx = palmInterpreter->outputs()[i];
+            const char *tensor_name = palmInterpreter->tensor(tensor_idx)->name;
             if (strcmp(tensor_name, "regressors") == 0 || strcmp(tensor_name, "Identity:0") == 0 || strcmp(tensor_name, "Identity") == 0)
             {
                 // regressors: old-ver, Identity:0: Pinto's, Identity: new-ver
-                points_ptr = interpreter->typed_output_tensor<float>(i);
+                points_ptr = palmInterpreter->typed_output_tensor<float>(i);
             }
             else if (strcmp(tensor_name, "classificators") == 0 || strcmp(tensor_name, "Identity_1:0") == 0 || strcmp(tensor_name, "Identity_1") == 0)
             {
-                scores_ptr = interpreter->typed_output_tensor<float>(i);
+                scores_ptr = palmInterpreter->typed_output_tensor<float>(i);
             }
             else
             {
@@ -177,16 +177,16 @@ public:
         resolver.AddCustom("Convolution2DTransposeBias",
                            mediapipe::tflite_operations::RegisterConvolution2DTransposeBias());
         tflite::InterpreterBuilder builder(*landmarkModel, resolver);
-        builder(&landmarkInterpreter);
-        CHECK_TFLITE_ERROR(landmarkInterpreter != nullptr);
-        CHECK_TFLITE_ERROR(landmarkInterpreter->AllocateTensors() == kTfLiteOk);
+        builder(&handLandmarkInterpreter);
+        CHECK_TFLITE_ERROR(handLandmarkInterpreter != nullptr);
+        CHECK_TFLITE_ERROR(handLandmarkInterpreter->AllocateTensors() == kTfLiteOk);
 
         printf("[WASM]: Model Info");
 
-        printf("[WASM]: INTPUT NUM: %lu\n", landmarkInterpreter->inputs().size());
-        for (auto i : landmarkInterpreter->inputs())
+        printf("[WASM]: INTPUT NUM: %lu\n", handLandmarkInterpreter->inputs().size());
+        for (auto i : handLandmarkInterpreter->inputs())
         {
-            const TfLiteTensor *tensor = landmarkInterpreter->tensor(i);
+            const TfLiteTensor *tensor = handLandmarkInterpreter->tensor(i);
             printf("[WASM]: INTPUT[%d]: Name:%s Size:%zu\n", i, tensor->name, tensor->bytes);
             printf("[WASM]:    TYPE(1:float):%d\n", tensor->type);
             int num = tensor->dims->size;
@@ -206,10 +206,10 @@ public:
             printf("]\n");
         }
 
-        printf("[WASM]: OUTTPUT NUM: %lu\n", landmarkInterpreter->outputs().size());
-        for (auto i : landmarkInterpreter->outputs())
+        printf("[WASM]: OUTTPUT NUM: %lu\n", handLandmarkInterpreter->outputs().size());
+        for (auto i : handLandmarkInterpreter->outputs())
         {
-            const TfLiteTensor *tensor = landmarkInterpreter->tensor(i);
+            const TfLiteTensor *tensor = handLandmarkInterpreter->tensor(i);
             printf("[WASM]: OUTTPUT[%d]: Name:%s Size:%zu\n", i, tensor->name, tensor->bytes);
             printf("[WASM]:    TYPE(1:float):%d\n", tensor->type);
             int num = tensor->dims->size;
@@ -220,23 +220,23 @@ public:
             }
             printf("]\n");
         }
-        int output_num = landmarkInterpreter->outputs().size();
+        int output_num = handLandmarkInterpreter->outputs().size();
 
         for (int j = 0; j < output_num; j++)
         {
-            int tensor_idx = landmarkInterpreter->outputs()[j];
-            const char *tensor_name = landmarkInterpreter->tensor(tensor_idx)->name;
+            int tensor_idx = handLandmarkInterpreter->outputs()[j];
+            const char *tensor_name = handLandmarkInterpreter->tensor(tensor_idx)->name;
             if (strcmp(tensor_name, "ld_21_3d") == 0 || strcmp(tensor_name, "Identity") == 0)
             {
-                landmark_ptr = landmarkInterpreter->typed_output_tensor<float>(j);
+                landmark_ptr = handLandmarkInterpreter->typed_output_tensor<float>(j);
             }
             else if (strcmp(tensor_name, "output_handflag") == 0 || strcmp(tensor_name, "Identity_1") == 0)
             {
-                handflag_ptr = landmarkInterpreter->typed_output_tensor<float>(j);
+                handflag_ptr = handLandmarkInterpreter->typed_output_tensor<float>(j);
             }
             else if (strcmp(tensor_name, "Identity_2") == 0)
             {
-                handedness_ptr = landmarkInterpreter->typed_output_tensor<float>(j);
+                handedness_ptr = handLandmarkInterpreter->typed_output_tensor<float>(j);
             }
             else
             {
@@ -281,7 +281,7 @@ public:
 
     void exec(int width, int height, int max_palm_num, int resizedFactor)
     {
-        float *input = interpreter->typed_input_tensor<float>(0);
+        float *input = palmInterpreter->typed_input_tensor<float>(0);
 
         cv::Mat inputImage(height, width, CV_8UC4, inputBuffer);
         cv::Mat temporaryImage(1024, 1024, CV_8UC4, temporaryBuffer);
@@ -306,7 +306,7 @@ public:
         }
 
         // // (2) Infer
-        CHECK_TFLITE_ERROR(interpreter->Invoke() == kTfLiteOk);
+        CHECK_TFLITE_ERROR(palmInterpreter->Invoke() == kTfLiteOk);
 
         //// decode keyoiints
         float score_thresh = 0.2f;
@@ -369,7 +369,7 @@ public:
                 maxY = height;
             }
 
-            float *landmarkInput = landmarkInterpreter->typed_input_tensor<float>(0);
+            float *landmarkInput = handLandmarkInterpreter->typed_input_tensor<float>(0);
 
             // target Imageを切り抜き
             int crop_width = maxX - minX;
@@ -440,7 +440,7 @@ public:
             }
 
             //// Landmark検出
-            CHECK_TFLITE_ERROR(landmarkInterpreter->Invoke() == kTfLiteOk);
+            CHECK_TFLITE_ERROR(handLandmarkInterpreter->Invoke() == kTfLiteOk);
 
             float score = *handflag_ptr;
             if (score > 0.0000001)

@@ -5,12 +5,12 @@ import { BackendTypes, PoseLandmarkDetectionConfig, PoseLandmarkDetectionOperati
 import { loadURLAsDataURL } from "../utils/urlReader";
 
 // @ts-ignore
-import tflite_float32 from "../../resources/tflite/detector/pose_detection.bin";
+import tflite_pose_float32 from "../../resources/tflite/detector/pose_detection.bin";
 
 
 // @ts-ignore
 // import tflite_model_landmark from "../../resources/tflite/landmark/pose_landmark_full.bin";
-import tflite_model_landmark from "../../resources/tflite/landmark/pose_landmark_lite.bin";
+import tflite_pose_model_landmark from "../../resources/tflite/landmark/pose_landmark_lite.bin";
 // import tflite_model_landmark from "../../resources/tflite/landmark/pose_landmark_heavy.bin";
 
 
@@ -33,14 +33,15 @@ export const generatePoseLandmarkDetectionDefaultConfig = (): PoseLandmarkDetect
             "tfjs-backend-wasm-threaded-simd.wasm": "/tfjs-backend-wasm-threaded-simd.wasm",
         },
         pageUrl: window.location.href,
-        modelTFLites: {
-            float32: tflite_float32.split(",")[1],
+        /** POSE */
+        poseDetectorModelTFLites: {
+            float32: tflite_pose_float32.split(",")[1],
         },
-        landmarkModelTFLites: {
-            float32: tflite_model_landmark.split(",")[1],
+        poseLandmarkModelTFLites: {
+            float32: tflite_pose_model_landmark.split(",")[1],
         },
-
-        modelKey: "float32",
+        poseModelKey: "float32",
+        
         useSimd: true,
         wasmBase64: wasm.split(",")[1],
         wasmSimdBase64: wasmSimd.split(",")[1],

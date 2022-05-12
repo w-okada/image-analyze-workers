@@ -8,68 +8,68 @@ namespace
 }
 
 auto count = 0;
-MemoryUtil *m = new MemoryUtil();
+HandCore *hand = new HandCore();
 
 extern "C"
 {
     EMSCRIPTEN_KEEPALIVE
     int initModelBuffer(int size)
     {
-        m->initModelBuffer(size);
+        hand->initModelBuffer(size);
         return 0;
     }
     EMSCRIPTEN_KEEPALIVE
     char *getModelBufferAddress()
     {
-        return m->modelBuffer;
+        return hand->modelBuffer;
     }
     EMSCRIPTEN_KEEPALIVE
     int loadModel(int size)
     {
-        m->loadModel(size);
+        hand->loadModel(size);
         return 0;
     }
 
     EMSCRIPTEN_KEEPALIVE
     int initLandmarkModelBuffer(int size)
     {
-        m->initLandmarkModelBuffer(size);
+        hand->initLandmarkModelBuffer(size);
         return 0;
     }
     EMSCRIPTEN_KEEPALIVE
     char *getLandmarkModelBufferAddress()
     {
-        return m->landmarkModelBuffer;
+        return hand->landmarkModelBuffer;
     }
     EMSCRIPTEN_KEEPALIVE
     int loadLandmarkModel(int size)
     {
-        m->loadLandmarkModel(size);
+        hand->loadLandmarkModel(size);
         return 0;
     }
 
     EMSCRIPTEN_KEEPALIVE
     int initInputBuffer(int width, int height, int channel)
     {
-        m->initInputBuffer(width, height, channel);
+        hand->initInputBuffer(width, height, channel);
         return 0;
     }
     EMSCRIPTEN_KEEPALIVE
     unsigned char *getInputBufferAddress()
     {
-        return m->inputBuffer;
+        return hand->inputBuffer;
     }
 
     EMSCRIPTEN_KEEPALIVE
     float *getOutputBufferAddress()
     {
-        return m->outputBuffer;
+        return hand->outputBuffer;
     }
 
     EMSCRIPTEN_KEEPALIVE
     unsigned char *getTemporaryBufferAddress()
     {
-        return m->temporaryBuffer;
+        return hand->temporaryBuffer;
     }
 
     // EMSCRIPTEN_KEEPALIVE
@@ -82,7 +82,7 @@ extern "C"
     EMSCRIPTEN_KEEPALIVE
     int exec(int width, int height, int max_palm_num, int resizedFactor)
     {
-        m->exec(width, height, max_palm_num, resizedFactor);
+        hand->exec(width, height, max_palm_num, resizedFactor);
         return 0;
     }
 }

@@ -14,9 +14,9 @@ export interface PoseLandmarkDetectionConfig {
     wasmPaths: { [key: string]: string };
     pageUrl: string;
 
-    modelTFLites: { [key: string]: string };
-    landmarkModelTFLites: { [key: string]: string };
-    modelKey: string;
+    poseDetectorModelTFLites: { [key: string]: string };
+    poseLandmarkModelTFLites: { [key: string]: string };
+    poseModelKey: string;
     wasmBase64: string;
     wasmSimdBase64: string;
     useSimd: boolean;
