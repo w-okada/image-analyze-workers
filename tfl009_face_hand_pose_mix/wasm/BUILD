@@ -7,8 +7,8 @@ cc_binary(
   name = "tflite",
   srcs = [
     "const.hpp",
-    "tflite.cpp", 
-    "tflite.hpp", 
+    "pose-core.cpp", 
+    "pose-core.hpp", 
     "pose.hpp", 
     "mediapipe/Anchor.cpp",
     "mediapipe/Anchor.hpp",
@@ -39,8 +39,8 @@ cc_binary(
   name = "tflite-simd",
   srcs = [
     "const.hpp",
-    "tflite.cpp", 
-    "tflite.hpp", 
+    "pose-core.cpp", 
+    "pose-core.hpp", 
     "pose.hpp", 
     "mediapipe/Anchor.cpp",
     "mediapipe/Anchor.hpp",

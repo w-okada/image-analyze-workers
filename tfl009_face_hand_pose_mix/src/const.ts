@@ -31,21 +31,22 @@ export interface PoseLandmarkDetectionOperationParams {
 }
 
 export interface TFLite extends EmscriptenModule {
-    _getInputBufferAddress(): number;
-    _getOutputBufferAddress(): number;
-    _getTemporaryBufferAddress(): number
+    /** POSE  **/
+    _getPoseInputBufferAddress(): number;
+    _getPoseOutputBufferAddress(): number;
+    _getPoseTemporaryBufferAddress(): number
 
-    _getDetectorModelBufferAddress(): number;
-    _getLandmarkModelBufferAddress(): number;
+    _getPoseDetectorModelBufferAddress(): number;
+    _getPoseLandmarkModelBufferAddress(): number;
 
-    _initDetectorModelBuffer(size: number): void;
-    _initLandmarkModelBuffer(size: number): void;
-    _initInputBuffer(width: number, height: number, channel: number): void
+    _initPoseDetectorModelBuffer(size: number): void;
+    _initPoseLandmarkModelBuffer(size: number): void;
+    _initPoseInputBuffer(width: number, height: number, channel: number): void
 
-    _loadDetectorModel(bufferSize: number): number;
-    _loadLandmarkModel(bufferSize: number): number;
-    _exec(widht: number, height: number, max_pose_num: number, resizedFactor: number, cropExt: number): number;
-    _set_calculate_mode(mode: number): number
+    _loadPoseDetectorModel(bufferSize: number): number;
+    _loadPoseLandmarkModel(bufferSize: number): number;
+    _execPose(widht: number, height: number, max_pose_num: number, resizedFactor: number, cropExt: number): number;
+    _set_pose_calculate_mode(mode: number): number
 }
 export const INPUT_WIDTH = 256
 export const INPUT_HEIGHT = 256

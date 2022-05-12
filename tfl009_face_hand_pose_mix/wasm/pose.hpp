@@ -1,23 +1,14 @@
 #ifndef __TFLITE_POSE_H__
 #define __TFLITE_POSE_H__
 
+#include "const.hpp"
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
 #define SYSTEM_MAX_POSE_NUM 20
-
-    typedef struct fvec2
-    {
-        float x, y;
-    } fvec2;
-
-    typedef struct fvec3
-    {
-        float x, y, z;
-    } fvec3;
-
     typedef struct rect_t
     {
         fvec2 topleft;

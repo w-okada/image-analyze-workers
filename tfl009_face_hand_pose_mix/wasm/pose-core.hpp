@@ -21,7 +21,7 @@ static std::vector<Anchor> s_anchors;
         printf("[WASM] Error at %s:%d\n", __FILE__, __LINE__); \
     }
 
-class MemoryUtil
+class PoseCore
 {
 private:
     int detector_input_width = 0;
@@ -46,16 +46,16 @@ public:
     ////////////////////////////////////
     // Detector
     ////////////////////////////////////
-    char *detectorModelBuffer;
-    void initDetectorModelBuffer(int size)
+    char *poseDetectorModelBuffer;
+    void initPoseDetectorModelBuffer(int size)
     {
-        detectorModelBuffer = new char[size];
+        poseDetectorModelBuffer = new char[size];
     }
-    char *getDetectorModelBufferAddress()
+    char *getPoseDetectorModelBufferAddress()
     {
-        return detectorModelBuffer;
+        return poseDetectorModelBuffer;
     }
-    int loadDetectorModel(int size)
+    int loadPoseDetectorModel(int size)
     {
         printf("[WASM] --------------------------------------------------------\n");
         printf("[WASM] - TFLite Model Loader                                  -\n");
@@ -66,7 +66,7 @@ public:
         printf("[WASM] Loading model of size: %d\n", size);
 
         // Load model
-        std::unique_ptr<tflite::FlatBufferModel> model = tflite::FlatBufferModel::BuildFromBuffer(detectorModelBuffer, size);
+        std::unique_ptr<tflite::FlatBufferModel> model = tflite::FlatBufferModel::BuildFromBuffer(poseDetectorModelBuffer, size);
         CHECK_TFLITE_ERROR(model != nullptr);
 
         tflite::ops::builtin::BuiltinOpResolver resolver;
@@ -141,17 +141,17 @@ public:
     ////////////////////////////////////
     // Landmark
     ////////////////////////////////////
-    char *landmarkModelBuffer;
-    void initLandmarkModelBuffer(int size)
+    char *poseLandmarkModelBuffer;
+    void initPoseLandmarkModelBuffer(int size)
     {
-        landmarkModelBuffer = new char[size];
+        poseLandmarkModelBuffer = new char[size];
     }
-    char *getLandmarkModelBufferAddress()
+    char *getPoseLandmarkModelBufferAddress()
     {
-        return landmarkModelBuffer;
+        return poseLandmarkModelBuffer;
     }
 
-    int loadLandmarkModel(int size)
+    int loadPoseLandmarkModel(int size)
     {
         printf("[WASM] --------------------------------------------------------\n");
         printf("[WASM] - TFLite Model Loader                                  -\n");
@@ -162,7 +162,7 @@ public:
         printf("[WASM] Loading model of size: %d\n", size);
 
         // Load model
-        std::unique_ptr<tflite::FlatBufferModel> landmarkModel = tflite::FlatBufferModel::BuildFromBuffer(landmarkModelBuffer, size);
+        std::unique_ptr<tflite::FlatBufferModel> landmarkModel = tflite::FlatBufferModel::BuildFromBuffer(poseLandmarkModelBuffer, size);
         CHECK_TFLITE_ERROR(landmarkModel != nullptr);
 
         tflite::ops::builtin::BuiltinOpResolver resolver;
@@ -225,15 +225,15 @@ public:
                 poseflag_ptr = landmarkInterpreter->typed_output_tensor<float>(j);
             }
             else if (strcmp(tensor_name, "Identity_2") == 0)
-            { //output_segmentation
+            { // output_segmentation
                 output_segmentation_ptr = landmarkInterpreter->typed_output_tensor<float>(j);
             }
             else if (strcmp(tensor_name, "Identity_3") == 0)
-            { //output_heatmap
+            { // output_heatmap
                 output_heatmap_ptr = landmarkInterpreter->typed_output_tensor<float>(j);
             }
             else if (strcmp(tensor_name, "Identity_4") == 0)
-            { //world_3d
+            { // world_3d
                 output_world3d_ptr = landmarkInterpreter->typed_output_tensor<float>(j);
             }
             else
@@ -245,44 +245,44 @@ public:
         return 0;
     }
 
-    unsigned char *inputBuffer;
-    void initInputBuffer(int width, int height, int channel)
+    unsigned char *poseInputBuffer;
+    void initPoseInputBuffer(int width, int height, int channel)
     {
-        inputBuffer = new unsigned char[width * height * channel];
-        initOutputBuffer();
-        initTemporaryBuffer();
+        poseInputBuffer = new unsigned char[width * height * channel];
+        initPoseOutputBuffer();
+        initPoseTemporaryBuffer();
     }
-    unsigned char *getInputBufferAddress()
+    unsigned char *getPoseInputBufferAddress()
     {
-        return inputBuffer;
-    }
-
-    float *outputBuffer;
-    void initOutputBuffer()
-    {
-        outputBuffer = new float[1024 * 1024];
-    }
-    float *getOutputBufferAddress()
-    {
-        return outputBuffer;
+        return poseInputBuffer;
     }
 
-    unsigned char *temporaryBuffer;
-    void initTemporaryBuffer()
+    float *poseOutputBuffer;
+    void initPoseOutputBuffer()
     {
-        temporaryBuffer = new unsigned char[2048 * 2048 * 4];
+        poseOutputBuffer = new float[1024 * 1024];
     }
-    unsigned char *getTemporaryBufferAddress()
+    float *getPoseOutputBufferAddress()
     {
-        return temporaryBuffer;
+        return poseOutputBuffer;
     }
 
-    void exec(int width, int height, int max_pose_num, int resizedFactor, float cropExtention)
+    unsigned char *poseTemporaryBuffer;
+    void initPoseTemporaryBuffer()
+    {
+        poseTemporaryBuffer = new unsigned char[2048 * 2048 * 4];
+    }
+    unsigned char *getPoseTemporaryBufferAddress()
+    {
+        return poseTemporaryBuffer;
+    }
+
+    void execPose(int width, int height, int max_pose_num, int resizedFactor, float cropExtention)
     {
         float *input = interpreter->typed_input_tensor<float>(0);
 
-        cv::Mat inputImage(height, width, CV_8UC4, inputBuffer);
-        cv::Mat temporaryImage(1024, 1024, CV_8UC4, temporaryBuffer);
+        cv::Mat inputImage(height, width, CV_8UC4, poseInputBuffer);
+        cv::Mat temporaryImage(1024, 1024, CV_8UC4, poseTemporaryBuffer);
 
         cv::Mat inputImageRGB(height, width, CV_8UC3);
         int fromTo[] = {0, 0, 1, 1, 2, 2}; // split alpha channel
@@ -484,14 +484,14 @@ public:
         }
 
         //// output
-        *outputBuffer = 0.0; // 検出した顔の数を初期化
-        float *currentOutputPosition = outputBuffer + 1;
+        *poseOutputBuffer = 0.0; // 検出した顔の数を初期化
+        float *currentOutputPosition = poseOutputBuffer + 1;
         if (pose_result.num > 0)
         {
             for (int i = 0; i < pose_result.num; i++)
             {
 
-                (*outputBuffer)++; // 検出した手の数をインクリメント
+                (*poseOutputBuffer)++; // 検出した手の数をインクリメント
                 // score, rotateion
                 *currentOutputPosition = pose_result.poses[i].score;
                 currentOutputPosition++;
@@ -564,7 +564,7 @@ public:
         }
     }
 
-    int set_calculate_mode(int mode)
+    int set_pose_calculate_mode(int mode)
     {
         calculate_mode = mode;
         return 0;

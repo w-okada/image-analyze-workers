@@ -3,10 +3,10 @@ import { TFLite, TFLitePoseLandmarkDetection, PoseLandmarkDetectionConfig, PoseL
 
 export class TFLiteWrapper {
     tflite: TFLite | null = null;
-    imageInputAddress: number = 0
-    tempImage: ImageData | null = null
-    getTemporaryImage = () => {
-        return this.tempImage;
+    poseImageInputAddress: number = 0
+    poseTempImage: ImageData | null = null
+    getPoseTemporaryImage = () => {
+        return this.poseTempImage;
     }
 
     init = async (config: PoseLandmarkDetectionConfig) => {
@@ -21,25 +21,26 @@ export class TFLiteWrapper {
             this.tflite = await mod({ wasmBinary: b });
         }
 
-        /// load detector model
+        // (3) Load Pose
+        //// (3-1) load pose detector model
         const tfliteModel = Buffer.from(config.modelTFLites[config.modelKey], "base64");
-        this.tflite!._initDetectorModelBuffer(tfliteModel.byteLength);
-        const modelBufferOffset = this.tflite!._getDetectorModelBufferAddress();
+        this.tflite!._initPoseDetectorModelBuffer(tfliteModel.byteLength);
+        const modelBufferOffset = this.tflite!._getPoseDetectorModelBufferAddress();
         this.tflite!.HEAPU8.set(new Uint8Array(tfliteModel), modelBufferOffset);
-        this.tflite!._loadDetectorModel(tfliteModel.byteLength);
+        this.tflite!._loadPoseDetectorModel(tfliteModel.byteLength);
 
-        // load landmark model
+        //// (3-2) load pose landmark model
         const tfliteLandmarkModel = Buffer.from(config.landmarkModelTFLites[config.modelKey], "base64");
-        this.tflite!._initLandmarkModelBuffer(tfliteLandmarkModel.byteLength);
-        const landmarkModelBufferOffset = this.tflite!._getLandmarkModelBufferAddress();
+        this.tflite!._initPoseLandmarkModelBuffer(tfliteLandmarkModel.byteLength);
+        const landmarkModelBufferOffset = this.tflite!._getPoseLandmarkModelBufferAddress();
         this.tflite!.HEAPU8.set(new Uint8Array(tfliteLandmarkModel), landmarkModelBufferOffset);
-        this.tflite!._loadLandmarkModel(tfliteLandmarkModel.byteLength);
+        this.tflite!._loadPoseLandmarkModel(tfliteLandmarkModel.byteLength);
 
+        // (3-3) configure pose
+        this.tflite!._initPoseInputBuffer(config.maxProcessWidth, config.maxProcessHeight, 4)
+        this.poseImageInputAddress = this.tflite!._getPoseInputBufferAddress()
+        this.tflite!._set_pose_calculate_mode(1)
 
-        this.tflite!._initInputBuffer(config.maxProcessWidth, config.maxProcessHeight, 4)
-        this.imageInputAddress = this.tflite!._getInputBufferAddress()
-
-        this.tflite!._set_calculate_mode(1)
     };
 
     exec = (config: PoseLandmarkDetectionConfig, params: PoseLandmarkDetectionOperationParams, targetCanvas: HTMLCanvasElement) => {
@@ -50,25 +51,25 @@ export class TFLiteWrapper {
         const imageData = tmpCanvas.getContext("2d")!.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height)
 
 
-        this.tflite!.HEAPU8.set(imageData.data, this.imageInputAddress);
+        this.tflite!.HEAPU8.set(imageData.data, this.poseImageInputAddress);
         // this.tflite!._copySrc2Dst(this.width, this.height, 4);
-        this.tflite!._exec(params.processWidth, params.processHeight, 1, 4, 1.8);
+        this.tflite!._execPose(params.processWidth, params.processHeight, 1, 4, 1.8);
 
         ////////////////////////
         // for debug
         /////////////////////////
-        const tempoaryAddress = this.tflite!._getTemporaryBufferAddress()
+        const tempoaryAddress = this.tflite!._getPoseTemporaryBufferAddress()
         const tmpRes = new Uint8ClampedArray(this.tflite!.HEAPU8.slice(tempoaryAddress, tempoaryAddress + params.processWidth * params.processWidth * 4));
         // console.log("tempRES", tmpRes)
         // console.log("params width", params.processWidth, params.processWidth)
         try {
-            this.tempImage = new ImageData(tmpRes, params.processWidth, params.processHeight);
+            this.poseTempImage = new ImageData(tmpRes, params.processWidth, params.processHeight);
             // this.tempImage = new ImageData(tmpRes, 840, 840);
         } catch (err) {
             console.log(err)
         }
 
-        const e = this.tflite!._getOutputBufferAddress()
+        const e = this.tflite!._getPoseOutputBufferAddress()
         // const outImage = new ImageData(new Uint8ClampedArray(this.tflite!.HEAPU8.slice(e, e + params.processWidth * params.processHeight * 4)), params.processWidth, params.processHeight)
         // return outImage
         const poseNum = this.tflite!.HEAPF32[e / 4];
