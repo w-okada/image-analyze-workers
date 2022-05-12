@@ -204,6 +204,7 @@ const App = () => {
         GlobalLoopID = LOOP_ID;
 
         const dst = document.getElementById("output") as HTMLCanvasElement;
+        const dst2 = document.getElementById("output2") as HTMLCanvasElement;
         const snap = document.createElement("canvas");
         const info = document.getElementById("info") as HTMLDivElement;
 
@@ -217,7 +218,7 @@ const App = () => {
 
         const render = async () => {
             const start = performance.now();
-            [snap, dst].forEach((x) => {
+            [snap, dst, dst2].forEach((x) => {
                 const width = inputSourceElement instanceof HTMLVideoElement ? inputSourceElement.videoWidth : inputSourceElement.naturalWidth;
                 const height = inputSourceElement instanceof HTMLVideoElement ? inputSourceElement.videoHeight : inputSourceElement.naturalHeight;
                 if (x.width != width || x.height != height) {
@@ -232,8 +233,51 @@ const App = () => {
             const snapCtx = snap.getContext("2d")!;
             snapCtx.drawImage(inputSourceElement, 0, 0, snap.width, snap.height);
             try {
+                /** Hand */
                 if (snap.width > 0 && snap.height > 0) {
-                    const res = tflite.exec(config, params, snap)
+                    const res = tflite.execHand(config, params, snap)
+                    const tempImage = tflite.getPoseTemporaryImage()
+                    console.log("HandRes:",res)
+
+                    const dstCtx = dst2.getContext("2d")!
+                    dstCtx.drawImage(snap, 0, 0, dst.width, dst.height)
+                    res.forEach(hand=>{
+                        dstCtx.fillStyle="#ff0000aa";
+                        dstCtx.fillRect(                        
+                        (hand.palm.minX)*dst.width, 
+                        (hand.palm.minY)*dst.height, 
+                        (hand.palm.maxX - hand.palm.minX)*dst.width, (hand.palm.maxY - hand.palm.minY) *dst.height)
+
+                        dstCtx.fillStyle="#00ff00aa";
+                        dstCtx.fillRect(                        
+                            (hand.hand.minX)*dst.width, 
+                            (hand.hand.minY)*dst.height, 
+                            (hand.hand.maxX - hand.hand.minX)*dst.width, 
+                            (hand.hand.maxY - hand.hand.minY) *dst.height
+                        )
+                        dstCtx.fillStyle="#0000ffaa";
+                        hand.rotatedHand.positions.forEach(p=>{
+                            dstCtx.fillRect(p.x*dst.width, p.y*dst.height, 10,10)
+                        })
+
+                        dstCtx.fillStyle="#00ffffaa";
+                        hand.palmKeypoints.forEach(p=>{
+                            dstCtx.fillRect(p.x*dst.width, p.y*dst.height, 10,10)
+                        })
+
+                        dstCtx.fillStyle="#ffffffaa";
+                        hand.landmarkKeypoints.forEach(p=>{
+                            dstCtx.fillRect(p.x*dst.width, p.y*dst.height, 10,10)
+                        })
+
+                    })
+
+
+                }
+
+                /** Pose */
+                if (snap.width > 0 && snap.height > 0) {
+                    const res = tflite.execPose(config, params, snap)
                     const tempImage = tflite.getPoseTemporaryImage()
                     if(tempImage){
                         const testCanvas = document.getElementById("test") as HTMLCanvasElement
@@ -304,9 +348,8 @@ const App = () => {
                         dstCtx.lineTo(pose.landmarkKeypoints[offset+12].x*dst.width,pose.landmarkKeypoints[offset+12].y*dst.height);
                         dstCtx.closePath();
                         dstCtx.stroke();
-
-
                     })
+
                 }
             } catch (error) {
                 console.log("ERROR drawing", error);
@@ -338,15 +381,21 @@ const App = () => {
         <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", objectFit: "contain", alignItems: "flex-start" }}>
             <div style={{ width: "100%", display: "flex", objectFit: "contain", alignItems: "flex-start" }}>
                 <div
-                    style={{ width: "33%", objectFit: "contain" }}
+                    style={{ width: "20%", objectFit: "contain" }}
                     ref={(ref) => {
                         ref?.replaceChildren(inputSourceElement);
                     }}
                 ></div>
-                <div style={{ width: "33%", objectFit: "contain" }}>
-                    <canvas id="output" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                <div style={{ width: "20%", objectFit: "contain" }}>
+                <canvas id="output" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                 </div>
-                <div style={{ width: "30%", marginLeft: "3%", objectFit: "contain" }}>
+                <div style={{ width: "20%", objectFit: "contain" }}>
+                <canvas id="output2" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                </div>
+                <div style={{ width: "20%", objectFit: "contain" }}>
+                <canvas id="output3" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                </div>
+                <div style={{ width: "20%", marginLeft: "3%", objectFit: "contain" }}>
                     <Controller></Controller>
                 </div>
                 <div style={{ position: "absolute", top: "2%", left: "2%", background: "#000000", color: "#aabbaa" }} id="info"></div>

@@ -1,5 +1,5 @@
 import { BrowserTypes, getBrowserType } from "@dannadori/000_WorkerBase";
-import { TFLite, TFLitePoseLandmarkDetection, PoseLandmarkDetectionConfig, PoseLandmarkDetectionOperationParams } from "../../const";
+import { TFLite, TFLitePoseLandmarkDetection, PoseLandmarkDetectionConfig, PoseLandmarkDetectionOperationParams, TFLiteHand } from "../../const";
 
 export class TFLiteWrapper {
     tflite: TFLite | null = null;
@@ -8,6 +8,9 @@ export class TFLiteWrapper {
     getPoseTemporaryImage = () => {
         return this.poseTempImage;
     }
+    handImageInputAddress: number = 0
+    handTempImage: ImageData | null = null
+
 
     init = async (config: PoseLandmarkDetectionConfig) => {
         const browserType = getBrowserType();
@@ -20,6 +23,24 @@ export class TFLiteWrapper {
             const b = Buffer.from(config.wasmBase64!, "base64");
             this.tflite = await mod({ wasmBinary: b });
         }
+        // (1) Hand Pose
+        /// load palm model
+        const tflitePalmDetectorModel = Buffer.from(config.palmDetectorModelTFLites[config.handModelKey], "base64");
+        this.tflite!._initPalmDetectorModelBuffer(tflitePalmDetectorModel.byteLength);
+        const palmDetectorModelBufferOffset = this.tflite!._getPalmDetectorModelBufferAddress();
+        this.tflite!.HEAPU8.set(new Uint8Array(tflitePalmDetectorModel), palmDetectorModelBufferOffset);
+        this.tflite!._loadPalmDetectorModel(tflitePalmDetectorModel.byteLength);
+
+        // load landmark model
+        const tfliteLandmarkModel = Buffer.from(config.handLandmarkModelTFLites[config.handModelKey], "base64");
+        this.tflite!._initHandLandmarkModelBuffer(tfliteLandmarkModel.byteLength);
+        const landmarkModelBufferOffset = this.tflite!._getHandLandmarkModelBufferAddress();
+        this.tflite!.HEAPU8.set(new Uint8Array(tfliteLandmarkModel), landmarkModelBufferOffset);
+        this.tflite!._loadHandLandmarkModel(tfliteLandmarkModel.byteLength);
+
+
+        this.tflite!._initHandInputBuffer(config.maxProcessWidth, config.maxProcessHeight, 4)
+        this.handImageInputAddress = this.tflite!._getHandInputBufferAddress()
 
         // (3) Load Pose
         //// (3-1) load pose detector model
@@ -43,7 +64,7 @@ export class TFLiteWrapper {
 
     };
 
-    exec = (config: PoseLandmarkDetectionConfig, params: PoseLandmarkDetectionOperationParams, targetCanvas: HTMLCanvasElement) => {
+    execPose = (config: PoseLandmarkDetectionConfig, params: PoseLandmarkDetectionOperationParams, targetCanvas: HTMLCanvasElement) => {
         const tmpCanvas = document.createElement("canvas")
         tmpCanvas.width = params.processWidth
         tmpCanvas.height = params.processHeight
@@ -146,6 +167,101 @@ export class TFLiteWrapper {
         }
         console.log(poses)
         return poses
+
+    }
+
+
+
+    execHand = (config: PoseLandmarkDetectionConfig, params: PoseLandmarkDetectionOperationParams, targetCanvas: HTMLCanvasElement) => {
+        const tmpCanvas = document.createElement("canvas")
+        tmpCanvas.width = params.processWidth
+        tmpCanvas.height = params.processHeight
+        tmpCanvas.getContext("2d")!.drawImage(targetCanvas, 0, 0, tmpCanvas.width, tmpCanvas.height)
+        const imageData = tmpCanvas.getContext("2d")!.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height)
+
+
+        this.tflite!.HEAPU8.set(imageData.data, this.handImageInputAddress);
+        // this.tflite!._copySrc2Dst(this.width, this.height, 4);
+        this.tflite!._execHand(params.processWidth, params.processHeight, 4, 2);
+
+        ////////////////////////
+        // for debug
+        /////////////////////////
+        const tempoaryAddress = this.tflite!._getHandTemporaryBufferAddress()
+        const tmpRes = new Uint8ClampedArray(this.tflite!.HEAPU8.slice(tempoaryAddress, tempoaryAddress + params.processWidth * params.processWidth * 4));
+        console.log("tempRES", tmpRes)
+        console.log("params width", params.processWidth, params.processWidth)
+        try {
+            this.handTempImage = new ImageData(tmpRes, params.processWidth, params.processHeight);
+            // this.tempImage = new ImageData(tmpRes, 840, 840);
+        } catch (err) {
+            console.log(err)
+        }
+
+        const e = this.tflite!._getHandOutputBufferAddress()
+        // const outImage = new ImageData(new Uint8ClampedArray(this.tflite!.HEAPU8.slice(e, e + params.processWidth * params.processHeight * 4)), params.processWidth, params.processHeight)
+        // return outImage
+        const handNum = this.tflite!.HEAPF32[e / 4];
+        const hands: TFLiteHand[] = []
+        for (let i = 0; i < handNum; i++) {
+            // 12: score and rects
+            //  8: ratated hand
+            // 14: palm keypoints
+            // 63: landmark keypoints
+            // -> 12 + 8 + 14 + 63 = 97
+            const offset = e / 4 + 1 + i * (97)
+            const hand: TFLiteHand = {
+                score: this.tflite!.HEAPF32[offset + 0],
+                landmarkScore: this.tflite!.HEAPF32[offset + 1],
+                handedness: this.tflite!.HEAPF32[offset + 2],
+                rotation: this.tflite!.HEAPF32[offset + 3],
+                palm: {
+                    minX: this.tflite!.HEAPF32[offset + 4],
+                    minY: this.tflite!.HEAPF32[offset + 5],
+                    maxX: this.tflite!.HEAPF32[offset + 6],
+                    maxY: this.tflite!.HEAPF32[offset + 7],
+                },
+                hand: {
+                    minX: this.tflite!.HEAPF32[offset + 8],
+                    minY: this.tflite!.HEAPF32[offset + 9],
+                    maxX: this.tflite!.HEAPF32[offset + 10],
+                    maxY: this.tflite!.HEAPF32[offset + 11],
+                },
+                rotatedHand: {
+                    positions: [
+                    ]
+                },
+                palmKeypoints: [
+                ],
+                landmarkKeypoints: [
+                ],
+            }
+            for (let j = 0; j < 4; j++) {
+                let rotatedOffset = (e / 4 + 1) + (i * 97) + (12) + (j * 2)
+                hand.rotatedHand.positions.push({
+                    x: this.tflite!.HEAPF32[rotatedOffset + 0],
+                    y: this.tflite!.HEAPF32[rotatedOffset + 1],
+                })
+            }
+            for (let j = 0; j < 7; j++) {
+                let palmKeypointOffset = (e / 4 + 1) + (i * 97) + (12 + 8) + (j * 2)
+                hand.palmKeypoints.push({
+                    x: this.tflite!.HEAPF32[palmKeypointOffset + 0],
+                    y: this.tflite!.HEAPF32[palmKeypointOffset + 1],
+                })
+            }
+            for (let j = 0; j < 21; j++) {
+                let landmarkKeypointOffset = (e / 4 + 1) + (i * 97) + (12 + 8 + 14) + (j * 3)
+                hand.landmarkKeypoints.push({
+                    x: this.tflite!.HEAPF32[landmarkKeypointOffset + 0],
+                    y: this.tflite!.HEAPF32[landmarkKeypointOffset + 1],
+                    z: this.tflite!.HEAPF32[landmarkKeypointOffset + 2],
+                })
+            }
+            hands.push(hand)
+        }
+        console.log(hands);
+        return hands
 
     }
 

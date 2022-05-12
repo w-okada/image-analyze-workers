@@ -43,16 +43,16 @@ public:
     ////////////////////////////////////
     // Palm
     ////////////////////////////////////
-    char *modelBuffer;
-    void initModelBuffer(int size)
+    char *palmDetectorModelBuffer;
+    void initPalmDetectorModelBuffer(int size)
     {
-        modelBuffer = new char[size];
+        palmDetectorModelBuffer = new char[size];
     }
-    char *getModelBufferAddress()
+    char *getPalmDetectorModelBufferAddress()
     {
-        return modelBuffer;
+        return palmDetectorModelBuffer;
     }
-    int loadModel(int size)
+    int loadPalmDetectorModel(int size)
     {
         printf("[WASM] --------------------------------------------------------\n");
         printf("[WASM] - TFLite Model Loader                                  -\n");
@@ -63,7 +63,7 @@ public:
         printf("[WASM] Loading model of size: %d\n", size);
 
         // Load model
-        std::unique_ptr<tflite::FlatBufferModel> model = tflite::FlatBufferModel::BuildFromBuffer(modelBuffer, size);
+        std::unique_ptr<tflite::FlatBufferModel> model = tflite::FlatBufferModel::BuildFromBuffer(palmDetectorModelBuffer, size);
         CHECK_TFLITE_ERROR(model != nullptr);
 
         tflite::ops::builtin::BuiltinOpResolver resolver;
@@ -149,17 +149,17 @@ public:
     ////////////////////////////////////
     // Landmark
     ////////////////////////////////////
-    char *landmarkModelBuffer;
-    void initLandmarkModelBuffer(int size)
+    char *handLandmarkModelBuffer;
+    void initHandLandmarkModelBuffer(int size)
     {
-        landmarkModelBuffer = new char[size];
+        handLandmarkModelBuffer = new char[size];
     }
-    char *getLandmarkModelBufferAddress()
+    char *getHandLandmarkModelBufferAddress()
     {
-        return landmarkModelBuffer;
+        return handLandmarkModelBuffer;
     }
 
-    int loadLandmarkModel(int size)
+    int loadHandLandmarkModel(int size)
     {
         printf("[WASM] --------------------------------------------------------\n");
         printf("[WASM] - TFLite Model Loader                                  -\n");
@@ -170,7 +170,7 @@ public:
         printf("[WASM] Loading model of size: %d\n", size);
 
         // Load model
-        std::unique_ptr<tflite::FlatBufferModel> landmarkModel = tflite::FlatBufferModel::BuildFromBuffer(landmarkModelBuffer, size);
+        std::unique_ptr<tflite::FlatBufferModel> landmarkModel = tflite::FlatBufferModel::BuildFromBuffer(handLandmarkModelBuffer, size);
         CHECK_TFLITE_ERROR(landmarkModel != nullptr);
 
         tflite::ops::builtin::BuiltinOpResolver resolver;
@@ -247,44 +247,44 @@ public:
         return 0;
     }
 
-    unsigned char *inputBuffer;
-    void initInputBuffer(int width, int height, int channel)
+    unsigned char *handInputBuffer;
+    void initHandInputBuffer(int width, int height, int channel)
     {
-        inputBuffer = new unsigned char[width * height * channel];
-        initOutputBuffer();
-        initTemporaryBuffer();
+        handInputBuffer = new unsigned char[width * height * channel];
+        initHandOutputBuffer();
+        initHandTemporaryBuffer();
     }
-    unsigned char *getInputBufferAddress()
+    unsigned char *getHandInputBufferAddress()
     {
-        return inputBuffer;
-    }
-
-    float *outputBuffer;
-    void initOutputBuffer()
-    {
-        outputBuffer = new float[1024 * 4];
-    }
-    float *getOutputBufferAddress()
-    {
-        return outputBuffer;
+        return handInputBuffer;
     }
 
-    unsigned char *temporaryBuffer;
-    void initTemporaryBuffer()
+    float *handOutputBuffer;
+    void initHandOutputBuffer()
     {
-        temporaryBuffer = new unsigned char[1024 * 1024 * 4];
+        handOutputBuffer = new float[1024 * 4];
     }
-    unsigned char *getTemporaryBufferAddress()
+    float *getHandOutputBufferAddress()
     {
-        return temporaryBuffer;
+        return handOutputBuffer;
     }
 
-    void exec(int width, int height, int max_palm_num, int resizedFactor)
+    unsigned char *handTemporaryBuffer;
+    void initHandTemporaryBuffer()
+    {
+        handTemporaryBuffer = new unsigned char[1024 * 1024 * 4];
+    }
+    unsigned char *getHandTemporaryBufferAddress()
+    {
+        return handTemporaryBuffer;
+    }
+
+    void execHand(int width, int height, int max_palm_num, int resizedFactor)
     {
         float *input = palmInterpreter->typed_input_tensor<float>(0);
 
-        cv::Mat inputImage(height, width, CV_8UC4, inputBuffer);
-        cv::Mat temporaryImage(1024, 1024, CV_8UC4, temporaryBuffer);
+        cv::Mat inputImage(height, width, CV_8UC4, handInputBuffer);
+        cv::Mat temporaryImage(1024, 1024, CV_8UC4, handTemporaryBuffer);
 
         cv::Mat inputImageRGB(height, width, CV_8UC3);
         int fromTo[] = {0, 0, 1, 1, 2, 2}; // split alpha channel
@@ -470,14 +470,14 @@ public:
             float shiftRatioX = 1;
             float shiftRatioY = 1;
             ////
-            *outputBuffer = 0.0; // 検出した手の数を初期化
-            float *currentOutputPosition = outputBuffer + 1;
+            *handOutputBuffer = 0.0; // 検出した手の数を初期化
+            float *currentOutputPosition = handOutputBuffer + 1;
             if (palm_result.num > 0)
             {
                 for (int i = 0; i < palm_result.num; i++)
                 {
 
-                    (*outputBuffer)++; // 検出した手の数をインクリメント
+                    (*handOutputBuffer)++; // 検出した手の数をインクリメント
                     // score, rotateion
                     *currentOutputPosition = palm_result.palms[i].score;
                     currentOutputPosition++;

@@ -14,9 +14,14 @@ export interface PoseLandmarkDetectionConfig {
     wasmPaths: { [key: string]: string };
     pageUrl: string;
 
+    palmDetectorModelTFLites: { [key: string]: string };
+    handLandmarkModelTFLites: { [key: string]: string };
+    handModelKey: string;
+
     poseDetectorModelTFLites: { [key: string]: string };
     poseLandmarkModelTFLites: { [key: string]: string };
     poseModelKey: string;
+
     wasmBase64: string;
     wasmSimdBase64: string;
     useSimd: boolean;
@@ -31,7 +36,24 @@ export interface PoseLandmarkDetectionOperationParams {
 }
 
 export interface TFLite extends EmscriptenModule {
-    /** POSE  **/
+    /** Hand  **/
+    _getHandInputBufferAddress(): number;
+    _getHandOutputBufferAddress(): number;
+    _getHandTemporaryBufferAddress(): number
+
+    _getPalmDetectorModelBufferAddress(): number;
+    _getHandLandmarkModelBufferAddress(): number;
+
+    _initPalmDetectorModelBuffer(size: number): void;
+    _initHandLandmarkModelBuffer(size: number): void;
+    _initHandInputBuffer(width: number, height: number, channel: number): void
+
+    _loadPalmDetectorModel(bufferSize: number): number;
+    _loadHandLandmarkModel(bufferSize: number): number;
+    _execHand(widht: number, height: number, max_palm_num: number, resizedFactor: number): number;
+
+
+    /** Pose  **/
     _getPoseInputBufferAddress(): number;
     _getPoseOutputBufferAddress(): number;
     _getPoseTemporaryBufferAddress(): number
@@ -50,6 +72,42 @@ export interface TFLite extends EmscriptenModule {
 }
 export const INPUT_WIDTH = 256
 export const INPUT_HEIGHT = 256
+
+
+export type TFLiteHand = {
+    score: number,
+    landmarkScore: number,
+    handedness: number,
+    rotation: number,
+    palm: {
+        minX: number,
+        minY: number,
+        maxX: number,
+        maxY: number,
+    },
+    hand: {
+        minX: number,
+        minY: number,
+        maxX: number,
+        maxY: number,
+    },
+    rotatedHand: {
+        positions: {
+            x: number,
+            y: number
+        }[]
+    }
+    palmKeypoints: {
+        x: number,
+        y: number
+    }[],
+    landmarkKeypoints: {
+        x: number,
+        y: number,
+        z: number
+    }[],
+}
+
 
 export type TFLitePoseLandmarkDetection = {
     score: number,

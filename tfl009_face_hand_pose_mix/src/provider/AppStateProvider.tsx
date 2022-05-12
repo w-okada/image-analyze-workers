@@ -4,10 +4,23 @@ import { ReactNode } from "react";
 import { BackendTypes, PoseLandmarkDetectionConfig, PoseLandmarkDetectionOperationParams } from "../const";
 import { loadURLAsDataURL } from "../utils/urlReader";
 
+
+
+/** (1) Hand **/
+// @ts-ignore
+import tflite_hand_float32 from "../../resources/tflite/palm/palm_detection_lite.bin";
+// import tflite_float32 from "../../resources/tflite/palm/palm_detection_full.bin";
+// import tflite_float32 from "../../resources/tflite/palm/palm_detection_old.bin";
+
+
+// @ts-ignore
+import tflite_hand_model_landmark from "../../resources/tflite/landmark/hand_landmark_lite.bin";
+// import tflite_model_landmark from "../../resources/tflite/landmark/hand_landmark_full.bin";
+// import tflite_model_landmark from "../../resources/tflite/landmark/landmark_old.bin";
+
+/** (3) Pose **/
 // @ts-ignore
 import tflite_pose_float32 from "../../resources/tflite/detector/pose_detection.bin";
-
-
 // @ts-ignore
 // import tflite_model_landmark from "../../resources/tflite/landmark/pose_landmark_full.bin";
 import tflite_pose_model_landmark from "../../resources/tflite/landmark/pose_landmark_lite.bin";
@@ -22,6 +35,11 @@ import wasm from "../../resources/wasm/tflite.wasm";
 import wasmSimd from "../../resources/wasm/tflite-simd.wasm";
 import { TFLiteWrapper } from "./class/TFLiteWrapper";
 
+
+
+
+
+
 export const generatePoseLandmarkDetectionDefaultConfig = (): PoseLandmarkDetectionConfig => {
     const defaultConf: PoseLandmarkDetectionConfig = {
         browserType: getBrowserType(),
@@ -33,7 +51,16 @@ export const generatePoseLandmarkDetectionDefaultConfig = (): PoseLandmarkDetect
             "tfjs-backend-wasm-threaded-simd.wasm": "/tfjs-backend-wasm-threaded-simd.wasm",
         },
         pageUrl: window.location.href,
-        /** POSE */
+        /** Hand */
+        palmDetectorModelTFLites: {
+            float32: tflite_hand_float32.split(",")[1],
+        },
+        handLandmarkModelTFLites: {
+            float32: tflite_hand_model_landmark.split(",")[1],
+        },
+        handModelKey:"float32",
+
+        /** Pose */
         poseDetectorModelTFLites: {
             float32: tflite_pose_float32.split(",")[1],
         },
@@ -41,7 +68,7 @@ export const generatePoseLandmarkDetectionDefaultConfig = (): PoseLandmarkDetect
             float32: tflite_pose_model_landmark.split(",")[1],
         },
         poseModelKey: "float32",
-        
+
         useSimd: true,
         wasmBase64: wasm.split(",")[1],
         wasmSimdBase64: wasmSimd.split(",")[1],
@@ -81,7 +108,7 @@ type AppStateValue = {
     config: PoseLandmarkDetectionConfig;
     setConfig: (config: PoseLandmarkDetectionConfig) => void;
     params: PoseLandmarkDetectionOperationParams;
-    setParams: (params: PoseLandmarkDetectionOperationParams) => void;
+    setParams: (config: PoseLandmarkDetectionOperationParams) => void;
     tflite?:TFLiteWrapper 
 };
 

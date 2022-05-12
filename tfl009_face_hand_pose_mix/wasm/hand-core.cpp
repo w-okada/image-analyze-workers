@@ -13,63 +13,63 @@ HandCore *hand = new HandCore();
 extern "C"
 {
     EMSCRIPTEN_KEEPALIVE
-    int initModelBuffer(int size)
+    int initPalmDetectorModelBuffer(int size)
     {
-        hand->initModelBuffer(size);
+        hand->initPalmDetectorModelBuffer(size);
         return 0;
     }
     EMSCRIPTEN_KEEPALIVE
-    char *getModelBufferAddress()
+    char *getPalmDetectorModelBufferAddress()
     {
-        return hand->modelBuffer;
+        return hand->palmDetectorModelBuffer;
     }
     EMSCRIPTEN_KEEPALIVE
-    int loadModel(int size)
+    int loadPalmDetectorModel(int size)
     {
-        hand->loadModel(size);
-        return 0;
-    }
-
-    EMSCRIPTEN_KEEPALIVE
-    int initLandmarkModelBuffer(int size)
-    {
-        hand->initLandmarkModelBuffer(size);
-        return 0;
-    }
-    EMSCRIPTEN_KEEPALIVE
-    char *getLandmarkModelBufferAddress()
-    {
-        return hand->landmarkModelBuffer;
-    }
-    EMSCRIPTEN_KEEPALIVE
-    int loadLandmarkModel(int size)
-    {
-        hand->loadLandmarkModel(size);
+        hand->loadPalmDetectorModel(size);
         return 0;
     }
 
     EMSCRIPTEN_KEEPALIVE
-    int initInputBuffer(int width, int height, int channel)
+    int initHandLandmarkModelBuffer(int size)
     {
-        hand->initInputBuffer(width, height, channel);
+        hand->initHandLandmarkModelBuffer(size);
         return 0;
     }
     EMSCRIPTEN_KEEPALIVE
-    unsigned char *getInputBufferAddress()
+    char *getHandLandmarkModelBufferAddress()
     {
-        return hand->inputBuffer;
+        return hand->handLandmarkModelBuffer;
+    }
+    EMSCRIPTEN_KEEPALIVE
+    int loadHandLandmarkModel(int size)
+    {
+        hand->loadHandLandmarkModel(size);
+        return 0;
     }
 
     EMSCRIPTEN_KEEPALIVE
-    float *getOutputBufferAddress()
+    int initHandInputBuffer(int width, int height, int channel)
     {
-        return hand->outputBuffer;
+        hand->initHandInputBuffer(width, height, channel);
+        return 0;
+    }
+    EMSCRIPTEN_KEEPALIVE
+    unsigned char *getHandInputBufferAddress()
+    {
+        return hand->handInputBuffer;
     }
 
     EMSCRIPTEN_KEEPALIVE
-    unsigned char *getTemporaryBufferAddress()
+    float *getHandOutputBufferAddress()
     {
-        return hand->temporaryBuffer;
+        return hand->handOutputBuffer;
+    }
+
+    EMSCRIPTEN_KEEPALIVE
+    unsigned char *getHandTemporaryBufferAddress()
+    {
+        return hand->handTemporaryBuffer;
     }
 
     // EMSCRIPTEN_KEEPALIVE
@@ -80,9 +80,9 @@ extern "C"
     // }
 
     EMSCRIPTEN_KEEPALIVE
-    int exec(int width, int height, int max_palm_num, int resizedFactor)
+    int execHand(int width, int height, int max_palm_num, int resizedFactor)
     {
-        hand->exec(width, height, max_palm_num, resizedFactor);
+        hand->execHand(width, height, max_palm_num, resizedFactor);
         return 0;
     }
 }
