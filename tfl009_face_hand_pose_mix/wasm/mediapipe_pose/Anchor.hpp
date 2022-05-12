@@ -1,5 +1,5 @@
-#ifndef __MEDIAPIPE_ANCHOR_HPP__
-#define __MEDIAPIPE_ANCHOR_HPP__
+#ifndef __MEDIAPIPE_POSE_ANCHOR_HPP__
+#define __MEDIAPIPE_POSE_ANCHOR_HPP__
 
 #include <vector>
 
@@ -31,4 +31,4 @@ typedef struct SsdAnchorsCalculatorOptions
 
 int generate_ssd_anchors(std::vector<Anchor> *anchors);
 
-#endif //__MEDIAPIPE_ANCHOR_HPP__
+#endif //__MEDIAPIPE_POSE_ANCHOR_HPP__

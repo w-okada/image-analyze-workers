@@ -7,9 +7,6 @@ namespace
 {
 }
 
-using std::chrono::high_resolution_clock;
-
-auto start_time = high_resolution_clock::now();
 PoseCore *pose = new PoseCore();
 
 extern "C"

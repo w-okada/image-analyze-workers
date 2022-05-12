@@ -1,18 +1,18 @@
-#ifndef __OPENCV_BARCODE_BARDETECT_HPP__
-#define __OPENCV_BARCODE_BARDETECT_HPP__
+#ifndef __POSE_CORE_HPP__
+#define __POSE_CORE_HPP__
 
 #include "tensorflow/lite/kernels/register.h"
 #include "tensorflow/lite/model.h"
 #include "opencv2/opencv.hpp"
 #include <list>
 #include "pose.hpp"
-#include "mediapipe/Anchor.hpp"
-#include "mediapipe/KeypointDecoder.hpp"
-#include "mediapipe/NonMaxSuppression.hpp"
-#include "mediapipe/PackPoseResult.hpp"
+#include "mediapipe_pose/Anchor.hpp"
+#include "mediapipe_pose/KeypointDecoder.hpp"
+#include "mediapipe_pose/NonMaxSuppression.hpp"
+#include "mediapipe_pose/PackPoseResult.hpp"
 #include "const.hpp"
-std::unique_ptr<tflite::Interpreter> interpreter;
-std::unique_ptr<tflite::Interpreter> landmarkInterpreter;
+std::unique_ptr<tflite::Interpreter> poseInterpreter;
+std::unique_ptr<tflite::Interpreter> poseLandmarkInterpreter;
 static std::vector<Anchor> s_anchors;
 
 #define CHECK_TFLITE_ERROR(x)                                  \
@@ -71,16 +71,16 @@ public:
 
         tflite::ops::builtin::BuiltinOpResolver resolver;
         tflite::InterpreterBuilder builder(*model, resolver);
-        builder(&interpreter);
-        CHECK_TFLITE_ERROR(interpreter != nullptr);
-        CHECK_TFLITE_ERROR(interpreter->AllocateTensors() == kTfLiteOk);
+        builder(&poseInterpreter);
+        CHECK_TFLITE_ERROR(poseInterpreter != nullptr);
+        CHECK_TFLITE_ERROR(poseInterpreter->AllocateTensors() == kTfLiteOk);
 
         printf("[WASM]: Model Info");
 
-        printf("[WASM]: INTPUT NUM: %lu\n", interpreter->inputs().size());
-        for (auto i : interpreter->inputs())
+        printf("[WASM]: INTPUT NUM: %lu\n", poseInterpreter->inputs().size());
+        for (auto i : poseInterpreter->inputs())
         {
-            const TfLiteTensor *tensor = interpreter->tensor(i);
+            const TfLiteTensor *tensor = poseInterpreter->tensor(i);
             printf("[WASM]: INTPUT[%d]: Name:%s Size:%zu\n", i, tensor->name, tensor->bytes);
             printf("[WASM]:    TYPE(1:float):%d\n", tensor->type);
             int num = tensor->dims->size;
@@ -100,10 +100,10 @@ public:
             printf("]\n");
         }
 
-        printf("[WASM]: OUTTPUT NUM: %lu\n", interpreter->outputs().size());
-        for (auto i : interpreter->outputs())
+        printf("[WASM]: OUTTPUT NUM: %lu\n", poseInterpreter->outputs().size());
+        for (auto i : poseInterpreter->outputs())
         {
-            const TfLiteTensor *tensor = interpreter->tensor(i);
+            const TfLiteTensor *tensor = poseInterpreter->tensor(i);
             printf("[WASM]: OUTTPUT[%d]: Name:%s Size:%zu\n", i, tensor->name, tensor->bytes);
             printf("[WASM]:    TYPE(1:float):%d\n", tensor->type);
             int num = tensor->dims->size;
@@ -115,18 +115,18 @@ public:
             printf("]\n");
         }
 
-        int output_num = interpreter->outputs().size();
+        int output_num = poseInterpreter->outputs().size();
         for (int i = 0; i < output_num; i++)
         {
-            int tensor_idx = interpreter->outputs()[i];
-            const char *tensor_name = interpreter->tensor(tensor_idx)->name;
+            int tensor_idx = poseInterpreter->outputs()[i];
+            const char *tensor_name = poseInterpreter->tensor(tensor_idx)->name;
             if (strcmp(tensor_name, "Identity") == 0)
             {
-                points_ptr = interpreter->typed_output_tensor<float>(i);
+                points_ptr = poseInterpreter->typed_output_tensor<float>(i);
             }
             else if (strcmp(tensor_name, "Identity_1") == 0)
             {
-                scores_ptr = interpreter->typed_output_tensor<float>(i);
+                scores_ptr = poseInterpreter->typed_output_tensor<float>(i);
             }
             else
             {
@@ -167,16 +167,16 @@ public:
 
         tflite::ops::builtin::BuiltinOpResolver resolver;
         tflite::InterpreterBuilder builder(*landmarkModel, resolver);
-        builder(&landmarkInterpreter);
-        CHECK_TFLITE_ERROR(landmarkInterpreter != nullptr);
-        CHECK_TFLITE_ERROR(landmarkInterpreter->AllocateTensors() == kTfLiteOk);
+        builder(&poseLandmarkInterpreter);
+        CHECK_TFLITE_ERROR(poseLandmarkInterpreter != nullptr);
+        CHECK_TFLITE_ERROR(poseLandmarkInterpreter->AllocateTensors() == kTfLiteOk);
 
         printf("[WASM]: Model Info");
 
-        printf("[WASM]: INTPUT NUM: %lu\n", landmarkInterpreter->inputs().size());
-        for (auto i : landmarkInterpreter->inputs())
+        printf("[WASM]: INTPUT NUM: %lu\n", poseLandmarkInterpreter->inputs().size());
+        for (auto i : poseLandmarkInterpreter->inputs())
         {
-            const TfLiteTensor *tensor = landmarkInterpreter->tensor(i);
+            const TfLiteTensor *tensor = poseLandmarkInterpreter->tensor(i);
             printf("[WASM]: INTPUT[%d]: Name:%s Size:%zu\n", i, tensor->name, tensor->bytes);
             printf("[WASM]:    TYPE(1:float):%d\n", tensor->type);
             int num = tensor->dims->size;
@@ -196,10 +196,10 @@ public:
             printf("]\n");
         }
 
-        printf("[WASM]: OUTTPUT NUM: %lu\n", landmarkInterpreter->outputs().size());
-        for (auto i : landmarkInterpreter->outputs())
+        printf("[WASM]: OUTTPUT NUM: %lu\n", poseLandmarkInterpreter->outputs().size());
+        for (auto i : poseLandmarkInterpreter->outputs())
         {
-            const TfLiteTensor *tensor = landmarkInterpreter->tensor(i);
+            const TfLiteTensor *tensor = poseLandmarkInterpreter->tensor(i);
             printf("[WASM]: OUTTPUT[%d]: Name:%s Size:%zu\n", i, tensor->name, tensor->bytes);
             printf("[WASM]:    TYPE(1:float):%d\n", tensor->type);
             int num = tensor->dims->size;
@@ -210,31 +210,31 @@ public:
             }
             printf("]\n");
         }
-        int output_num = landmarkInterpreter->outputs().size();
+        int output_num = poseLandmarkInterpreter->outputs().size();
 
         for (int j = 0; j < output_num; j++)
         {
-            int tensor_idx = landmarkInterpreter->outputs()[j];
-            const char *tensor_name = landmarkInterpreter->tensor(tensor_idx)->name;
+            int tensor_idx = poseLandmarkInterpreter->outputs()[j];
+            const char *tensor_name = poseLandmarkInterpreter->tensor(tensor_idx)->name;
             if (strcmp(tensor_name, "Identity") == 0)
             {
-                landmark_ptr = landmarkInterpreter->typed_output_tensor<float>(j);
+                landmark_ptr = poseLandmarkInterpreter->typed_output_tensor<float>(j);
             }
             else if (strcmp(tensor_name, "Identity_1") == 0)
             {
-                poseflag_ptr = landmarkInterpreter->typed_output_tensor<float>(j);
+                poseflag_ptr = poseLandmarkInterpreter->typed_output_tensor<float>(j);
             }
             else if (strcmp(tensor_name, "Identity_2") == 0)
             { // output_segmentation
-                output_segmentation_ptr = landmarkInterpreter->typed_output_tensor<float>(j);
+                output_segmentation_ptr = poseLandmarkInterpreter->typed_output_tensor<float>(j);
             }
             else if (strcmp(tensor_name, "Identity_3") == 0)
             { // output_heatmap
-                output_heatmap_ptr = landmarkInterpreter->typed_output_tensor<float>(j);
+                output_heatmap_ptr = poseLandmarkInterpreter->typed_output_tensor<float>(j);
             }
             else if (strcmp(tensor_name, "Identity_4") == 0)
             { // world_3d
-                output_world3d_ptr = landmarkInterpreter->typed_output_tensor<float>(j);
+                output_world3d_ptr = poseLandmarkInterpreter->typed_output_tensor<float>(j);
             }
             else
             {
@@ -279,7 +279,7 @@ public:
 
     void execPose(int width, int height, int max_pose_num, int resizedFactor, float cropExtention)
     {
-        float *input = interpreter->typed_input_tensor<float>(0);
+        float *input = poseInterpreter->typed_input_tensor<float>(0);
 
         cv::Mat inputImage(height, width, CV_8UC4, poseInputBuffer);
         cv::Mat temporaryImage(1024, 1024, CV_8UC4, poseTemporaryBuffer);
@@ -298,7 +298,7 @@ public:
 
         // // (2) Infer
         // printf("Infer!\n");
-        CHECK_TFLITE_ERROR(interpreter->Invoke() == kTfLiteOk);
+        CHECK_TFLITE_ERROR(poseInterpreter->Invoke() == kTfLiteOk);
 
         //// decode keyoiints
         float score_thresh = 0.2f;
@@ -316,7 +316,7 @@ public:
 
         for (int i = 0; i < pose_result.num; i++)
         {
-            float *landmarkInput = landmarkInterpreter->typed_input_tensor<float>(0);
+            float *landmarkInput = poseLandmarkInterpreter->typed_input_tensor<float>(0);
 
             float hipX = pose_result.poses[i].keys[0].x;
             float hipY = pose_result.poses[i].keys[0].y;
@@ -394,7 +394,7 @@ public:
             inputImage32F = inputImage32F / 255.0;
 
             //// Landmark検出
-            CHECK_TFLITE_ERROR(landmarkInterpreter->Invoke() == kTfLiteOk);
+            CHECK_TFLITE_ERROR(poseLandmarkInterpreter->Invoke() == kTfLiteOk);
 
             float score = *poseflag_ptr;
             if (score > 0.0000001)
@@ -570,4 +570,4 @@ public:
         return 0;
     }
 };
-#endif //__OPENCV_BARCODE_BARDETECT_HPP__
+#endif //__POSE_CORE_HPP__

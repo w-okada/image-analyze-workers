@@ -1,19 +1,26 @@
+#ifndef __HAND_CORE_HPP__
+#define __HAND_CORE_HPP__
 
 #include "tensorflow/lite/kernels/register.h"
 #include "tensorflow/lite/model.h"
 #include "opencv2/opencv.hpp"
 #include <list>
-#include "handpose.hpp"
+#include "hand-core.hpp"
 #include "custom_ops/transpose_conv_bias.h"
-#include "mediapipe/Anchor.hpp"
-#include "mediapipe/KeypointDecoder.hpp"
-#include "mediapipe/NonMaxSuppression.hpp"
-#include "mediapipe/PackPalmResult.hpp"
+#include "mediapipe_hand/Anchor.hpp"
+#include "mediapipe_hand/KeypointDecoder.hpp"
+#include "mediapipe_hand/NonMaxSuppression.hpp"
+#include "mediapipe_hand/PackPalmResult.hpp"
 #include "const.hpp"
-
 std::unique_ptr<tflite::Interpreter> interpreter;
 std::unique_ptr<tflite::Interpreter> landmarkInterpreter;
 static std::vector<Anchor> s_anchors;
+
+#define CHECK_TFLITE_ERROR(x)                                  \
+    if (!(x))                                                  \
+    {                                                          \
+        printf("[WASM] Error at %s:%d\n", __FILE__, __LINE__); \
+    }
 
 class MemoryUtil
 {
@@ -29,8 +36,8 @@ private:
     float *handflag_ptr;
     float *handedness_ptr;
 
-    // int palmTyp = PALM_256;
-    int palmType = PALM_192;
+    // int palmTyp = PALM_DETECTOR_256;
+    int palmType = PALM_DETECTOR_192;
 
 public:
     ////////////////////////////////////
@@ -93,11 +100,11 @@ public:
         }
         if (palm_input_width == 192)
         {
-            palmType = PALM_192;
+            palmType = PALM_DETECTOR_192;
         }
         else
         {
-            palmType = PALM_256;
+            palmType = PALM_DETECTOR_256;
         }
 
         printf("[WASM]: OUTTPUT NUM: %lu\n", interpreter->outputs().size());
@@ -287,7 +294,7 @@ public:
         cv::Mat inputImage32F(palm_input_height, palm_input_width, CV_32FC3, input);
         resizedInputImageRGB.convertTo(inputImage32F, CV_32FC3);
 
-        if (palmType == PALM_256)
+        if (palmType == PALM_DETECTOR_256)
         {
             float mean = 128.0f;
             float std = 128.0f;
@@ -421,7 +428,7 @@ public:
             cv::Mat inputImage32F(landmark_input_height, landmark_input_width, CV_32FC3, landmarkInput);
             inputImageRGB.convertTo(inputImage32F, CV_32FC3);
 
-            if (palmType == PALM_256)
+            if (palmType == PALM_DETECTOR_256)
             {
                 float mean = 128.0f;
                 float std = 128.0f;
@@ -531,3 +538,4 @@ public:
         }
     }
 };
+#endif //__HAND_CORE_HPP__

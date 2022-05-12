@@ -1,5 +1,5 @@
-#ifndef __TFLITE_HAND_POSE_H__
-#define __TFLITE_HAND_POSE_H__
+#ifndef __HAND_HPP__
+#define __HAND_HPP__
 
 #include "const.hpp"
 
@@ -56,4 +56,4 @@ extern "C"
 }
 #endif
 
-#endif /* __TFLITE_HAND_POSE_H__ */
+#endif /* __HAND_HPP__ */

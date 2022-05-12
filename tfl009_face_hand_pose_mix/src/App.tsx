@@ -234,7 +234,7 @@ const App = () => {
             try {
                 if (snap.width > 0 && snap.height > 0) {
                     const res = tflite.exec(config, params, snap)
-                    const tempImage = tflite.getTemporaryImage()
+                    const tempImage = tflite.getPoseTemporaryImage()
                     if(tempImage){
                         const testCanvas = document.getElementById("test") as HTMLCanvasElement
                         if(testCanvas.width!=tempImage.width ||testCanvas.height!=tempImage.height){
