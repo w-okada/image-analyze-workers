@@ -3,163 +3,147 @@
 ![image](https://user-images.githubusercontent.com/48346627/104487132-0b101180-5610-11eb-8182-b1be3470c9c9.png)
 
 ## Install
+
 ```
 ## install
 $ npm install @dannadori/googlemeet-segmentation-worker-js
-$ cp node_modules/@dannadori/googlemeet-segmentation-worker-js/dist/googlemeet-segmentation-worker-worker.js public/
-$ cp node_modules/\@tensorflow/tfjs-backend-wasm/dist/tfjs-backend-wasm.wasm public/
-
-## download model
-$ mkdir public/google-segmentation
-$ # curl https://flect-lab-web.s3-us-west-2.amazonaws.com/googlemeet/googlemeet-segmentation_128_32/model.json > public/google-segmentation/model.json
-$ # curl https://flect-lab-web.s3-us-west-2.amazonaws.com/googlemeet/googlemeet-segmentation_128_32/group1-shard1of1.bin > public/google-segmentation/group1-shard1of1.bin
-```
-Temporary, the model files are not available from above URL. Please get them from web.
-
-
-## API
-
-```
-export declare const generateGoogleMeetSegmentationDefaultConfig: () => GoogleMeetSegmentationConfig;
-export declare const generateDefaultGoogleMeetSegmentationParams: () => GoogleMeetSegmentationOperationParams;
-export declare const createForegroundImage: (srcCanvas: HTMLCanvasElement, prediction: number[][][]) => ImageD
-
-export declare class GoogleMeetSegmentationWorkerManager {
-    init(config: GoogleMeetSegmentationConfig | null): Promise<void>;
-    predict(targetCanvas: HTMLCanvasElement, params?: GoogleMeetSegmentationOperationParams): Promise<number[][]>;
-}
 
 ```
 
-## Configuration and Parameter
+## step by step usage
+
+examples described here is in [this repository](https://github.com/w-okada/image-analyze-workers-examples).
+
+### create workspace and install modules
 
 ```
-
-export interface GoogleMeetSegmentationConfig{
-    browserType         : BrowserType
-    processOnLocal      : boolean
-    useTFWasmBackend    : boolean
-    wasmPath            : string
-    modelPath           : string
-    workerPath          : string
-}
-
-
-export interface GoogleMeetSegmentationOperationParams{
-    type                : GoogleMeetSegmentationFunctionType
-    processWidth        : number
-    processHeight       : number
-    smoothingS          : number
-    smoothingR          : number
-    jbfWidth            : number
-    jbfHeight           : number
-
-    staticMemory        : boolean
-    lightWrapping       : boolean
-    smoothingType       : GoogleMeetSegmentationSmoothingType
-
-    originalWidth       : number
-    originalHeight      : number
-    
-}
-
-export enum GoogleMeetSegmentationFunctionType{
-    Segmentation,
-    xxx, // Not implemented
-}
-
-export enum GoogleMeetSegmentationSmoothingType{
-    GPU,
-    JS,
-    WASM,
-    JS_CANVAS,
-}
-
-```
-
-## Step by step
-### Create environment and install package
-```
-$ npx create-react-app 011demo_googlemeet-segmentation-worker-js-demo3  --template typescript
-$ cd demo/
-$ npm install
+$ mkdir example
+$ cd example/
+$ mkdir public
+$ mkdir src
+$ npm init -y
 $ npm install @dannadori/googlemeet-segmentation-worker-js
-$ cp node_modules/@dannadori/googlemeet-segmentation-worker-js/dist/googlemeet-segmentation-worker-worker.js public/
+$ npm install html-webpack-plugin react react-dom
+$ npm install -D typescript ts-loader webpack webpack-cli webpack-dev-server @types/react @types/react-dom
 ```
 
-### Download Model
+### setup workspace
+
+Copy files below from [this repository](https://github.com/w-okada/image-analyze-workers-examples/tree/master/011_googlemeet-segmentation-worker-js/example).
+
+-   package.json
+-   tsconfig.json
+-   webpack.config.js
+
+### prepaire public folder
+
+Create index.html in the public folder. The sample of index.html is here.
+
 ```
-$ mkdir public/google-segmentation
-$ curl https://flect-lab-web.s3-us-west-2.amazonaws.com/googlemeet-segmentation_128_32/model.json > public/google-segmentation/model.json
-$ curl https://flect-lab-web.s3-us-west-2.amazonaws.com/googlemeet-segmentation_128_32/group1-shard1of1.bin > public/google-segmentation/group1-shard1of1.bin
+<!DOCTYPE html>
+<html lang="ja" style="width: 100%; height: 100%; overflow: hidden">
+  <head>
+    <meta charset="utf-8" />
+    <title>exampleApp</title>
+  </head>
+  <body style="width: 100%; height: 100%; margin: 0px">
+    <noscript>
+      <strong>please enable javascript</strong>
+    </noscript>
+    <div id="app" style="width: 100%; height: 100%" />
+  </body>
+</html>
 ```
 
-### Add source image to public. 
-In this time, the name is "srcImage.jpg"
+Then, put image into the public folder
+
+### Edit src/index.tsx
+
+```
+import * as React from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+
+const container = document.getElementById("app")!;
+const root = createRoot(container);
+root.render(<App />);
+```
 
 ### Edit src/App.tsx
-Sample code is here.
 
 ```
-import React from 'react';
-import './App.css';
-import { createForegroundImage, generateDefaultGoogleMeetSegmentationParams, generateGoogleMeetSegmentationDefaultConfig, GoogleMeetSegmentationWorkerManager } from '@dannadori/googlemeet-segmentation-worker-js'
+import {
+  generateDefaultGoogleMeetSegmentationParams,
+  generateGoogleMeetSegmentationDefaultConfig,
+  GoogleMeetSegmentationWorkerManager,
+} from "@dannadori/googlemeet-segmentation-worker-js";
+import React from "react";
+import { useEffect } from "react";
 
-class App extends React.Component{
-  
-  manager = new GoogleMeetSegmentationWorkerManager()
-                
-  config = (()=>{
-    const c = generateGoogleMeetSegmentationDefaultConfig()
-    c.useTFWasmBackend = false
-    c.wasmPath = ""
-    c.modelPath="/google-segmentation/model.json"
-    c.processOnLocal=true
-    return c
-  })()
-  params = (()=>{
-    const p = generateDefaultGoogleMeetSegmentationParams()
-    p.processHeight=128
-    p.processWidth=128
-    return p
-  })()
+const config = (() => {
+  const c = generateGoogleMeetSegmentationDefaultConfig();
+  c.modelKey = "160x96"; // option: "160x96", "128x128", "256x144", "256x256"
+  c.processOnLocal = false; // if you want to run prediction on webworker, set false.
+  c.useSimd = true; // if you want to use simd, set true.
+  return c;
+})();
 
+const params = (() => {
+  const p = generateDefaultGoogleMeetSegmentationParams();
+  p.processWidth = 512; // processing image width,  should be under 1000.
+  p.processHeight = 512; // processing image height, should be under 1000.
+  return p;
+})();
 
-  srcCanvas = document.createElement("canvas")
-  dstCanvas = document.createElement("canvas")
+const App = () => {
+  useEffect(() => {
+    const input = document.getElementById("input") as HTMLImageElement;
+    const output = document.getElementById("output") as HTMLCanvasElement;
+    const tmpCanvas = document.createElement("canvas");
 
-  componentDidMount = () =>{
-    document.getRootNode().lastChild!.appendChild(this.srcCanvas)
-    document.getRootNode().lastChild!.appendChild(this.dstCanvas)
-    const srcImage = document.createElement("img")
-    srcImage.onload = () =>{
-      this.manager.init(this.config).then(()=>{
-        this.srcCanvas.getContext("2d")!.drawImage(
-          srcImage, 0, 0, this.srcCanvas.width, this.dstCanvas.height)
-        return this.manager.predict(this.srcCanvas, this.params)
-      }).then((res)=>{
-        if(res){
-          console.log("res is good")
-          const foreground = createForegroundImage(this.srcCanvas, res)
-          this.dstCanvas.getContext("2d")!.putImageData(foreground, 0, 0)
-          this.srcCanvas.getContext("2d")!.drawImage(this.dstCanvas, 0, 0, this.srcCanvas.width, this.srcCanvas.height)
-        }else{
-          console.log("res is not")
+    const manager = new GoogleMeetSegmentationWorkerManager();
+    manager.init(config).then(() => {
+      tmpCanvas.width = input.width;
+      tmpCanvas.height = input.height;
+      tmpCanvas
+        .getContext("2d")!
+        .drawImage(input, 0, 0, tmpCanvas.width, tmpCanvas.height);
+
+      console.log(tmpCanvas);
+      manager.predict(params, tmpCanvas).then((prediction) => {
+        console.log(prediction);
+        if (!prediction) {
+          return;
         }
-      })
-    }
-    srcImage.src = "./srcImage.jpg"
-  }
+        output.width = params.processWidth;
+        output.height = params.processHeight;
+        const mask = new ImageData(
+          prediction,
+          params.processWidth,
+          params.processHeight
+        );
+        const outputCtx = output.getContext("2d")!;
+        outputCtx.putImageData(mask, 0, 0);
+        outputCtx.globalCompositeOperation = "source-atop";
+        outputCtx.drawImage(tmpCanvas, 0, 0, output.width, output.height);
+      });
+    });
+  }, []);
 
-  render = ()=>{
-    return (
-      <div className="App">
+  return (
+    <div style={{ display: "flex", flexDirection: "row" }}>
+      <div>
+        <img id="input" src="./test.jpg"></img>
       </div>
-    );
-  }
-}
+      <div>
+        <canvas id="output"></canvas>
+      </div>
+    </div>
+  );
+};
 
 export default App;
+
 ```
 
 ### build and start
@@ -167,7 +151,3 @@ export default App;
 ```
 $ npm run start
 ```
-
-
-
-
