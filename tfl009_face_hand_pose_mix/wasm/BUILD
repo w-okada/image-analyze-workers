@@ -34,6 +34,19 @@ cc_binary(
     "mediapipe_hand/PackPalmResult.cpp",
     "mediapipe_hand/PackPalmResult.hpp",
 
+    "face-core.cpp", 
+    "face-core.hpp", 
+    "face.hpp", 
+    "mediapipe_face/Anchor.cpp",
+    "mediapipe_face/Anchor.hpp",
+    "mediapipe_face/KeypointDecoder.cpp",
+    "mediapipe_face/KeypointDecoder.hpp",
+    "mediapipe_face/NonMaxSuppression.cpp",
+    "mediapipe_face/NonMaxSuppression.hpp",
+    "mediapipe_face/PackFaceResult.cpp",
+    "mediapipe_face/PackFaceResult.hpp",
+
+
     ],
   linkopts = tflite_linkopts() + [
     "-s ALLOW_MEMORY_GROWTH=1",
@@ -81,7 +94,18 @@ cc_binary(
     "mediapipe_hand/NonMaxSuppression.hpp",
     "mediapipe_hand/PackPalmResult.cpp",
     "mediapipe_hand/PackPalmResult.hpp",
-    
+
+    "face-core.cpp", 
+    "face-core.hpp", 
+    "face.hpp", 
+    "mediapipe_face/Anchor.cpp",
+    "mediapipe_face/Anchor.hpp",
+    "mediapipe_face/KeypointDecoder.cpp",
+    "mediapipe_face/KeypointDecoder.hpp",
+    "mediapipe_face/NonMaxSuppression.cpp",
+    "mediapipe_face/NonMaxSuppression.hpp",
+    "mediapipe_face/PackFaceResult.cpp",
+    "mediapipe_face/PackFaceResult.hpp",
   ],
   linkopts = tflite_linkopts() + [
     "-s ALLOW_MEMORY_GROWTH=1",

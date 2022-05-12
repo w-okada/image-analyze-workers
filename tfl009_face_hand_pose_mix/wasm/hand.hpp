@@ -10,11 +10,6 @@ extern "C"
 
 #define SYSTEM_MAX_PALM_NUM 20
 #define HAND_JOINT_NUM 21
-    typedef struct rect_t
-    {
-        fvec2 topleft;
-        fvec2 btmright;
-    } rect_t;
 
     typedef struct _palm_t
     {

@@ -18,6 +18,20 @@ import tflite_hand_model_landmark from "../../resources/tflite/landmark/hand_lan
 // import tflite_model_landmark from "../../resources/tflite/landmark/hand_landmark_full.bin";
 // import tflite_model_landmark from "../../resources/tflite/landmark/landmark_old.bin";
 
+
+/** (2) Face **/
+// @ts-ignore
+import tflite_face_float32 from "../../resources/tflite/detector/face_detection_short_range.bin";
+// import tflite_float32 from "../../resources/tflite/detector/face_detection_full_range.bin";
+// import tflite_float32 from "../../resources/tflite/detector/face_detection_full_range_sparse.bin";
+
+// @ts-ignore
+// import tflite_model_landmark from "../../resources/tflite/landmark/face_landmark_with_attention.bin";
+// import tflite_model_landmark from "../../resources/tflite/landmark/model_float32.bin";
+import tflite_face_model_landmark from "../../resources/tflite/landmark/model_float16_quant.bin";
+// import tflite_model_landmark from "../../resources/tflite/landmark/face_landmark.bin";
+
+
 /** (3) Pose **/
 // @ts-ignore
 import tflite_pose_float32 from "../../resources/tflite/detector/pose_detection.bin";
@@ -59,6 +73,15 @@ export const generatePoseLandmarkDetectionDefaultConfig = (): PoseLandmarkDetect
             float32: tflite_hand_model_landmark.split(",")[1],
         },
         handModelKey:"float32",
+
+        /** Hand */
+        faceDetectorModelTFLites: {
+            float32: tflite_face_float32.split(",")[1],
+        },
+        faceLandmarkModelTFLites: {
+            float32: tflite_face_model_landmark.split(",")[1],
+        },
+        faceModelKey:"float32",
 
         /** Pose */
         poseDetectorModelTFLites: {

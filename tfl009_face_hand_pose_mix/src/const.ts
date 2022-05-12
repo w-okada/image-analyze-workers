@@ -18,6 +18,10 @@ export interface PoseLandmarkDetectionConfig {
     handLandmarkModelTFLites: { [key: string]: string };
     handModelKey: string;
 
+    faceDetectorModelTFLites: { [key: string]: string };
+    faceLandmarkModelTFLites: { [key: string]: string };
+    faceModelKey: string;
+
     poseDetectorModelTFLites: { [key: string]: string };
     poseLandmarkModelTFLites: { [key: string]: string };
     poseModelKey: string;
@@ -52,6 +56,21 @@ export interface TFLite extends EmscriptenModule {
     _loadHandLandmarkModel(bufferSize: number): number;
     _execHand(widht: number, height: number, max_palm_num: number, resizedFactor: number): number;
 
+    /** Face */
+    _getFaceInputBufferAddress(): number;
+    _getFaceOutputBufferAddress(): number;
+    _getFaceTemporaryBufferAddress(): number
+
+    _getFaceDetectorModelBufferAddress(): number;
+    _getFaceLandmarkModelBufferAddress(): number;
+
+    _initFaceDetectorModelBuffer(size: number): void;
+    _initFaceLandmarkModelBuffer(size: number): void;
+    _initFaceInputBuffer(width: number, height: number, channel: number): void
+
+    _loadFaceDetectorModel(bufferSize: number): number;
+    _loadFaceLandmarkModel(bufferSize: number): number;
+    _execFace(widht: number, height: number, max_palm_num: number): number;
 
     /** Pose  **/
     _getPoseInputBufferAddress(): number;
@@ -148,5 +167,59 @@ export type TFLitePoseLandmarkDetection = {
         z: number,
     }[],
 
+}
+
+
+export type TFLiteFaceLandmarkDetection = {
+    score: number,
+    landmarkScore: number,
+    rotation: number,
+    face: {
+        minX: number,
+        minY: number,
+        maxX: number,
+        maxY: number,
+    },
+    faceWithMargin: {
+        minX: number,
+        minY: number,
+        maxX: number,
+        maxY: number,
+    },
+    rotatedFace: {
+        positions: {
+            x: number,
+            y: number
+        }[]
+    }
+    faceKeypoints: {
+        x: number,
+        y: number
+    }[],
+    landmarkKeypoints: {
+        x: number,
+        y: number,
+        z: number
+    }[],
+    landmarkLipsKeypoints: {
+        x: number,
+        y: number
+    }[],
+    landmarkLeftEyeKeypoints: {
+        x: number,
+        y: number
+    }[],
+    landmarkRightEyeKeypoints: {
+        x: number,
+        y: number
+    }[],
+    landmarkLeftIrisKeypoints: {
+        x: number,
+        y: number
+    }[],
+    landmarkRightIrisKeypoints: {
+        x: number,
+        y: number
+    }[],
 }
 

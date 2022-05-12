@@ -3,12 +3,12 @@
 #include "Anchor.hpp"
 #include "../const.hpp"
 
-float CalculateScale(float min_scale, float max_scale, int stride_index, int num_strides)
+float HandCalculateScale(float min_scale, float max_scale, int stride_index, int num_strides)
 {
     return min_scale + (max_scale - min_scale) * 1.0 * stride_index / (num_strides - 1.0f);
 }
 
-int GenerateAnchors(std::vector<Anchor> *anchors, const SsdAnchorsCalculatorOptions &options)
+int HandGenerateAnchors(std::vector<Anchor> *anchors, const SsdAnchorsCalculatorOptions &options)
 {
     int layer_id = 0;
     while (layer_id < (int)options.strides.size())
@@ -24,7 +24,7 @@ int GenerateAnchors(std::vector<Anchor> *anchors, const SsdAnchorsCalculatorOpti
                options.strides[last_same_stride_layer] == options.strides[layer_id])
         {
             const float scale =
-                CalculateScale(options.min_scale, options.max_scale,
+                HandCalculateScale(options.min_scale, options.max_scale,
                                last_same_stride_layer, options.strides.size());
             if (last_same_stride_layer == 0 && options.reduce_boxes_in_lowest_layer)
             {
@@ -50,7 +50,7 @@ int GenerateAnchors(std::vector<Anchor> *anchors, const SsdAnchorsCalculatorOpti
                     const float scale_next =
                         last_same_stride_layer == (int)options.strides.size() - 1
                             ? 1.0f
-                            : CalculateScale(options.min_scale, options.max_scale,
+                            : HandCalculateScale(options.min_scale, options.max_scale,
                                              last_same_stride_layer + 1,
                                              options.strides.size());
                     scales.push_back(std::sqrt(scale * scale_next));
@@ -159,6 +159,6 @@ int generate_ssd_anchors(std::vector<Anchor> *anchors, int type)
         anchor_options.fixed_anchor_size = true;
     }
 
-    GenerateAnchors(anchors, anchor_options);
+    HandGenerateAnchors(anchors, anchor_options);
     return 0;
 }

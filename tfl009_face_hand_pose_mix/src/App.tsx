@@ -205,6 +205,7 @@ const App = () => {
 
         const dst = document.getElementById("output") as HTMLCanvasElement;
         const dst2 = document.getElementById("output2") as HTMLCanvasElement;
+        const dst3 = document.getElementById("output3") as HTMLCanvasElement;
         const snap = document.createElement("canvas");
         const info = document.getElementById("info") as HTMLDivElement;
 
@@ -218,7 +219,7 @@ const App = () => {
 
         const render = async () => {
             const start = performance.now();
-            [snap, dst, dst2].forEach((x) => {
+            [snap, dst, dst2, dst3].forEach((x) => {
                 const width = inputSourceElement instanceof HTMLVideoElement ? inputSourceElement.videoWidth : inputSourceElement.naturalWidth;
                 const height = inputSourceElement instanceof HTMLVideoElement ? inputSourceElement.videoHeight : inputSourceElement.naturalHeight;
                 if (x.width != width || x.height != height) {
@@ -236,8 +237,8 @@ const App = () => {
                 /** Hand */
                 if (snap.width > 0 && snap.height > 0) {
                     const res = tflite.execHand(config, params, snap)
-                    const tempImage = tflite.getPoseTemporaryImage()
-                    console.log("HandRes:",res)
+                    // const tempImage = tflite.getPoseTemporaryImage()
+                    // console.log("HandRes:",res)
 
                     const dstCtx = dst2.getContext("2d")!
                     dstCtx.drawImage(snap, 0, 0, dst.width, dst.height)
@@ -269,11 +270,88 @@ const App = () => {
                         hand.landmarkKeypoints.forEach(p=>{
                             dstCtx.fillRect(p.x*dst.width, p.y*dst.height, 10,10)
                         })
+                    })
+                }
+
+                /** Face */
+                if (snap.width > 0 && snap.height > 0) {
+                    const res = tflite.execFace(config, params, snap)
+                    // const tempImage = tflite.getPoseTemporaryImage()
+                    // console.log("FaceRes:",res)
+
+                    const dstCtx = dst3.getContext("2d")!
+                    dstCtx.drawImage(snap, 0, 0, dst.width, dst.height)
+                    res.forEach(face=>{
+                        if(face.score < 0.01 || face.landmarkScore < 0.01){
+                            return
+                        }
+                        const score =face.score.toFixed(2)
+                        const lscore = face.landmarkScore.toFixed(2)
+                        dstCtx.fillStyle="#000000";
+                        dstCtx.font = 'bold 48pt sans-serif';
+                        dstCtx.fillText(`${score}/${lscore}`, (face.face.minX)*dst.width, (face.face.minY)*dst.height)
+
+                        dstCtx.fillStyle="#ff0000aa";
+                        dstCtx.fillRect(                        
+                        (face.face.minX)*dst.width, 
+                        (face.face.minY)*dst.height, 
+                        (face.face.maxX - face.face.minX)*dst.width, (face.face.maxY - face.face.minY) *dst.height)
+
+                        dstCtx.fillStyle="#00ff00aa";
+                        dstCtx.fillRect(                        
+                            (face.faceWithMargin.minX)*dst.width, 
+                            (face.faceWithMargin.minY)*dst.height, 
+                            (face.faceWithMargin.maxX - face.faceWithMargin.minX)*dst.width, 
+                            (face.faceWithMargin.maxY - face.faceWithMargin.minY) *dst.height
+                        )
+                        dstCtx.fillStyle="#0000ffff";
+                        face.rotatedFace.positions.forEach(p=>{
+                            dstCtx.fillRect(p.x*dst.width, p.y*dst.height, 20,20)
+                        })
+
+                        dstCtx.fillStyle="#00ffffaa";
+                        face.faceKeypoints.forEach(p=>{
+                            dstCtx.fillRect(p.x*dst.width, p.y*dst.height, 10,10)
+                        })
+
+                        // dstCtx.fillStyle="#ffffffaa";
+                        // face.landmarkKeypoints.forEach(p=>{
+                        //     dstCtx.fillRect(p.x*dst.width, p.y*dst.height, 10,10)
+                        // })
+
+                        dstCtx.fillStyle="#880088aa";
+                        face.landmarkLipsKeypoints.forEach(p=>{
+                            dstCtx.fillRect(p.x*dst.width, p.y*dst.height, 10,10)
+                        })
+                        dstCtx.fillStyle="#ff0000aa";
+                        face.landmarkLeftEyeKeypoints.forEach(p=>{
+                            dstCtx.fillRect(p.x*dst.width, p.y*dst.height, 10,10)
+                        })
+                        dstCtx.fillStyle="#ffff00aa";
+                        face.landmarkRightEyeKeypoints.forEach(p=>{
+                            dstCtx.fillRect(p.x*dst.width, p.y*dst.height, 10,10)
+                        })
+                        dstCtx.fillStyle="#0000ffaa";
+                        face.landmarkLeftIrisKeypoints.forEach(p=>{
+                            dstCtx.fillRect(p.x*dst.width, p.y*dst.height, 10,10)
+                        })
+                        dstCtx.fillStyle="#ffff00aa";
+                        face.landmarkRightIrisKeypoints.forEach(p=>{
+                            dstCtx.fillRect(p.x*dst.width, p.y*dst.height, 10,10)
+                        })
+
+                        dstCtx.lineWidth = 20;
+                        dstCtx.strokeStyle="#ff0000"
+                        dstCtx.beginPath();
+                        const offset=0
+                        dstCtx.moveTo(face.faceKeypoints[0].x*dst.width,face.faceKeypoints[0].y*dst.height);
+                        dstCtx.lineTo(face.faceKeypoints[1].x*dst.width,face.faceKeypoints[1].y*dst.height);
+                        dstCtx.closePath();
+                        dstCtx.stroke();
 
                     })
-
-
                 }
+
 
                 /** Pose */
                 if (snap.width > 0 && snap.height > 0) {

@@ -7,7 +7,6 @@ namespace
 {
 }
 
-auto count = 0;
 HandCore *hand = new HandCore();
 
 extern "C"

@@ -16,12 +16,6 @@ std::unique_ptr<tflite::Interpreter> palmInterpreter;
 std::unique_ptr<tflite::Interpreter> handLandmarkInterpreter;
 static std::vector<Anchor> s_anchors;
 
-#define CHECK_TFLITE_ERROR(x)                                  \
-    if (!(x))                                                  \
-    {                                                          \
-        printf("[WASM] Error at %s:%d\n", __FILE__, __LINE__); \
-    }
-
 class HandCore
 {
 private:

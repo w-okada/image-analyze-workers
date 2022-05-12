@@ -9,12 +9,6 @@ extern "C"
 #endif
 
 #define SYSTEM_MAX_POSE_NUM 20
-    typedef struct rect_t
-    {
-        fvec2 topleft;
-        fvec2 btmright;
-    } rect_t;
-
     typedef struct _pose_t
     {
         float score;
