@@ -54,7 +54,7 @@ public:
         printf("[WASM] -   https://github.com/w-okada/image-analyze-workers   -\n");
         printf("[WASM] --------------------------------------------------------\n");
         printf("[WASM] \n");
-        printf("[WASM] Loading model of size: %d\n", size);
+        printf("[WASM] Palm Detector Model size: %d\n", size);
 
         // Load model
         std::unique_ptr<tflite::FlatBufferModel> model = tflite::FlatBufferModel::BuildFromBuffer(palmDetectorModelBuffer, size);
@@ -161,7 +161,7 @@ public:
         printf("[WASM] -   https://github.com/w-okada/image-analyze-workers   -\n");
         printf("[WASM] --------------------------------------------------------\n");
         printf("[WASM] \n");
-        printf("[WASM] Loading model of size: %d\n", size);
+        printf("[WASM] Hand Landmark Model size: %d\n", size);
 
         // Load model
         std::unique_ptr<tflite::FlatBufferModel> landmarkModel = tflite::FlatBufferModel::BuildFromBuffer(handLandmarkModelBuffer, size);
