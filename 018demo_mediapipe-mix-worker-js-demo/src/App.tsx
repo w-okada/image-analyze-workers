@@ -1,10 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
-import { BlazePoseWorkerManager, useAppState, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes } from "./provider/AppStateProvider";
-import { BlazePoseDrawer } from "./BlazePoseDrawer";
+import { useAppState } from "./provider/AppStateProvider";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "@dannadori/demo-base";
-
+import { MediapipeMixWorkerManager, OperationType } from "@dannadori/mediapipe-mix-worker-js";
+import { BlazePoseDrawer } from "./BlazePoseDrawer";
+import { FacemeshDrawer } from "./FacemeshDrawer";
+import { HandPoseDetectionDrawer } from "./HandPoseDetectionDrawer";
+import { FacePredictionEx, HandPredictionEx, PosePredictionEx } from "@dannadori/mediapipe-mix-worker-js/dist/const";
 let GlobalLoopID = 0;
 
 const Controller = () => {
@@ -17,6 +20,20 @@ const Controller = () => {
         onInputSourceChanged: setInputSource,
     };
 
+    const operationTypeSelectorProps: CommonSelectorProps<OperationType> = {
+        id: "operation-type-selector",
+        title: "operation type",
+        currentValue: params.operationType,
+        options: {
+            hand: OperationType.hand,
+            face: OperationType.face,
+            pose: OperationType.pose,
+        },
+        onChange: (value: OperationType) => {
+            params.operationType = value;
+            setConfig({ ...config });
+        },
+    };
     const onLocalSwitchProps: CommonSwitchProps = {
         id: "on-local-switch",
         title: "process on local",
@@ -27,73 +44,18 @@ const Controller = () => {
         },
     };
 
-    const backendSelectorProps: CommonSelectorProps<BackendTypes> = {
-        id: "backend-selector",
-        title: "internal resolution",
-        currentValue: config.backendType,
-        options: {
-            WebGL: BackendTypes.WebGL,
-            wasm: BackendTypes.wasm,
-            cpu: BackendTypes.cpu,
-        },
-        onChange: (value: BackendTypes) => {
-            config.backendType = value;
-            setConfig({ ...config });
-        },
-    };
-
-    const modelTypeSelectorProps: CommonSelectorProps<ModelTypes> = {
-        id: "model-type-selector",
-        title: "model type",
-        currentValue: config.modelType,
-        options: {
-            mediapipe: "mediapipe",
-            tfjs: "tfjs",
-            tflite: "tflite",
-        },
-        onChange: (value: ModelTypes) => {
-            config.modelType = value;
-            setConfig({ ...config });
-        },
-    };
-
-    const detectorModelTypeSelectorProps: CommonSelectorProps<DetectorTypes> = {
-        id: "detector-model-type-selector",
-        title: "detector model type",
-        currentValue: config.detectorModelKey,
-        options: {
-            lite: DetectorTypes.lite,
-        },
-        onChange: (value: DetectorTypes) => {
-            config.detectorModelKey = value;
-            setConfig({ ...config });
-        },
-    };
-    const landmarkModelTypeSelectorProps: CommonSelectorProps<LandmarkTypes> = {
-        id: "landmark-model-type-selector",
-        title: "landmark model type",
-        currentValue: config.landmarkModelKey,
-        options: {
-            lite: LandmarkTypes.lite,
-            full: LandmarkTypes.full,
-            heavy: LandmarkTypes.heavy,
-        },
-        onChange: (value: LandmarkTypes) => {
-            config.landmarkModelKey = value;
-            setConfig({ ...config });
-        },
-    };
-
     const processWidthSliderProps: CommonSliderProps = {
         id: "process-width-slider",
         title: "process width",
-        currentValue: params.processWidth,
+        currentValue: params.faceProcessWidth,
         max: 1000,
         min: 100,
         step: 10,
         width: "30%",
         onChange: (value: number) => {
-            params.processWidth = value;
+            params.handProcessWidth = value;
+            params.faceProcessWidth = value;
+            params.poseProcessWidth = value;
             setParams({ ...params });
         },
         integer: true,
@@ -101,13 +63,15 @@ const Controller = () => {
     const processHeightSliderProps: CommonSliderProps = {
         id: "process-height-slider",
         title: "process height",
-        currentValue: params.processHeight,
+        currentValue: params.faceProcessHeight,
         max: 1000,
         min: 100,
         step: 10,
         width: "30%",
         onChange: (value: number) => {
-            params.processHeight = value;
+            params.handProcessHeight = value;
+            params.faceProcessHeight = value;
+            params.poseProcessHeight = value;
             setParams({ ...params });
         },
         integer: true,
@@ -116,13 +80,14 @@ const Controller = () => {
     const movingAverageWindowSliderProps: CommonSliderProps = {
         id: "moving-average-window-slider",
         title: "moving average window",
-        currentValue: params.movingAverageWindow,
+        currentValue: params.faceMovingAverageWindow,
         max: 100,
         min: 1,
         step: 1,
         width: "30%",
         onChange: (value: number) => {
-            params.movingAverageWindow = value;
+            params.faceMovingAverageWindow = value;
+            params.poseMovingAverageWindow = value;
             setParams({ ...params });
         },
         integer: true,
@@ -131,13 +96,14 @@ const Controller = () => {
     const affineResizedSliderProps: CommonSliderProps = {
         id: "affine-resized-slider",
         title: "affine resized ",
-        currentValue: params.affineResizedFactor,
+        currentValue: params.handAffineResizedFactor,
         max: 8,
         min: 1,
         step: 1,
         width: "30%",
         onChange: (value: number) => {
-            params.affineResizedFactor = value;
+            params.handAffineResizedFactor = value;
+            params.poseAffineResizedFactor = value;
             setParams({ ...params });
         },
         integer: true,
@@ -145,84 +111,40 @@ const Controller = () => {
     const cropExtentionSliderProps: CommonSliderProps = {
         id: "crop-extention-slider",
         title: "crop extention",
-        currentValue: params.cropExt,
+        currentValue: params.poseCropExt,
         max: 2,
         min: 1,
         step: 0.1,
         width: "30%",
         onChange: (value: number) => {
-            params.cropExt = value;
+            params.poseCropExt = value;
             setParams({ ...params });
         },
         integer: false,
     };
 
-    const availableConfigTable = useMemo(() => {
-        return (
-            <table className="table table-compact w-full">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>type</th>
-                        <th>backend</th>
-                        <th>webworker</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th>1</th>
-                        <td>mediapipe</td>
-                        <td>any(no difference)</td>
-                        <td>no</td>
-                    </tr>
-                    <tr>
-                        <th>2</th>
-                        <td>tfjs</td>
-                        <td>webgl,cpu</td>
-                        <td>yes</td>
-                    </tr>
-                    <tr>
-                        <th>3</th>
-                        <td>tflite</td>
-                        <td>wasm</td>
-                        <td>yes</td>
-                    </tr>
-                </tbody>
-            </table>
-        );
-    }, []);
-
     return (
         <div style={{ display: "flex", flexDirection: "column" }}>
             <Credit></Credit>
-            <div>
-                <div>available config</div>
-                <div>{availableConfigTable}</div>
-            </div>
             <VideoInputSelector {...videoInputSelectorProps}></VideoInputSelector>
             <CommonSwitch {...onLocalSwitchProps}></CommonSwitch>
-            <CommonSelector {...backendSelectorProps}></CommonSelector>
-            <CommonSelector {...modelTypeSelectorProps}></CommonSelector>
-            <CommonSelector {...detectorModelTypeSelectorProps}></CommonSelector>
-            <CommonSelector {...landmarkModelTypeSelectorProps}></CommonSelector>
-
+            <CommonSelector {...operationTypeSelectorProps}></CommonSelector>
             <CommonSlider {...processWidthSliderProps}></CommonSlider>
             <CommonSlider {...processHeightSliderProps}></CommonSlider>
             <CommonSlider {...movingAverageWindowSliderProps}></CommonSlider>
             <CommonSlider {...affineResizedSliderProps}></CommonSlider>
             <CommonSlider {...cropExtentionSliderProps}></CommonSlider>
-            {/* <CommonSlider {...maxFaceSliderProps}></CommonSlider> moving averageを使うので複数検出はしない*/}
         </div>
     );
 };
 const App = () => {
     console.log("render2");
     const { inputSource, config, params } = useAppState();
-    const managerRef = useRef<BlazePoseWorkerManager>();
-    const [manager, setManager] = useState<BlazePoseWorkerManager | undefined>(managerRef.current);
+    const managerRef = useRef<MediapipeMixWorkerManager>();
+    const [manager, setManager] = useState<MediapipeMixWorkerManager | undefined>(managerRef.current);
     useEffect(() => {
         const loadModel = async () => {
-            const m = manager ? manager : new BlazePoseWorkerManager();
+            const m = manager ? manager : new MediapipeMixWorkerManager();
             await m.init(config);
             managerRef.current = m;
             setManager(managerRef.current);
@@ -230,13 +152,21 @@ const App = () => {
         loadModel();
     }, [config]);
 
-    const drawer = useMemo(() => {
+    const handDrawer = useMemo(() => {
+        return new HandPoseDetectionDrawer();
+    }, []);
+    const faceDrawer = useMemo(() => {
+        return new FacemeshDrawer();
+    }, []);
+    const poseDrawer = useMemo(() => {
         return new BlazePoseDrawer();
     }, []);
 
     useEffect(() => {
         const output = document.getElementById("output") as HTMLCanvasElement;
-        drawer.setOutputCanvas(output);
+        handDrawer.setOutputCanvas(output);
+        faceDrawer.setOutputCanvas(output);
+        poseDrawer.setOutputCanvas(output);
     }, []);
 
     const inputSourceElement = useMemo(() => {
@@ -305,9 +235,15 @@ const App = () => {
             try {
                 if (snap.width > 0 && snap.height > 0) {
                     const prediction = await managerRef.current!.predict(params, snap);
-                    console.log("prediction", prediction);
+                    // console.log("prediction", prediction);
                     if (prediction) {
-                        drawer.draw(snap, config, params, prediction);
+                        if (prediction.operationType === OperationType.hand) {
+                            handDrawer.draw(snap, config, params, prediction as HandPredictionEx);
+                        } else if (prediction.operationType === OperationType.face) {
+                            faceDrawer.draw(snap, config, params, prediction as FacePredictionEx);
+                        } else {
+                            poseDrawer.draw(snap, config, params, prediction as PosePredictionEx);
+                        }
                     }
                 }
             } catch (error) {

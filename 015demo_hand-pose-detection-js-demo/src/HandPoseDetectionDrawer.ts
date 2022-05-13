@@ -21,7 +21,7 @@ export class HandPoseDetectionDrawer {
         outputCtx.fillStyle = "#4169e1aa";
         prediction.forEach(hand => {
             if (config.modelType === "tflite") {
-                if (hand.score < 0.00) {
+                if (hand.score < 0.70) {
                     return
                 }
                 hand.keypoints.forEach(key => {
