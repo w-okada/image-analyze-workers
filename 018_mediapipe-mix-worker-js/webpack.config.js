@@ -2,8 +2,8 @@ const path = require("path");
 const webpack = require("webpack");
 
 const manager = {
-    // mode: "development",
-    mode: "production",
+    mode: "development",
+    // mode: "production",
     entry: "./src/mediapipe-mix-worker.ts",
     resolve: {
         extensions: [".ts", ".js"],

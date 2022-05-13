@@ -14,9 +14,25 @@ import { BoundingBox } from "@tensorflow-models/face-landmarks-detection/dist/sh
 export { OperationType, MediapipeMixConfig, MediapipeMixOperationParams, HandPredictionEx, FacePredictionEx, PosePredictionEx, PartsLookupIndices, TRIANGULATION, NUM_KEYPOINTS, FingerLookupIndices }
 
 // @ts-ignore
-import palmDetectorTFLite from "../resources/tflite/detector/palm_detection_lite.bin";
+import palmDetectorTFLite from "../resources/tflite/detector/palm_detection_lite.bin"; // 78m
+// import palmDetectorTFLite from "../resources/pinto/hand/palm_detection/saved_model_lite/model_dynamic_range_quant.bin"; // very slow
+// import palmDetectorTFLite from "../resources/pinto/hand/palm_detection/saved_model_lite/model_float16_quant.bin"; // 78m
+// import palmDetectorTFLite from "../resources/pinto/hand/palm_detection/saved_model_lite/model_float32.bin"; // 77m / large size
+// import palmDetectorTFLite from "../resources/pinto/hand/palm_detection/saved_model_lite/model_full_integer_quant.bin"; // not work
+// import palmDetectorTFLite from "../resources/pinto/hand/palm_detection/saved_model_lite/model_full_integer_quant_edgetpu.bin"; // not work
+// import palmDetectorTFLite from "../resources/pinto/hand/palm_detection/saved_model_lite/model_integer_quant.bin"; // slow // 116m
+// import palmDetectorTFLite from "../resources/pinto/hand/palm_detection/saved_model_lite/model_weight_quant.bin"; // very slow
+// import palmDetectorTFLite from "../resources/pinto/hand/palm_detection/saved_model_full/model_float16_quant.bin"; // 88m
+
 // @ts-ignore
 import handLandmarkLiteTFLite from "../resources/tflite/landmark/hand_landmark_lite.bin";
+// import handLandmarkLiteTFLite from "../resources/pinto/hand/hand_landmark/saved_model_hand_landmark_lite/model_dynamic_range_quant.bin"; // very slow
+// import handLandmarkLiteTFLite from "../resources/pinto/hand/hand_landmark/saved_model_hand_landmark_lite/model_float16_quant.bin"; // 77m
+// import handLandmarkLiteTFLite from "../resources/pinto/hand/hand_landmark/saved_model_hand_landmark_lite/model_float32.bin"; // 78m
+// import handLandmarkLiteTFLite from "../resources/pinto/hand/hand_landmark/saved_model_hand_landmark_lite/model_full_integer_quant.bin"; // not work
+// import handLandmarkLiteTFLite from "../resources/pinto/hand/hand_landmark/saved_model_hand_landmark_lite/model_integer_quant.bin"; // not work
+// import handLandmarkLiteTFLite from "../resources/pinto/hand/hand_landmark/saved_model_hand_landmark_lite/model_weight_quant.bin"; // very slow
+
 // @ts-ignore
 import faceDetectorTFLite from "../resources/tflite/detector/face_detection_short_range.bin";
 // @ts-ignore
@@ -521,7 +537,9 @@ export class LocalMM extends LocalWorker {
                     yMax: x.pose.maxY,
                     width: x.pose.maxX - x.pose.minX,
                     height: x.pose.maxY - x.pose.maxY
-                }
+                },
+                // score: x.score, // not accurate
+                score: x.landmarkScore
             }
 
             return pose
