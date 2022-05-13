@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import { BlazePoseWorkerManager, useAppState, BackendTypes, DetectorTypes, LandmarkTypes, ModelTypes } from "./provider/AppStateProvider";
-import { BlazePoseDrawer } from "./BlazeFaceDrawer";
+import { BlazePoseDrawer } from "./BlazePoseDrawer";
 import { DataTypesOfDataURL, getDataTypeOfDataURL } from "./utils/urlReader";
 import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, CommonSwitch, CommonSwitchProps, Credit, VideoInputSelector, VideoInputSelectorProps } from "@dannadori/demo-base";
 
