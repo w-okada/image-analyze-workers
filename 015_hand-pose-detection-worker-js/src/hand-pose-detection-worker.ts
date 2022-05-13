@@ -311,7 +311,9 @@ export class LocalHP extends LocalWorker {
                 const hand: Hand = {
                     keypoints: [...x.landmarkKeypoints],
                     handedness: x.handedness < 0.5 ? "Left" : "Right",
-                    score: x.landmarkScore
+                    // score: x.landmarkScore, // not work??
+                    score: x.score
+
                 }
                 return hand
             })
