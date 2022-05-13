@@ -220,15 +220,15 @@ public:
         {
             int tensor_idx = handLandmarkInterpreter->outputs()[j];
             const char *tensor_name = handLandmarkInterpreter->tensor(tensor_idx)->name;
-            if (strcmp(tensor_name, "ld_21_3d") == 0 || strcmp(tensor_name, "Identity") == 0)
+            if (strcmp(tensor_name, "ld_21_3d") == 0 || strcmp(tensor_name, "Identity") == 0 || strcmp(tensor_name, "Identity:0") == 0)
             {
                 landmark_ptr = handLandmarkInterpreter->typed_output_tensor<float>(j);
             }
-            else if (strcmp(tensor_name, "output_handflag") == 0 || strcmp(tensor_name, "Identity_1") == 0)
+            else if (strcmp(tensor_name, "output_handflag") == 0 || strcmp(tensor_name, "Identity_1") == 0 || strcmp(tensor_name, "Identity_1:0") == 0)
             {
                 handflag_ptr = handLandmarkInterpreter->typed_output_tensor<float>(j);
             }
-            else if (strcmp(tensor_name, "Identity_2") == 0)
+            else if (strcmp(tensor_name, "Identity_2") == 0 || strcmp(tensor_name, "Identity_2:0") == 0)
             {
                 handedness_ptr = handLandmarkInterpreter->typed_output_tensor<float>(j);
             }
