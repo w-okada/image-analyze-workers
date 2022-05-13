@@ -69,24 +69,27 @@ Note. some module is not provided as webworker for safari because of it's restri
   - [MediaPipe BlazePose](#mediapipe-blazepose)
     - [installation and usage](#installation-and-usage-16)
     - [demo](#demo-16)
+  - [MediaPipe Mix](#mediapipe-mix)
+    - [installation and usage](#installation-and-usage-17)
+    - [demo](#demo-17)
 - [TFLite Wasm](#tflite-wasm)
   - [Google meet person segmentation(TFLite wasm)](#google-meet-person-segmentationtflite-wasm)
-    - [demo](#demo-17)
-  - [White-Box-Cartoon(TFLite wasm)](#white-box-cartoontflite-wasm)
     - [demo](#demo-18)
+  - [White-Box-Cartoon(TFLite wasm)](#white-box-cartoontflite-wasm)
+    - [demo](#demo-19)
     - [License](#license-1)
   - [ESPCN (TFLite wasm)](#espcn-tflite-wasm)
-    - [demo](#demo-19)
+    - [demo](#demo-20)
 - [Libs](#libs)
   - [FaceSwap](#faceswap)
-    - [demo](#demo-20)
+    - [demo](#demo-21)
 - [Experiments](#experiments)
   - [Exp.1 Multi-version based tfjs model](#exp1-multi-version-based-tfjs-model)
-    - [demo](#demo-21)
+    - [demo](#demo-22)
     - [src](#src)
     - [Citation](#citation-1)
   - [Exp.2 Performance improvement](#exp2-performance-improvement)
-    - [demo](#demo-22)
+    - [demo](#demo-23)
     - [src](#src-1)
     - [Citation](#citation-2)
 - [Reference](#reference-1)
@@ -396,6 +399,19 @@ This project (code, pre-trained models, demos, etc.) is released under the Creat
 [mediapipe(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/mediapipe/index.html)
 [tfjs](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t17_blaze-pose/tfjs/index.html)
 [tfjs(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t17_blaze-pose/tfjs/index.html)
+
+## MediaPipe Mix
+
+Compose Mediapipe models(hand, face, pose).
+
+### installation and usage
+
+[See here](/018_mediapipe-mix-worker-js)
+
+### demo
+
+[all](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t18_mediapipe-mix/index.html)
+[all(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t18_mediapipe-mix/index.html)
 
 # TFLite Wasm
 
