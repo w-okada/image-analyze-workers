@@ -147,7 +147,9 @@ const predict = async (config: BlazePoseConfig, params: BlazePoseOperationParams
                     yMax: x.pose.maxY,
                     width: x.pose.maxX - x.pose.minX,
                     height: x.pose.maxY - x.pose.maxY
-                }
+                },
+                // score: x.score, // not accurate
+                score: x.landmarkScore
             }
 
             return pose
