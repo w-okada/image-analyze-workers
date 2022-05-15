@@ -151,3 +151,40 @@ export default App;
 ```
 $ npm run start
 ```
+
+## Parameters
+
+### Config
+
+You can configure the module by setting configuration created at `const c = generateGoogleMeetSegmentationDefaultConfig(); ` above smaple.
+
+```
+export interface MediapipeMixConfig {
+    processOnLocal: boolean;
+}
+
+export interface GoogleMeetSegmentationConfig {
+    processOnLocal: boolean;  // Run the module on webworker or local thread(main thread).
+    modelKey: string; // which model you want to use. "160x96", "128x128", "256x144", "256x256"
+    useSimd: boolean; // use wasm-simd or normal wasm.
+}
+```
+
+### Parameter
+
+You can configure the operation by setting paramters created at `const p = generateDefaultGoogleMeetSegmentationParams();` above smaple.
+
+```
+export interface GoogleMeetSegmentationOperationParams {
+    jbfD: number;                      // Diameter of each pixel neighborhood that is used during filtering. If it is non-positive, it is computed from sigmaSpace .
+    jbfSigmaC: number;                 // Filter sigma in the color space. A larger value of the parameter means that farther colors within the pixel neighborhood (see sigmaSpace ) will be mixed together, resulting in larger areas of semi-equal color.
+    jbfSigmaS: number;                 // Filter sigma in the coordinate space. A larger value of the parameter means that farther pixels will influence each other as long as their colors are close enough (see sigmaColor ). When d>0 , it specifies the neighborhood size regardless of sigmaSpace .
+    jbfPostProcess: PostProcessTypes;  // PostProcess type(0: none, 1: softmax, 2:joint bilateral filter, 3: both softmax and joint bilateral filter)
+
+    threshold: number; // Threshold
+    interpolation: InterpolationTypes; // interpolation when enlarge the mask from model output to input process size.
+
+    processWidth: number; // image width pose prediction. up to 1024
+    processHeight: number;// image height prediction. up to 1024
+}
+```

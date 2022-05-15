@@ -44,7 +44,6 @@ export interface GoogleMeetSegmentationConfig {
 
 export interface GoogleMeetSegmentationOperationParams {
     type: GoogleMeetSegmentationFunctionType;
-    processSizeKey: string;
 
     jbfD: number;
     jbfSigmaC: number;

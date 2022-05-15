@@ -112,7 +112,6 @@ export const generateGoogleMeetSegmentationDefaultConfig = (): GoogleMeetSegment
 export const generateDefaultGoogleMeetSegmentationParams = (): GoogleMeetSegmentationOperationParams => {
     const defaultParams: GoogleMeetSegmentationOperationParams = {
         type: GoogleMeetSegmentationFunctionType.Segmentation,
-        processSizeKey: "256x256",
         jbfD: 0,
         jbfSigmaC: 2,
         jbfSigmaS: 2,
