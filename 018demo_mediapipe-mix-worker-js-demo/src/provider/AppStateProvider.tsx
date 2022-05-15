@@ -33,6 +33,7 @@ const initialInputSourcePath = "mov/Happy.mp4";
 
 const initialConfig = generateMediapipeMixDefaultConfig();
 const initialParams = generateDefaultMediapipeMixParams();
+initialConfig.processOnLocal = false;
 initialParams.faceProcessWidth = 512;
 initialParams.faceProcessHeight = 512;
 

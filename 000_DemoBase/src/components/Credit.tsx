@@ -1,24 +1,23 @@
 import React, { useMemo } from "react";
 
 // @ts-ignore
-import homepage from "../../resources/logos/home.svg";
+import homepageSvg from "../../resources/logos/home.svg";
 // @ts-ignore
-import github from "../../resources/logos/github.svg";
+import githubSvg from "../../resources/logos/github.svg";
 // @ts-ignore
-import twitter from "../../resources/logos/twitter.svg";
+import twitterSvg from "../../resources/logos/twitter.svg";
 // @ts-ignore
-import linkedin from "../../resources/logos/linkedin.svg";
-
+import linkedinSvg from "../../resources/logos/linkedin.svg";
 // @ts-ignore
-import blog from "../../resources/logos/file-text.svg";
+import blogSvg from "../../resources/logos/file-text.svg";
 
 export type CreditProps = {
-    title?: string;
-    homepage?: string;
-    github?: string;
-    twitter?: string;
-    linkedin?: string;
-    blog?: string;
+    title: string;
+    homepage: string;
+    github: string;
+    twitter: string;
+    linkedin: string;
+    blog: string;
 };
 
 export type LinkIconProps = {
@@ -37,7 +36,7 @@ const LinkIcon = (props: LinkIconProps) => {
     );
 };
 
-const creditProps: CreditProps = {
+const defaultProps: CreditProps = {
     title: "Created by w-okada. FLECT, Co., Ltd.",
     homepage: "https://www.flect.co.jp/",
     github: "https://github.com/w-okada/image-analyze-workers",
@@ -46,40 +45,47 @@ const creditProps: CreditProps = {
     blog: "https://medium.com/@dannadori",
 };
 
-export const Credit = (props: CreditProps = creditProps) => {
+// using default parameters
+// https://stackoverflow.com/questions/47774695/react-functional-component-default-props-vs-default-parameters
+export const Credit = ({ title = defaultProps.title, homepage = defaultProps.homepage, github = defaultProps.github, twitter = defaultProps.twitter, linkedin = defaultProps.linkedin, blog = defaultProps.blog }) => {
     // const props = creditProps;
-    const homepageIcon = props.homepage ? (
+
+    const homepageIcon = homepage ? (
         useMemo(() => {
-            return <LinkIcon tooltip="homepage" icon={homepage} url={props.homepage!} />;
+            return (
+                <>
+                    <LinkIcon tooltip="homepage" icon={homepageSvg} url={homepage!} />
+                </>
+            );
         }, [])
     ) : (
         <></>
     );
 
-    const githubIcon = props.github ? (
+    const githubIcon = github ? (
         useMemo(() => {
-            return <LinkIcon tooltip="github" icon={github} url={props.github!} />;
+            return <LinkIcon tooltip="github" icon={githubSvg} url={github!} />;
         }, [])
     ) : (
         <></>
     );
-    const twitterIcon = props.twitter ? (
+    const twitterIcon = twitter ? (
         useMemo(() => {
-            return <LinkIcon tooltip="twitter" icon={twitter} url={props.twitter!} />;
+            return <LinkIcon tooltip="twitter" icon={twitterSvg} url={twitter!} />;
         }, [])
     ) : (
         <></>
     );
-    const linkedInIcon = props.linkedin ? (
+    const linkedInIcon = linkedin ? (
         useMemo(() => {
-            return <LinkIcon tooltip="linkedin" icon={linkedin} url={props.linkedin!} />;
+            return <LinkIcon tooltip="linkedin" icon={linkedinSvg} url={linkedin!} />;
         }, [])
     ) : (
         <></>
     );
-    const blogIcon = props.blog ? (
+    const blogIcon = blog ? (
         useMemo(() => {
-            return <LinkIcon tooltip="blog" icon={blog} url={props.blog!} />;
+            return <LinkIcon tooltip="blog" icon={blogSvg} url={blog!} />;
         }, [])
     ) : (
         <></>
@@ -89,7 +95,7 @@ export const Credit = (props: CreditProps = creditProps) => {
         <div style={{ display: "flex", flexDirection: "column", margin: "5px" }}>
             <div>
                 <p className="text-slate-600" style={{ fontSize: "0.75rem" }}>
-                    {props.title}
+                    {title}
                 </p>
             </div>
             <div style={{ display: "flex", margin: "5px" }}>

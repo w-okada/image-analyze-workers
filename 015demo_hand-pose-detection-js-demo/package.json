@@ -66,7 +66,7 @@
     },
     "dependencies": {
         "@dannadori/hand-pose-detection-worker-js": "^1.0.22",
-        "@dannadori/demo-base": "^1.0.11",
+        "@dannadori/demo-base": "^1.0.12",
         "react": "^18.1.0",
         "react-dom": "^18.1.0"
     }
