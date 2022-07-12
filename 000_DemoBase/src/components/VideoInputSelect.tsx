@@ -27,7 +27,9 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
         setVideoDevices(videoDevices);
     };
     useEffect(() => {
-        loadDevices();
+        if (!props.onlyFile) {
+            loadDevices();
+        }
     }, []);
 
     /// Load Camera
@@ -178,7 +180,7 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
     };
 
     const chooseWindowClicked = () => {
-        navigator.mediaDevices.getDisplayMedia().then((media) => {
+        navigator.mediaDevices.getDisplayMedia({ audio: true }).then((media) => {
             props.onInputSourceChanged(media);
         });
     };
@@ -186,7 +188,7 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
     return (
         <div style={{ display: "flex" }}>
             <div>
-                <CommonSelector {...commonSelectorProps}></CommonSelector>
+                {props.onlyFile ? <></> : <CommonSelector {...commonSelectorProps}></CommonSelector>}
                 {props.currentValue === "File" ? (
                     <div style={{ display: "flex" }}>
                         <button
