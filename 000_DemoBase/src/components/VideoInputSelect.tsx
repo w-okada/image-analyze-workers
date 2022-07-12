@@ -180,7 +180,7 @@ export const VideoInputSelector = (props: VideoInputSelectorProps) => {
     };
 
     const chooseWindowClicked = () => {
-        navigator.mediaDevices.getDisplayMedia({ audio: true }).then((media) => {
+        navigator.mediaDevices.getDisplayMedia({ audio: true, video: true }).then((media) => {
             props.onInputSourceChanged(media);
         });
     };
