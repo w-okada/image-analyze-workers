@@ -72,24 +72,27 @@ Note. some module is not provided as webworker for safari because of it's restri
   - [MediaPipe Mix](#mediapipe-mix)
     - [installation and usage](#installation-and-usage-17)
     - [demo](#demo-17)
+  - [MediaPipe Mix2](#mediapipe-mix2)
+    - [installation and usage](#installation-and-usage-18)
+    - [demo](#demo-18)
 - [TFLite Wasm](#tflite-wasm)
   - [Google meet person segmentation(TFLite wasm)](#google-meet-person-segmentationtflite-wasm)
-    - [demo](#demo-18)
-  - [White-Box-Cartoon(TFLite wasm)](#white-box-cartoontflite-wasm)
     - [demo](#demo-19)
+  - [White-Box-Cartoon(TFLite wasm)](#white-box-cartoontflite-wasm)
+    - [demo](#demo-20)
     - [License](#license-1)
   - [ESPCN (TFLite wasm)](#espcn-tflite-wasm)
-    - [demo](#demo-20)
+    - [demo](#demo-21)
 - [Libs](#libs)
   - [FaceSwap](#faceswap)
-    - [demo](#demo-21)
+    - [demo](#demo-22)
 - [Experiments](#experiments)
   - [Exp.1 Multi-version based tfjs model](#exp1-multi-version-based-tfjs-model)
-    - [demo](#demo-22)
+    - [demo](#demo-23)
     - [src](#src)
     - [Citation](#citation-1)
   - [Exp.2 Performance improvement](#exp2-performance-improvement)
-    - [demo](#demo-23)
+    - [demo](#demo-24)
     - [src](#src-1)
     - [Citation](#citation-2)
 - [Reference](#reference-1)
@@ -402,7 +405,7 @@ This project (code, pre-trained models, demos, etc.) is released under the Creat
 
 ## MediaPipe Mix
 
-Compose Mediapipe models(hand, face, pose).
+Compose Mediapipe models(hand, face, pose). This module bundles whole models in one file. If you want to split them, use [MediaPipe Mix2](#mediapipe-mix2).
 
 ### installation and usage
 
@@ -412,6 +415,23 @@ Compose Mediapipe models(hand, face, pose).
 
 [all](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t18_mediapipe-mix/index.html)
 [all(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t18_mediapipe-mix/index.html)
+
+
+## MediaPipe Mix2
+![image](https://user-images.githubusercontent.com/48346627/181917376-fd2cbb95-918c-4564-97df-b9051293fb07.png)
+
+Compose Mediapipe models(hand, face, pose) version2. This module load models from external path. This requires some of skills. If you want to use simply, use  [MediaPipe Mix](#mediapipe-mix).
+
+### installation and usage
+
+[See here](/019_mediapipe-mix-worker-js)
+
+### demo
+
+[all](https://d3iwgbxa9wipu8.cloudfront.net/P01_wokers/t19_mediapipe-mix2/index.html)
+[all(slow)](https://flect-lab-web.s3-us-west-2.amazonaws.com/P01_wokers/t19_mediapipe-mix2/index.html)
+
+
 
 # TFLite Wasm
 
