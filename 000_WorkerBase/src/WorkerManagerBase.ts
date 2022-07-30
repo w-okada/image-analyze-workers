@@ -62,6 +62,7 @@ export abstract class WorkerManagerBase<T extends Config, S extends OperationPar
                     reject();
                 }
             };
+
             newWorker.postMessage({
                 message: WorkerCommand.INITIALIZE,
                 config: config,
