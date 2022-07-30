@@ -30,28 +30,29 @@ export class MediapipeMix2WorkerManager extends WorkerManagerBase<MediapipeMix2C
     generateDefaultConfig = async (props?: MediapipeMixWorkerManager2Props) => {
         // (1) Load Wasm
         const wasmUrl = props?.wasmUrl || require("./resources/wasm/tflite-simd.wasm") as string
-        const wasmBin = await this.fetchData(wasmUrl)
+        const wasmBinP = this.fetchData(wasmUrl)
 
         // (2) Load TFLite
         const palmDetectorModelTFLiteUrl = props?.palmDetectorModelTFLiteUrl || require("./resources/tflite/detector/palm_detection_lite.bin") as string
-        const palmDetectorModelTFLite = await this.fetchData(palmDetectorModelTFLiteUrl)
+        const palmDetectorModelTFLiteP = this.fetchData(palmDetectorModelTFLiteUrl)
 
         const handLandmarkLiteTFLiteUrl = props?.handLandmarkLiteTFLiteUrl || require("./resources/tflite/landmark/hand_landmark_lite.bin")
-        const handLandmarkLiteTFLite = await this.fetchData(handLandmarkLiteTFLiteUrl)
+        const handLandmarkLiteTFLiteP = this.fetchData(handLandmarkLiteTFLiteUrl)
 
         const faceDetectorModelTFLiteUrl = props?.faceDetectorModelTFLiteUrl || require("./resources/tflite/detector/face_detection_short_range.bin")
-        const faceDetectorModelTFLite = await this.fetchData(faceDetectorModelTFLiteUrl)
+        const faceDetectorModelTFLiteP = this.fetchData(faceDetectorModelTFLiteUrl)
 
         const faceLandmarkModelTFLiteUrl = props?.faceLandmarkModelTFLiteUrl || require("./resources/tflite/landmark/model_float16_quant.bin")
-        const faceLandmarkModelTFLite = await this.fetchData(faceLandmarkModelTFLiteUrl)
+        const faceLandmarkModelTFLiteP = this.fetchData(faceLandmarkModelTFLiteUrl)
 
         const poseDetectorModelTFLiteUrl = props?.poseDetectorModelTFLiteUrl || require("./resources/tflite/detector/pose_detection.bin")
-        const poseDetectorModelTFLite = await this.fetchData(poseDetectorModelTFLiteUrl)
+        const poseDetectorModelTFLiteP = this.fetchData(poseDetectorModelTFLiteUrl)
 
 
         const poseLandmarkModelTFLiteUrl = props?.poseLandmarkModelTFLiteUrl || require("./resources/tflite/landmark/pose_landmark_lite.bin")
-        const poseLandmarkModelTFLite = await this.fetchData(poseLandmarkModelTFLiteUrl)
+        const poseLandmarkModelTFLiteP = this.fetchData(poseLandmarkModelTFLiteUrl)
 
+        const [wasmBin, palmDetectorModelTFLite, handLandmarkLiteTFLite, faceDetectorModelTFLite, faceLandmarkModelTFLite, poseDetectorModelTFLite, poseLandmarkModelTFLite] = await Promise.all([wasmBinP, palmDetectorModelTFLiteP, handLandmarkLiteTFLiteP, faceDetectorModelTFLiteP, faceLandmarkModelTFLiteP, poseDetectorModelTFLiteP, poseLandmarkModelTFLiteP])
 
         const defaultConf: MediapipeMix2Config = {
             browserType: getBrowserType(),
