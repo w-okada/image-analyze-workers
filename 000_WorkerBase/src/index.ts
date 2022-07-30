@@ -1,5 +1,5 @@
-import { WorkerManagerBase, LocalWorker } from "./WorkerManagerBase";
+import { WorkerManagerBase, ImageProcessor } from "./WorkerManagerBase";
 import { getBrowserType, BrowserTypes } from "./BrowserUtil";
 
-export { WorkerManagerBase, LocalWorker };
+export { WorkerManagerBase, ImageProcessor };
 export { getBrowserType, BrowserTypes };

@@ -2,14 +2,12 @@ import { BlockingQueue } from "./BlockingQueue";
 import { BrowserTypes, getBrowserType } from "./BrowserUtil";
 import { WorkerCommand, WorkerResponse } from "./const";
 
-export abstract class LocalWorker {
-    abstract init: (config: any | null) => Promise<void>;
-    abstract predict: (config: any, params: any, targets: any) => Promise<any>;
-}
 export abstract class ImageProcessor {
-    abstract init: (config: any | null) => Promise<void>;
-    abstract predict: (config: any, params: any, targets: any) => Promise<any>;
+    abstract init: (config: Config | null) => Promise<void>;
+    abstract predict: (config: Config, params: OperationParams, targets: any) => Promise<any>;
 }
+export type Config = {}
+export type OperationParams = {}
 
 export type WorkerManagerBaseInitProps = {
     useWorkerForSafari: boolean;
@@ -21,8 +19,8 @@ export abstract class WorkerManagerBase {
     abstract imageProcessor: ImageProcessor;
     worker: Worker | null = null;
 
-    abstract init: (config: any | null) => Promise<void>;
-    abstract predict: (params: any, targets: any) => Promise<any>;
+    abstract init: (config: Config | null) => Promise<void>;
+    abstract predict: (params: OperationParams, targets: any) => Promise<any>;
 
     sem = new BlockingQueue<number>();
 
@@ -38,7 +36,7 @@ export abstract class WorkerManagerBase {
         this.sem.enqueue(num + 1);
     };
 
-    initCommon = async (props: WorkerManagerBaseInitProps, config: any) => {
+    initCommon = async (props: WorkerManagerBaseInitProps, config: Config) => {
         const num = await this.lock();
         if (this.worker) {
             this.worker.terminate();
@@ -103,7 +101,7 @@ export abstract class WorkerManagerBase {
         return this.targetCanvas;
     };
 
-    sendToWorker = async (params: any, data: any, transferable = true) => {
+    sendToWorker = async (params: OperationParams, data: any, transferable = true) => {
         if (this.sem.length > 100) {
             throw new Error(`queue is fulled: ${this.sem.length}`);
         }
