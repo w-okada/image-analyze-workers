@@ -1,4 +1,5 @@
-import { FacePredictionEx, MediapipeMix2Config, MediapipeMix2OperationParams, NUM_KEYPOINTS, TRIANGULATION } from "@dannadori/mediapipe-mix-worker-js-no-bundle-worker";
+import { FacePredictionEx, MediapipeMix2Config, MediapipeMix2OperationParams, NUM_KEYPOINTS, TRIANGULATION } from "@dannadori/mediapipe-mix2-worker-js";
+
 
 
 export class FacemeshDrawer {

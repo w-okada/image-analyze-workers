@@ -1,4 +1,4 @@
-import { MediapipeMix2Config, MediapipeMix2OperationParams, PartsLookupIndices, PosePredictionEx } from "@dannadori/mediapipe-mix-worker-js-no-bundle-worker";
+import { MediapipeMix2Config, MediapipeMix2OperationParams, PartsLookupIndices, PosePredictionEx } from "@dannadori/mediapipe-mix2-worker-js";
 
 
 const colors: { [key: string]: string } = {

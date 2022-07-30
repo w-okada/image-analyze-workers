@@ -1,4 +1,4 @@
-import { FingerLookupIndices, HandPredictionEx, MediapipeMix2Config, MediapipeMix2OperationParams } from "@dannadori/mediapipe-mix-worker-js-no-bundle-worker";
+import { FingerLookupIndices, HandPredictionEx, MediapipeMix2Config, MediapipeMix2OperationParams } from "@dannadori/mediapipe-mix2-worker-js";
 
 export class HandPoseDetectionDrawer {
     private outputCanvas: HTMLCanvasElement | null = null;

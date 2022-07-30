@@ -6,7 +6,8 @@ import { CommonSelector, CommonSelectorProps, CommonSlider, CommonSliderProps, C
 import { BlazePoseDrawer } from "./BlazePoseDrawer";
 import { FacemeshDrawer } from "./FacemeshDrawer";
 import { HandPoseDetectionDrawer } from "./HandPoseDetectionDrawer";
-import { FacePredictionEx, HandPredictionEx, OperationType, PosePredictionEx } from "@dannadori/mediapipe-mix-worker-js-no-bundle-worker";
+import { FacePredictionEx, HandPredictionEx, OperationType, PosePredictionEx } from "@dannadori/mediapipe-mix2-worker-js";
+
 let GlobalLoopID = 0;
 
 const Controller = () => {

@@ -1,5 +1,4 @@
-import { MediapipeMix2WorkerManager } from "@dannadori/mediapipe-mix-worker-js-no-bundle-worker";
-import { MediapipeMix2Config, MediapipeMix2OperationParams } from "@dannadori/mediapipe-mix-worker-js-no-bundle-worker/dist/const";
+import { MediapipeMix2Config, MediapipeMix2OperationParams, MediapipeMix2WorkerManager } from "@dannadori/mediapipe-mix2-worker-js";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { ReactNode } from "react";
 import { loadURLAsDataURL } from "../utils/urlReader";
@@ -59,9 +58,7 @@ export const AppStateProvider = ({ children }: Props) => {
         setDefaultConfig();
     }, []);
     useEffect(() => {
-        console.log("changConfig1", config);
         manager.init(config);
-        console.log("changConfig2", config);
     }, [config]);
 
     useEffect(() => {
