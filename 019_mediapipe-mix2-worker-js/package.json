@@ -1,6 +1,6 @@
 {
-    "name": "@dannadori/mediapipe-mix-worker-js-no-bundle-worker",
-    "version": "1.0.3",
+    "name": "@dannadori/mediapipe-mix2-worker-js",
+    "version": "1.0.2",
     "description": "",
     "main": "dist/index.js",
     "scripts": {

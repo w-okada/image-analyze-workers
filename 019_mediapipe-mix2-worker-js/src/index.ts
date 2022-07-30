@@ -20,9 +20,6 @@ export type MediapipeMixWorkerManager2Props = {
     faceLandmarkModelTFLiteUrl?: string,
     poseDetectorModelTFLiteUrl?: string,
     poseLandmarkModelTFLiteUrl?: string,
-
-    jsUrl?: string,
-
 }
 
 export class MediapipeMix2WorkerManager extends WorkerManagerBase<MediapipeMix2Config, MediapipeMix2OperationParams> {
