@@ -2,12 +2,13 @@ import { BlockingQueue } from "./BlockingQueue";
 import { BrowserTypes, getBrowserType } from "./BrowserUtil";
 import { WorkerCommand, WorkerResponse } from "./const";
 
-export abstract class ImageProcessor {
-    abstract init: (config: Config | null) => Promise<void>;
-    abstract predict: (config: Config, params: OperationParams, targets: any) => Promise<any>;
-}
 export type Config = {}
 export type OperationParams = {}
+
+export abstract class ImageProcessor<T extends Config, S extends OperationParams> {
+    abstract init: (config: T) => Promise<void>;
+    abstract predict: (config: T, params: S, targets: any) => Promise<any>;
+}
 
 export type WorkerManagerBaseInitProps = {
     useWorkerForSafari: boolean;
@@ -15,12 +16,12 @@ export type WorkerManagerBaseInitProps = {
     workerJs?: () => Worker;
 };
 
-export abstract class WorkerManagerBase {
-    abstract imageProcessor: ImageProcessor;
+export abstract class WorkerManagerBase<T extends Config, S extends OperationParams>  {
+    abstract imageProcessor: ImageProcessor<T, S>;
     worker: Worker | null = null;
 
-    abstract init: (config: Config | null) => Promise<void>;
-    abstract predict: (params: OperationParams, targets: any) => Promise<any>;
+    abstract init: (config: T) => Promise<void>;
+    abstract predict: (params: S, targets: any) => Promise<any>;
 
     sem = new BlockingQueue<number>();
 
@@ -36,7 +37,7 @@ export abstract class WorkerManagerBase {
         this.sem.enqueue(num + 1);
     };
 
-    initCommon = async (props: WorkerManagerBaseInitProps, config: Config) => {
+    initCommon = async (props: WorkerManagerBaseInitProps, config: T) => {
         const num = await this.lock();
         if (this.worker) {
             this.worker.terminate();
@@ -101,7 +102,7 @@ export abstract class WorkerManagerBase {
         return this.targetCanvas;
     };
 
-    sendToWorker = async (params: OperationParams, data: any, transferable = true) => {
+    sendToWorker = async (params: S, data: any, transferable = true) => {
         if (this.sem.length > 100) {
             throw new Error(`queue is fulled: ${this.sem.length}`);
         }
@@ -169,4 +170,70 @@ export abstract class WorkerManagerBase {
             return true;
         }
     };
+
+
+
+    fetchData = async (url: string) => {
+        if (url.startsWith("data:")) {
+            const data = url.split(",")[1]
+            return Buffer.from(data, "base64");
+        }
+
+        const res = await fetch(url, {
+            method: "GET"
+        });
+        return await res.arrayBuffer()
+    };
+}
+
+
+
+
+export type WorkerDispatcherCallbacks<T extends Config, S extends OperationParams> = {
+    init: (config: T) => Promise<ImageProcessor<T, S>>
+    // predict: (config: T, params: S, data: any) => Promise<any>
+}
+export class WorkerDispatcher<T extends Config, S extends OperationParams> {
+
+    imageProcessor: ImageProcessor<T, S> | null = null
+    config: T | null = null;
+    callbacks: WorkerDispatcherCallbacks<T, S> | null = null;
+    context: any
+    constructor(context: any) {
+        this.context = context
+    }
+
+    setCallback = (callbacks: WorkerDispatcherCallbacks<T, S>) => {
+        this.callbacks = callbacks
+    }
+
+    dispach = async (event: any) => {
+        if (!this.callbacks) {
+            console.warn("[worker] Dispatcher callbacks is not initialized")
+            return
+        }
+        if (!this.config) {
+            console.warn("[worker] Dispatcher config is not initialized")
+            return
+        }
+        if (event.data.message === WorkerCommand.INITIALIZE) {
+            this.config = event.data.config as T;
+            this.imageProcessor = await this.callbacks.init(this.config)
+            this.context.postMessage({ message: WorkerResponse.INITIALIZED });
+        } else if (event.data.message === WorkerCommand.PREDICT) {
+            if (!this.imageProcessor) {
+                console.warn("[worker] ImageProcessor is not initialized")
+                return
+            }
+            const params = event.data.params as S;
+            const data: Uint8ClampedArray = event.data.data;
+
+            const prediction = this.imageProcessor.predict(this.config, params, data)
+
+            this.context.postMessage({
+                message: WorkerResponse.PREDICTED,
+                prediction: prediction,
+            });
+        }
+    }
 }
