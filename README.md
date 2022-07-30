@@ -424,7 +424,7 @@ Compose Mediapipe models(hand, face, pose) version2. This module load models fro
 
 ### installation and usage
 
-[See here](/019_mediapipe-mix-worker-js)
+[See here](/019_mediapipe-mix2-worker-js)
 
 ### demo
 
