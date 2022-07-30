@@ -212,23 +212,24 @@ export class WorkerDispatcher<T extends Config, S extends OperationParams> {
             console.warn("[worker] Dispatcher callbacks is not initialized")
             return
         }
-        if (!this.config) {
-            console.warn("[worker] Dispatcher config is not initialized")
-            return
-        }
         if (event.data.message === WorkerCommand.INITIALIZE) {
             this.config = event.data.config as T;
             this.imageProcessor = await this.callbacks.init(this.config)
             this.context.postMessage({ message: WorkerResponse.INITIALIZED });
+            console.log("[worker] Initialized")
         } else if (event.data.message === WorkerCommand.PREDICT) {
             if (!this.imageProcessor) {
                 console.warn("[worker] ImageProcessor is not initialized")
                 return
             }
+            if (!this.config) {
+                console.warn("[worker] Dispatcher config is not initialized")
+                return
+            }
             const params = event.data.params as S;
             const data: Uint8ClampedArray = event.data.data;
 
-            const prediction = this.imageProcessor.predict(this.config, params, data)
+            const prediction = await this.imageProcessor.predict(this.config, params, data)
 
             this.context.postMessage({
                 message: WorkerResponse.PREDICTED,

@@ -55,7 +55,7 @@
     },
     "dependencies": {
         "@dannadori/demo-base": "^1.0.16",
-        "@dannadori/mediapipe-mix2-worker-js": "^1.0.3",
+        "@dannadori/mediapipe-mix2-worker-js": "^1.0.5",
         "react": "^18.2.0",
         "react-dom": "^18.2.0"
     }
