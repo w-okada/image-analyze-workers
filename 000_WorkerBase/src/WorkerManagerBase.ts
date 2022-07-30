@@ -6,6 +6,10 @@ export abstract class LocalWorker {
     abstract init: (config: any | null) => Promise<void>;
     abstract predict: (config: any, params: any, targets: any) => Promise<any>;
 }
+export abstract class ImageProcessor {
+    abstract init: (config: any | null) => Promise<void>;
+    abstract predict: (config: any, params: any, targets: any) => Promise<any>;
+}
 
 export type WorkerManagerBaseInitProps = {
     useWorkerForSafari: boolean;
@@ -14,7 +18,7 @@ export type WorkerManagerBaseInitProps = {
 };
 
 export abstract class WorkerManagerBase {
-    abstract localWorker: LocalWorker;
+    abstract imageProcessor: ImageProcessor;
     worker: Worker | null = null;
 
     abstract init: (config: any | null) => Promise<void>;
@@ -42,7 +46,7 @@ export abstract class WorkerManagerBase {
         this.worker = null;
 
         if (this.useWorker(props) === false) {
-            await this.localWorker.init(config);
+            await this.imageProcessor.init(config);
             this.unlock(num);
             return;
         }
